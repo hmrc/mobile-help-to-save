@@ -13,6 +13,8 @@ scalaSettings
 publishingSettings
 defaultSettings()
 
+PlayKeys.playDefaultPort := 8248
+
 libraryDependencies ++= AppDependencies.appDependencies
 retrieveManaged := true
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
