@@ -19,8 +19,6 @@ libraryDependencies ++= AppDependencies.appDependencies
 retrieveManaged := true
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
-routesGenerator := StaticRoutesGenerator
-
 Keys.fork in IntegrationTest := false
 unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base => Seq(base / "it")).value
 addTestReportOption(IntegrationTest, "int-test-reports")
