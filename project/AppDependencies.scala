@@ -1,15 +1,10 @@
-import sbt._
-import play.sbt.PlayImport._
 import play.core.PlayVersion
-import uk.gov.hmrc.SbtAutoBuildPlugin
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
-import uk.gov.hmrc.versioning.SbtGitVersioning
+import play.sbt.PlayImport.ws
+import sbt.{ModuleID, _}
 
-object MicroServiceBuild extends Build with MicroService {
+object AppDependencies {
 
-  val appName = "mobile-help-to-save"
-
-  override lazy val appDependencies: Seq[ModuleID] = compile ++ test()
+  lazy val appDependencies: Seq[ModuleID] = compile ++ test()
 
   val compile = Seq(
     ws,
