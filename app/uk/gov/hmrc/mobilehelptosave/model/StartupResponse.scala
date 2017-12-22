@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.controllers
+package uk.gov.hmrc.mobilehelptosave.model
 
-import javax.inject.Singleton
+import play.api.libs.json.{Json, Writes}
 
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import play.api.mvc._
+case class StartupResponse(enabled: Boolean, infoUrl: String)
 
-import scala.concurrent.Future
-
-@Singleton()
-class MicroserviceHelloWorld extends BaseController {
-
-	def hello() = Action.async { implicit request =>
-		Future.successful(Ok("Hello world"))
-	}
-
+object StartupResponse {
+  implicit val writes: Writes[StartupResponse] = Json.writes[StartupResponse]
 }

@@ -16,25 +16,23 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import play.api.http.Status
-import play.api.test.FakeRequest
-import play.api.http.Status
-import play.api.test.FakeRequest
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.play.test.WithFakeApplication
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import javax.inject.{Inject, Named, Singleton}
 
+import play.api.libs.json.Json
+import play.api.mvc._
+import uk.gov.hmrc.mobilehelptosave.model.StartupResponse
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication{
+import scala.concurrent.Future
 
-  val fakeRequest = FakeRequest("GET", "/")
+@Singleton()
+class StartupController @Inject() (
+  @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
+  @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String
+) extends BaseController {
 
-  "GET /" should {
-    "return 200" in {
-      val controller = new MicroserviceHelloWorld()
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
+  val startup: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok(Json.toJson(StartupResponse(helpToSaveEnabled, helpToSaveInfoUrl))))
   }
 
 }
