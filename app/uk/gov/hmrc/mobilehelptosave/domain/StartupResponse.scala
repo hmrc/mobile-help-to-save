@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.model
+package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Json, Writes}
 
-case class StartupResponse(enabled: Boolean, infoUrl: String)
+case class StartupResponse(enabled: Boolean, infoUrl: String, user: Option[UserDetails])
 
 object StartupResponse {
   implicit val writes: Writes[StartupResponse] = Json.writes[StartupResponse]
