@@ -16,57 +16,34 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WSClient
-import play.api.test.{Helpers, TestServer}
+import uk.gov.hmrc.mobilehelptosave.stubs.HelpToSaveStub
+import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class StartupISpec extends UnitSpec with GuiceOneServerPerTest with WsScalaTestClient {
+class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteWsClient {
+
+  override implicit lazy val app: Application = wireMockApplicationBuilder().build()
+
   "GET /mobile-help-to-save/startup" should {
-    "return enabled=true when configuration value helpToSave.enabled=true" in withTestServer(
-      new GuiceApplicationBuilder()
-        .configure("helpToSave.enabled" -> true)
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+    "include user details" in {
+      HelpToSaveStub.currentUserIsEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
-      (response.json \ "enabled").as[Boolean] shouldBe true
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
     }
 
-    "return enabled=false when configuration value helpToSave.enabled=false" in withTestServer(
-      new GuiceApplicationBuilder()
-        .configure("helpToSave.enabled" -> false)
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+    "omit user state if call to help-to-save fails" in {
+      HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
-      (response.json \ "enabled").as[Boolean] shouldBe false
-    }
-
-    "include infoUrl obtained from configuration" in withTestServer(
-      new GuiceApplicationBuilder()
-        .configure("helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information")
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
-    }
-  }
-
-  private def withTestServer(app: Application)(testCode: (Application, PortNumber) => Any) = {
-    val port: Int = Helpers.testServerPort
-    Helpers.running(TestServer(port, app)) {
-      testCode(app, PortNumber(port))
+      (response.json \ "user" \ "state").asOpt[String] shouldBe None
+      // check that only the user state field has been omitted, not all fields
+      (response.json \ "enabled").asOpt[Boolean] should not be None
+      (response.json \ "infoUrl").asOpt[String] should not be None
     }
   }
 }

@@ -17,9 +17,16 @@ Response format:
   // Feature toggle for Help to Save app functionality:
   "enabled": true,
   // Absolute URL of page containing information about the Help to Save scheme
-  "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
+  "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
+  // User-specific Help to Save data
+  "user": {
+    // user state, can be NotEnrolled or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
+    "state": "NotEnrolled"
+  }
 }
 ```
+
+If there is a problem obtaining the user-specific data then the user field will be omitted and the other fields will still be returned (as opposed to an error response being returned).
 
 ## License
 

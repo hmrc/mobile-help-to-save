@@ -20,19 +20,22 @@ import javax.inject.{Inject, Named, Singleton}
 
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.mobilehelptosave.model.StartupResponse
+import uk.gov.hmrc.mobilehelptosave.domain.StartupResponse
+import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-
-import scala.concurrent.Future
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 @Singleton()
 class StartupController @Inject() (
+  userService: UserService,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String
 ) extends BaseController {
 
   val startup: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(Json.toJson(StartupResponse(helpToSaveEnabled, helpToSaveInfoUrl))))
+    userService.userDetails().map { user =>
+      Ok(Json.toJson(StartupResponse(helpToSaveEnabled, helpToSaveInfoUrl, user)))
+    }
   }
 
 }
