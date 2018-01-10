@@ -18,6 +18,8 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import javax.inject.{Inject, Singleton}
 
+import cats.data.OptionT
+import cats.instances.future._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
 import uk.gov.hmrc.mobilehelptosave.domain.{UserDetails, UserState}
@@ -25,13 +27,27 @@ import uk.gov.hmrc.mobilehelptosave.domain.{UserDetails, UserState}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UserService @Inject() (helpToSaveConnector: HelpToSaveConnector) {
+class UserService @Inject() (
+  helpToSaveConnector: HelpToSaveConnector,
+  surveyService: SurveyService
+) {
 
-  def userDetails()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] =
-    helpToSaveConnector.enrolmentStatus().map { maybeEnrolled =>
-      maybeEnrolled.map { enrolled =>
-        UserDetails(state = if (enrolled) UserState.Enrolled else UserState.NotEnrolled)
-      }
+  def userDetails()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = {
+    val enrolledFO = helpToSaveConnector.enrolmentStatus()
+    val wantsToBeContactedFO = surveyService.userWantsToBeContacted()
+    (for {
+      enrolled <- OptionT(enrolledFO)
+      wantsToBeContacted <- OptionT(wantsToBeContactedFO)
+    } yield {
+      UserDetails(state = state(enrolled, wantsToBeContacted))
+    }).value
+  }
+
+  private def state(enrolled: Boolean, wantsToBeContacted: Boolean) =
+    if (enrolled) {
+      UserState.Enrolled
+    } else {
+      if (wantsToBeContacted) UserState.InvitedFirstTime else UserState.NotEnrolled
     }
 
 }
