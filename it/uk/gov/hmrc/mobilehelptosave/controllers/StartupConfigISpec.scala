@@ -58,9 +58,12 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "enabled").as[Boolean] shouldBe false
     }
 
-    "include infoUrl obtained from configuration" in withTestServer(
+    "include infoUrl and invitationUrl obtained from configuration" in withTestServer(
       wireMockApplicationBuilder()
-        .configure("helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information")
+        .configure(
+          "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
+          "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation"
+        )
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -70,6 +73,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
+      (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
     }
   }
 }

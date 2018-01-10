@@ -18,9 +18,11 @@ Response format:
   "enabled": true,
   // Absolute URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
+  // URL of invitation call to action - may be absolute or relative, should be resolved in the context of the base web URL (hmrc_base_web_url on Android)
+  "invitationUrl": "https://www.example.com/about-help-to-save",
   // User-specific Help to Save data
   "user": {
-    // user state, can be NotEnrolled or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
+    // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
     "state": "NotEnrolled"
   }
 }

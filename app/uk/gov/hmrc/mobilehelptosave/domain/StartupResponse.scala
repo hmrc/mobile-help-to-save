@@ -18,7 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Json, Writes}
 
-case class StartupResponse(enabled: Boolean, infoUrl: String, user: Option[UserDetails])
+case class StartupResponse(
+  enabled: Boolean,
+  infoUrl: String,
+  invitationUrl: String,
+  user: Option[UserDetails]
+)
 
 object StartupResponse {
   implicit val writes: Writes[StartupResponse] = Json.writes[StartupResponse]
