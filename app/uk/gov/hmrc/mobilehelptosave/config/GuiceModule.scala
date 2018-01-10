@@ -27,6 +27,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   override def configure(): Unit = {
     bindConfigBoolean("helpToSave.enabled")
     bindConfigString("helpToSave.infoUrl")
+    bindConfigString("helpToSave.invitationUrl")
 
     bind(classOf[CoreGet]).to(classOf[DefaultHttpClient])
     bind(classOf[LoggerLike]).toInstance(Logger)
