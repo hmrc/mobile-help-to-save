@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.services
 
-import play.api.libs.json.{Json, Writes}
+import javax.inject.Singleton
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Enrolled = Value
+import com.google.inject.ImplementedBy
+import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.{ExecutionContext, Future}
+
+@ImplementedBy(classOf[SurveyServiceImpl])
+trait SurveyService {
+  def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
 }
 
-case class UserDetails(state: UserState.Value)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+@Singleton
+class SurveyServiceImpl extends SurveyService {
+  //TODO real logic
+  override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
+    Future successful Some(false)
 }
