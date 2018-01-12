@@ -16,10 +16,14 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
+import cats.data.OptionT
+import cats.instances.future._
 import com.google.inject.ImplementedBy
+import play.api.LoggerLike
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.connectors.NativeAppWidgetConnector
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -29,8 +33,29 @@ trait SurveyService {
 }
 
 @Singleton
-class SurveyServiceImpl extends SurveyService {
-  //TODO real logic
+class SurveyServiceImpl @Inject() (
+  logger: LoggerLike,
+  nativeAppWidgetConnector: NativeAppWidgetConnector
+) extends SurveyService {
+
+  // The campaign ID, question key and yes answer all need to match the values used by the Android and iOS apps.
+  private val helpToSaveCampaignId = "HELP_TO_SAVE_1"
+  private val wantsToBeContactedQuestionKey = "question_3"
+  /**
+    * The answer value used when the user answers yes to the above question.
+    *
+    * This needs to match the following values used by the native apps:
+    * * uk.gov.hmrc.ptcalc.presentation.main.taxaccount.taxcredits.helptosave.HelpToSaveViewModelFactory.createQuestion3() on Android
+    * * CampaignViewModel.yesAction() on iOS
+    */
+  private val yesAnswer = "Yes"
+  private val noAnswer = "No"
+
   override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
-    Future successful Some(false)
+    OptionT(nativeAppWidgetConnector.getAnswers(helpToSaveCampaignId, wantsToBeContactedQuestionKey)).map { answers: Seq[String] =>
+      answers
+        .filterNot(answer => answer.equalsIgnoreCase(yesAnswer) || answer.equalsIgnoreCase(noAnswer))
+        .foreach(answer => logger.warn(s"""Unknown survey answer "$answer" found"""))
+      answers.exists(_.equalsIgnoreCase(yesAnswer))
+    }.value
 }
