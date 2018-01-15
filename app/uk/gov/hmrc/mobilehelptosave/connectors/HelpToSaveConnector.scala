@@ -17,14 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 
 import com.google.inject.ImplementedBy
-import play.api.Mode.Mode
+import play.api.LoggerLike
 import play.api.libs.json.JsValue
-import play.api.{Configuration, Environment, LoggerLike}
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,7 +36,7 @@ trait HelpToSaveConnector {
 @Singleton
 class HelpToSaveConnectorImpl @Inject() (
   logger: LoggerLike,
-  config: HelpToSaveConnectorConfig,
+  @Named("help-to-save-baseUrl") baseUrl: URL,
   http: CoreGet) extends HelpToSaveConnector {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
@@ -51,22 +49,6 @@ class HelpToSaveConnectorImpl @Inject() (
     }
   }
 
-  private val enrolmentStatusUrl = new URL(config.serviceUrl, "/help-to-save/enrolment-status")
+  private val enrolmentStatusUrl = new URL(baseUrl, "/help-to-save/enrolment-status")
 
-}
-
-@ImplementedBy(classOf[HelpToSaveConnectorConfigImpl])
-trait HelpToSaveConnectorConfig {
-  val serviceUrl: URL
-}
-
-@Singleton
-class HelpToSaveConnectorConfigImpl @Inject() (
-  override val runModeConfiguration: Configuration,
-  environment: Environment
-) extends HelpToSaveConnectorConfig with ServicesConfig {
-
-  override val serviceUrl = new URL(baseUrl("help-to-save"))
-
-  override protected def mode: Mode = environment.mode
 }

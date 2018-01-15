@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.mobilehelptosave.stubs.HelpToSaveStub
+import uk.gov.hmrc.mobilehelptosave.stubs.{HelpToSaveStub, NativeAppWidgetStub}
 import uk.gov.hmrc.mobilehelptosave.support.{WireMockSupport, WithTestServer}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -38,6 +38,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -52,6 +53,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -69,6 +71,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200

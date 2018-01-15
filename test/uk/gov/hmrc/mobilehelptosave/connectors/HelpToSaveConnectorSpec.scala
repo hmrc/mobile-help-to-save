@@ -18,19 +18,18 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.{ConnectException, URL}
 
-import com.typesafe.config.Config
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import org.slf4j.Logger
 import play.api.LoggerLike
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.hooks.HttpHook
+import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, ThrowableWithMessageContaining}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest {
+class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest with ThrowableWithMessageContaining {
 
   // when https://github.com/paulbutcher/ScalaMock/issues/39 is fixed we will be able to simplify this code by mocking LoggerLike directly (instead of slf4j.Logger)
   private val slf4jLoggerStub = stub[Logger]
@@ -43,64 +42,51 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
   "enrolmentStatus" should {
     "return None when there is an error connecting to the help-to-save service" in {
-      val connectExceptionToThrow = new ConnectException("Connection refused")
-      val connectionRefusedHttp = new HttpGet {
-        override def configuration: Option[Config] = None
+      val connectionRefusedHttp = FakeHttpGet(
+        "http://help-to-save-service/help-to-save/enrolment-status",
+        Future {
+          throw new ConnectException("Connection refused")
+        })
 
-        override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-          Future failed connectExceptionToThrow
-        }
-
-        override val hooks: Seq[HttpHook] = Seq.empty
-      }
-
-      val connector = new HelpToSaveConnectorImpl(logger, FakeHelpToSaveConnectorConfig, connectionRefusedHttp)
+      val connector = new HelpToSaveConnectorImpl(logger, new URL("http://help-to-save-service/"), connectionRefusedHttp)
 
       await(connector.enrolmentStatus()) shouldBe None
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get enrolment status from help-to-save service""",
-        argThat((e: Throwable) => e.getMessage.contains("Connection refused"))
+        throwableWithMessageContaining("Connection refused")
       )
     }
 
     "return None when the help-to-save service returns a 4xx error" in {
-      val thrownException = Upstream4xxResponse("message", 429, 500)
-      val error4xxHttp = new CoreGet {
-        override def GET[A](url: String)(implicit rds: HttpReads[A], hc: HeaderCarrier, ec: ExecutionContext): Future[A] =
-          Future { throw thrownException }
-        override def GET[A](url: String, queryParams: Seq[(String, String)])(implicit rds: HttpReads[A], hc: HeaderCarrier, ec: ExecutionContext): Future[A] =
-          Future { throw thrownException }
-      }
+      val error4xxHttp = FakeHttpGet(
+        "http://help-to-save-service/help-to-save/enrolment-status",
+        HttpResponse(429))
 
-      val connector = new HelpToSaveConnectorImpl(logger, FakeHelpToSaveConnectorConfig, error4xxHttp)
+      val connector = new HelpToSaveConnectorImpl(logger, new URL("http://help-to-save-service/"), error4xxHttp)
 
       await(connector.enrolmentStatus()) shouldBe None
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
-        """Couldn't get enrolment status from help-to-save service""", thrownException)
+        """Couldn't get enrolment status from help-to-save service""",
+        throwableWithMessageContaining("429")
+      )
     }
 
     "return None when the help-to-save service returns a 5xx error" in {
-      val thrownException = Upstream5xxResponse("message", 500, 502)
-      val error5xxHttp = new CoreGet {
-        override def GET[A](url: String)(implicit rds: HttpReads[A], hc: HeaderCarrier, ec: ExecutionContext): Future[A] =
-          Future { throw thrownException }
-        override def GET[A](url: String, queryParams: Seq[(String, String)])(implicit rds: HttpReads[A], hc: HeaderCarrier, ec: ExecutionContext): Future[A] =
-          Future { throw thrownException }
-      }
+      val error5xxHttp = FakeHttpGet(
+        "http://help-to-save-service/help-to-save/enrolment-status",
+        HttpResponse(500))
 
-      val connector = new HelpToSaveConnectorImpl(logger, FakeHelpToSaveConnectorConfig, error5xxHttp)
+      val connector = new HelpToSaveConnectorImpl(logger, new URL("http://help-to-save-service/"), error5xxHttp)
 
       await(connector.enrolmentStatus()) shouldBe None
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
-        """Couldn't get enrolment status from help-to-save service""", thrownException)
+        """Couldn't get enrolment status from help-to-save service""",
+        throwableWithMessageContaining("500")
+      )
     }
-  }
-
-  private object FakeHelpToSaveConnectorConfig extends HelpToSaveConnectorConfig {
-    override val serviceUrl: URL = new URL("http://help-to-save-service/")
   }
 
 }
