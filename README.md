@@ -12,7 +12,7 @@ Returns information that the mobile app is likely to need each time it starts.
 
 Response format:
 
-```json
+```
 {
   // Feature toggle for Help to Save app functionality:
   "enabled": true,
