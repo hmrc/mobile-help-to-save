@@ -28,13 +28,14 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 @Singleton()
 class StartupController @Inject() (
   userService: UserService,
+  authorisedWithInternalAuthId: AuthorisedWithInternalAuthId,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String,
   @Named("helpToSave.invitationUrl") helpToSaveInvitationUrl: String
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = Action.async { implicit request =>
-    userService.userDetails().map { user =>
+  val startup: Action[AnyContent] = authorisedWithInternalAuthId.async { implicit request =>
+    userService.userDetails(request.internalAuthId).map { user =>
       Ok(Json.toJson(StartupResponse(
         enabled = helpToSaveEnabled,
         infoUrl = helpToSaveInfoUrl,

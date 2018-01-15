@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.repos
 
-import play.api.libs.json.{Json, Writes}
+class FakeInvitationRepositorySpec extends InvitationRepositorySpec {
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+  val repo: InvitationRepository = new FakeInvitationRepository
 
-case class UserDetails(state: UserState.Value)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
 }

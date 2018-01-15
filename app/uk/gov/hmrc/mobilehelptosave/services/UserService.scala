@@ -20,34 +20,53 @@ import javax.inject.{Inject, Singleton}
 
 import cats.data.OptionT
 import cats.instances.future._
+import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
-import uk.gov.hmrc.mobilehelptosave.domain.{UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserService @Inject() (
   helpToSaveConnector: HelpToSaveConnector,
-  surveyService: SurveyService
+  surveyService: SurveyService,
+  invitationRepository: InvitationRepository,
+  clock: Clock
 ) {
 
-  def userDetails()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = {
+  def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = {
     val enrolledFO = helpToSaveConnector.enrolmentStatus()
     val wantsToBeContactedFO = surveyService.userWantsToBeContacted()
     (for {
       enrolled <- OptionT(enrolledFO)
       wantsToBeContacted <- OptionT(wantsToBeContactedFO)
+      state <- OptionT.liftF(determineState(internalAuthId, enrolled, wantsToBeContacted))
     } yield {
-      UserDetails(state = state(enrolled, wantsToBeContacted))
+      UserDetails(state = state)
     }).value
   }
 
-  private def state(enrolled: Boolean, wantsToBeContacted: Boolean) =
+  private def determineState(internalAuthId: InternalAuthId, enrolled: Boolean, wantsToBeContacted: Boolean)(implicit ec: ExecutionContext): Future[UserState.Value] =
     if (enrolled) {
-      UserState.Enrolled
+      Future successful UserState.Enrolled
     } else {
-      if (wantsToBeContacted) UserState.InvitedFirstTime else UserState.NotEnrolled
+      if (wantsToBeContacted) {
+        determineInvitedState(internalAuthId)
+      }
+      else {
+        Future successful UserState.NotEnrolled
+      }
     }
+
+  private def determineInvitedState(internalAuthId: InternalAuthId)(implicit ec: ExecutionContext): Future[UserState.Value] = {
+    invitationRepository.insert(Invitation(internalAuthId, clock.now()))
+      .map ( _ => UserState.InvitedFirstTime )
+      .recover {
+        case e: DatabaseException if invitationRepository.isDuplicateKey(e) =>
+          UserState.Invited
+      }
+  }
 
 }

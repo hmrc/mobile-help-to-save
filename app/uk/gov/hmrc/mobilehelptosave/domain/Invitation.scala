@@ -16,14 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json.{Json, Writes}
+import org.joda.time.DateTime
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
-
-case class UserDetails(state: UserState.Value)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
-}
+case class Invitation(internalAuthId: InternalAuthId, created: DateTime)

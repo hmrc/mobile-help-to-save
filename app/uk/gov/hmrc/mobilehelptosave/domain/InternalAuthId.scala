@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.Format
+import uk.gov.hmrc.domain.{SimpleObjectReads, SimpleObjectWrites}
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+case class InternalAuthId(value: String) extends AnyVal
 
-case class UserDetails(state: UserState.Value)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+object InternalAuthId {
+  implicit val format: Format[InternalAuthId] = Format(
+    new SimpleObjectReads[InternalAuthId]("value", InternalAuthId.apply),
+    new SimpleObjectWrites[InternalAuthId](_.value))
 }
