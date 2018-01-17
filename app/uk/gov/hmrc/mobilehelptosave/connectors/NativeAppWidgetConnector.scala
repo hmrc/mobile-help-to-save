@@ -23,32 +23,37 @@ import com.google.inject.ImplementedBy
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegments
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveConnector {
+@ImplementedBy(classOf[NativeAppWidgetConnectorImpl])
+trait NativeAppWidgetConnector {
 
-  def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+  def getAnswers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]]
 
 }
 
 @Singleton
-class HelpToSaveConnectorImpl @Inject() (
+class NativeAppWidgetConnectorImpl @Inject() (
   logger: LoggerLike,
-  @Named("help-to-save-baseUrl") baseUrl: URL,
-  http: CoreGet) extends HelpToSaveConnector {
+  @Named("native-app-widget-baseUrl") baseUrl: URL,
+  http: CoreGet
+) extends NativeAppWidgetConnector {
 
-  override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
-    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
-      Some((json \ "enrolled").as[Boolean])
+  override def getAnswers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
+    http.GET[JsValue](getAnswersUrl(campaignId, questionKey).toString).map { jsonBody =>
+      Some((jsonBody \\ "content").map(_.as[String]))
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
-        logger.warn("Couldn't get enrolment status from help-to-save service", e)
+        logger.warn("Couldn't get answers from native-app-widget service", e)
         None
     }
-  }
 
-  private val enrolmentStatusUrl = new URL(baseUrl, "/help-to-save/enrolment-status")
+  private def getAnswersUrl(campaignId: String, questionKey: String) =
+    new URL(
+      baseUrl,
+      encodePathSegments("native-app-widget", "widget-data", campaignId, questionKey)
+    )
 
 }

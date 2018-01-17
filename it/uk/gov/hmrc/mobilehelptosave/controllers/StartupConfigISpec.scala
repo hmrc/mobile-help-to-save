@@ -19,9 +19,13 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.mobilehelptosave.stubs.HelpToSaveStub
+import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
+import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub}
 import uk.gov.hmrc.mobilehelptosave.support.{WireMockSupport, WithTestServer}
 import uk.gov.hmrc.play.test.UnitSpec
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Tests that the startup endpoint uses configuration values correctly
@@ -29,36 +33,42 @@ import uk.gov.hmrc.play.test.UnitSpec
   */
 class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSupport with WithTestServer {
 
+  private val internalAuthId = InternalAuthId("test-internal-auth-id")
+
   "GET /mobile-help-to-save/startup" should {
-    "return enabled=true when configuration value helpToSave.enabled=true" in withTestServer(
+    "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> true)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
+      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
       HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "enabled").as[Boolean] shouldBe true
     }
 
-    "return enabled=false when configuration value helpToSave.enabled=false" in withTestServer(
+    "return enabled=false when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> false)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
+      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
       HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "enabled").as[Boolean] shouldBe false
     }
 
-    "include infoUrl and invitationUrl obtained from configuration" in withTestServer(
+    "include infoUrl and invitationUrl obtained from configuration" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure(
           "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
@@ -68,7 +78,9 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
+      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
       HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -76,4 +88,13 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
     }
   }
+
+  private def withTestServerAndInvitationCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =
+    withTestServer(app) { (app: Application, portNumber: PortNumber) =>
+      try {
+        testCode(app, portNumber)
+      } finally {
+        await(app.injector.instanceOf[InvitationRepository].removeById(internalAuthId))
+      }
+    }
 }

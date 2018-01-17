@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.support
 
-import play.api.libs.json.{Json, Writes}
+import org.scalamock.matchers.{MatcherBase, Matchers}
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+trait ThrowableWithMessageContaining { this: Matchers =>
 
-case class UserDetails(state: UserState.Value)
+  def throwableWithMessageContaining(message: String): MatcherBase =
+    argThat((e: Throwable) => e.getMessage.contains(message))
 
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
 }

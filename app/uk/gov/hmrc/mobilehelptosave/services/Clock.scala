@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.services
 
-import play.api.libs.json.{Json, Writes}
+import javax.inject.Singleton
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
+import com.google.inject.ImplementedBy
+import org.joda.time.DateTime
+
+@ImplementedBy(classOf[ClockImpl])
+trait Clock {
+  def now(): DateTime
 }
 
-case class UserDetails(state: UserState.Value)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+@Singleton
+class ClockImpl extends Clock {
+  def now(): DateTime = DateTime.now()
 }

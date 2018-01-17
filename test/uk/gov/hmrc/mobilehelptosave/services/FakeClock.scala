@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.services
 
-import play.api.libs.json.{Json, Writes}
+import org.joda.time.DateTime
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
+class FixedFakeClock(time: DateTime) extends Clock {
+  override def now(): DateTime = time
 }
 
-case class UserDetails(state: UserState.Value)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+class VariableFakeClock(var time: DateTime) extends Clock {
+  override def now(): DateTime = time
 }

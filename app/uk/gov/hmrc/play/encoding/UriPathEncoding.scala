@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.play.encoding
 
-import play.api.libs.json.{Json, Writes}
+import java.nio.charset.StandardCharsets
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+import play.utils.UriEncoding
 
-case class UserDetails(state: UserState.Value)
+object UriPathEncoding {
 
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+  def encodePathSegments(pathSegments: String*): String =
+    pathSegments.map(encodePathSegment).mkString("/", "/", "")
+
+  def encodePathSegment(pathSegment: String): String =
+    UriEncoding.encodePathSegment(pathSegment, StandardCharsets.UTF_8.name)
+
 }

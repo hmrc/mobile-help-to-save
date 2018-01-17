@@ -16,18 +16,30 @@
 
 package uk.gov.hmrc.mobilehelptosave.config
 
+import java.net.URL
+import javax.inject.Provider
+
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names.named
+import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.play.config.ServicesConfig
 
-class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule {
+class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule with ServicesConfig {
+
+  override protected lazy val mode: Mode = environment.mode
+  override protected lazy val runModeConfiguration: Configuration = configuration
 
   override def configure(): Unit = {
     bindConfigBoolean("helpToSave.enabled")
     bindConfigString("helpToSave.infoUrl")
     bindConfigString("helpToSave.invitationUrl")
+    bindConfigInt("helpToSave.dailyInvitationCap")
+
+    bindBaseUrl("help-to-save")
+    bindBaseUrl("native-app-widget")
 
     bind(classOf[CoreGet]).to(classOf[DefaultHttpClient])
     bind(classOf[LoggerLike]).toInstance(Logger)
@@ -37,8 +49,19 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getBoolean(path))
   }
 
+  private def bindConfigInt(path: String): Unit = {
+    bindConstant().annotatedWith(named(path)).to(configuration.underlying.getInt(path))
+  }
+
   private def bindConfigString(path: String): Unit = {
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getString(path))
+  }
+
+  private def bindBaseUrl(serviceName: String) =
+    bind(classOf[URL]).annotatedWith(named(s"$serviceName-baseUrl")).toProvider(new BaseUrlProvider(serviceName))
+
+  private class BaseUrlProvider(serviceName: String) extends Provider[URL] {
+    override lazy val get = new URL(baseUrl(serviceName))
   }
 
 }

@@ -35,8 +35,13 @@ libraryDependencies ++= AppDependencies.appDependencies
 retrieveManaged := true
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
+unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon"
+
 Keys.fork in IntegrationTest := false
-unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base => Seq(base / "it")).value
+unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base => Seq(
+  base / "it",
+  base / "testcommon"
+)).value
 addTestReportOption(IntegrationTest, "int-test-reports")
 testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value)
 parallelExecution in IntegrationTest := false
