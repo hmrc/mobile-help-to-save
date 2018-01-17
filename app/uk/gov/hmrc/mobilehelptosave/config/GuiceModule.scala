@@ -36,6 +36,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigBoolean("helpToSave.enabled")
     bindConfigString("helpToSave.infoUrl")
     bindConfigString("helpToSave.invitationUrl")
+    bindConfigInt("helpToSave.dailyInvitationCap")
 
     bindBaseUrl("help-to-save")
     bindBaseUrl("native-app-widget")
@@ -46,6 +47,10 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   private def bindConfigBoolean(path: String): Unit = {
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getBoolean(path))
+  }
+
+  private def bindConfigInt(path: String): Unit = {
+    bindConstant().annotatedWith(named(path)).to(configuration.underlying.getInt(path))
   }
 
   private def bindConfigString(path: String): Unit = {

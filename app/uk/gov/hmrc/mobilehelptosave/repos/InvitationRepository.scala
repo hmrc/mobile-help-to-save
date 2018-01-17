@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.repos
 import javax.inject.Singleton
 
 import com.google.inject.{ImplementedBy, Inject}
+import org.joda.time.DateTime
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.ReadPreference
@@ -32,12 +33,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[InvitationMongoRepository])
 trait InvitationRepository {
-  private type ID = InternalAuthId
-  private type A = Invitation
+  def findById(id: InternalAuthId, readPreference: ReadPreference = ReadPreference.primaryPreferred)(implicit ec: ExecutionContext): Future[Option[Invitation]]
+  def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int]
 
-  def findById(id: InternalAuthId, readPreference: ReadPreference = ReadPreference.primaryPreferred)(implicit ec: ExecutionContext): Future[Option[A]]
-  def insert(entity: A)(implicit ec: ExecutionContext): Future[WriteResult]
-  def removeById(id: ID, writeConcern: WriteConcern = WriteConcern.Default)(implicit ec: ExecutionContext): Future[WriteResult]
+  def insert(entity: Invitation)(implicit ec: ExecutionContext): Future[WriteResult]
+  def removeById(id: InternalAuthId, writeConcern: WriteConcern = WriteConcern.Default)(implicit ec: ExecutionContext): Future[WriteResult]
 
   def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]]
 
@@ -59,6 +59,9 @@ class InvitationMongoRepository @Inject()(mongo: ReactiveMongoComponent)
       name = Some("createdIndex")
     )
   )
+
+  override def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int] =
+    collection.count(Some(Json.obj("created" -> Json.obj("$gte" -> dateTime))))
 }
 
 private[repos] object InvitationMongoFormat {

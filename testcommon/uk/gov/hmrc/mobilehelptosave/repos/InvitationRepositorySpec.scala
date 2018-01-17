@@ -92,6 +92,36 @@ trait InvitationRepositorySpec extends WordSpec with Matchers with FutureAwaits 
     }
   }
 
+  "countCreatedSince" should {
+    "include invitations created at or after the time but not before" in {
+      val beforeId = InternalAuthId(s"before-${UUID.randomUUID()}")
+      val atId = InternalAuthId(s"at-${UUID.randomUUID()}")
+      val afterId = InternalAuthId(s"after-${UUID.randomUUID()}")
+      val ids = Seq(beforeId, atId, afterId)
+
+      val at = new DateTime("2017-12-25T10:20:30Z")
+      val before = at.minusMillis(1)
+      val after = at.plusMillis(1)
+
+      val beforeInvitation = Invitation(beforeId, before)
+      val atInvitation = Invitation(atId, at)
+      val afterInvitation = Invitation(afterId, after)
+
+      try {
+        await(repo.insert(atInvitation))
+        await(repo.countCreatedSince(at)) shouldBe 1
+
+        await(repo.insert(beforeInvitation))
+        await(repo.countCreatedSince(at)) shouldBe 1
+
+        await(repo.insert(afterInvitation))
+        await(repo.countCreatedSince(at)) shouldBe 2
+      } finally {
+        ids.foreach(id => await(repo.removeById(id)))
+      }
+    }
+  }
+
   "removeById" should {
     "return the removed count" in {
       val id = InternalAuthId(s"test-${UUID.randomUUID()}")

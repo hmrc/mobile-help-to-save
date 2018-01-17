@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 
 import cats.data.OptionT
 import cats.instances.future._
+import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
@@ -33,7 +34,8 @@ class UserService @Inject() (
   helpToSaveConnector: HelpToSaveConnector,
   surveyService: SurveyService,
   invitationRepository: InvitationRepository,
-  clock: Clock
+  clock: Clock,
+  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
 ) {
 
   def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = {
@@ -60,13 +62,25 @@ class UserService @Inject() (
       }
     }
 
-  private def determineInvitedState(internalAuthId: InternalAuthId)(implicit ec: ExecutionContext): Future[UserState.Value] = {
-    invitationRepository.insert(Invitation(internalAuthId, clock.now()))
-      .map ( _ => UserState.InvitedFirstTime )
-      .recover {
-        case e: DatabaseException if invitationRepository.isDuplicateKey(e) =>
-          UserState.Invited
+  private def determineInvitedState(internalAuthId: InternalAuthId)(implicit ec: ExecutionContext): Future[UserState.Value] =
+    invitationRepository.findById(internalAuthId).flatMap { invitationO =>
+      if (invitationO.isDefined) {
+        Future.successful(UserState.Invited)
+      } else {
+        invitationRepository.countCreatedSince(startOfTodayUtc()).flatMap { alreadyCreatedTodayCount =>
+          if (alreadyCreatedTodayCount >= dailyInvitationCap) {
+            Future.successful(UserState.NotEnrolled)
+          } else {
+            invitationRepository.insert(Invitation(internalAuthId, clock.now()))
+              .map(_ => UserState.InvitedFirstTime)
+              .recover {
+                case e: DatabaseException if invitationRepository.isDuplicateKey(e) =>
+                  UserState.Invited
+              }
+          }
+        }
       }
-  }
+    }
 
+  private def startOfTodayUtc() = clock.now().withZone(DateTimeZone.UTC).withTimeAtStartOfDay()
 }

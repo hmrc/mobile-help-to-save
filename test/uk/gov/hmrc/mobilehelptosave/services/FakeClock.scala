@@ -18,6 +18,10 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import org.joda.time.DateTime
 
-class FakeClock(initialTime: DateTime) extends Clock {
-  override def now(): DateTime = initialTime
+class FixedFakeClock(time: DateTime) extends Clock {
+  override def now(): DateTime = time
+}
+
+class VariableFakeClock(var time: DateTime) extends Clock {
+  override def now(): DateTime = time
 }
