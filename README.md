@@ -16,10 +16,12 @@ Response format:
 {
   // Feature toggle for Help to Save app functionality:
   "enabled": true,
-  // Absolute URL of page containing information about the Help to Save scheme
+  // URL of page containing information about the Help to Save scheme - may be absolute or relative, should be resolved in the context of the base web URL (hmrc_base_web_url on Android)
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
   // URL of invitation call to action - may be absolute or relative, should be resolved in the context of the base web URL (hmrc_base_web_url on Android)
   "invitationUrl": "https://www.example.com/about-help-to-save",
+  // URL that will redirect enrolled users to the NS&I Help to Save account homepage - may be absolute or relative, should be resolved in the context of the base web URL (hmrc_base_web_url on Android)
+  "accessAccountUrl": "https://www.example.com/help-to-save/homepage",
   // User-specific Help to Save data
   "user": {
     // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States

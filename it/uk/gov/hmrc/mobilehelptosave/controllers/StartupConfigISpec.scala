@@ -68,11 +68,12 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "enabled").as[Boolean] shouldBe false
     }
 
-    "include infoUrl and invitationUrl obtained from configuration" in withTestServerAndInvitationCleanup(
+    "include infoUrl, invitationUrl and accessAccountUrl obtained from configuration" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure(
           "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
-          "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation"
+          "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
+          "helpToSave.accessAccountUrl" -> "/access-account"
         )
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
@@ -86,6 +87,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       response.status shouldBe 200
       (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
+      (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
     }
   }
 

@@ -36,6 +36,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigBoolean("helpToSave.enabled")
     bindConfigString("helpToSave.infoUrl")
     bindConfigString("helpToSave.invitationUrl")
+    bindConfigString("helpToSave.accessAccountUrl")
     bindConfigInt("helpToSave.dailyInvitationCap")
 
     bindBaseUrl("help-to-save")

@@ -22,6 +22,7 @@ case class StartupResponse(
   enabled: Boolean,
   infoUrl: String,
   invitationUrl: String,
+  accessAccountUrl: String,
   user: Option[UserDetails]
 )
 

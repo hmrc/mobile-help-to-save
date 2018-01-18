@@ -31,7 +31,8 @@ class StartupController @Inject() (
   authorisedWithInternalAuthId: AuthorisedWithInternalAuthId,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String,
-  @Named("helpToSave.invitationUrl") helpToSaveInvitationUrl: String
+  @Named("helpToSave.invitationUrl") helpToSaveInvitationUrl: String,
+  @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
 ) extends BaseController {
 
   val startup: Action[AnyContent] = authorisedWithInternalAuthId.async { implicit request =>
@@ -40,6 +41,7 @@ class StartupController @Inject() (
         enabled = helpToSaveEnabled,
         infoUrl = helpToSaveInfoUrl,
         invitationUrl = helpToSaveInvitationUrl,
+        accessAccountUrl = helpToSaveAccessAccountUrl,
         user = user
       )))
     }
