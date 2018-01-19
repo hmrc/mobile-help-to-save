@@ -56,6 +56,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         new AlwaysAuthorisedWithInternalAuthId(internalAuthId),
         helpToSaveEnabled = true,
         "",
+        "",
         "")
 
       status(controller.startup(FakeRequest())) shouldBe 200
@@ -68,6 +69,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         mockUserService,
         NeverAuthorisedWithInternalAuthId,
         helpToSaveEnabled = true,
+        "",
         "",
         "")
 
