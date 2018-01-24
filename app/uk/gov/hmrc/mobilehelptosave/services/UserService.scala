@@ -35,10 +35,11 @@ class UserService @Inject() (
   surveyService: SurveyService,
   invitationRepository: InvitationRepository,
   clock: Clock,
+  @Named("helpToSave.enabled") enabled: Boolean,
   @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
 ) {
 
-  def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = {
+  def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
     val enrolledFO = helpToSaveConnector.enrolmentStatus()
     val wantsToBeContactedFO = surveyService.userWantsToBeContacted()
     (for {
@@ -49,6 +50,13 @@ class UserService @Inject() (
       UserDetails(state = state)
     }).value
   }
+
+  private def whenEnabled[T](body: => Future[Option[T]]) =
+    if (enabled) {
+      body
+    } else {
+      Future successful None
+    }
 
   private def determineState(internalAuthId: InternalAuthId, enrolled: Boolean, wantsToBeContacted: Boolean)(implicit ec: ExecutionContext): Future[UserState.Value] =
     if (enrolled) {

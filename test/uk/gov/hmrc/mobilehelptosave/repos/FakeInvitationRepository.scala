@@ -51,3 +51,17 @@ class FakeInvitationRepository extends InvitationRepository {
 
   override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = Future successful Seq.empty
 }
+
+object ShouldNotBeCalledInvitationRepository extends InvitationRepository {
+  private def dontCallMe() = Future failed new RuntimeException("InvitationRepository should not be called in this situation")
+
+  override def findById(id: InternalAuthId, readPreference: ReadPreference)(implicit ec: ExecutionContext): Future[Option[Invitation]] = dontCallMe()
+
+  override def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int] = dontCallMe()
+
+  override def insert(entity: Invitation)(implicit ec: ExecutionContext): Future[WriteResult] = dontCallMe()
+
+  override def removeById(id: InternalAuthId, writeConcern: WriteConcern)(implicit ec: ExecutionContext): Future[WriteResult] = dontCallMe()
+
+  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = dontCallMe()
+}
