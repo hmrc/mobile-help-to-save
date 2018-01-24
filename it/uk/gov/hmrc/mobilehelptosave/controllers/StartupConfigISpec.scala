@@ -52,7 +52,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "enabled").as[Boolean] shouldBe true
     }
 
-    "return enabled=false when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
+    "return enabled=false and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> false)
         .build()) { (app: Application, portNumber: PortNumber) =>
@@ -66,6 +66,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "enabled").as[Boolean] shouldBe false
+
+      HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
     }
 
     "include infoUrl, invitationUrl and accessAccountUrl obtained from configuration" in withTestServerAndInvitationCleanup(

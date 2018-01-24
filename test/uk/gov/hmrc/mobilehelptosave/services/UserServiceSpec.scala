@@ -25,7 +25,7 @@ import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
-import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository}
+import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository, ShouldNotBeCalledInvitationRepository}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,12 +39,26 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   private val fixedClock = new FixedFakeClock(DateTime.parse("2017-11-22T10:20:30"))
 
   "userDetails" should {
+    "return None and not call the connector when Help to Save is not enabled" in {
+      val service = new UserService(
+        shouldNotBeCalledHelpToSaveConnector,
+        shouldNotBeCalledSurveyService,
+        ShouldNotBeCalledInvitationRepository,
+        fixedClock,
+        enabled = false,
+        dailyInvitationCap = 1000
+      )
+
+      await(service.userDetails(internalAuthId)) shouldBe None
+    }
+
     "return state=Enrolled when the current user is enrolled in Help to Save" in {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
         fakeSurveyService(wantsToBeContacted = Some(false)),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -58,6 +72,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -71,6 +86,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(false)),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -85,6 +101,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         invitationRepo,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -100,6 +117,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -116,6 +134,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         stubRepo,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -147,6 +166,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         invitationRepo,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 3
       )
 
@@ -166,6 +186,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         invitationRepo,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 3
       )
 
@@ -188,6 +209,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         invitationRepo,
         clock,
+        enabled = true,
         dailyInvitationCap = 3
       )
 
@@ -209,6 +231,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         mockRepo,
         clock,
+        enabled = true,
         dailyInvitationCap = 3
       )
 
@@ -247,6 +270,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(true)),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -261,6 +285,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = Some(false)),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -273,6 +298,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         fakeSurveyService(wantsToBeContacted = None),
         new FakeInvitationRepository,
         fixedClock,
+        enabled = true,
         dailyInvitationCap = 1000
       )
 
@@ -287,6 +313,14 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
   private def fakeSurveyService(wantsToBeContacted: Option[Boolean]) = new SurveyService {
     override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = Future successful wantsToBeContacted
+  }
+
+  private val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
+    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = Future failed new RuntimeException("HelpToSaveConnector should not be called in this situation")
+  }
+
+  private val shouldNotBeCalledSurveyService = new SurveyService {
+    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = Future failed new RuntimeException("SurveyService should not be called in this situation")
   }
 
   // disable implicit

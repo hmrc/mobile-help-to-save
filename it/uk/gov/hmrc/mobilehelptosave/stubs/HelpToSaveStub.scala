@@ -22,6 +22,9 @@ object HelpToSaveStub {
   def currentUserIsEnrolled(): Unit = enrolmentStatusIs(true)
   def currentUserIsNotEnrolled(): Unit = enrolmentStatusIs(false)
 
+  def enrolmentStatusShouldNotHaveBeenCalled(): Unit =
+    verify(0, getRequestedFor(urlPathEqualTo("/help-to-save/enrolment-status")))
+
   def enrolmentStatusReturnsInternalServerError(): Unit =
     stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
       .willReturn(aResponse()
