@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
@@ -52,7 +53,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "enabled").as[Boolean] shouldBe true
     }
 
-    "return enabled=false and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
+    "return enabled=false, omit all other fields from the response and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> false)
         .build()) { (app: Application, portNumber: PortNumber) =>
@@ -66,6 +67,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "enabled").as[Boolean] shouldBe false
+      response.json.as[JsObject] - "enabled" shouldBe Json.obj()
 
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
     }

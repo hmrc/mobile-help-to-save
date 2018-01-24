@@ -20,10 +20,12 @@ import javax.inject.{Inject, Named, Singleton}
 
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.mobilehelptosave.domain.StartupResponse
+import uk.gov.hmrc.mobilehelptosave.domain.{DisabledStartupResponse, EnabledStartupResponse}
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+
+import scala.concurrent.Future
 
 @Singleton()
 class StartupController @Inject() (
@@ -36,15 +38,20 @@ class StartupController @Inject() (
 ) extends BaseController {
 
   val startup: Action[AnyContent] = authorisedWithInternalAuthId.async { implicit request =>
-    userService.userDetails(request.internalAuthId).map { user =>
-      Ok(Json.toJson(StartupResponse(
-        enabled = helpToSaveEnabled,
-        infoUrl = helpToSaveInfoUrl,
-        invitationUrl = helpToSaveInvitationUrl,
-        accessAccountUrl = helpToSaveAccessAccountUrl,
-        user = user
-      )))
+    val responseF = if (helpToSaveEnabled) {
+      userService.userDetails(request.internalAuthId).map { user =>
+        EnabledStartupResponse(
+          infoUrl = helpToSaveInfoUrl,
+          invitationUrl = helpToSaveInvitationUrl,
+          accessAccountUrl = helpToSaveAccessAccountUrl,
+          user = user
+        )
+      }
+    } else {
+      Future successful DisabledStartupResponse
     }
+
+    responseF.map(response => Ok(Json.toJson(response)))
   }
 
 }

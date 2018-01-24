@@ -18,8 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpec}
+import play.api.libs.json.JsObject
 import play.api.mvc.{Request, Result, Results}
-import play.api.test.Helpers.status
+import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, UserDetails, UserState}
@@ -60,6 +61,53 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         "")
 
       status(controller.startup(FakeRequest())) shouldBe 200
+    }
+
+    "include URLs in response when helpToSaveEnabled = true" in {
+      val internalAuthId = InternalAuthId("some-internal-auth-id")
+
+      val mockUserService = mock[UserService]
+
+      (mockUserService.userDetails(_: InternalAuthId)(_: HeaderCarrier, _ :ExecutionContext))
+        .expects(internalAuthId, *, *)
+        .returning(Future successful Some(UserDetails(UserState.Invited)))
+
+      val controller = new StartupController(
+        mockUserService,
+        new AlwaysAuthorisedWithInternalAuthId(internalAuthId),
+        helpToSaveEnabled = true,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      val resultF = controller.startup(FakeRequest())
+      status(resultF) shouldBe 200
+      val jsonBody = contentAsJson(resultF)
+      (jsonBody \ "infoUrl").as[String] shouldBe "/info"
+      (jsonBody \ "invitationUrl").as[String] shouldBe "/invitation"
+      (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
+    }
+
+    "omit URLs from response when helpToSaveEnabled = false" in {
+      val internalAuthId = InternalAuthId("some-internal-auth-id")
+
+      val mockUserService = mock[UserService]
+
+      val controller = new StartupController(
+        mockUserService,
+        new AlwaysAuthorisedWithInternalAuthId(internalAuthId),
+        helpToSaveEnabled = false,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      val resultF = controller.startup(FakeRequest())
+      status(resultF) shouldBe 200
+      val jsonBody = contentAsJson(resultF)
+      val jsonKeys = jsonBody.as[JsObject].keys
+      jsonKeys should not contain "infoUrl"
+      jsonKeys should not contain "invitationUrl"
+      jsonKeys should not contain "accessAccountUrl"
     }
 
     "check permissions using AuthorisedWithInternalAuthId" in {
