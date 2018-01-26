@@ -25,6 +25,7 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.metrics.MobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,6 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserService @Inject() (
   helpToSaveConnector: HelpToSaveConnector,
   surveyService: SurveyService,
+  metrics: MobileHelpToSaveMetrics,
   invitationRepository: InvitationRepository,
   clock: Clock,
   @Named("helpToSave.enabled") enabled: Boolean,
@@ -80,7 +82,10 @@ class UserService @Inject() (
             Future.successful(UserState.NotEnrolled)
           } else {
             invitationRepository.insert(Invitation(internalAuthId, clock.now()))
-              .map(_ => UserState.InvitedFirstTime)
+              .map { _ =>
+                metrics.invitationCounter.inc()
+                UserState.InvitedFirstTime
+              }
               .recover {
                 case e: DatabaseException if invitationRepository.isDuplicateKey(e) =>
                   UserState.Invited

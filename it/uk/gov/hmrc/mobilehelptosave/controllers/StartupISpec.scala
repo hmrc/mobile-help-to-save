@@ -72,6 +72,27 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
       (response2.json \ "user" \ "state").asOpt[String] shouldBe Some("Invited")
     }
 
+    "integrate with the metrics returned by /admin/metrics" in {
+      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserWantsToBeContacted()
+
+      def invitationCountMetric(): Integer = {
+        val metricsResponse = await(wsUrl("/admin/metrics").get())
+        (metricsResponse.json \ "counters" \ "invitation" \ "count").as[Int]
+      }
+
+      val invitationCountBefore = invitationCountMetric()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
+
+      val invitationCountAfter = invitationCountMetric()
+
+      (invitationCountAfter - invitationCountBefore) shouldBe 1
+    }
+
     "omit user state if call to help-to-save fails" in {
       AuthStub.userIsLoggedInWithInternalId(internalAuthId)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
