@@ -25,6 +25,7 @@ import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, ShouldNotUpdateInvitationMetrics}
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository, ShouldNotBeCalledInvitationRepository}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -43,6 +44,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         shouldNotBeCalledHelpToSaveConnector,
         shouldNotBeCalledSurveyService,
+        ShouldNotUpdateInvitationMetrics,
         ShouldNotBeCalledInvitationRepository,
         fixedClock,
         enabled = false,
@@ -56,6 +58,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
         fakeSurveyService(wantsToBeContacted = Some(false)),
+        ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
@@ -70,6 +73,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
@@ -84,6 +88,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(false)),
+        ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
@@ -94,11 +99,15 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       user.state shouldBe UserState.NotEnrolled
     }
 
-    "return state=InvitedFirstTime and store the time of the invitation if the user is not enrolled and said they wanted to be contacted in the survey" in {
+    "return state=InvitedFirstTime, store the time of the invitation and increment the counter " +
+    "if the user is not enrolled and said they wanted to be contacted in the survey" in {
+      val metrics = FakeMobileHelpToSaveMetrics()
+
       val invitationRepo = new FakeInvitationRepository
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        metrics,
         invitationRepo,
         fixedClock,
         enabled = true,
@@ -109,12 +118,17 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       user.state shouldBe UserState.InvitedFirstTime
 
       await(invitationRepo.findById(internalAuthId)).value.created shouldBe fixedClock.now()
+
+      metrics.invitationCounter.getCount shouldBe 1
     }
 
     "change from InvitedFirstTime to Invited the second time it is checked (but retain the same time)" in {
+      val metrics = FakeMobileHelpToSaveMetrics()
+
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        metrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
@@ -124,6 +138,8 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       await(service.userDetails(internalAuthId)).value.state shouldBe UserState.InvitedFirstTime
       await(service.userDetails(internalAuthId)).value.state shouldBe UserState.Invited
       await(service.userDetails(internalAuthId)).value.state shouldBe UserState.Invited
+
+      metrics.invitationCounter.getCount shouldBe 1
     }
 
     "return state=Invited in the unlikely event a not enrolled user accesses the system from two devices at almost exactly the same time" in {
@@ -132,6 +148,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        ShouldNotUpdateInvitationMetrics,
         stubRepo,
         fixedClock,
         enabled = true,
@@ -160,10 +177,13 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     }
 
     "not change state from NotEnrolled to InvitedFirstTime when the daily cap has been reached" in {
+      val metrics = FakeMobileHelpToSaveMetrics()
+
       val invitationRepo = new FakeInvitationRepository
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        metrics,
         invitationRepo,
         fixedClock,
         enabled = true,
@@ -177,13 +197,18 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       await(service.userDetails(capExceededInternalAuthId)).value.state shouldBe UserState.NotEnrolled
 
       await(invitationRepo.findById(capExceededInternalAuthId)) shouldBe None
+
+      metrics.invitationCounter.getCount shouldBe 3
     }
 
     "continue to return Invited for already-invited users even when the cap has been reached"  in {
+      val metrics = FakeMobileHelpToSaveMetrics()
+
       val invitationRepo = new FakeInvitationRepository
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        metrics,
         invitationRepo,
         fixedClock,
         enabled = true,
@@ -199,14 +224,19 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
       // check an already-invited user's status again
       await(service.userDetails(InternalAuthId(successfullyInvitedInternalAuthid))).value.state shouldBe UserState.Invited
+
+      metrics.invitationCounter.getCount shouldBe 3
     }
 
     "only count invitations made today towards the cap" in {
+      val metrics = FakeMobileHelpToSaveMetrics()
+
       val clock = new VariableFakeClock(DateTime.parse("2017-11-22T10:20:30"))
       val invitationRepo = new FakeInvitationRepository
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        metrics,
         invitationRepo,
         clock,
         enabled = true,
@@ -221,6 +251,8 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
       clock.time = clock.time.plusDays(1)
       await(service.userDetails(capExceededInternalAuthId)).value.state shouldBe UserState.InvitedFirstTime
+
+      metrics.invitationCounter.getCount shouldBe 4
     }
 
     "use UTC timezone when counting invitations made today for the cap" in {
@@ -229,6 +261,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        FakeMobileHelpToSaveMetrics(),
         mockRepo,
         clock,
         enabled = true,
@@ -265,9 +298,12 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     }
 
     "return state=InvitedFirstTime even when a different user has already been invited" in {
+      val metrics = FakeMobileHelpToSaveMetrics()
+
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = Some(true)),
+        metrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
@@ -277,12 +313,15 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       await(service.userDetails(internalAuthId)).value.state shouldBe UserState.InvitedFirstTime
       val otherInternalAuthId = InternalAuthId("other-test-internal-auth-id")
       await(service.userDetails(otherInternalAuthId)).value.state shouldBe UserState.InvitedFirstTime
+
+      metrics.invitationCounter.getCount shouldBe 2
     }
 
     "return no details when the HelpToSaveConnector returns None" in {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = None),
         fakeSurveyService(wantsToBeContacted = Some(false)),
+        ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
@@ -296,6 +335,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val service = new UserService(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
         fakeSurveyService(wantsToBeContacted = None),
+        ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         fixedClock,
         enabled = true,
