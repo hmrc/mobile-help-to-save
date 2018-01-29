@@ -27,6 +27,8 @@ import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.config.ServicesConfig
 
+import scala.util.control.NonFatal
+
 class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule with ServicesConfig {
 
   override protected lazy val mode: Mode = environment.mode
@@ -47,6 +49,20 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   }
 
   private def bindConfigBoolean(path: String): Unit = {
+    Logger.info(s"""Boolean "$path" string value is "${configuration.getString(path)}" """)
+
+    try {
+      Logger.info(s"""Boolean "$path" boolean value is "${configuration.getBoolean(path)}" """)
+    } catch {
+      case NonFatal(e) => Logger.info("configuration.getBoolean", e)
+    }
+
+    try {
+      Logger.info(s"""Boolean "$path" underlying boolean value is "${configuration.underlying.getBoolean(path)}" """)
+    } catch {
+      case NonFatal(e) => Logger.info("configuration.getBoolean", e)
+    }
+
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getBoolean(path))
   }
 
