@@ -16,6 +16,10 @@ Response format:
 {
   // Feature toggle for Help to Save app functionality:
   "enabled": true,
+  // Fine grained feature toggles
+  "balanceEnabled": true,
+  "paidInThisMonthEnabled": true,
+  "firstBonusEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
   // URL of invitation call to action
@@ -25,7 +29,14 @@ Response format:
   // User-specific Help to Save data
   "user": {
     // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
-    "state": "NotEnrolled"
+    "state": "Enrolled",
+    // Users account information
+    "account": {
+      "balance": 150.00,
+      "paidInThisMonth": 50.00,
+      // Bonus after two years
+      "firstBonus": 75.00
+    }
   }
 }
 ```
