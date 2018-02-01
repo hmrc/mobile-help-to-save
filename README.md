@@ -26,6 +26,17 @@ Response format:
   "user": {
     // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
     "state": "NotEnrolled"
+  },
+  // App based feature toggles
+  "balanceEnabled": true,
+  "paidInThisMonthEnabled": true,
+  "firstBonusEnabled": true,
+  // Account-specific Help to Save data
+  "account": {
+    "balance": 100.50,
+    "paidInThisMonth": 50.25,
+    // The second year bonus
+    "firstBonus": 50.25
   }
 }
 ```
