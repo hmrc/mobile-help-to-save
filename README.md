@@ -28,14 +28,20 @@ Response format:
   "accessAccountUrl": "/help-to-save/access-account",
   // User-specific Help to Save data
   "user": {
+    // users name, optional
+    "name": "Beth Planner",
     // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
     "state": "Enrolled",
-    // Users account information
     "account": {
-      "balance": 150.00,
-      "paidInThisMonth": 50.00,
-      // Bonus after two years
-      "firstBonus": 75.00
+      "balance": 150,
+      // Amount user has already paid in this month
+      "paidInThisMonth": 40,
+      // Headroom left to save, to achieve any further bonus
+      "canPayInThisMonth": 10,
+      // The amount calculated that the user will receive, two years after they have started the account
+      "predictedFirstBonus": 75,
+      // Should be constant at £50, but having a property means we are protected from further changes
+      "maximumPaidInThisMonth": 50
     }
   }
 }
