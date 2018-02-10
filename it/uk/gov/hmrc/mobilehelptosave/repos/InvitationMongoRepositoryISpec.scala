@@ -16,10 +16,24 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
+import java.util.UUID
+
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class InvitationMongoRepositoryISpec extends InvitationRepositorySpec with GuiceOneAppPerSuite {
 
-  override val repo: InvitationRepository = app.injector.instanceOf[InvitationRepository]
+  override implicit lazy val app: Application = new GuiceApplicationBuilder()
+    .configure("mongodb.collectionName.suffix" -> s"-test-${UUID.randomUUID()}")
+    .build()
 
+  override val repo: InvitationMongoRepository = app.injector.instanceOf[InvitationMongoRepository]
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    await(repo.collection.drop(failIfNotFound = false))
+  }
 }

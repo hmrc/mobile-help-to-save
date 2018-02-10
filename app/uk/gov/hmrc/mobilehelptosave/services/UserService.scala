@@ -38,16 +38,22 @@ class UserService @Inject() (
   invitationRepository: InvitationRepository,
   clock: Clock,
   @Named("helpToSave.enabled") enabled: Boolean,
-  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
+  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int,
+  @Named("helpToSave.invitationFilters.survey") surveyInvitationFilter: Boolean
 ) {
 
   def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
     val enrolledFO = helpToSaveConnector.enrolmentStatus()
-    val wantsToBeContactedFO = surveyService.userWantsToBeContacted()
+
+    val surveyAllowsInvitationFO = if (surveyInvitationFilter)
+      surveyService.userWantsToBeContacted()
+    else
+      Future successful Some(true)
+
     (for {
       enrolled <- OptionT(enrolledFO)
-      wantsToBeContacted <- OptionT(wantsToBeContactedFO)
-      state <- OptionT.liftF(determineState(internalAuthId, enrolled, wantsToBeContacted))
+      surveyAllowsInvitation <- OptionT(surveyAllowsInvitationFO)
+      state <- OptionT.liftF(determineState(internalAuthId, enrolled, surveyAllowsInvitation))
     } yield {
       UserDetails(state = state)
     }).value

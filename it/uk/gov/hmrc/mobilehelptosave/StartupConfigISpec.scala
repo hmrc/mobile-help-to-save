@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.controllers
+package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
@@ -93,6 +93,25 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
       (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
     }
+
+    "invite user regardless of survey response when helpToSave.invitationFilters.survey=false" in withTestServerAndInvitationCleanup(
+      wireMockApplicationBuilder()
+        .configure(
+          InvitationConfig.Enabled,
+          "helpToSave.invitationFilters.survey" -> "false"
+        ).build()) { (app: Application, portNumber: PortNumber) =>
+      implicit val implicitPortNumber: PortNumber = portNumber
+      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
+    }
+
   }
 
   private def withTestServerAndInvitationCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =

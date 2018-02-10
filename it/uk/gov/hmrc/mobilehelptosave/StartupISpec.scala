@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.controllers
+package uk.gov.hmrc.mobilehelptosave
 
 import java.util.UUID
 
@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteWsClient with BeforeAndAfterEach {
 
   override implicit lazy val app: Application = wireMockApplicationBuilder()
-    .configure("helpToSave.dailyInvitationCap" -> 1000)
+    .configure(InvitationConfig.Enabled)
     .build()
 
   private var internalAuthId: InternalAuthId = _

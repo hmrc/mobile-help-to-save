@@ -20,6 +20,7 @@ import javax.inject.Singleton
 
 import com.google.inject.{ImplementedBy, Inject}
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.ReadPreference
@@ -45,13 +46,15 @@ trait InvitationRepository {
 }
 
 @Singleton
-class InvitationMongoRepository @Inject()(mongo: ReactiveMongoComponent)
-  extends ReactiveRepository[Invitation, InternalAuthId](
-    collectionName = "invitations",
-    mongo = mongo.mongoConnector.db,
-    domainFormat = InvitationMongoFormat.mongoFormat,
-    idFormat = InternalAuthId.format
-  ) with InvitationRepository {
+class InvitationMongoRepository @Inject()(
+  mongo: ReactiveMongoComponent,
+  configuration: Configuration
+) extends ReactiveRepository[Invitation, InternalAuthId](
+  collectionName = "invitations" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
+  mongo = mongo.mongoConnector.db,
+  domainFormat = InvitationMongoFormat.mongoFormat,
+  idFormat = InternalAuthId.format
+) with InvitationRepository {
 
   override def indexes: Seq[Index] = Seq(
     Index(
