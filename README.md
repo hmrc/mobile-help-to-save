@@ -42,8 +42,8 @@ Response format:
       "predictedFirstBonus": 75,
       // Should be constant at £50, but having a property means we are protected from further changes
       "maximumPaidInThisMonth": 50,
-      // The date from which the first bonus will be paid, ISO-8601
-      "firstBonusFromDate": "2020-01-16T00:00:00+00:00"
+      // The date from which the first bonus will be paid, ISO-8601 date
+      "firstBonusFromDate": "2020-01-16"
     }
   }
 }
