@@ -34,16 +34,22 @@ Response format:
     "state": "Enrolled",
     "account": {
       "balance": 150,
-      // Amount user has already paid in this month
-      "paidInThisMonth": 40,
+      // Amount user has already paid in this month, usually an integer but it's possible to pay in pounds & pence by bank transfer
+      "paidInThisMonth": 40.12,
       // Headroom left to save, to achieve any further bonus
-      "canPayInThisMonth": 10,
-      // The amount calculated that the user will receive, two years after they have started the account
-      "predictedFirstBonus": 75,
+      "canPayInThisMonth": 9.88,
       // Should be constant at £50, but having a property means we are protected from further changes
       "maximumPaidInThisMonth": 50,
-      // The date from which the first bonus will be paid, ISO-8601 date
-      "firstBonusFromDate": "2020-01-16"
+      "bonusTerms": [
+        {
+          // The amount calculated that the user will receive, two years after they have started the account
+          "bonusEstimate": 75,
+          "bonusPaid": 0,
+          // The date from which the first bonus will be paid, ISO-8601 date
+          "bonusPaidOnOrAfterDate": "2020-01-01"
+        }
+        // there may optionally be another bonusTerm object here for the second bonus
+      ]
     }
   }
 }
