@@ -52,7 +52,7 @@ class SurveyServiceImpl @Inject() (
   private val noAnswer = "No"
 
   override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
-    OptionT(nativeAppWidgetConnector.getAnswers(helpToSaveCampaignId, wantsToBeContactedQuestionKey)).map { answers: Seq[String] =>
+    OptionT(nativeAppWidgetConnector.answers(helpToSaveCampaignId, wantsToBeContactedQuestionKey)).map { answers: Seq[String] =>
       answers
         .filterNot(answer => answer.equalsIgnoreCase(yesAnswer) || answer.equalsIgnoreCase(noAnswer))
         .foreach(answer => logger.warn(s"""Unknown survey answer "$answer" found"""))

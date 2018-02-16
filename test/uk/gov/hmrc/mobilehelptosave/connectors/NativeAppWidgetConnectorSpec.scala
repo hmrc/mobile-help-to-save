@@ -20,28 +20,19 @@ import java.net.{ConnectException, URL}
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import org.slf4j.Logger
-import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, ThrowableWithMessageContaining}
+import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFactory with OneInstancePerTest with ThrowableWithMessageContaining with FutureAwaits with DefaultAwaitTimeout {
-
-  // when https://github.com/paulbutcher/ScalaMock/issues/39 is fixed we will be able to simplify this code by mocking LoggerLike directly (instead of slf4j.Logger)
-  private val slf4jLoggerStub = stub[Logger]
-  (slf4jLoggerStub.isWarnEnabled: () => Boolean).when().returning(true)
-  private val logger = new LoggerLike {
-    override val logger: Logger = slf4jLoggerStub
-  }
+class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining with FutureAwaits with DefaultAwaitTimeout {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "getAnswers" should {
+  "answers" should {
     "return the answers when native-app-widget returns 200 OK" in {
       val nativeAppWidgetAnswersResponse = HttpResponse(
         200,
@@ -70,7 +61,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), fakeHttp)
 
-      await(connector.getAnswers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Some(Seq("Yes", "No"))
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Some(Seq("Yes", "No"))
     }
 
     "return None when there is an error connecting to native-app-widget" in {
@@ -82,7 +73,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), connectionRefusedHttp)
 
-      await(connector.getAnswers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get answers from native-app-widget service""",
@@ -97,7 +88,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), error4xxHttp)
 
-      await(connector.getAnswers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get answers from native-app-widget service""",
@@ -112,7 +103,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), error5xxHttp)
 
-      await(connector.getAnswers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get answers from native-app-widget service""",

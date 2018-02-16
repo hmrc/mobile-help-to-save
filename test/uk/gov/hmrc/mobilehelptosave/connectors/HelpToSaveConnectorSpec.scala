@@ -20,23 +20,14 @@ import java.net.{ConnectException, URL}
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
-import org.slf4j.Logger
-import play.api.LoggerLike
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, ThrowableWithMessageContaining}
+import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest with ThrowableWithMessageContaining {
-
-  // when https://github.com/paulbutcher/ScalaMock/issues/39 is fixed we will be able to simplify this code by mocking LoggerLike directly (instead of slf4j.Logger)
-  private val slf4jLoggerStub = stub[Logger]
-  (slf4jLoggerStub.isWarnEnabled: () => Boolean).when().returning(true)
-  private val logger = new LoggerLike {
-    override val logger: Logger = slf4jLoggerStub
-  }
+class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 

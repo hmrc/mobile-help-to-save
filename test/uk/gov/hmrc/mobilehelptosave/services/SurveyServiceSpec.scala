@@ -18,27 +18,19 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import org.slf4j.Logger
-import play.api.LoggerLike
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.NativeAppWidgetConnector
+import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class SurveyServiceSpec extends
   WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout with
-  MockFactory with OneInstancePerTest {
+  MockFactory with OneInstancePerTest with LoggerStub {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  // when https://github.com/paulbutcher/ScalaMock/issues/39 is fixed we will be able to simplify this code by mocking LoggerLike directly (instead of slf4j.Logger)
-  private val slf4jLoggerStub = stub[Logger]
-  (slf4jLoggerStub.isWarnEnabled: () => Boolean).when().returning(true)
-  private val logger = new LoggerLike {
-    override val logger: Logger = slf4jLoggerStub
-  }
 
   "userWantsToBeContacted" should {
 
@@ -91,7 +83,7 @@ class SurveyServiceSpec extends
   }
 
   private def fakeNativeAppWidgetConnector(answersForHtsQ3: Option[Seq[String]]) = new NativeAppWidgetConnector {
-    override def getAnswers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
+    override def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
       if (campaignId == "HELP_TO_SAVE_1" && questionKey == "question_3")
         Future successful answersForHtsQ3
       else
