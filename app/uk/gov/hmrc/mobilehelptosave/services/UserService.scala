@@ -61,15 +61,10 @@ class UserService @Inject() (
     if (enrolled) {
       Future successful Some(UserState.Enrolled)
     } else {
-      invitationEligibilityService.userIsEligibleToBeInvited().flatMap { eligibleToBeInvitedO: Option[Boolean] =>
-        eligibleToBeInvitedO match {
-          case Some(eligibleToBeInvited) =>
-            if (eligibleToBeInvited) determineInvitedState(internalAuthId).map(Some.apply)
-            else Future successful Some(UserState.NotEnrolled)
-          case None =>
-            Future successful None
-        }
-      }
+      OptionT(invitationEligibilityService.userIsEligibleToBeInvited()).flatMap { eligibleToBeInvited =>
+        if (eligibleToBeInvited) OptionT.liftF(determineInvitedState(internalAuthId))
+        else OptionT.pure(UserState.NotEnrolled)
+      }.value
     }
 
   private def determineInvitedState(internalAuthId: InternalAuthId)(implicit ec: ExecutionContext): Future[UserState.Value] =
