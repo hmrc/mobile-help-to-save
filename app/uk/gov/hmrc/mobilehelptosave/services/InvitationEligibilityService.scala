@@ -18,7 +18,10 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import javax.inject.{Inject, Singleton}
 
+import cats.data.OptionT
+import cats.instances.future._
 import com.google.inject.ImplementedBy
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.EnabledInvitationFilters
 
@@ -26,20 +29,30 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[InvitationEligibilityServiceImpl])
 trait InvitationEligibilityService {
-  def userIsEligibleToBeInvited()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+  def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
 }
 
 @Singleton
 class InvitationEligibilityServiceImpl @Inject() (
   surveyService: SurveyService,
+  taxCreditsService: TaxCreditsService,
   enabledFilters: EnabledInvitationFilters
 ) extends InvitationEligibilityService {
 
-  override def userIsEligibleToBeInvited()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
-    if (enabledFilters.surveyInvitationFilter)
-      surveyService.userWantsToBeContacted()
-    else
-      Future successful Some(true)
-  }
+  override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
+    val trueFO = Future successful Some(true)
 
+    val surveyFO = if (enabledFilters.surveyInvitationFilter) surveyService.userWantsToBeContacted()
+    else trueFO
+
+    val wtcFO = if (enabledFilters.workingTaxCreditsInvitationFilter) taxCreditsService.hasRecentWtcPayments(nino)
+    else trueFO
+
+    (for {
+      survey <- OptionT(surveyFO)
+      wtc <- OptionT(wtcFO)
+    } yield {
+      survey && wtc
+    }).value
+  }
 }

@@ -22,8 +22,9 @@ import com.google.inject.ImplementedBy
 import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.internalId
+import uk.gov.hmrc.auth.core.retrieve.{Retrievals, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, AuthorisationException, NoActiveSession}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -31,25 +32,28 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 
 import scala.concurrent.Future
 
-class InternalAuthIdRequest[+A](val internalAuthId: InternalAuthId, request: Request[A]) extends WrappedRequest[A](request)
+class RequestWithIds[+A](val internalAuthId: InternalAuthId, val nino: Nino, request: Request[A]) extends WrappedRequest[A](request)
 
-@ImplementedBy(classOf[AuthorisedWithInternalAuthIdImpl])
-trait AuthorisedWithInternalAuthId extends ActionBuilder[InternalAuthIdRequest] with ActionRefiner[Request, InternalAuthIdRequest]
+@ImplementedBy(classOf[AuthorisedWithIdsImpl])
+trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
 
 @Singleton
-class AuthorisedWithInternalAuthIdImpl @Inject() (authConnector: AuthConnector) extends AuthorisedWithInternalAuthId with Results {
-  override protected def refine[A](request: Request[A]): Future[Either[Result, InternalAuthIdRequest[A]]] = {
+class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends AuthorisedWithIds with Results {
+  override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
-    authConnector.authorise(AuthProviders(GovernmentGateway, Verify), internalId).map {
-      case Some(internalAuthId) =>
-        Right(new InternalAuthIdRequest(InternalAuthId(internalAuthId), request))
-      case None =>
+    authConnector.authorise(AuthProviders(GovernmentGateway, Verify), Retrievals.internalId and Retrievals.nino).map {
+      case Some(internalAuthId) ~ Some(nino) =>
+        Right(new RequestWithIds(InternalAuthId(internalAuthId), Nino(nino), request))
+      case None ~ _ =>
         // <confluence>/display/PE/Retrievals+Reference#RetrievalsReference-internalId states
         // "always defined for Government Gateway and Verify auth providers"
         // and we have specified AuthProviders(GovernmentGateway, Verify) so internalId
         // should always be defined.
         Logger.warn("Internal auth id not found")
         Left(InternalServerError("Internal id not found"))
+      case _ ~ None =>
+        Logger.warn("NINO not found")
+        Left(Forbidden("NINO not found"))
     }.recover {
       case _: NoActiveSession => Left(Unauthorized)
       case _: AuthorisationException => Left(Forbidden)

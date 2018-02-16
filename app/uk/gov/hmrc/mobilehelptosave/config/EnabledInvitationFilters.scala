@@ -20,5 +20,6 @@ import javax.inject.{Inject, Named, Singleton}
 
 @Singleton
 case class EnabledInvitationFilters @Inject() (
-  @Named("helpToSave.invitationFilters.survey") surveyInvitationFilter: Boolean
+  @Named("helpToSave.invitationFilters.survey") surveyInvitationFilter: Boolean,
+  @Named("helpToSave.invitationFilters.workingTaxCredits") workingTaxCreditsInvitationFilter: Boolean
 )

@@ -20,6 +20,7 @@ import java.util.UUID
 
 import org.scalatest.BeforeAndAfterEach
 import play.api.Application
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub}
@@ -36,10 +37,13 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
 
   private var internalAuthId: InternalAuthId = _
 
+  private val generator = new Generator(0)
+  private val nino = generator.nextNino
+
   "GET /mobile-help-to-save/startup" should {
 
     "include user.state" in {
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -49,7 +53,7 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
     }
 
     "return user.state = NotEnrolled when user is not already enrolled and has not indicated that they wanted to be contacted" in {
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -59,7 +63,7 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
     }
 
     "return user.state = InvitedFirstTime and then user.state = Invited when user is not already enrolled and has indicated that they wanted to be contacted" in {
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserWantsToBeContacted()
 
@@ -73,7 +77,7 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
     }
 
     "integrate with the metrics returned by /admin/metrics" in {
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserWantsToBeContacted()
 
@@ -94,7 +98,7 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
     }
 
     "omit user state if call to help-to-save fails" in {
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -107,7 +111,7 @@ class StartupISpec extends UnitSpec with WireMockSupport with OneServerPerSuiteW
     }
 
     "omit user state if call to native-app-widget to get survey answers fails" in {
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.gettingAnswersReturnsInternalServerError()
 

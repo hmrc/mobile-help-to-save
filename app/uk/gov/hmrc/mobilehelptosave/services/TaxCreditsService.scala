@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import cats.data.OptionT
 import cats.instances.future._
+import com.google.inject.ImplementedBy
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,13 +28,19 @@ import uk.gov.hmrc.mobilehelptosave.connectors.TaxCreditsBrokerConnector
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@ImplementedBy(classOf[TaxCreditsServiceImpl])
+trait TaxCreditsService {
+  def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+}
+
 @Singleton
-class TaxCreditsService(
+class TaxCreditsServiceImpl @Inject() (
   logger: LoggerLike,
   taxCreditsBrokerConnector: TaxCreditsBrokerConnector,
-  clock: Clock) {
+  clock: Clock)
+  extends TaxCreditsService {
 
-  def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
+  override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
     OptionT(taxCreditsBrokerConnector.previousPayments(nino)(hc, ec)).map { previousPayments =>
       previousPayments.filter(p => !p.paymentDate.isBefore(clock.now())) foreach(p =>
         logger.warn(s"""Previous payment has date that isn't in the past: "${p.paymentDate}""""))

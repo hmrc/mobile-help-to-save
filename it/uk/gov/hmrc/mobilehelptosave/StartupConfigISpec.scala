@@ -20,6 +20,7 @@ import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSClient
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub}
@@ -35,6 +36,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSupport with WithTestServer {
 
   private val internalAuthId = InternalAuthId("test-internal-auth-id")
+  private val generator = new Generator(0)
+  private val nino = generator.nextNino
 
   "GET /mobile-help-to-save/startup" should {
     "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndInvitationCleanup(
@@ -44,7 +47,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -60,7 +63,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -83,7 +86,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -103,7 +106,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 

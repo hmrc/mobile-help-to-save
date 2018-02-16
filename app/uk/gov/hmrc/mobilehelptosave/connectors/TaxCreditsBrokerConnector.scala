@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 import javax.inject.{Inject, Named, Singleton}
 
+import com.google.inject.ImplementedBy
 import org.joda.time.DateTime
 import play.api.LoggerLike
 import play.api.libs.json._
@@ -28,6 +29,7 @@ import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegments
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@ImplementedBy(classOf[TaxCreditsBrokerConnectorImpl])
 trait TaxCreditsBrokerConnector {
 
   def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[Payment]]]

@@ -30,16 +30,16 @@ import scala.concurrent.Future
 @Singleton()
 class StartupController @Inject() (
   userService: UserService,
-  authorisedWithInternalAuthId: AuthorisedWithInternalAuthId,
+  authorisedWithIds: AuthorisedWithIds,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String,
   @Named("helpToSave.invitationUrl") helpToSaveInvitationUrl: String,
   @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = authorisedWithInternalAuthId.async { implicit request =>
+  val startup: Action[AnyContent] = authorisedWithIds.async { implicit request =>
     val responseF = if (helpToSaveEnabled) {
-      userService.userDetails(request.internalAuthId).map { user =>
+      userService.userDetails(request.internalAuthId, request.nino).map { user =>
         EnabledStartupResponse(
           infoUrl = helpToSaveInfoUrl,
           invitationUrl = helpToSaveInvitationUrl,

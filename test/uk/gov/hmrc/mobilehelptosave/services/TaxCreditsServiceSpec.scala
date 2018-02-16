@@ -96,27 +96,23 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
 
     "previous payments are unknown" should {
       "return None" in {
-        val service = new TaxCreditsService(logger, fakeTaxCreditsBrokerConnector(nino, None), fixedClock)
+        val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, None), fixedClock)
         await(service.hasRecentWtcPayments(nino)) shouldBe None
       }
     }
   }
 
   private def resultForPaymentsShouldBe(payments: Seq[Payment], expectedResult: Boolean): Unit = {
-    val service = new TaxCreditsService(logger, fakeTaxCreditsBrokerConnector(nino, Some(payments)), fixedClock)
+    val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, Some(payments)), fixedClock)
     await(service.hasRecentWtcPayments(nino)) shouldBe Some(expectedResult)
   }
 
   private def fakeTaxCreditsBrokerConnector(expectedNino: Nino, maybePreviousPayments: Option[Seq[Payment]]) = new TaxCreditsBrokerConnector {
     override def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[Payment]]] = {
+      nino shouldBe expectedNino
       hc shouldBe passedHc
       ec shouldBe passedEc
-      Future.successful(if (nino == expectedNino) {
-        maybePreviousPayments
-      }
-      else {
-        None
-      })
+      Future successful maybePreviousPayments
     }
   }
 }

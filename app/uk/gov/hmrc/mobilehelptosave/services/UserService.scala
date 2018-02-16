@@ -22,6 +22,7 @@ import cats.data.OptionT
 import cats.instances.future._
 import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
@@ -41,10 +42,10 @@ class UserService @Inject() (
   @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
 ) {
 
-  def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
+  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
     (for {
       enrolled <- OptionT(helpToSaveConnector.enrolmentStatus())
-      state <- OptionT(determineState(internalAuthId, enrolled))
+      state <- OptionT(determineState(internalAuthId, nino, enrolled))
     } yield {
       UserDetails(state = state)
     }).value
@@ -57,11 +58,11 @@ class UserService @Inject() (
       Future successful None
     }
 
-  private def determineState(internalAuthId: InternalAuthId, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
+  private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
     if (enrolled) {
       Future successful Some(UserState.Enrolled)
     } else {
-      OptionT(invitationEligibilityService.userIsEligibleToBeInvited()).flatMap { eligibleToBeInvited =>
+      OptionT(invitationEligibilityService.userIsEligibleToBeInvited(nino)).flatMap { eligibleToBeInvited =>
         if (eligibleToBeInvited) OptionT.liftF(determineInvitedState(internalAuthId))
         else OptionT.pure(UserState.NotEnrolled)
       }.value
