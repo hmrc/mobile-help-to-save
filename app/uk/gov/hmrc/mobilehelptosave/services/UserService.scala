@@ -32,28 +32,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserService @Inject() (
+  invitationEligibilityService: InvitationEligibilityService,
   helpToSaveConnector: HelpToSaveConnector,
-  surveyService: SurveyService,
   metrics: MobileHelpToSaveMetrics,
   invitationRepository: InvitationRepository,
   clock: Clock,
   @Named("helpToSave.enabled") enabled: Boolean,
-  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int,
-  @Named("helpToSave.invitationFilters.survey") surveyInvitationFilter: Boolean
+  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
 ) {
 
   def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
-    val enrolledFO = helpToSaveConnector.enrolmentStatus()
-
-    val surveyAllowsInvitationFO = if (surveyInvitationFilter)
-      surveyService.userWantsToBeContacted()
-    else
-      Future successful Some(true)
-
     (for {
-      enrolled <- OptionT(enrolledFO)
-      surveyAllowsInvitation <- OptionT(surveyAllowsInvitationFO)
-      state <- OptionT.liftF(determineState(internalAuthId, enrolled, surveyAllowsInvitation))
+      enrolled <- OptionT(helpToSaveConnector.enrolmentStatus())
+      state <- OptionT(determineState(internalAuthId, enrolled))
     } yield {
       UserDetails(state = state)
     }).value
@@ -66,15 +57,18 @@ class UserService @Inject() (
       Future successful None
     }
 
-  private def determineState(internalAuthId: InternalAuthId, enrolled: Boolean, wantsToBeContacted: Boolean)(implicit ec: ExecutionContext): Future[UserState.Value] =
+  private def determineState(internalAuthId: InternalAuthId, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
     if (enrolled) {
-      Future successful UserState.Enrolled
+      Future successful Some(UserState.Enrolled)
     } else {
-      if (wantsToBeContacted) {
-        determineInvitedState(internalAuthId)
-      }
-      else {
-        Future successful UserState.NotEnrolled
+      invitationEligibilityService.userIsEligibleToBeInvited().flatMap { eligibleToBeInvitedO: Option[Boolean] =>
+        eligibleToBeInvitedO match {
+          case Some(eligibleToBeInvited) =>
+            if (eligibleToBeInvited) determineInvitedState(internalAuthId).map(Some.apply)
+            else Future successful Some(UserState.NotEnrolled)
+          case None =>
+            Future successful None
+        }
       }
     }
 
