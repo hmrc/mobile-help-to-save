@@ -21,36 +21,43 @@ import play.api.mvc.Results
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals, ~}
+import uk.gov.hmrc.auth.core.syntax.retrieved._
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, AuthorisationException, NoActiveSession}
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthorisedWithInternalAuthIdSpec extends UnitSpec with MockFactory with Retrievals with Results {
+class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals with Results {
+  private val generator = new Generator(0)
+  private val testNino = generator.nextNino
 
-  "AuthorisedWithInternalAuthId" should {
-    "include the internal auth ID in the request" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Future successful Some("some-internal-auth-id"))
+  "AuthorisedWithIds" should {
+    "include the internal auth ID and NINO in the request" in {
+      val authConnectorStub = authConnectorStubThatWillReturn(Some("some-internal-auth-id"), Some(testNino.value))
 
-      val authorised = new AuthorisedWithInternalAuthIdImpl(authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
 
       var capturedInternalAuthId: Option[InternalAuthId] = None
+      var capturedNino: Option[Nino] = None
       val action = authorised { request =>
         capturedInternalAuthId = Some(request.internalAuthId)
+        capturedNino = Some(request.nino)
         Ok
       }
 
       await(action(FakeRequest())) shouldBe Ok
       capturedInternalAuthId shouldBe Some(InternalAuthId("some-internal-auth-id"))
+      capturedNino shouldBe Some(testNino)
     }
 
     "return 500 when no internal auth ID can be retrieved" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Future successful None)
+      val authConnectorStub = authConnectorStubThatWillReturn(None, Some(testNino.value))
 
-      val authorised = new AuthorisedWithInternalAuthIdImpl(authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
 
       val action = authorised { _ =>
         Ok
@@ -59,10 +66,22 @@ class AuthorisedWithInternalAuthIdSpec extends UnitSpec with MockFactory with Re
       status(action(FakeRequest())) shouldBe 500
     }
 
+    "return 403 when no NINO can be retrieved" in {
+      val authConnectorStub = authConnectorStubThatWillReturn(Some("some-internal-auth-id"), None)
+
+      val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
+
+      val action = authorised { _ =>
+        Ok
+      }
+
+      status(action(FakeRequest())) shouldBe 403
+    }
+
     "return 401 when AuthConnector throws NoActiveSession" in {
       val authConnectorStub = authConnectorStubThatWillReturn(Future failed new NoActiveSession("not logged in") {})
 
-      val authorised = new AuthorisedWithInternalAuthIdImpl(authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
 
       val action = authorised { _ =>
         Ok
@@ -74,7 +93,7 @@ class AuthorisedWithInternalAuthIdSpec extends UnitSpec with MockFactory with Re
     "return 403 when AuthConnector throws any other AuthorisationException" in {
       val authConnectorStub = authConnectorStubThatWillReturn(Future failed new AuthorisationException("not authorised") {})
 
-      val authorised = new AuthorisedWithInternalAuthIdImpl(authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
 
       val action = authorised { _ =>
         Ok
@@ -84,11 +103,14 @@ class AuthorisedWithInternalAuthIdSpec extends UnitSpec with MockFactory with Re
     }
   }
 
-  private def authConnectorStubThatWillReturn(futureInternalAuthId: Future[Option[String]]): AuthConnector = {
+  private def authConnectorStubThatWillReturn(internalAuthId: Option[String], nino: Option[String]): AuthConnector =
+    authConnectorStubThatWillReturn(Future successful (internalAuthId and nino))
+
+  private def authConnectorStubThatWillReturn(futureIds: Future[Option[String] ~ Option[String]]): AuthConnector = {
     val authConnectorStub = stub[AuthConnector]
-    (authConnectorStub.authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
-      .when(AuthProviders(GovernmentGateway, Verify), internalId, *, *)
-      .returns(futureInternalAuthId)
+    (authConnectorStub.authorise[Option[String] ~ Option[String]](_: Predicate, _: Retrieval[Option[String] ~ Option[String]])(_: HeaderCarrier, _: ExecutionContext))
+      .when(AuthProviders(GovernmentGateway, Verify), internalId and nino, *, *)
+      .returns(futureIds)
     authConnectorStub
   }
 

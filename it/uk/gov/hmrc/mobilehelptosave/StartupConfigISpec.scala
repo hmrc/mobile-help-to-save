@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.controllers
+package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSClient
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub}
@@ -35,6 +36,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSupport with WithTestServer {
 
   private val internalAuthId = InternalAuthId("test-internal-auth-id")
+  private val generator = new Generator(0)
+  private val nino = generator.nextNino
 
   "GET /mobile-help-to-save/startup" should {
     "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndInvitationCleanup(
@@ -44,7 +47,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -60,7 +63,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -83,7 +86,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedInWithInternalId(internalAuthId)
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
@@ -93,6 +96,25 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
       (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
     }
+
+    "invite user regardless of survey response when helpToSave.invitationFilters.survey=false" in withTestServerAndInvitationCleanup(
+      wireMockApplicationBuilder()
+        .configure(
+          InvitationConfig.Enabled,
+          "helpToSave.invitationFilters.survey" -> "false"
+        ).build()) { (app: Application, portNumber: PortNumber) =>
+      implicit val implicitPortNumber: PortNumber = portNumber
+      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
+    }
+
   }
 
   private def withTestServerAndInvitationCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =

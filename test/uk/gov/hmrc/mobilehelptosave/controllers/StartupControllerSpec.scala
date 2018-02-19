@@ -22,6 +22,7 @@ import play.api.libs.json.JsObject
 import play.api.mvc.{Request, Result, Results}
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, UserDetails, UserState}
 import uk.gov.hmrc.mobilehelptosave.services.UserService
@@ -32,29 +33,32 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private class AlwaysAuthorisedWithInternalAuthId(id: InternalAuthId) extends AuthorisedWithInternalAuthId {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, InternalAuthIdRequest[A]]] =
-      Future successful Right(new InternalAuthIdRequest(id, request))
+  private val generator = new Generator(0)
+  private val nino = generator.nextNino
+
+  private class AlwaysAuthorisedWithIds(id: InternalAuthId, nino: Nino) extends AuthorisedWithIds {
+    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
+      Future successful Right(new RequestWithIds(id, nino, request))
   }
 
-  private object NeverAuthorisedWithInternalAuthId extends AuthorisedWithInternalAuthId with Results {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, InternalAuthIdRequest[A]]] =
+  private object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {
+    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
       Future successful Left(Forbidden)
   }
 
   "startup" should {
-    "pass internalAuthId obtained from auth into userService" in {
+    "pass internalAuthId and NINO obtained from auth into userService" in {
       val internalAuthId = InternalAuthId("some-internal-auth-id")
 
       val mockUserService = mock[UserService]
 
-      (mockUserService.userDetails(_: InternalAuthId)(_: HeaderCarrier, _ :ExecutionContext))
-        .expects(internalAuthId, *, *)
+      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _ :ExecutionContext))
+        .expects(internalAuthId, nino, *, *)
         .returning(Future successful Some(UserDetails(UserState.Invited)))
 
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithInternalAuthId(internalAuthId),
+        new AlwaysAuthorisedWithIds(internalAuthId, nino),
         helpToSaveEnabled = true,
         "",
         "",
@@ -65,16 +69,18 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
     "include URLs in response when helpToSaveEnabled = true" in {
       val internalAuthId = InternalAuthId("some-internal-auth-id")
+      val generator = new Generator(0)
+      val nino = generator.nextNino
 
       val mockUserService = mock[UserService]
 
-      (mockUserService.userDetails(_: InternalAuthId)(_: HeaderCarrier, _ :ExecutionContext))
-        .expects(internalAuthId, *, *)
+      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _ :ExecutionContext))
+        .expects(internalAuthId, nino, *, *)
         .returning(Future successful Some(UserDetails(UserState.Invited)))
 
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithInternalAuthId(internalAuthId),
+        new AlwaysAuthorisedWithIds(internalAuthId, nino),
         helpToSaveEnabled = true,
         helpToSaveInfoUrl = "/info",
         helpToSaveInvitationUrl = "/invitation",
@@ -95,7 +101,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithInternalAuthId(internalAuthId),
+        new AlwaysAuthorisedWithIds(internalAuthId, nino),
         helpToSaveEnabled = false,
         helpToSaveInfoUrl = "/info",
         helpToSaveInvitationUrl = "/invitation",
@@ -110,12 +116,12 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       jsonKeys should not contain "accessAccountUrl"
     }
 
-    "check permissions using AuthorisedWithInternalAuthId" in {
+    "check permissions using AuthorisedWithIds" in {
       val mockUserService = mock[UserService]
 
       val controller = new StartupController(
         mockUserService,
-        NeverAuthorisedWithInternalAuthId,
+        NeverAuthorisedWithIds,
         helpToSaveEnabled = true,
         "",
         "",

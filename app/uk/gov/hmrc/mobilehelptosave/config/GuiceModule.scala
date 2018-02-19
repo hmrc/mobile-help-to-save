@@ -38,9 +38,12 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigString("helpToSave.invitationUrl")
     bindConfigString("helpToSave.accessAccountUrl")
     bindConfigInt("helpToSave.dailyInvitationCap")
+    bindConfigBoolean("helpToSave.invitationFilters.survey")
+    bindConfigBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
     bindBaseUrl("help-to-save")
     bindBaseUrl("native-app-widget")
+    bindBaseUrl("tax-credits-broker")
 
     bind(classOf[CoreGet]).to(classOf[DefaultHttpClient])
     bind(classOf[LoggerLike]).toInstance(Logger)

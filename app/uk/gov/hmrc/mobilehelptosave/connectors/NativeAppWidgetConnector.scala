@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[NativeAppWidgetConnectorImpl])
 trait NativeAppWidgetConnector {
 
-  def getAnswers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]]
+  def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]]
 
 }
 
@@ -41,8 +41,8 @@ class NativeAppWidgetConnectorImpl @Inject() (
   http: CoreGet
 ) extends NativeAppWidgetConnector {
 
-  override def getAnswers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
-    http.GET[JsValue](getAnswersUrl(campaignId, questionKey).toString).map { jsonBody =>
+  override def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
+    http.GET[JsValue](answersUrl(campaignId, questionKey).toString).map { jsonBody =>
       Some((jsonBody \\ "content").map(_.as[String]))
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
@@ -50,7 +50,7 @@ class NativeAppWidgetConnectorImpl @Inject() (
         None
     }
 
-  private def getAnswersUrl(campaignId: String, questionKey: String) =
+  private def answersUrl(campaignId: String, questionKey: String) =
     new URL(
       baseUrl,
       encodePathSegments("native-app-widget", "widget-data", campaignId, questionKey)

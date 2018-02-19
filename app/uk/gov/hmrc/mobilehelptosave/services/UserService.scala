@@ -22,6 +22,7 @@ import cats.data.OptionT
 import cats.instances.future._
 import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
@@ -32,8 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserService @Inject() (
+  invitationEligibilityService: InvitationEligibilityService,
   helpToSaveConnector: HelpToSaveConnector,
-  surveyService: SurveyService,
   metrics: MobileHelpToSaveMetrics,
   invitationRepository: InvitationRepository,
   clock: Clock,
@@ -41,13 +42,10 @@ class UserService @Inject() (
   @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
 ) {
 
-  def userDetails(internalAuthId: InternalAuthId)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
-    val enrolledFO = helpToSaveConnector.enrolmentStatus()
-    val wantsToBeContactedFO = surveyService.userWantsToBeContacted()
+  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
     (for {
-      enrolled <- OptionT(enrolledFO)
-      wantsToBeContacted <- OptionT(wantsToBeContactedFO)
-      state <- OptionT.liftF(determineState(internalAuthId, enrolled, wantsToBeContacted))
+      enrolled <- OptionT(helpToSaveConnector.enrolmentStatus())
+      state <- OptionT(determineState(internalAuthId, nino, enrolled))
     } yield {
       UserDetails(state = state)
     }).value
@@ -60,16 +58,14 @@ class UserService @Inject() (
       Future successful None
     }
 
-  private def determineState(internalAuthId: InternalAuthId, enrolled: Boolean, wantsToBeContacted: Boolean)(implicit ec: ExecutionContext): Future[UserState.Value] =
+  private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
     if (enrolled) {
-      Future successful UserState.Enrolled
+      Future successful Some(UserState.Enrolled)
     } else {
-      if (wantsToBeContacted) {
-        determineInvitedState(internalAuthId)
-      }
-      else {
-        Future successful UserState.NotEnrolled
-      }
+      OptionT(invitationEligibilityService.userIsEligibleToBeInvited(nino)).flatMap { eligibleToBeInvited =>
+        if (eligibleToBeInvited) OptionT.liftF(determineInvitedState(internalAuthId))
+        else OptionT.pure(UserState.NotEnrolled)
+      }.value
     }
 
   private def determineInvitedState(internalAuthId: InternalAuthId)(implicit ec: ExecutionContext): Future[UserState.Value] =
