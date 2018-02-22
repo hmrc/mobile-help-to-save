@@ -17,5 +17,5 @@
 package uk.gov.hmrc.mobilehelptosave
 
 object InvitationConfig {
-  val Enabled: (String, Int) = "helpToSave.dailyInvitationCap" -> 1000
+  val Enabled: (String, Int) = "helpToSave.dailyInvitationCap" -> 1000000
 }
