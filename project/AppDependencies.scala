@@ -12,7 +12,7 @@ object AppDependencies {
     "uk.gov.hmrc" %% "bootstrap-play-25" % "1.4.0",
     "uk.gov.hmrc" %% "auth-client" % "2.5.0",
     "uk.gov.hmrc" %% "domain" % "5.1.0",
-    "uk.gov.hmrc" %% "play-reactivemongo" % "6.1.0",
+    "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     "org.typelevel" %% "cats-core" % "1.0.1"
   )
 
