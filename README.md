@@ -25,9 +25,9 @@ Response format:
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
   // URL of invitation call to action
-  "invitationUrl": "/help-to-save",
+  "invitationUrl": "/mobile-help-to-save",
   // URL that will redirect enrolled users to the NS&I Help to Save account homepage
-  "accessAccountUrl": "/help-to-save/access-account",
+  "accessAccountUrl": "/mobile-help-to-save/access-account",
   // User-specific Help to Save data
   "user": {
     // users name, optional
