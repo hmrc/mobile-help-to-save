@@ -60,6 +60,7 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach {
   def wireMockApplicationBuilder(): GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
       .configure(
+        "auditing.enabled" -> false,
         "microservice.services.auth.port" -> wireMockPort,
         "microservice.services.help-to-save.port" -> wireMockPort,
         "microservice.services.native-app-widget.port" -> wireMockPort,

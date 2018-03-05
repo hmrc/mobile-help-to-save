@@ -34,6 +34,11 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   override def configure(): Unit = {
     bindConfigBoolean("helpToSave.enabled")
+    bindConfigBoolean("helpToSave.balanceEnabled")
+    bindConfigBoolean("helpToSave.paidInThisMonthEnabled")
+    bindConfigBoolean("helpToSave.firstBonusEnabled")
+    bindConfigBoolean("helpToSave.shareInvitationEnabled")
+    bindConfigBoolean("helpToSave.savingRemindersEnabled")
     bindConfigString("helpToSave.infoUrl")
     bindConfigString("helpToSave.invitationUrl")
     bindConfigString("helpToSave.accessAccountUrl")

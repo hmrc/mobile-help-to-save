@@ -24,7 +24,12 @@ final case class EnabledStartupResponse(
   infoUrl: String,
   invitationUrl: String,
   accessAccountUrl: String,
-  user: Option[UserDetails]
+  user: Option[UserDetails],
+  balanceEnabled: Boolean,
+  paidInThisMonthEnabled: Boolean,
+  firstBonusEnabled: Boolean,
+  shareInvitationEnabled: Boolean,
+  savingRemindersEnabled: Boolean
 ) extends StartupResponse
 
 case object DisabledStartupResponse extends StartupResponse

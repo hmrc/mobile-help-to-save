@@ -23,7 +23,12 @@ class StartupResponseJsonSpec extends WordSpec with Matchers {
 
   "EnabledStartupResponse JSON" should {
     """include "enabled": true""" in {
-      val json = Json.toJson(EnabledStartupResponse("", "", "", None))
+      val response = EnabledStartupResponse(
+        "", "", "", None,
+        balanceEnabled = false, paidInThisMonthEnabled = false, firstBonusEnabled = false,
+        shareInvitationEnabled = false, savingRemindersEnabled = false
+      )
+      val json = Json.toJson(response)
       (json \ "enabled").as[Boolean] shouldBe true
     }
   }

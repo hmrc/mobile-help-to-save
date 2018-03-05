@@ -75,12 +75,41 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
     }
 
-    "include infoUrl, invitationUrl and accessAccountUrl obtained from configuration" in withTestServerAndInvitationCleanup(
+    "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndInvitationCleanup(
+      wireMockApplicationBuilder()
+        .configure("helpToSave.enabled" -> true)
+        .build()) { (app: Application, portNumber: PortNumber) =>
+      implicit val implicitPortNumber: PortNumber = portNumber
+      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "balanceEnabled").as[Boolean] shouldBe false
+      (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe false
+      (response.json \ "firstBonusEnabled").as[Boolean] shouldBe false
+      (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe false
+      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe false
+      (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
+      (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
+      (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
+    }
+
+
+    "allow feature flag and URL settings to be overridden in configuration" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure(
           "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
           "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
-          "helpToSave.accessAccountUrl" -> "/access-account"
+          "helpToSave.accessAccountUrl" -> "/access-account",
+          "helpToSave.balanceEnabled" -> "true",
+          "helpToSave.paidInThisMonthEnabled" -> "true",
+          "helpToSave.firstBonusEnabled" -> "true",
+          "helpToSave.shareInvitationEnabled" -> "true",
+          "helpToSave.savingRemindersEnabled" -> "true"
         )
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
@@ -92,6 +121,11 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
+      (response.json \ "balanceEnabled").as[Boolean] shouldBe true
+      (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe true
+      (response.json \ "firstBonusEnabled").as[Boolean] shouldBe true
+      (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
+      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
       (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
       (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
