@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import javax.inject.{Inject, Named, Singleton}
-
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.mobilehelptosave.domain.{DisabledStartupResponse, EnabledStartupResponse}
@@ -32,6 +31,11 @@ class StartupController @Inject() (
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
+  @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
+  @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
+  @Named("helpToSave.firstBonusEnabled") firstBonusEnabled: Boolean,
+  @Named("helpToSave.shareInvitationEnabled") shareInvitationEnabled: Boolean,
+  @Named("helpToSave.savingRemindersEnabled") savingRemindersEnabled: Boolean,
   @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String,
   @Named("helpToSave.invitationUrl") helpToSaveInvitationUrl: String,
   @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
@@ -44,7 +48,12 @@ class StartupController @Inject() (
           infoUrl = helpToSaveInfoUrl,
           invitationUrl = helpToSaveInvitationUrl,
           accessAccountUrl = helpToSaveAccessAccountUrl,
-          user = user
+          user = user,
+          balanceEnabled = balanceEnabled,
+          paidInThisMonthEnabled = paidInThisMonthEnabled,
+          firstBonusEnabled = firstBonusEnabled,
+          shareInvitationEnabled = shareInvitationEnabled,
+          savingRemindersEnabled = savingRemindersEnabled
         )
       }
     } else {
