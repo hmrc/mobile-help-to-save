@@ -1,0 +1,19 @@
+{
+  "transactions": [
+    {
+      "amount": 3.00,
+      "operation": "C",
+      "transactionReference": "B41519121620238A",
+      "transactionDate": "2018-02-20",
+      "accountingDate": "2018-02-20"
+    },
+    {
+      "amount": 6.66,
+      "operation": "C",
+      "transactionReference": "B41519313352244A",
+      "description": "Deposit",
+      "transactionDate": "2018-02-22",
+      "accountingDate": "2018-02-22"
+    }
+  ]
+}

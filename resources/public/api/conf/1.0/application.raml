@@ -1,0 +1,83 @@
+#%RAML 1.0
+title: Help To Save
+version: 1.0
+protocols: [ HTTPS ]
+baseUri: https://api.service.hmrc.gov.uk/
+
+mediaType: [ application/json, application/hal+json ]
+
+uses:
+  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/headers.raml
+  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
+
+types:
+  nino:
+    type: String
+    example: AA999999A
+
+traits:
+  loginRequired:
+    responses:
+      401:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              invalidCredentials:
+                description: Invalid Authentication information provided.
+                value:
+                  code: INVALID_CREDENTIALS
+
+  permissionOnAccountNinoRequired:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              noPermissionOnAccountNino:
+                description: The logged in user is not permitted to access the account for the specified NINO.
+                value:
+                  code: NO_PERMISSION_ON_ACCOUNT_NINO
+
+  blocked:
+    responses:
+      403:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              isBlocked:
+                description: The specified Help to Save account has a block applied. Try accessing the account via the web for more details.
+                value:
+                  code: BLOCKED
+
+/individuals/help-to-save/account
+  {nino}:
+    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+    uriParameters:
+      nino:
+        type: nino
+        description: The account holder's national insurance number
+    get:
+      displayName: Get account information
+      responses:
+        200:
+          body:
+            application/json:
+              #TODO
+#              type: !include schemas/account.json
+              example: !include examples/account.json
+    /transactions:
+      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+      get:
+        displayName: Get transactions
+        description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned.
+        responses:
+          200:
+            body:
+              application/json:
+                type: !include schemas/transactions.json
+                example: !include examples/transactions.json
