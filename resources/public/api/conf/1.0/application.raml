@@ -81,3 +81,11 @@ traits:
               application/json:
                 type: !include schemas/transactions.json
                 example: !include examples/transactions.json
+    /messages:
+      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+      get:
+        displayName: Get message list
+      /{messageId}:
+        is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+        get:
+          displayName: Get message
