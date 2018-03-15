@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import javax.inject.{Inject, Named, Singleton}
-
 import cats.data.OptionT
 import cats.instances.future._
+import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.domain.Nino
@@ -37,6 +36,7 @@ class UserService @Inject() (
   helpToSaveConnector: HelpToSaveConnector,
   metrics: MobileHelpToSaveMetrics,
   invitationRepository: InvitationRepository,
+  accountService: AccountService,
   clock: Clock,
   @Named("helpToSave.enabled") enabled: Boolean,
   @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
@@ -46,8 +46,9 @@ class UserService @Inject() (
     (for {
       enrolled <- OptionT(helpToSaveConnector.enrolmentStatus())
       state <- OptionT(determineState(internalAuthId, nino, enrolled))
+      userDetails <- OptionT.liftF(userDetails(nino, state))
     } yield {
-      UserDetails(state = state)
+      userDetails
     }).value
   }
 
@@ -57,6 +58,16 @@ class UserService @Inject() (
     } else {
       Future successful None
     }
+
+  private def userDetails(nino: Nino, state: UserState.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
+    val accountFO = if (state == UserState.Enrolled) {
+      accountService.account(nino)
+    } else {
+      Future successful None
+    }
+
+    accountFO.map(accountO => UserDetails(state = state, account = accountO))
+  }
 
   private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
     if (enrolled) {

@@ -18,15 +18,8 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Json, Writes}
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+case class Account(balance: BigDecimal)
 
-case class UserDetails(
-  state: UserState.Value,
-  account: Option[Account]
-)
-
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+object Account {
+  implicit val writes: Writes[Account] = Json.writes[Account]
 }

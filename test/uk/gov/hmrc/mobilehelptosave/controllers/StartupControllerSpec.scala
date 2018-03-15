@@ -54,7 +54,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
       (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _ :ExecutionContext))
         .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Some(UserDetails(UserState.Invited)))
+        .returning(Future successful Some(UserDetails(UserState.Invited, None)))
 
       val controller = new StartupController(
         mockUserService,
@@ -81,7 +81,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
       (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _ :ExecutionContext))
         .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Some(UserDetails(UserState.Invited)))
+        .returning(Future successful Some(UserDetails(UserState.Invited, None)))
 
       val controller = new StartupController(
         mockUserService,
