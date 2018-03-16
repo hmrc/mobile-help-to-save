@@ -34,6 +34,10 @@ Response format:
     "name": "Beth Planner",
     // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
     "state": "Enrolled",
+    // Account section is present if:
+    // - state is "Enrolled"
+    // AND
+    // - no errors were encountered whilst fetching the account data from NS&I
     "account": {
       "balance": 150,
       // Amount user has already paid in this month, usually an integer but it's possible to pay in pounds & pence by bank transfer
