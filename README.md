@@ -59,6 +59,12 @@ Response format:
 
 If there is a problem obtaining the user-specific data then the user field will be omitted and the other fields will still be returned (as opposed to an error response being returned).
 
+## Testing
+
+To run the tests in this repository:
+
+    sbt test it:test
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
