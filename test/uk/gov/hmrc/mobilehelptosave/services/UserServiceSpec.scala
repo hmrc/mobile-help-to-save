@@ -25,7 +25,7 @@ import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
-import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, MobileHelpToSaveMetrics, ShouldNotUpdateInvitationMetrics}
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository, ShouldNotBeCalledInvitationRepository}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -54,6 +54,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     helpToSaveConnector: HelpToSaveConnector,
     metrics: MobileHelpToSaveMetrics,
     invitationRepository: InvitationRepository,
+    accountService: AccountService = fakeAccountService(nino, None),
     clock: Clock = fixedClock,
     enabled: Boolean = true,
     dailyInvitationCap: Int = 1000
@@ -62,6 +63,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     helpToSaveConnector,
     metrics,
     invitationRepository,
+    accountService,
     clock,
     enabled = enabled,
     dailyInvitationCap = dailyInvitationCap
@@ -78,18 +80,6 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       )
 
       await(service.userDetails(internalAuthId, nino)) shouldBe None
-    }
-
-    "return state=Enrolled when the current user is enrolled in Help to Save" in {
-      val service = new UserServiceWithTestDefaults(
-        shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
-        ShouldNotUpdateInvitationMetrics,
-        new FakeInvitationRepository
-      )
-
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
-      user.state shouldBe UserState.Enrolled
     }
 
     "return state=Enrolled when the current user is enrolled in Help to Save, even if they are eligible to be invited" in {
@@ -121,6 +111,29 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   }
 
   "userDetails" when {
+    "user is enrolled in Help to Save" should {
+
+      val accountReturnedByAccountService = Account(BigDecimal("543.12"))
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = fakeAccountService(nino, Some(accountReturnedByAccountService))
+      )
+
+      "return state=Enrolled" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        user.state shouldBe UserState.Enrolled
+      }
+
+      "include account information" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        user.account shouldBe Some(accountReturnedByAccountService)
+      }
+
+    }
+
     "user is eligible to be invited" should {
 
       val invitationEligibilityService = fakeInvitationEligibilityService(allTestNinos, eligible = Some(true))
@@ -252,7 +265,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
           fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
           metrics,
           invitationRepo,
-          clock,
+          clock = clock,
           dailyInvitationCap = 3
         )
 
@@ -277,7 +290,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
           fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
           FakeMobileHelpToSaveMetrics(),
           mockRepo,
-          clock,
+          clock = clock,
           dailyInvitationCap = 3
         )
 
@@ -392,6 +405,16 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       ec shouldBe passedEc
 
       Future successful eligible
+    }
+  }
+
+  private def fakeAccountService(expectedNino: Nino, accountToReturn: Option[Account]): AccountService = new AccountService {
+    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] = {
+      nino shouldBe expectedNino
+      hc shouldBe passedHc
+      ec shouldBe passedEc
+
+      Future successful accountToReturn
     }
   }
 

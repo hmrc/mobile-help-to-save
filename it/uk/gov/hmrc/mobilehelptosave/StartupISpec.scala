@@ -18,9 +18,10 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
+import play.api.libs.json.JsUndefined
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub, NativeAppWidgetStub}
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec extends WordSpec with Matchers
@@ -36,14 +37,18 @@ class StartupISpec extends WordSpec with Matchers
 
   "GET /mobile-help-to-save/startup" should {
 
-    "include user.state" in {
+    "include user.state and user.account" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+      HelpToSaveProxyStub.nsiAccountExists(nino, "123.45")
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+      // check it is "balance": 123.45 not "balance": "123.45"
+      (response.json \ "user" \ "account" \ "balance").asOpt[String] shouldBe None
+      (response.json \ "user" \ "account" \ "balance").as[BigDecimal] shouldBe BigDecimal("123.45")
     }
 
     "integrate with the metrics returned by /admin/metrics" in {
@@ -80,6 +85,17 @@ class StartupISpec extends WordSpec with Matchers
       (response.json \ "infoUrl").asOpt[String] should not be None
     }
 
+    "omit account details but still include user state if call to get account fails" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+      HelpToSaveProxyStub.nsiAccountReturnsInternalServerError()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+      (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+    }
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()

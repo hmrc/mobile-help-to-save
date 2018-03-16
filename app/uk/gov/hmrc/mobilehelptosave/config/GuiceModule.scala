@@ -17,10 +17,10 @@
 package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
-import javax.inject.Provider
 
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names.named
+import javax.inject.Provider
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.http.CoreGet
@@ -47,6 +47,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
     bindBaseUrl("help-to-save")
+    bindBaseUrl("help-to-save-proxy")
     bindBaseUrl("native-app-widget")
     bindBaseUrl("tax-credits-broker")
 

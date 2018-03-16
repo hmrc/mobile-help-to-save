@@ -22,10 +22,10 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
 
 import scala.concurrent.Future
 
-class FakeHttpGet(expectedUrl: String, responseF: Future[HttpResponse]) extends HttpGet {
+class FakeHttpGet(urlPredicate: String => Boolean, responseF: Future[HttpResponse]) extends HttpGet {
 
   override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    if (url == expectedUrl)
+    if (urlPredicate(url))
       responseF
   else
       Future successful HttpResponse(404)
@@ -38,7 +38,10 @@ class FakeHttpGet(expectedUrl: String, responseF: Future[HttpResponse]) extends 
 
 object FakeHttpGet {
 
-  def apply(expectedUrl: String, responseF: Future[HttpResponse]) = new FakeHttpGet(expectedUrl, responseF)
-  def apply(expectedUrl: String, response: HttpResponse) = new FakeHttpGet(expectedUrl, Future successful response)
+  def apply(expectedUrl: String, responseF: Future[HttpResponse]) = new FakeHttpGet(_ == expectedUrl, responseF)
+  def apply(expectedUrl: String, response: HttpResponse) = new FakeHttpGet(_ == expectedUrl, Future successful response)
+
+  def apply(urlPredicate: String => Boolean, responseF: Future[HttpResponse]) = new FakeHttpGet(urlPredicate, responseF)
+  def apply(urlPredicate: String => Boolean, response: HttpResponse) = new FakeHttpGet(urlPredicate, Future successful response)
 
 }

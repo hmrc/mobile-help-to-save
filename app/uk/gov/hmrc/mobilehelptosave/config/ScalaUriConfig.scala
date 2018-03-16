@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.config
 
-import play.api.libs.json.{Json, Writes}
+import io.lemonlabs.uri.config.{ExcludeNones, UriConfig}
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+object ScalaUriConfig {
 
-case class UserDetails(
-  state: UserState.Value,
-  account: Option[Account]
-)
+  implicit val config: UriConfig = UriConfig(renderQuery = ExcludeNones)
 
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
 }
