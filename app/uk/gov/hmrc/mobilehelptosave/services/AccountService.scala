@@ -18,6 +18,8 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+
+import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveProxyConnector
@@ -30,12 +32,35 @@ trait AccountService {
 
   def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]]
 
+  def getAmountPaidInThisMonth(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[BigDecimal]]
+
+  def getRemainingCouldSaveThisMonth(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[BigDecimal]]
+
 }
 
 @Singleton
-class AccountServiceImpl @Inject() (helpToSaveProxyConnector: HelpToSaveProxyConnector) extends AccountService {
+class AccountServiceImpl @Inject() (helpToSaveProxyConnector: HelpToSaveProxyConnector, logger: LoggerLike) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] =
-    helpToSaveProxyConnector.nsiAccount(nino).map(_.map(nsiAccount => Account(nsiAccount.accountBalance)))
+    helpToSaveProxyConnector.nsiAccount(nino).map(_.map(nsiAccount => Account(nsiAccount.accountBalance, nsiAccount.investmentRemaining)))
+
+  override def getAmountPaidInThisMonth(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[BigDecimal]] =
+    account(nino).map{
+      _ match {
+        case Some(a) ⇒ Some(a.investmentRemaining)
+        case None ⇒ None
+      }
+    }.recover {
+      case e ⇒ logger.warn("Couldn't get amount paid in this month", e)
+        None
+    }
+
+  override def getRemainingCouldSaveThisMonth(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[BigDecimal]] =
+    getAmountPaidInThisMonth(nino).map{
+      _ match {
+        case Some(amount) ⇒ Some(50.00 - amount)
+        case None ⇒ None
+      }
+    }
 
 }

@@ -60,12 +60,13 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
-                |  "accountBalance": "200.34"
+                |  "accountBalance": "200.34",
+                |  "investmentRemaining" : "15.00"
                 |}
               """.stripMargin)
           ))))
 
-      await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34")))
+      await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34"), BigDecimal("15.00")))
 
       val connector2 = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, FakeHttpGet(
         isAccountUrlForNino _,
@@ -75,12 +76,13 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
-                |  "accountBalance": "200.00"
+                |  "accountBalance": "200.00",
+                |  "investmentRemaining": "20.00"
                 |}
               """.stripMargin)
           ))))
 
-      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.00")))
+      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.00"), BigDecimal("20.00")))
     }
 
     "send a correlationId that is of an allowed length" in {
@@ -102,7 +104,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                   Json.parse(
                     """
                       |{
-                      |  "accountBalance": "200.34"
+                      |  "accountBalance": "200.34",
+                      |  "investmentRemaining": "20.00"
                       |}
                     """.stripMargin)
                 ))
@@ -114,7 +117,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, http)
 
-      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34")))
+      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34"), BigDecimal("20.00")))
 
       sentCorrelationId.value.length should be <= 38
     }

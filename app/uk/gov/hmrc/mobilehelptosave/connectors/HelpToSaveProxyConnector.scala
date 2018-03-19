@@ -59,7 +59,7 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 
 }
 
-case class NsiAccount(accountBalance: BigDecimal)
+case class NsiAccount(accountBalance: BigDecimal, investmentRemaining: BigDecimal)
 
 object NsiAccount {
   implicit val reads: Reads[NsiAccount] = Json.reads[NsiAccount]
