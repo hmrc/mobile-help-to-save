@@ -1,3 +1,7 @@
 # microservice specific routes
 
 GET     /startup                uk.gov.hmrc.mobilehelptosave.controllers.StartupController.startup
+
+GET     /get-paid-in            uk.gov.hmrc.mobilehelptosave.services.AccountService.getAmountPaidInThisMonth(nino: String)
+
+GET     /get-still-to-save      uk.gov.hmrc.mobilehelptosave.services.AccountService.getRemainingCouldSaveThisMonth(nino: String)
