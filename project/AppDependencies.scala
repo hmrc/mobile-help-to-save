@@ -13,7 +13,8 @@ object AppDependencies {
     "uk.gov.hmrc" %% "domain" % "5.1.0",
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     "org.typelevel" %% "cats-core" % "1.0.1",
-    "io.lemonlabs" %% "scala-uri" % "1.1.1"
+    "io.lemonlabs" %% "scala-uri" % "1.1.1",
+    "ai.x" %% "play-json-extensions" % "0.9.0"
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(

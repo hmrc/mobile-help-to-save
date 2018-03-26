@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Json, Writes}
 
-case class Account(balance: BigDecimal)
+case class Account(balance: BigDecimal, investmentRemaining: BigDecimal)
 
 object Account {
   implicit val writes: Writes[Account] = Json.writes[Account]

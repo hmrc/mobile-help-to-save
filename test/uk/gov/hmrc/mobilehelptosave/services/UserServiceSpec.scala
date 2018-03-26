@@ -113,7 +113,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   "userDetails" when {
     "user is enrolled in Help to Save" should {
 
-      val accountReturnedByAccountService = Account(BigDecimal("543.12"))
+      val accountReturnedByAccountService = Account(BigDecimal("543.12"), BigDecimal("20.00"))
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
@@ -416,6 +416,10 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
       Future successful accountToReturn
     }
+
+    override def getAmountPaidInThisMonth(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[BigDecimal]] = ???
+
+    override def getRemainingCouldSaveThisMonth(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[BigDecimal]] = ???
   }
 
   private val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
