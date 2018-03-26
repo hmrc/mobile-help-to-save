@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "properties": {
+    "transactions": {
+      "$id": "/properties/transactions",
+      "type": "array",
+      "items": {
+        "$id": "/properties/transactions/items",
+        "type": "object",
+        "properties": {
+          "amount": {
+            "$id": "/properties/transactions/items/properties/operationAmount",
+            "type": "number",
+            "description": "The transaction value",
+            "examples": [
+              1.23
+            ]
+          },
+          "operation": {
+            "$id": "/properties/transactions/items/properties/operation",
+            "type": "string",
+            "description": "The Operation type - C=Credit, D=Debit",
+            "minLength": 1,
+            "maxLength": 1,
+            "pattern": "^[CD]$",
+            "examples": [
+              "C"
+            ]
+          },
+          "transactionReference": {
+            "$id": "/properties/transactions/items/properties/operationReference",
+            "type": "string",
+            "description": "The reference for this transaction.",
+            "minLength": 1,
+            "maxLength": 16,
+            "examples": [
+              "B41519121620238A"
+            ]
+          },
+          "transactionDate": {
+            "$id": "/properties/transactions/items/properties/transactionDate",
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 10,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "examples": [
+              "2018-02-19"
+            ]
+          },
+          "accountingDate": {
+            "$id": "/properties/transactions/items/properties/accountingDate",
+            "type": "string",
+            "description": "Date that the transaction was applied to the account.",
+            "minLength": 10,
+            "maxLength": 10,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "examples": [
+              "2018-02-19"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "operation",
+          "transactionReference",
+          "transactionDate",
+          "accountingDate"
+        ]
+      }
+    }
+  },
+  "required": [
+    "transactions"
+  ]
+}
