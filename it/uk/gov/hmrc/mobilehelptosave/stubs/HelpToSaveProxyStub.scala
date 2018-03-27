@@ -32,6 +32,10 @@ object HelpToSaveProxyStub {
           """
             |{
             |  "accountBalance": "123.45",
+            |  "currentInvestmentMonth": {
+            |    "investmentRemaining": "22.12",
+            |    "investmentLimit": "50.00"
+            |  },
             |  "terms": [
             |     {
             |       "termNumber":1,

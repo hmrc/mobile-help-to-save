@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Assertion, Matchers, WordSpec}
 import play.api.Application
-import play.api.libs.json.JsUndefined
+import play.api.libs.json.{JsLookupResult, JsUndefined}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub, NativeAppWidgetStub}
@@ -46,22 +46,19 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
-      // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-      (response.json \ "user" \ "account" \ "balance").asOpt[String] shouldBe None
-      (response.json \ "user" \ "account" \ "balance").as[BigDecimal] shouldBe BigDecimal("123.45")
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "balance", BigDecimal("123.45"))
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", BigDecimal("27.88"))
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", BigDecimal("22.12"))
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", BigDecimal(50))
 
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
-      (firstBonusTermJson \ "bonusEstimate").asOpt[String] shouldBe None
-      (firstBonusTermJson \ "bonusEstimate").as[BigDecimal] shouldBe BigDecimal("90.99")
-      (firstBonusTermJson \ "bonusPaid").asOpt[String] shouldBe None
-      (firstBonusTermJson \ "bonusPaid").as[BigDecimal] shouldBe BigDecimal("90.99")
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
 
       val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
-      (secondBonusTermJson \ "bonusEstimate").asOpt[String] shouldBe None
-      (secondBonusTermJson \ "bonusEstimate").as[BigDecimal] shouldBe BigDecimal(12)
-      (secondBonusTermJson \ "bonusPaid").asOpt[String] shouldBe None
-      (secondBonusTermJson \ "bonusPaid").as[BigDecimal] shouldBe BigDecimal(0)
+      shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
+      shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
     }
 
@@ -146,5 +143,11 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
     }
+  }
+
+  private def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
+    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
+    jsLookupResult.asOpt[String] shouldBe None
+    jsLookupResult.as[BigDecimal] shouldBe expectedValue
   }
 }

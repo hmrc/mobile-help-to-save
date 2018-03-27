@@ -62,6 +62,10 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               """
                 |{
                 |  "accountBalance": "200.34",
+                |  "currentInvestmentMonth": {
+                |    "investmentRemaining": "15.50",
+                |    "investmentLimit": "50.00"
+                |  },
                 |  "terms": [
                 |     {
                 |       "termNumber":2,
@@ -82,6 +86,9 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(
         accountBalance = BigDecimal("200.34"),
+        currentInvestmentMonth = NsiCurrentInvestmentMonth(
+          investmentRemaining = BigDecimal("15.50"),
+          investmentLimit = 50),
         terms = Seq(
           NsiBonusTerm(termNumber = 2, endDate = new LocalDate(2021, 12, 31), bonusEstimate = 67, bonusPaid = 0),
           NsiBonusTerm(termNumber = 1, endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
@@ -97,12 +104,21 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               """
                 |{
                 |  "accountBalance": "200.00",
+                |  "currentInvestmentMonth": {
+                |    "investmentRemaining": "12.34",
+                |    "investmentLimit": "150.42"
+                |  },
                 |  "terms": []
                 |}
               """.stripMargin)
           ))))
 
-      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(accountBalance = BigDecimal(200), terms = Seq.empty))
+      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(
+        accountBalance = BigDecimal(200),
+        currentInvestmentMonth = NsiCurrentInvestmentMonth(
+          investmentRemaining = BigDecimal("12.34"),
+          investmentLimit = BigDecimal("150.42")),
+        terms = Seq.empty))
     }
 
     "send a correlationId that is of an allowed length" in {
@@ -125,6 +141,10 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                     """
                       |{
                       |  "accountBalance": "200.34",
+                      |  "currentInvestmentMonth": {
+                      |    "investmentRemaining": "15.50",
+                      |    "investmentLimit": "50.00"
+                      |  },
                       |  "terms": []
                       |}
                     """.stripMargin)
@@ -137,7 +157,12 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, http)
 
-      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34"), Seq.empty))
+      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(
+        BigDecimal("200.34"),
+        NsiCurrentInvestmentMonth(
+          investmentRemaining = BigDecimal("15.50"),
+          investmentLimit = 50),
+        Seq.empty))
 
       sentCorrelationId.value.length should be <= 38
     }
@@ -200,6 +225,10 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               """
                 |{
                 |  "accountBalance": "123.45",
+                |  "currentInvestmentMonth": {
+                |    "investmentRemaining": "15.50",
+                |    "investmentLimit": "50.00"
+                |  },
                 |  "terms": [
                 |     {
                 |       "termNumber":1,

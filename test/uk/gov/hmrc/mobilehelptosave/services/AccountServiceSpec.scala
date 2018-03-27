@@ -17,58 +17,90 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import org.joda.time.LocalDate
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusTerm}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm, NsiCurrentInvestmentMonth}
+import uk.gov.hmrc.mobilehelptosave.domain.BonusTerm
+import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountServiceSpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout with OptionValues {
+  with FutureAwaits with DefaultAwaitTimeout with OptionValues
+  with MockFactory with OneInstancePerTest with LoggerStub {
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
+
+  private val testNsiAccount = NsiAccount(accountBalance = 0, currentInvestmentMonth = NsiCurrentInvestmentMonth(0, 0), terms = Seq.empty)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   "account" should {
     "return account balance" in {
-      val connector = fakeHelpToSaveProxyConnector(nino, Some(NsiAccount(accountBalance = BigDecimal("123.45"), terms = Seq.empty)))
-      val service = new AccountServiceImpl(connector)
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(accountBalance = BigDecimal("123.45"))))
+      val service = new AccountServiceImpl(logger, connector)
 
       await(service.account(nino)).value.balance shouldBe BigDecimal("123.45")
     }
 
+    "return payment amounts for current month" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(
+        currentInvestmentMonth = NsiCurrentInvestmentMonth(investmentRemaining = BigDecimal("12.34"), investmentLimit = 50))))
+      val service = new AccountServiceImpl(logger, connector)
+
+      val account = await(service.account(nino)).value
+      account.paidInThisMonth shouldBe BigDecimal("37.66")
+      account.canPayInThisMonth shouldBe BigDecimal("12.34")
+      account.maximumPaidInThisMonth shouldBe BigDecimal(50)
+    }
+
+    "return None when the payment amounts for current month don't make sense because investmentRemaining > investmentLimit" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(
+        currentInvestmentMonth = NsiCurrentInvestmentMonth(investmentRemaining = BigDecimal("50.01"), investmentLimit = 50))))
+      val service = new AccountServiceImpl(logger, connector)
+
+      await(service.account(nino)) shouldBe None
+
+      (slf4jLoggerStub.warn(_: String)) verify """investmentRemaining = 50.01 and investmentLimit = 50 values returned by NS&I don't make sense because they imply a negative amount paid in this month"""
+    }
+
+    "return payment amounts for current month when investmentRemaining == investmentLimit (boundary case for previous test)" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(
+        currentInvestmentMonth = NsiCurrentInvestmentMonth(investmentRemaining = 50, investmentLimit = 50))))
+      val service = new AccountServiceImpl(logger, connector)
+
+      val account = await(service.account(nino)).value
+      account.paidInThisMonth shouldBe BigDecimal(0)
+      account.canPayInThisMonth shouldBe BigDecimal(50)
+      account.maximumPaidInThisMonth shouldBe BigDecimal(50)
+    }
+
     "return bonus information including calculated bonusPaidOnOrAfterDate" in {
-      val connector = fakeHelpToSaveProxyConnector(nino, Some(NsiAccount(
-        accountBalance = BigDecimal("200.34"),
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(
         terms = Seq(
-          NsiBonusTerm(termNumber = 1, endDate = new LocalDate(2020, 10, 22), bonusEstimate = BigDecimal("65.43"), bonusPaid = 0)
-        ))))
+          NsiBonusTerm(termNumber = 1, endDate = new LocalDate(2020, 10, 22), bonusEstimate = BigDecimal("65.43"), bonusPaid = 0)))))
 
-      val service = new AccountServiceImpl(connector)
+      val service = new AccountServiceImpl(logger, connector)
 
-      await(service.account(nino)).value shouldBe Account(
-        balance = BigDecimal("200.34"),
-        bonusTerms = Seq(
-          BonusTerm(bonusEstimate = BigDecimal("65.43"), bonusPaid = 0, bonusPaidOnOrAfterDate = new LocalDate(2020, 10, 23))
-        )
+      await(service.account(nino)).value.bonusTerms shouldBe Seq(
+        BonusTerm(bonusEstimate = BigDecimal("65.43"), bonusPaid = 0, bonusPaidOnOrAfterDate = new LocalDate(2020, 10, 23))
       )
     }
 
-    "sort the terms by termNumber" in {
-      val connector = fakeHelpToSaveProxyConnector(nino, Some(NsiAccount(
+    "sort the bonus terms by termNumber" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(
         accountBalance = BigDecimal("200.34"),
         terms = Seq(
           NsiBonusTerm(termNumber = 2, endDate = new LocalDate(2021, 12, 31), bonusEstimate = 67, bonusPaid = 0),
           NsiBonusTerm(termNumber = 1, endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
         ))))
 
-      val service = new AccountServiceImpl(connector)
+      val service = new AccountServiceImpl(logger, connector)
 
       await(service.account(nino)).value.bonusTerms shouldBe Seq(
         BonusTerm(bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"), bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)),
@@ -78,7 +110,7 @@ class AccountServiceSpec extends WordSpec with Matchers
 
     "return None when the NS&I account cannot be retrieved" in {
       val connector = fakeHelpToSaveProxyConnector(nino, None)
-      val service = new AccountServiceImpl(connector)
+      val service = new AccountServiceImpl(logger, connector)
 
       await(service.account(nino)) shouldBe None
     }
