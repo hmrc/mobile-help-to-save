@@ -19,9 +19,11 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 import java.util.UUID
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.ImplementedBy
 import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Named, Singleton}
+import org.joda.time.LocalDate
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.domain.Nino
@@ -45,9 +47,9 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 ) extends HelpToSaveProxyConnector {
 
   override def nsiAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[NsiAccount]] = {
-                                                                                                                        http.GET[NsiAccount](nsiAccountUrl(nino)) map Some.apply
+    http.GET[NsiAccount](nsiAccountUrl(nino)) map Some.apply
   } recover {
-    case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
+    case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException | _: JsonParseException) =>
       logger.warn("Couldn't get account from help-to-save-proxy service", e)
       None
   }
@@ -59,7 +61,13 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 
 }
 
-case class NsiAccount(accountBalance: BigDecimal)
+case class NsiBonusTerm(termNumber: Int, endDate: LocalDate, bonusEstimate: BigDecimal, bonusPaid: BigDecimal)
+
+object NsiBonusTerm {
+  implicit val reads: Reads[NsiBonusTerm] = Json.reads[NsiBonusTerm]
+}
+
+case class NsiAccount(accountBalance: BigDecimal, terms: Seq[NsiBonusTerm])
 
 object NsiAccount {
   implicit val reads: Reads[NsiAccount] = Json.reads[NsiAccount]

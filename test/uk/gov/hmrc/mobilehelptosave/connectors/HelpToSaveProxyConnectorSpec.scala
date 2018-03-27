@@ -20,6 +20,7 @@ import java.net.{ConnectException, URL}
 
 import com.typesafe.config.Config
 import io.lemonlabs.uri._
+import org.joda.time.LocalDate
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.libs.json.Json
@@ -60,12 +61,32 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
-                |  "accountBalance": "200.34"
+                |  "accountBalance": "200.34",
+                |  "terms": [
+                |     {
+                |       "termNumber":2,
+                |       "endDate":"2021-12-31",
+                |       "bonusEstimate":"67.00",
+                |       "bonusPaid":"0.00"
+                |    },
+                |    {
+                |       "termNumber":1,
+                |       "endDate":"2019-12-31",
+                |       "bonusEstimate":"123.45",
+                |       "bonusPaid":"123.45"
+                |    }
+                |  ]
                 |}
               """.stripMargin)
           ))))
 
-      await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34")))
+      await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(
+        accountBalance = BigDecimal("200.34"),
+        terms = Seq(
+          NsiBonusTerm(termNumber = 2, endDate = new LocalDate(2021, 12, 31), bonusEstimate = 67, bonusPaid = 0),
+          NsiBonusTerm(termNumber = 1, endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
+        )
+      ))
 
       val connector2 = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, FakeHttpGet(
         isAccountUrlForNino _,
@@ -75,12 +96,13 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
-                |  "accountBalance": "200.00"
+                |  "accountBalance": "200.00",
+                |  "terms": []
                 |}
               """.stripMargin)
           ))))
 
-      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.00")))
+      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(accountBalance = BigDecimal(200), terms = Seq.empty))
     }
 
     "send a correlationId that is of an allowed length" in {
@@ -102,7 +124,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                   Json.parse(
                     """
                       |{
-                      |  "accountBalance": "200.34"
+                      |  "accountBalance": "200.34",
+                      |  "terms": []
                       |}
                     """.stripMargin)
                 ))
@@ -114,7 +137,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, http)
 
-      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34")))
+      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(BigDecimal("200.34"), Seq.empty))
 
       sentCorrelationId.value.length should be <= 38
     }
@@ -163,6 +186,43 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get account from help-to-save-proxy service""",
         throwableWithMessageContaining("500")
+      )
+    }
+
+    "return None when native-app-widget returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
+      val invalidJsonHttp = FakeHttpGet(
+        isAccountUrlForNino _,
+        HttpResponse(
+          200,
+          Some(
+            Json.parse(
+              // invalid because required field bonusPaid is omitted from first term
+              """
+                |{
+                |  "accountBalance": "123.45",
+                |  "terms": [
+                |     {
+                |       "termNumber":1,
+                |       "endDate":"2019-12-31",
+                |       "bonusEstimate":"90.99"
+                |    },
+                |    {
+                |       "termNumber":2,
+                |       "endDate":"2021-12-31",
+                |       "bonusEstimate":"12.00",
+                |       "bonusPaid":"00.00"
+                |    }
+                |  ]
+                |}""".stripMargin)
+          )))
+
+      val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, invalidJsonHttp)
+
+      await(connector.nsiAccount(nino)) shouldBe None
+
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
+        """Couldn't get account from help-to-save-proxy service""",
+        throwableWithMessageContaining("invalid json")
       )
     }
   }

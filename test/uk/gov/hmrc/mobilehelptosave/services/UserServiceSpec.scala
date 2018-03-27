@@ -113,7 +113,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   "userDetails" when {
     "user is enrolled in Help to Save" should {
 
-      val accountReturnedByAccountService = Account(BigDecimal("543.12"))
+      val accountReturnedByAccountService = Account(BigDecimal("543.12"), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),

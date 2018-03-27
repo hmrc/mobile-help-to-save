@@ -20,8 +20,8 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveProxyConnector
-import uk.gov.hmrc.mobilehelptosave.domain.Account
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusTerm}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,6 +36,17 @@ trait AccountService {
 class AccountServiceImpl @Inject() (helpToSaveProxyConnector: HelpToSaveProxyConnector) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] =
-    helpToSaveProxyConnector.nsiAccount(nino).map(_.map(nsiAccount => Account(nsiAccount.accountBalance)))
+    helpToSaveProxyConnector.nsiAccount(nino).map(_.map(nsiAccountToAccount))
+
+  private def nsiAccountToAccount(nsiAccount: NsiAccount): Account = Account(
+    nsiAccount.accountBalance,
+    bonusTerms = nsiAccount.terms.sortBy(_.termNumber).map(nsiBonusTermToBonusTerm)
+  )
+
+  private def nsiBonusTermToBonusTerm(nsiBonusTerm: NsiBonusTerm): BonusTerm = BonusTerm(
+    bonusEstimate = nsiBonusTerm.bonusEstimate,
+    bonusPaid = nsiBonusTerm.bonusPaid,
+    bonusPaidOnOrAfterDate = nsiBonusTerm.endDate.plusDays(1)
+  )
 
 }

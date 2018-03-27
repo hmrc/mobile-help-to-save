@@ -41,14 +41,28 @@ class StartupISpec extends WordSpec with Matchers
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
-      HelpToSaveProxyStub.nsiAccountExists(nino, "123.45")
+      HelpToSaveProxyStub.nsiAccountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
-      // check it is "balance": 123.45 not "balance": "123.45"
+      // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
       (response.json \ "user" \ "account" \ "balance").asOpt[String] shouldBe None
       (response.json \ "user" \ "account" \ "balance").as[BigDecimal] shouldBe BigDecimal("123.45")
+
+      val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
+      (firstBonusTermJson \ "bonusEstimate").asOpt[String] shouldBe None
+      (firstBonusTermJson \ "bonusEstimate").as[BigDecimal] shouldBe BigDecimal("90.99")
+      (firstBonusTermJson \ "bonusPaid").asOpt[String] shouldBe None
+      (firstBonusTermJson \ "bonusPaid").as[BigDecimal] shouldBe BigDecimal("90.99")
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
+
+      val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
+      (secondBonusTermJson \ "bonusEstimate").asOpt[String] shouldBe None
+      (secondBonusTermJson \ "bonusEstimate").as[BigDecimal] shouldBe BigDecimal(12)
+      (secondBonusTermJson \ "bonusPaid").asOpt[String] shouldBe None
+      (secondBonusTermJson \ "bonusPaid").as[BigDecimal] shouldBe BigDecimal(0)
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
     }
 
     "integrate with the metrics returned by /admin/metrics" in {
@@ -90,6 +104,30 @@ class StartupISpec extends WordSpec with Matchers
       HelpToSaveStub.currentUserIsEnrolled()
       NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
       HelpToSaveProxyStub.nsiAccountReturnsInternalServerError()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+      (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+    }
+
+    "omit account details but still include user state if get account returns JSON that doesn't conform to the schema" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+      HelpToSaveProxyStub.nsiAccountReturnsInvalidAccordingToSchemaJson(nino)
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+      (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+    }
+
+    "omit account details but still include user state if get account returns badly formed JSON" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+      HelpToSaveProxyStub.nsiAccountReturnsBadlyFormedJson(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200

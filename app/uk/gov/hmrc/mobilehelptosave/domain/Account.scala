@@ -16,9 +16,20 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
+import org.joda.time.LocalDate
 import play.api.libs.json.{Json, Writes}
 
-case class Account(balance: BigDecimal)
+case class BonusTerm(
+  bonusEstimate: BigDecimal,
+  bonusPaid: BigDecimal,
+  bonusPaidOnOrAfterDate: LocalDate
+)
+
+object BonusTerm {
+  implicit val writes: Writes[BonusTerm] = Json.writes[BonusTerm]
+}
+
+case class Account(balance: BigDecimal, bonusTerms: Seq[BonusTerm])
 
 object Account {
   implicit val writes: Writes[Account] = Json.writes[Account]
