@@ -1,11 +1,13 @@
 import play.core.PlayVersion
 import play.sbt.PlayImport.ws
+import sbt.Keys._
 import sbt.{ModuleID, _}
 
 object AppDependencies {
 
-  lazy val appDependencies: Seq[ModuleID] =
-    compile ++ test ++ integrationTest
+  def appDependencies: Seq[Setting[_]] = Seq(
+    libraryDependencies ++= compile ++ test ++ integrationTest
+  )
 
   val compile = Seq(
     ws,
@@ -29,7 +31,10 @@ object AppDependencies {
     "org.scalatest" %% "scalatest" % "3.0.4" % scope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
-    "com.typesafe.play" %% "play-test" % PlayVersion.current % scope
+    "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
+    // workaround for version clash in IntelliJ where without this line both jetty-util-9.2.15.v20160210 and jetty-util-9.2.22.v20170606 are brought in
+    // which results in a NoSuchMethodError when running StartupISpec
+    "org.eclipse.jetty.websocket" % "websocket-client" % "9.2.22.v20170606" % scope
   )
 
 }

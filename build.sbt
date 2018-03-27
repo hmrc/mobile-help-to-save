@@ -31,7 +31,7 @@ PlayKeys.playDefaultPort := 8248
 // from https://github.com/typelevel/cats/blob/master/README.md
 scalacOptions += "-Ypartial-unification"
 
-libraryDependencies ++= AppDependencies.appDependencies
+AppDependencies.appDependencies
 retrieveManaged := true
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
