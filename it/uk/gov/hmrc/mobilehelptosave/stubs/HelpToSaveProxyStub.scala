@@ -17,12 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 
 object HelpToSaveProxyStub {
 
-  def nsiAccountExists(nino: Nino, accountBalance: String): Unit =
+  def nsiAccountExists(nino: Nino): Unit =
     stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
       .withQueryParam("nino", equalTo(nino.value))
       .withQueryParam("version", equalTo("V1.0"))
@@ -30,7 +29,65 @@ object HelpToSaveProxyStub {
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
-          Json.obj("accountBalance" -> accountBalance).toString
+          """
+            |{
+            |  "accountBalance": "123.45",
+            |  "terms": [
+            |     {
+            |       "termNumber":1,
+            |       "endDate":"2019-12-31",
+            |       "bonusEstimate":"90.99",
+            |       "bonusPaid":"90.99"
+            |    },
+            |    {
+            |       "termNumber":2,
+            |       "endDate":"2021-12-31",
+            |       "bonusEstimate":"12.00",
+            |       "bonusPaid":"00.00"
+            |    }
+            |  ]
+            |}
+          """.stripMargin
+        )))
+
+  def nsiAccountReturnsInvalidAccordingToSchemaJson(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
+      .withQueryParam("nino", equalTo(nino.value))
+      .withQueryParam("version", equalTo("V1.0"))
+      .withQueryParam("systemId", equalTo("MDTPMOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(
+          // invalid because required field bonusPaid is omitted from first term
+          """
+            |{
+            |  "accountBalance": "123.45",
+            |  "terms": [
+            |     {
+            |       "termNumber":1,
+            |       "endDate":"2019-12-31",
+            |       "bonusEstimate":"90.99"
+            |    },
+            |    {
+            |       "termNumber":2,
+            |       "endDate":"2021-12-31",
+            |       "bonusEstimate":"12.00",
+            |       "bonusPaid":"00.00"
+            |    }
+            |  ]
+            |}
+          """.stripMargin
+        )))
+
+  def nsiAccountReturnsBadlyFormedJson(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
+      .withQueryParam("nino", equalTo(nino.value))
+      .withQueryParam("version", equalTo("V1.0"))
+      .withQueryParam("systemId", equalTo("MDTPMOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(
+          """not JSON""".stripMargin
         )))
 
   def nsiAccountDoesNotExist(nino: Nino): Unit =
