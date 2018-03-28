@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
@@ -33,15 +34,33 @@ trait AccountService {
 }
 
 @Singleton
-class AccountServiceImpl @Inject() (helpToSaveProxyConnector: HelpToSaveProxyConnector) extends AccountService {
+class AccountServiceImpl @Inject() (
+  logger: LoggerLike,
+  helpToSaveProxyConnector: HelpToSaveProxyConnector
+) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] =
-    helpToSaveProxyConnector.nsiAccount(nino).map(_.map(nsiAccountToAccount))
+    helpToSaveProxyConnector.nsiAccount(nino).map(_.flatMap(nsiAccountToAccount))
 
-  private def nsiAccountToAccount(nsiAccount: NsiAccount): Account = Account(
-    nsiAccount.accountBalance,
-    bonusTerms = nsiAccount.terms.sortBy(_.termNumber).map(nsiBonusTermToBonusTerm)
-  )
+  private def nsiAccountToAccount(nsiAccount: NsiAccount): Option[Account] = {
+    val paidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit - nsiAccount.currentInvestmentMonth.investmentRemaining
+    if (paidInThisMonth >= 0) {
+      Some(Account(
+        balance = nsiAccount.accountBalance,
+        paidInThisMonth = paidInThisMonth,
+        canPayInThisMonth = nsiAccount.currentInvestmentMonth.investmentRemaining,
+        maximumPaidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit,
+        bonusTerms = nsiAccount.terms.sortBy(_.termNumber).map(nsiBonusTermToBonusTerm)
+      ))
+    } else {
+      // investmentRemaining is unaffected by debits (only credits) so should never exceed investmentLimit
+      logger.warn(
+        s"investmentRemaining = ${nsiAccount.currentInvestmentMonth.investmentRemaining} and investmentLimit = ${nsiAccount.currentInvestmentMonth.investmentLimit} " +
+        s"values returned by NS&I don't make sense because they imply a negative amount paid in this month"
+      )
+      None
+    }
+  }
 
   private def nsiBonusTermToBonusTerm(nsiBonusTerm: NsiBonusTerm): BonusTerm = BonusTerm(
     bonusEstimate = nsiBonusTerm.bonusEstimate,

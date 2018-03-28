@@ -29,7 +29,15 @@ object BonusTerm {
   implicit val writes: Writes[BonusTerm] = Json.writes[BonusTerm]
 }
 
-case class Account(balance: BigDecimal, bonusTerms: Seq[BonusTerm])
+case class Account(
+  balance: BigDecimal,
+
+  paidInThisMonth: BigDecimal,
+  canPayInThisMonth: BigDecimal,
+  maximumPaidInThisMonth: BigDecimal,
+
+  bonusTerms: Seq[BonusTerm]
+)
 
 object Account {
   implicit val writes: Writes[Account] = Json.writes[Account]
