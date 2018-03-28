@@ -45,7 +45,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
     case AbsoluteUrl("http", Authority(_, Host("help-to-save-proxy-service"), None), AbsolutePath(Vector("help-to-save-proxy", "nsi-services", "account")), query, _)
       if query.param("nino").contains(nino.value) &&
          query.param("version").contains("V1.0") &&
-         query.param("systemId").contains("MDTPMOBILE") =>
+         query.param("systemId").contains("MDTP-MOBILE") =>
       true
     case _ =>
       false

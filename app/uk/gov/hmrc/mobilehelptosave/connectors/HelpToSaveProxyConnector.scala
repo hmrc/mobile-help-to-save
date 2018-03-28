@@ -56,7 +56,7 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 
   private def nsiAccountUrl(nino: Nino) = {
     val correlationId = UUID.randomUUID().toString
-    new URL(baseUrl, "/help-to-save-proxy/nsi-services/account").toString ? ("nino" -> nino.value) & ("version" -> "V1.0") & ("systemId" -> "MDTPMOBILE") & ("correlationId" -> correlationId)
+    new URL(baseUrl, "/help-to-save-proxy/nsi-services/account").toString ? ("nino" -> nino.value) & ("version" -> "V1.0") & ("systemId" -> "MDTP-MOBILE") & ("correlationId" -> correlationId)
   }
 
 }

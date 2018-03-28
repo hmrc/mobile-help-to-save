@@ -25,7 +25,7 @@ object HelpToSaveProxyStub {
     stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
       .withQueryParam("nino", equalTo(nino.value))
       .withQueryParam("version", equalTo("V1.0"))
-      .withQueryParam("systemId", equalTo("MDTPMOBILE"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
@@ -58,7 +58,7 @@ object HelpToSaveProxyStub {
     stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
       .withQueryParam("nino", equalTo(nino.value))
       .withQueryParam("version", equalTo("V1.0"))
-      .withQueryParam("systemId", equalTo("MDTPMOBILE"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
@@ -87,7 +87,7 @@ object HelpToSaveProxyStub {
     stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
       .withQueryParam("nino", equalTo(nino.value))
       .withQueryParam("version", equalTo("V1.0"))
-      .withQueryParam("systemId", equalTo("MDTPMOBILE"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
@@ -98,7 +98,7 @@ object HelpToSaveProxyStub {
     stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
       .withQueryParam("nino", equalTo(nino.value))
       .withQueryParam("version", equalTo("V1.0"))
-      .withQueryParam("systemId", equalTo("MDTPMOBILE"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(400)
         .withBody(
