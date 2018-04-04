@@ -143,8 +143,6 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
     }
 
     "omit URLs and user from response when helpToSaveShuttered = true" in {
-      val internalAuthId = InternalAuthId("some-internal-auth-id")
-
       val mockUserService = mock[UserService]
 
       val controller = new StartupController(
@@ -171,14 +169,35 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       jsonKeys should not contain "accessAccountUrl"
     }
 
-    "continue to include feature flags when helpToSaveShuttered = true because some of them take priority over shuttering" in {
-      val internalAuthId = InternalAuthId("some-internal-auth-id")
-
+    "include shuttering info in response when helpToSaveShuttered = true" in {
       val mockUserService = mock[UserService]
 
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        ShouldNotBeCalledAuthorisedWithIds,
+        helpToSaveShuttered = true,
+        helpToSaveEnabled = true,
+        balanceEnabled = false,
+        paidInThisMonthEnabled = false,
+        firstBonusEnabled = false,
+        shareInvitationEnabled = false,
+        savingRemindersEnabled = false,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      val resultF = controller.startup(FakeRequest())
+      status(resultF) shouldBe 200
+      val jsonBody = contentAsJson(resultF)
+      (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
+    }
+
+    "continue to include feature flags when helpToSaveShuttered = true because some of them take priority over shuttering" in {
+      val mockUserService = mock[UserService]
+
+      val controller = new StartupController(
+        mockUserService,
+        ShouldNotBeCalledAuthorisedWithIds,
         helpToSaveShuttered = true,
         helpToSaveEnabled = true,
         balanceEnabled = false,
