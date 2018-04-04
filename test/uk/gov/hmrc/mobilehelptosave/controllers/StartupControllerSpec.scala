@@ -46,6 +46,11 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       Future successful Left(Forbidden)
   }
 
+  private object ShouldNotBeCalledAuthorisedWithIds extends AuthorisedWithIds with Results {
+    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
+      Future failed new RuntimeException("AuthorisedWithIds should not be called in this situation")
+  }
+
   "startup" should {
     "pass internalAuthId and NINO obtained from auth into userService" in {
       val internalAuthId = InternalAuthId("some-internal-auth-id")
@@ -144,7 +149,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        ShouldNotBeCalledAuthorisedWithIds,
         helpToSaveShuttered = true,
         helpToSaveEnabled = true,
         balanceEnabled = false,

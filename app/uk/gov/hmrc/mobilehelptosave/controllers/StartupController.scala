@@ -24,8 +24,6 @@ import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
-
 @Singleton()
 class StartupController @Inject() (
   userService: UserService,
@@ -42,24 +40,27 @@ class StartupController @Inject() (
   @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = authorisedWithIds.async { implicit request =>
-    val responseF = if (helpToSaveEnabled) {
-      if (!helpToSaveShuttered) {
-        userService.userDetails(request.internalAuthId, request.nino).map { user =>
-          EnabledStartupResponse(
-            infoUrl = Some(helpToSaveInfoUrl),
-            invitationUrl = Some(helpToSaveInvitationUrl),
-            accessAccountUrl = Some(helpToSaveAccessAccountUrl),
-            user = user,
-            balanceEnabled = balanceEnabled,
-            paidInThisMonthEnabled = paidInThisMonthEnabled,
-            firstBonusEnabled = firstBonusEnabled,
-            shareInvitationEnabled = shareInvitationEnabled,
-            savingRemindersEnabled = savingRemindersEnabled
-          )
-        }
-      } else {
-        Future successful EnabledStartupResponse(
+  val startup: Action[AnyContent] = if (helpToSaveEnabled && !helpToSaveShuttered) {
+    authorisedWithIds.async { implicit request =>
+      val responseF = userService.userDetails(request.internalAuthId, request.nino).map { user =>
+        EnabledStartupResponse(
+          infoUrl = Some(helpToSaveInfoUrl),
+          invitationUrl = Some(helpToSaveInvitationUrl),
+          accessAccountUrl = Some(helpToSaveAccessAccountUrl),
+          user = user,
+          balanceEnabled = balanceEnabled,
+          paidInThisMonthEnabled = paidInThisMonthEnabled,
+          firstBonusEnabled = firstBonusEnabled,
+          shareInvitationEnabled = shareInvitationEnabled,
+          savingRemindersEnabled = savingRemindersEnabled
+        )
+      }
+      responseF.map(response => Ok(Json.toJson(response)))
+    }
+  } else {
+    Action { implicit request =>
+      val response = if (helpToSaveEnabled) {
+        EnabledStartupResponse(
           infoUrl = None,
           invitationUrl = None,
           accessAccountUrl = None,
@@ -70,12 +71,12 @@ class StartupController @Inject() (
           shareInvitationEnabled = shareInvitationEnabled,
           savingRemindersEnabled = savingRemindersEnabled
         )
+      } else {
+        DisabledStartupResponse
       }
-    } else {
-      Future successful DisabledStartupResponse
-    }
 
-    responseF.map(response => Ok(Json.toJson(response)))
+      Ok(Json.toJson(response))
+    }
   }
 
 }
