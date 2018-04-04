@@ -30,6 +30,7 @@ import scala.concurrent.Future
 class StartupController @Inject() (
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
+  @Named("helpToSave.shuttering.shuttered") helpToSaveShuttered: Boolean,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
   @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
@@ -43,12 +44,26 @@ class StartupController @Inject() (
 
   val startup: Action[AnyContent] = authorisedWithIds.async { implicit request =>
     val responseF = if (helpToSaveEnabled) {
-      userService.userDetails(request.internalAuthId, request.nino).map { user =>
-        EnabledStartupResponse(
-          infoUrl = helpToSaveInfoUrl,
-          invitationUrl = helpToSaveInvitationUrl,
-          accessAccountUrl = helpToSaveAccessAccountUrl,
-          user = user,
+      if (!helpToSaveShuttered) {
+        userService.userDetails(request.internalAuthId, request.nino).map { user =>
+          EnabledStartupResponse(
+            infoUrl = Some(helpToSaveInfoUrl),
+            invitationUrl = Some(helpToSaveInvitationUrl),
+            accessAccountUrl = Some(helpToSaveAccessAccountUrl),
+            user = user,
+            balanceEnabled = balanceEnabled,
+            paidInThisMonthEnabled = paidInThisMonthEnabled,
+            firstBonusEnabled = firstBonusEnabled,
+            shareInvitationEnabled = shareInvitationEnabled,
+            savingRemindersEnabled = savingRemindersEnabled
+          )
+        }
+      } else {
+        Future successful EnabledStartupResponse(
+          infoUrl = None,
+          invitationUrl = None,
+          accessAccountUrl = None,
+          user = None,
           balanceEnabled = balanceEnabled,
           paidInThisMonthEnabled = paidInThisMonthEnabled,
           firstBonusEnabled = firstBonusEnabled,

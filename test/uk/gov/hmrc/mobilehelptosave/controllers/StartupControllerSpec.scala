@@ -52,13 +52,14 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
       val mockUserService = mock[UserService]
 
-      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _ :ExecutionContext))
+      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(internalAuthId, nino, *, *)
         .returning(Future successful Some(UserDetails(UserState.Invited, None)))
 
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        helpToSaveShuttered = false,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -72,20 +73,21 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       status(controller.startup(FakeRequest())) shouldBe 200
     }
 
-    "include URLs in response when helpToSaveEnabled = true" in {
+    "include URLs and user in response when helpToSaveEnabled = true" in {
       val internalAuthId = InternalAuthId("some-internal-auth-id")
       val generator = new Generator(0)
       val nino = generator.nextNino
 
       val mockUserService = mock[UserService]
 
-      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _ :ExecutionContext))
+      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(internalAuthId, nino, *, *)
         .returning(Future successful Some(UserDetails(UserState.Invited, None)))
 
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        helpToSaveShuttered = false,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -99,12 +101,14 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val resultF = controller.startup(FakeRequest())
       status(resultF) shouldBe 200
       val jsonBody = contentAsJson(resultF)
+      val jsonKeys = jsonBody.as[JsObject].keys
+      jsonKeys should contain("user")
       (jsonBody \ "infoUrl").as[String] shouldBe "/info"
       (jsonBody \ "invitationUrl").as[String] shouldBe "/invitation"
       (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
     }
 
-    "omit URLs from response when helpToSaveEnabled = false" in {
+    "omit URLs and user from response when helpToSaveEnabled = false" in {
       val internalAuthId = InternalAuthId("some-internal-auth-id")
 
       val mockUserService = mock[UserService]
@@ -112,6 +116,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        helpToSaveShuttered = false,
         helpToSaveEnabled = false,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -126,9 +131,69 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       status(resultF) shouldBe 200
       val jsonBody = contentAsJson(resultF)
       val jsonKeys = jsonBody.as[JsObject].keys
+      jsonKeys should not contain "user"
       jsonKeys should not contain "infoUrl"
       jsonKeys should not contain "invitationUrl"
       jsonKeys should not contain "accessAccountUrl"
+    }
+
+    "omit URLs and user from response when helpToSaveShuttered = true" in {
+      val internalAuthId = InternalAuthId("some-internal-auth-id")
+
+      val mockUserService = mock[UserService]
+
+      val controller = new StartupController(
+        mockUserService,
+        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        helpToSaveShuttered = true,
+        helpToSaveEnabled = true,
+        balanceEnabled = false,
+        paidInThisMonthEnabled = false,
+        firstBonusEnabled = false,
+        shareInvitationEnabled = false,
+        savingRemindersEnabled = false,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      val resultF = controller.startup(FakeRequest())
+      status(resultF) shouldBe 200
+      val jsonBody = contentAsJson(resultF)
+      val jsonKeys = jsonBody.as[JsObject].keys
+      jsonKeys should not contain "user"
+      jsonKeys should not contain "infoUrl"
+      jsonKeys should not contain "invitationUrl"
+      jsonKeys should not contain "accessAccountUrl"
+    }
+
+    "continue to include feature flags when helpToSaveShuttered = true because some of them take priority over shuttering" in {
+      val internalAuthId = InternalAuthId("some-internal-auth-id")
+
+      val mockUserService = mock[UserService]
+
+      val controller = new StartupController(
+        mockUserService,
+        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        helpToSaveShuttered = true,
+        helpToSaveEnabled = true,
+        balanceEnabled = false,
+        paidInThisMonthEnabled = true,
+        firstBonusEnabled = false,
+        shareInvitationEnabled = false,
+        savingRemindersEnabled = false,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      val resultF = controller.startup(FakeRequest())
+      status(resultF) shouldBe 200
+      val jsonBody = contentAsJson(resultF)
+      (jsonBody \ "enabled").as[Boolean] shouldBe true
+      (jsonBody \ "balanceEnabled").as[Boolean] shouldBe false
+      (jsonBody \ "paidInThisMonthEnabled").as[Boolean] shouldBe true
+      (jsonBody \ "firstBonusEnabled").as[Boolean] shouldBe false
+      (jsonBody \ "shareInvitationEnabled").as[Boolean] shouldBe false
+      (jsonBody \ "savingRemindersEnabled").as[Boolean] shouldBe false
     }
 
     "check permissions using AuthorisedWithIds" in {
@@ -137,6 +202,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         NeverAuthorisedWithIds,
+        helpToSaveShuttered = false,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,

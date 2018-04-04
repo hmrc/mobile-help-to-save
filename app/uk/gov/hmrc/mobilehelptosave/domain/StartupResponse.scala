@@ -21,9 +21,9 @@ import play.api.libs.json._
 sealed trait StartupResponse
 
 final case class EnabledStartupResponse(
-  infoUrl: String,
-  invitationUrl: String,
-  accessAccountUrl: String,
+  infoUrl: Option[String],
+  invitationUrl: Option[String],
+  accessAccountUrl: Option[String],
   user: Option[UserDetails],
   balanceEnabled: Boolean,
   paidInThisMonthEnabled: Boolean,

@@ -33,6 +33,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   override protected lazy val runModeConfiguration: Configuration = configuration
 
   override def configure(): Unit = {
+    bindConfigBoolean("helpToSave.shuttering.shuttered")
     bindConfigBoolean("helpToSave.enabled")
     bindConfigBoolean("helpToSave.balanceEnabled")
     bindConfigBoolean("helpToSave.paidInThisMonthEnabled")
