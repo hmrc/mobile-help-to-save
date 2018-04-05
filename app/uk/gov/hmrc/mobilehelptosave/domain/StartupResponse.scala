@@ -21,9 +21,10 @@ import play.api.libs.json._
 sealed trait StartupResponse
 
 final case class EnabledStartupResponse(
-  infoUrl: String,
-  invitationUrl: String,
-  accessAccountUrl: String,
+  shuttering: Shuttering,
+  infoUrl: Option[String],
+  invitationUrl: Option[String],
+  accessAccountUrl: Option[String],
   user: Option[UserDetails],
   balanceEnabled: Boolean,
   paidInThisMonthEnabled: Boolean,
@@ -31,6 +32,12 @@ final case class EnabledStartupResponse(
   shareInvitationEnabled: Boolean,
   savingRemindersEnabled: Boolean
 ) extends StartupResponse
+
+case class Shuttering(shuttered: Boolean)
+
+case object Shuttering {
+  implicit val writes: Writes[Shuttering] = Json.writes[Shuttering]
+}
 
 case object DisabledStartupResponse extends StartupResponse
 

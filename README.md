@@ -14,6 +14,9 @@ Response format:
 
 ```
 {
+  "shuttering": {
+      "shuttered": false
+  },
   // Feature toggle for Help to Save app functionality:
   "enabled": true,
   // Fine grained feature toggles
@@ -62,6 +65,25 @@ Response format:
 ```
 
 If there is a problem obtaining the user-specific data then the user field will be omitted and the other fields will still be returned (as opposed to an error response being returned).
+
+When the Help to Save section of the app is shuttered then `shuttering.shuttered` will be true and other fields except for feature flags will be omitted:
+```
+{
+  "shuttering": {
+    "shuttered": true,
+    "title": "Service Unavailable",
+    "message": "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
+  },
+  // Feature toggle for Help to Save app functionality:
+  "enabled": true,
+  // Fine grained feature toggles
+  "balanceEnabled": true,
+  "paidInThisMonthEnabled": true,
+  "firstBonusEnabled": true,
+  "shareInvitationEnabled": true,
+  "savingRemindersEnabled": true
+}
+```
 
 ## Testing
 

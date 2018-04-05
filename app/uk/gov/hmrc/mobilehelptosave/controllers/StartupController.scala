@@ -19,17 +19,16 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import javax.inject.{Inject, Named, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.mobilehelptosave.domain.{DisabledStartupResponse, EnabledStartupResponse}
+import uk.gov.hmrc.mobilehelptosave.domain.{DisabledStartupResponse, EnabledStartupResponse, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-
-import scala.concurrent.Future
 
 @Singleton()
 class StartupController @Inject() (
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
+  @Named("helpToSave.shuttering.shuttered") helpToSaveShuttered: Boolean,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
   @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
@@ -41,13 +40,15 @@ class StartupController @Inject() (
   @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = authorisedWithIds.async { implicit request =>
-    val responseF = if (helpToSaveEnabled) {
-      userService.userDetails(request.internalAuthId, request.nino).map { user =>
+  val startup: Action[AnyContent] = if (helpToSaveEnabled && !helpToSaveShuttered) {
+    authorisedWithIds.async { implicit request =>
+      val shuttering = Shuttering(helpToSaveShuttered)
+      val responseF = userService.userDetails(request.internalAuthId, request.nino).map { user =>
         EnabledStartupResponse(
-          infoUrl = helpToSaveInfoUrl,
-          invitationUrl = helpToSaveInvitationUrl,
-          accessAccountUrl = helpToSaveAccessAccountUrl,
+          shuttering = shuttering,
+          infoUrl = Some(helpToSaveInfoUrl),
+          invitationUrl = Some(helpToSaveInvitationUrl),
+          accessAccountUrl = Some(helpToSaveAccessAccountUrl),
           user = user,
           balanceEnabled = balanceEnabled,
           paidInThisMonthEnabled = paidInThisMonthEnabled,
@@ -56,11 +57,30 @@ class StartupController @Inject() (
           savingRemindersEnabled = savingRemindersEnabled
         )
       }
-    } else {
-      Future successful DisabledStartupResponse
+      responseF.map(response => Ok(Json.toJson(response)))
     }
+  } else {
+    Action { implicit request =>
+      val shuttering = Shuttering(helpToSaveShuttered)
+      val response = if (helpToSaveEnabled) {
+        EnabledStartupResponse(
+          shuttering = shuttering,
+          infoUrl = None,
+          invitationUrl = None,
+          accessAccountUrl = None,
+          user = None,
+          balanceEnabled = balanceEnabled,
+          paidInThisMonthEnabled = paidInThisMonthEnabled,
+          firstBonusEnabled = firstBonusEnabled,
+          shareInvitationEnabled = shareInvitationEnabled,
+          savingRemindersEnabled = savingRemindersEnabled
+        )
+      } else {
+        DisabledStartupResponse
+      }
 
-    responseF.map(response => Ok(Json.toJson(response)))
+      Ok(Json.toJson(response))
+    }
   }
 
 }

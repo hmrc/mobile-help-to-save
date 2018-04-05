@@ -75,6 +75,26 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
     }
 
+    "only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndInvitationCleanup(
+      wireMockApplicationBuilder()
+        .configure(
+          "helpToSave.shuttering.shuttered" -> true,
+          "helpToSave.enabled" -> true,
+          "helpToSave.savingRemindersEnabled" -> true
+        )
+        .build()) { (app: Application, portNumber: PortNumber) =>
+      implicit val implicitPortNumber: PortNumber = portNumber
+      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
+      (response.json \ "enabled").as[Boolean] shouldBe true
+      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
+      response.json.as[JsObject].keys should not contain "user"
+
+      HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
+    }
+
     "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> true)
