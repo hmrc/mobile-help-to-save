@@ -79,6 +79,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       wireMockApplicationBuilder()
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
+          "helpToSave.shuttering.title" -> "Shuttered",
+          "helpToSave.shuttering.message" -> "HTS is currently not available",
           "helpToSave.enabled" -> true,
           "helpToSave.savingRemindersEnabled" -> true
         )
@@ -88,6 +90,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
+      (response.json \ "shuttering" \ "title").as[String] shouldBe "Shuttered"
+      (response.json \ "shuttering" \ "message").as[String] shouldBe "HTS is currently not available"
       (response.json \ "enabled").as[Boolean] shouldBe true
       (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
       response.json.as[JsObject].keys should not contain "user"

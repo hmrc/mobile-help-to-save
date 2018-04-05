@@ -34,6 +34,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   override def configure(): Unit = {
     bindConfigBoolean("helpToSave.shuttering.shuttered")
+    bindConfigString("helpToSave.shuttering.title")
+    bindConfigString("helpToSave.shuttering.message")
     bindConfigBoolean("helpToSave.enabled")
     bindConfigBoolean("helpToSave.balanceEnabled")
     bindConfigBoolean("helpToSave.paidInThisMonthEnabled")
