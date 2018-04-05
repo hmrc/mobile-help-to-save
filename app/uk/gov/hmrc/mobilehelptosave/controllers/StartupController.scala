@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 class StartupController @Inject() (
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
-  @Named("helpToSave.shuttering.shuttered") helpToSaveShuttered: Boolean,
+  shuttering: Shuttering,
   @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
   @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
   @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
@@ -40,9 +40,8 @@ class StartupController @Inject() (
   @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = if (helpToSaveEnabled && !helpToSaveShuttered) {
+  val startup: Action[AnyContent] = if (helpToSaveEnabled && !shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>
-      val shuttering = Shuttering(helpToSaveShuttered)
       val responseF = userService.userDetails(request.internalAuthId, request.nino).map { user =>
         EnabledStartupResponse(
           shuttering = shuttering,
@@ -61,7 +60,6 @@ class StartupController @Inject() (
     }
   } else {
     Action { implicit request =>
-      val shuttering = Shuttering(helpToSaveShuttered)
       val response = if (helpToSaveEnabled) {
         EnabledStartupResponse(
           shuttering = shuttering,

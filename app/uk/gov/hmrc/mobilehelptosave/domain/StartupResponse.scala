@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
+import com.google.inject.name.Named
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 
 sealed trait StartupResponse
@@ -33,7 +35,12 @@ final case class EnabledStartupResponse(
   savingRemindersEnabled: Boolean
 ) extends StartupResponse
 
-case class Shuttering(shuttered: Boolean)
+@Singleton
+case class Shuttering @Inject() (
+  @Named("helpToSave.shuttering.shuttered") shuttered: Boolean,
+  @Named("helpToSave.shuttering.title") title: String,
+  @Named("helpToSave.shuttering.message") message: String
+)
 
 case object Shuttering {
   implicit val writes: Writes[Shuttering] = Json.writes[Shuttering]

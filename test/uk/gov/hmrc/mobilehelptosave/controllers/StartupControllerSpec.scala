@@ -24,7 +24,7 @@ import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Shuttering, UserDetails, UserState}
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -54,6 +54,9 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       Future failed new RuntimeException("AuthorisedWithIds should not be called in this situation")
   }
 
+  val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
+  val falseShuttering = Shuttering(shuttered = false, "", "")
+
   "startup" should {
     "pass internalAuthId and NINO obtained from auth into userService" in {
 
@@ -64,7 +67,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        helpToSaveShuttered = false,
+        shuttering = falseShuttering,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -84,7 +87,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         NeverAuthorisedWithIds,
-        helpToSaveShuttered = false,
+        shuttering = falseShuttering,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -100,11 +103,11 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
   }
 
   "startup" when {
-    "helpToSaveEnabled = true ans helpToSaveShuttered = false" should {
+    "helpToSaveEnabled = true and helpToSaveShuttered = false" should {
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        helpToSaveShuttered = false,
+        shuttering = falseShuttering,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -149,7 +152,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        helpToSaveShuttered = false,
+        shuttering = falseShuttering,
         helpToSaveEnabled = false,
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
@@ -176,7 +179,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        helpToSaveShuttered = true,
+        shuttering = trueShuttering,
         helpToSaveEnabled = true,
         balanceEnabled = false,
         paidInThisMonthEnabled = true,
@@ -187,7 +190,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         helpToSaveInvitationUrl = "/invitation",
         helpToSaveAccessAccountUrl = "/accessAccount")
 
-      "omit URLs and user from response when helpToSaveShuttered = true" in {
+      "omit URLs and user from response" in {
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
@@ -198,11 +201,13 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         jsonKeys should not contain "accessAccountUrl"
       }
 
-      "include shuttering info in response when helpToSaveShuttered = true" in {
+      "include shuttering info in response" in {
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
+        (jsonBody \ "shuttering" \ "title").as[String] shouldBe "Shuttered"
+        (jsonBody \ "shuttering" \ "message").as[String] shouldBe "HTS is currently not available"
       }
 
       "continue to include feature flags because some of them take priority over shuttering" in {
@@ -217,6 +222,31 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         (jsonBody \ "firstBonusEnabled").as[Boolean] shouldBe false
         (jsonBody \ "shareInvitationEnabled").as[Boolean] shouldBe false
         (jsonBody \ "savingRemindersEnabled").as[Boolean] shouldBe false
+      }
+    }
+
+    "helpToSaveShuttered = true and a different title and message are passed in" should {
+      val controller = new StartupController(
+        mockUserService,
+        ShouldNotBeCalledAuthorisedWithIds,
+        shuttering = Shuttering(shuttered = true, "something", "some message"),
+        helpToSaveEnabled = true,
+        balanceEnabled = false,
+        paidInThisMonthEnabled = true,
+        firstBonusEnabled = false,
+        shareInvitationEnabled = false,
+        savingRemindersEnabled = false,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      "include the passed in shuttering info in response" in {
+        val resultF = controller.startup(FakeRequest())
+        status(resultF) shouldBe 200
+        val jsonBody = contentAsJson(resultF)
+        (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
+        (jsonBody \ "shuttering" \ "title").as[String] shouldBe "something"
+        (jsonBody \ "shuttering" \ "message").as[String] shouldBe "some message"
       }
     }
   }
