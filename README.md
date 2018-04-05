@@ -14,6 +14,9 @@ Response format:
 
 ```
 {
+  "shuttering": {
+      "shuttered": false
+  },
   // Feature toggle for Help to Save app functionality:
   "enabled": true,
   // Fine grained feature toggles
@@ -63,7 +66,7 @@ Response format:
 
 If there is a problem obtaining the user-specific data then the user field will be omitted and the other fields will still be returned (as opposed to an error response being returned).
 
-When the Help to Save section of the app is shuttered then a `shuttering` section will be included and other fields except for feature flags will be omitted:
+When the Help to Save section of the app is shuttered then `shuttering.shuttered` will be true and other fields except for feature flags will be omitted:
 ```
 {
   "shuttering": {

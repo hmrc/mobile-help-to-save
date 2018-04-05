@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import javax.inject.{Inject, Named, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.mobilehelptosave.domain.{DisabledStartupResponse, EnabledStartupResponse}
+import uk.gov.hmrc.mobilehelptosave.domain.{DisabledStartupResponse, EnabledStartupResponse, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -42,8 +42,10 @@ class StartupController @Inject() (
 
   val startup: Action[AnyContent] = if (helpToSaveEnabled && !helpToSaveShuttered) {
     authorisedWithIds.async { implicit request =>
+      val shuttering = Shuttering(helpToSaveShuttered)
       val responseF = userService.userDetails(request.internalAuthId, request.nino).map { user =>
         EnabledStartupResponse(
+          shuttering = shuttering,
           infoUrl = Some(helpToSaveInfoUrl),
           invitationUrl = Some(helpToSaveInvitationUrl),
           accessAccountUrl = Some(helpToSaveAccessAccountUrl),
@@ -59,8 +61,10 @@ class StartupController @Inject() (
     }
   } else {
     Action { implicit request =>
+      val shuttering = Shuttering(helpToSaveShuttered)
       val response = if (helpToSaveEnabled) {
         EnabledStartupResponse(
+          shuttering = shuttering,
           infoUrl = None,
           invitationUrl = None,
           accessAccountUrl = None,

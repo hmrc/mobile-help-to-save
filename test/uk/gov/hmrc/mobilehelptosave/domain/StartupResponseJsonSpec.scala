@@ -24,6 +24,7 @@ class StartupResponseJsonSpec extends WordSpec with Matchers {
   "EnabledStartupResponse JSON" should {
     """include "enabled": true""" in {
       val response = EnabledStartupResponse(
+        Shuttering(false),
         None, None, None, None,
         balanceEnabled = false, paidInThisMonthEnabled = false, firstBonusEnabled = false,
         shareInvitationEnabled = false, savingRemindersEnabled = false
