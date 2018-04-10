@@ -34,8 +34,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   override def configure(): Unit = {
     bindConfigBoolean("helpToSave.shuttering.shuttered")
-    bindConfigString("helpToSave.shuttering.title")
-    bindConfigString("helpToSave.shuttering.message")
+    bindConfigBase64String("helpToSave.shuttering.title")
+    bindConfigBase64String("helpToSave.shuttering.message")
     bindConfigBoolean("helpToSave.enabled")
     bindConfigBoolean("helpToSave.balanceEnabled")
     bindConfigBoolean("helpToSave.paidInThisMonthEnabled")
@@ -68,6 +68,12 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   private def bindConfigString(path: String): Unit = {
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getString(path))
+  }
+
+  private def bindConfigBase64String(path: String): Unit = {
+    val encoded = configuration.underlying.getString(path)
+    val decoded = Base64.decode(encoded)
+    bindConstant().annotatedWith(named(path)).to(decoded)
   }
 
   private def bindBaseUrl(serviceName: String) =
