@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.util.Base64
+
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.json.{JsObject, Json}
@@ -38,6 +40,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
   private val internalAuthId = InternalAuthId("test-internal-auth-id")
   private val generator = new Generator(0)
   private val nino = generator.nextNino
+  private val base64Encoder = Base64.getEncoder
 
   "GET /mobile-help-to-save/startup" should {
     "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndInvitationCleanup(
@@ -79,8 +82,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       wireMockApplicationBuilder()
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
-          "helpToSave.shuttering.title" -> "Shuttered",
-          "helpToSave.shuttering.message" -> "HTS is currently not available",
+          "helpToSave.shuttering.title" -> base64Encode("Shuttered"),
+          "helpToSave.shuttering.message" -> base64Encode("HTS is currently not available"),
           "helpToSave.enabled" -> true,
           "helpToSave.savingRemindersEnabled" -> true
         )
@@ -173,6 +176,10 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
     }
 
+  }
+
+  private def base64Encode(s: String): String = {
+    base64Encoder.encodeToString(s.getBytes("UTF-8"))
   }
 
   private def withTestServerAndInvitationCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =
