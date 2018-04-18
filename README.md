@@ -42,6 +42,9 @@ Response format:
     // AND
     // - no errors were encountered whilst fetching the account data from NS&I
     "account": {
+      "isClosed": true,
+      "closureDate": "2018-02-16",
+      "closingBalance": 150
       "balance": 150,
       // Amount user has already paid in this month, usually an integer but it's possible to pay in pounds & pence by bank transfer
       "paidInThisMonth": 40.12,
