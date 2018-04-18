@@ -42,6 +42,9 @@ Response format:
     // AND
     // - no errors were encountered whilst fetching the account data from NS&I
     "account": {
+      "isClosed": true,
+      "closureDate": "2018-02-16",
+      "closingBalance": 150
       "balance": 150,
       // Amount user has already paid in this month, usually an integer but it's possible to pay in pounds & pence by bank transfer
       "paidInThisMonth": 40.12,
@@ -49,11 +52,13 @@ Response format:
       "canPayInThisMonth": 9.88,
       // Should be constant at £50, but having a property means we are protected from further changes
       "maximumPaidInThisMonth": 50,
+      "thisMonthEndDate": "2018-02-28",
       "bonusTerms": [
         {
           // The amount calculated that the user will receive, two years after they have started the account
           "bonusEstimate": 75,
           "bonusPaid": 0,
+          "endDate": "2019-12-31",
           // The date from which the first bonus will be paid, ISO-8601 date
           "bonusPaidOnOrAfterDate": "2020-01-01"
         }
