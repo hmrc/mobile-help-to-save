@@ -46,10 +46,12 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+      (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "balance", BigDecimal("123.45"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", BigDecimal("22.12"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", BigDecimal(50))
+      (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-02-28"
 
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
@@ -60,6 +62,40 @@ class StartupISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+    }
+
+    "include account closure fields when account is closed" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
+      HelpToSaveProxyStub.closedNsiAccountExists(nino)
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+
+      (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe true
+      (response.json \ "user" \ "account" \ "closureDate").as[String] shouldBe "2018-04-09"
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "closingBalance", 10)
+
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "balance", 0)
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", 0)
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", 50)
+      shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", 50)
+      // Date used for testing is a date when BST applied to test that the
+      // service still returns the date supplied by NS&I unmodified during
+      // BST.
+      (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+
+      val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("7.50"))
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-03-01"
+
+      val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
+      shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
+      shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
     }
 
     "integrate with the metrics returned by /admin/metrics" in {

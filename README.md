@@ -52,6 +52,8 @@ Response format:
       "canPayInThisMonth": 9.88,
       // Should be constant at £50, but having a property means we are protected from further changes
       "maximumPaidInThisMonth": 50,
+      // The end date of the month that the "this month" figures refer to.
+      // Clients should use this date instead of calculating it themselves to protect against clock skew & race conditions.
       "thisMonthEndDate": "2018-02-28",
       "bonusTerms": [
         {

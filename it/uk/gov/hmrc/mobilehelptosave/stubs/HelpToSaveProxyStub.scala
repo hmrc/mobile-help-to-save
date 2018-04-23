@@ -32,7 +32,9 @@ object HelpToSaveProxyStub {
           """
             |{
             |  "accountBalance": "123.45",
+            |  "accountClosedFlag": "",
             |  "currentInvestmentMonth": {
+            |    "endDate": "2018-02-28",
             |    "investmentRemaining": "22.12",
             |    "investmentLimit": "50.00"
             |  },
@@ -48,6 +50,43 @@ object HelpToSaveProxyStub {
             |       "endDate":"2021-12-31",
             |       "bonusEstimate":"12.00",
             |       "bonusPaid":"00.00"
+            |    }
+            |  ]
+            |}
+          """.stripMargin
+        )))
+
+  def closedNsiAccountExists(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo("/help-to-save-proxy/nsi-services/account"))
+      .withQueryParam("nino", equalTo(nino.value))
+      .withQueryParam("version", equalTo("V1.0"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(
+          """
+            |{
+            |  "accountBalance": "0.00",
+            |  "accountClosedFlag": "C",
+            |  "accountClosureDate": "2018-04-09",
+            |  "accountClosingBalance": "10.00",
+            |  "currentInvestmentMonth": {
+            |    "endDate": "2018-04-30",
+            |    "investmentLimit": "50.00",
+            |    "investmentRemaining": "50.00"
+            |  },
+            |  "terms": [
+            |     {
+            |       "termNumber":1,
+            |       "endDate": "2020-02-29",
+            |       "bonusEstimate": "7.50",
+            |       "bonusPaid": "0.00"
+            |    },
+            |    {
+            |       "termNumber":2,
+            |       "endDate": "2022-02-28",
+            |       "bonusEstimate": "0.00",
+            |       "bonusPaid": "0.00"
             |    }
             |  ]
             |}

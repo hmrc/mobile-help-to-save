@@ -30,13 +30,19 @@ object BonusTerm {
 }
 
 case class Account(
+  isClosed: Boolean,
+
   balance: BigDecimal,
 
   paidInThisMonth: BigDecimal,
   canPayInThisMonth: BigDecimal,
   maximumPaidInThisMonth: BigDecimal,
+  thisMonthEndDate: LocalDate,
 
-  bonusTerms: Seq[BonusTerm]
+  bonusTerms: Seq[BonusTerm],
+
+  closureDate: Option[LocalDate] = None,
+  closingBalance: Option[BigDecimal] = None
 )
 
 object Account {

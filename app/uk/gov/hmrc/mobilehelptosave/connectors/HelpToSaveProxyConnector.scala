@@ -61,7 +61,11 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 
 }
 
-case class NsiCurrentInvestmentMonth(investmentRemaining: BigDecimal, investmentLimit: BigDecimal)
+case class NsiCurrentInvestmentMonth(
+  investmentRemaining: BigDecimal,
+  investmentLimit: BigDecimal,
+  endDate: LocalDate
+)
 
 object NsiCurrentInvestmentMonth {
   implicit val reads: Reads[NsiCurrentInvestmentMonth] = Json.reads[NsiCurrentInvestmentMonth]
@@ -74,9 +78,12 @@ object NsiBonusTerm {
 }
 
 case class NsiAccount(
+  accountClosedFlag: String,
   accountBalance: BigDecimal,
   currentInvestmentMonth: NsiCurrentInvestmentMonth,
-  terms: Seq[NsiBonusTerm]
+  terms: Seq[NsiBonusTerm],
+  accountClosureDate: Option[LocalDate] = None,
+  accountClosingBalance: Option[BigDecimal] = None
 )
 
 object NsiAccount {
