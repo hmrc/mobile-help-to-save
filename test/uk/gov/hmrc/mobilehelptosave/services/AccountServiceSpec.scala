@@ -53,6 +53,8 @@ class AccountServiceSpec extends WordSpec with Matchers
       val returnedAccount = await(service.account(nino)).value
       returnedAccount.isClosed shouldBe false
       returnedAccount.balance shouldBe BigDecimal("123.45")
+
+      (slf4jLoggerStub.warn(_: String)).verify(*).never()
     }
 
     """accept accountClosedFlag = " " (space) to mean not closed""" in {
@@ -62,6 +64,18 @@ class AccountServiceSpec extends WordSpec with Matchers
       val returnedAccount = await(service.account(nino)).value
       returnedAccount.isClosed shouldBe false
       returnedAccount.balance shouldBe BigDecimal("123.45")
+
+      (slf4jLoggerStub.warn(_: String)).verify(*).never()
+    }
+
+    "log warning for unknown accountClosedFlag values" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(accountClosedFlag = "O", accountBalance = BigDecimal("123.45"))))
+      val service = new AccountServiceImpl(logger, connector)
+
+      val returnedAccount = await(service.account(nino)).value
+      returnedAccount.isClosed shouldBe false
+
+      (slf4jLoggerStub.warn(_: String)) verify """Unknown value for accountClosedFlag: "O""""
     }
 
     "return account details for closed account" in {

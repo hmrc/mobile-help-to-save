@@ -66,9 +66,15 @@ class AccountServiceImpl @Inject() (
     }
   }
 
-  private def nsiAccountClosedFlagToIsClosed(accountClosedFlag: String): Boolean = {
-    accountClosedFlag == "C"
-  }
+  private def nsiAccountClosedFlagToIsClosed(accountClosedFlag: String): Boolean =
+    if (accountClosedFlag == "C") {
+      true
+    } else if (accountClosedFlag.trim.isEmpty) {
+      false
+    } else {
+      logger.warn(s"""Unknown value for accountClosedFlag: "$accountClosedFlag"""")
+      false
+    }
 
   private def nsiBonusTermToBonusTerm(nsiBonusTerm: NsiBonusTerm): BonusTerm = BonusTerm(
     bonusEstimate = nsiBonusTerm.bonusEstimate,
