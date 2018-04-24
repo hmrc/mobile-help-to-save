@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.joda.time.{DateTime, ReadableInstant}
+import org.joda.time.{DateTime, LocalDate, ReadableInstant}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import reactivemongo.api.ReadPreference
@@ -113,7 +113,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   "userDetails" when {
     "user is enrolled in Help to Save" should {
 
-      val accountReturnedByAccountService = Account(BigDecimal("543.12"), 0, 0, 0, bonusTerms = Seq.empty)
+      val accountReturnedByAccountService = Account(isClosed = false, BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),

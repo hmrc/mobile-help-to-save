@@ -46,11 +46,15 @@ class AccountServiceImpl @Inject() (
     val paidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit - nsiAccount.currentInvestmentMonth.investmentRemaining
     if (paidInThisMonth >= 0) {
       Some(Account(
+        isClosed = nsiAccountClosedFlagToIsClosed(nsiAccount.accountClosedFlag),
         balance = nsiAccount.accountBalance,
         paidInThisMonth = paidInThisMonth,
         canPayInThisMonth = nsiAccount.currentInvestmentMonth.investmentRemaining,
         maximumPaidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit,
-        bonusTerms = nsiAccount.terms.sortBy(_.termNumber).map(nsiBonusTermToBonusTerm)
+        thisMonthEndDate = nsiAccount.currentInvestmentMonth.endDate,
+        bonusTerms = nsiAccount.terms.sortBy(_.termNumber).map(nsiBonusTermToBonusTerm),
+        closureDate = nsiAccount.accountClosureDate,
+        closingBalance = nsiAccount.accountClosingBalance
       ))
     } else {
       // investmentRemaining is unaffected by debits (only credits) so should never exceed investmentLimit
@@ -61,6 +65,16 @@ class AccountServiceImpl @Inject() (
       None
     }
   }
+
+  private def nsiAccountClosedFlagToIsClosed(accountClosedFlag: String): Boolean =
+    if (accountClosedFlag == "C") {
+      true
+    } else if (accountClosedFlag.trim.isEmpty) {
+      false
+    } else {
+      logger.warn(s"""Unknown value for accountClosedFlag: "$accountClosedFlag"""")
+      false
+    }
 
   private def nsiBonusTermToBonusTerm(nsiBonusTerm: NsiBonusTerm): BonusTerm = BonusTerm(
     bonusEstimate = nsiBonusTerm.bonusEstimate,
