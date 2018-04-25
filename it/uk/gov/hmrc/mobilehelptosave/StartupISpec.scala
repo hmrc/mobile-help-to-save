@@ -21,7 +21,7 @@ import play.api.Application
 import play.api.libs.json.{JsLookupResult, JsUndefined}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub, NativeAppWidgetStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec extends WordSpec with Matchers
@@ -29,7 +29,11 @@ class StartupISpec extends WordSpec with Matchers
   with WireMockSupport with OneServerPerSuiteWsClient {
 
   override implicit lazy val app: Application = wireMockApplicationBuilder()
-    .configure(InvitationConfig.Enabled)
+    .configure(
+      InvitationConfig.Enabled,
+      "helpToSave.invitationFilters.survey" -> "false",
+      "helpToSave.invitationFilters.workingTaxCredits" -> "false"
+    )
     .build()
 
   private val generator = new Generator(0)
@@ -40,7 +44,6 @@ class StartupISpec extends WordSpec with Matchers
     "include user.state and user.account" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
       HelpToSaveProxyStub.nsiAccountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -67,7 +70,6 @@ class StartupISpec extends WordSpec with Matchers
     "include account closure fields when account is closed" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
       HelpToSaveProxyStub.closedNsiAccountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -101,7 +103,6 @@ class StartupISpec extends WordSpec with Matchers
     "integrate with the metrics returned by /admin/metrics" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
-      NativeAppWidgetStub.currentUserWantsToBeContacted()
 
       def invitationCountMetric(): Integer = {
         val metricsResponse = await(wsUrl("/admin/metrics").get())
@@ -122,7 +123,6 @@ class StartupISpec extends WordSpec with Matchers
     "omit user state if call to help-to-save fails" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -135,7 +135,6 @@ class StartupISpec extends WordSpec with Matchers
     "omit account details but still include user state if call to get account fails" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
       HelpToSaveProxyStub.nsiAccountReturnsInternalServerError()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -147,7 +146,6 @@ class StartupISpec extends WordSpec with Matchers
     "omit account details but still include user state if get account returns JSON that doesn't conform to the schema" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
       HelpToSaveProxyStub.nsiAccountReturnsInvalidAccordingToSchemaJson(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -159,7 +157,6 @@ class StartupISpec extends WordSpec with Matchers
     "omit account details but still include user state if get account returns badly formed JSON" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
       HelpToSaveProxyStub.nsiAccountReturnsBadlyFormedJson(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
