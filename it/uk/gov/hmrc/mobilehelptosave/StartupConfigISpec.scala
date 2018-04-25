@@ -25,7 +25,7 @@ import play.api.libs.ws.WSClient
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{WireMockSupport, WithTestServer}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -46,13 +46,13 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
     "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> true)
+        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -62,13 +62,13 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
     "return enabled=false, omit all other fields from the response and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> false)
+        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -87,6 +87,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
           "helpToSave.enabled" -> true,
           "helpToSave.savingRemindersEnabled" -> true
         )
+        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -105,21 +106,21 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
     "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> true)
+        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "balanceEnabled").as[Boolean] shouldBe false
       (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe false
       (response.json \ "firstBonusEnabled").as[Boolean] shouldBe false
-      (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe false
-      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe false
+      (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
+      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
@@ -138,13 +139,13 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
           "helpToSave.shareInvitationEnabled" -> "true",
           "helpToSave.savingRemindersEnabled" -> "true"
         )
+        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -156,24 +157,6 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
       (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
-    }
-
-    "invite user regardless of survey response when helpToSave.invitationFilters.survey=false" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
-        .configure(
-          InvitationConfig.Enabled,
-          "helpToSave.invitationFilters.survey" -> "false"
-        ).build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
-      NativeAppWidgetStub.currentUserHasNotRespondedToSurvey()
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
     }
 
   }
