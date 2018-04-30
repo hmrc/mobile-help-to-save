@@ -59,11 +59,13 @@ class StartupISpec extends WordSpec with Matchers
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
+      (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-12-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
 
       val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
+      (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
     }
 
@@ -92,11 +94,13 @@ class StartupISpec extends WordSpec with Matchers
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("7.50"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
+      (firstBonusTermJson \ "endDate").as[String] shouldBe "2020-02-29"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-03-01"
 
       val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
+      (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-02-28"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
     }
 

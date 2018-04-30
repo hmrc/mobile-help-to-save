@@ -79,6 +79,7 @@ class AccountServiceImpl @Inject() (
   private def nsiBonusTermToBonusTerm(nsiBonusTerm: NsiBonusTerm): BonusTerm = BonusTerm(
     bonusEstimate = nsiBonusTerm.bonusEstimate,
     bonusPaid = nsiBonusTerm.bonusPaid,
+    endDate = nsiBonusTerm.endDate,
     bonusPaidOnOrAfterDate = nsiBonusTerm.endDate.plusDays(1)
   )
 
