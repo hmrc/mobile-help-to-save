@@ -22,6 +22,7 @@ import play.api.libs.json.{Json, Writes}
 case class BonusTerm(
   bonusEstimate: BigDecimal,
   bonusPaid: BigDecimal,
+  endDate: LocalDate,
   bonusPaidOnOrAfterDate: LocalDate
 )
 

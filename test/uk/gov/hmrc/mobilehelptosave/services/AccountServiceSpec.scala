@@ -139,7 +139,7 @@ class AccountServiceSpec extends WordSpec with Matchers
       val service = new AccountServiceImpl(logger, connector)
 
       await(service.account(nino)).value.bonusTerms shouldBe Seq(
-        BonusTerm(bonusEstimate = BigDecimal("65.43"), bonusPaid = 0, bonusPaidOnOrAfterDate = new LocalDate(2020, 10, 23))
+        BonusTerm(bonusEstimate = BigDecimal("65.43"), bonusPaid = 0, endDate = new LocalDate(2020, 10, 22), bonusPaidOnOrAfterDate = new LocalDate(2020, 10, 23))
       )
     }
 
@@ -154,8 +154,8 @@ class AccountServiceSpec extends WordSpec with Matchers
       val service = new AccountServiceImpl(logger, connector)
 
       await(service.account(nino)).value.bonusTerms shouldBe Seq(
-        BonusTerm(bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"), bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)),
-        BonusTerm(bonusEstimate = 67, bonusPaid = 0, bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1))
+        BonusTerm(bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"), endDate = new LocalDate(2019, 12, 31), bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)),
+        BonusTerm(bonusEstimate = 67, bonusPaid = 0, endDate = new LocalDate(2021, 12, 31), bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1))
       )
     }
 
