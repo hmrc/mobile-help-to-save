@@ -57,6 +57,16 @@ class InvitationWorkingTaxCreditsFilterISpec extends WordSpec with Matchers
         (response.json \ "user" \ "state").asOpt[String] shouldBe Some("NotEnrolled")
       }
 
+      """return user.state = NotEnrolled when user is not already enrolled and tax-credits-broker returns {"excluded":true}""" in {
+        AuthStub.userIsLoggedIn(internalAuthId, nino)
+        HelpToSaveStub.currentUserIsNotEnrolled()
+        TaxCreditBrokerStub.paymentSummaryReturnsExcluded(nino)
+
+        val response = await(wsUrl("/mobile-help-to-save/startup").get())
+        response.status shouldBe 200
+        (response.json \ "user" \ "state").asOpt[String] shouldBe Some("NotEnrolled")
+      }
+
       "return user.state = InvitedFirstTime and then user.state = Invited when user is not already enrolled and has received a WTC payment recently" in {
         AuthStub.userIsLoggedIn(internalAuthId, nino)
         HelpToSaveStub.currentUserIsNotEnrolled()

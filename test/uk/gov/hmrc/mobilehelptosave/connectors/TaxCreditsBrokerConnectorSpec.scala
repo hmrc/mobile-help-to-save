@@ -81,11 +81,14 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
       ))
     }
 
-    "return None and not log a warning when tax-credits-broker returns 200 OK with excluded: true" in {
+    "return empty Seq and not log a warning when tax-credits-broker returns 200 OK with excluded: true" in {
       // We don't log a warning because /tcs/:nino/payment-summary when
       // called with an unknown NINO seems to return a 200 with "excluded": true
       // rather than a 404, so if we logged a warning we'd log a warning
       // every time we made a call for a NINO that had never had tax credits.
+      // We return Some(Seq.empty) instead of None for a similar reason - this
+      // is not an exceptional condition so we don't want to indicate failure
+      // by returning None.
       val taxCreditsBrokerResponse = HttpResponse(
         200,
         Some(Json.parse("""{"excluded":true}"""))
@@ -95,7 +98,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe None
+      await(connector.previousPayments(nino)) shouldBe Some(Seq.empty)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(*, *) never()
       (slf4jLoggerStub.warn(_: String)) verify * never()
