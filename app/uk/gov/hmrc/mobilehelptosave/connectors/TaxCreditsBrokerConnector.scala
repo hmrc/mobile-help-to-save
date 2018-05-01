@@ -17,9 +17,9 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
-import javax.inject.{Inject, Named, Singleton}
 
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTime
 import play.api.LoggerLike
 import play.api.libs.json._
@@ -46,7 +46,7 @@ class TaxCreditsBrokerConnectorImpl @Inject() (
   override def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[Payment]]] =
     http.GET[JsValue](previousPaymentsUrl(nino).toString).map { jsonBody =>
       if ((jsonBody \ "excluded").asOpt[Boolean].contains(true)) {
-        None
+        Some(Seq.empty)
       } else {
         Some((jsonBody \ "workingTaxCredit" \ "previousPaymentSeq").asOpt[JsValue].fold(Seq.empty[Payment])(_.as[Seq[Payment]]))
       }

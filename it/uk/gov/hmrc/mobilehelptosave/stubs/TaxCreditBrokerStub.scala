@@ -57,6 +57,25 @@ object TaxCreditBrokerStub {
           """.stripMargin
         )))
 
+  /**
+    * This is called paymentSummaryReturnsExcluded, not
+    * userIsExcludedFromTaxCredits, because payment-summary returns
+    * {"excluded":true} when the NINO is unknown, not just when the NINO is
+    * explicitly excluded (at least in stubbed environments - haven't
+    * verified what happens when running against the real HoD).
+    */
+  def paymentSummaryReturnsExcluded(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(encodePathSegments("tcs", nino.value, "payment-summary")))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(
+          """
+             |{
+             |  "excluded": true
+             |}
+          """.stripMargin
+        )))
+
   def gettingTaxCreditsPaymentsReturnsInternalServerError(nino: Nino): Unit =
     stubFor(get(urlPathEqualTo(encodePathSegments("tcs", nino.value, "payment-summary")))
       .willReturn(aResponse()
