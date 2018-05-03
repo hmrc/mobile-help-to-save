@@ -61,4 +61,7 @@ object AuthStub {
         .withStatus(401)
           .withHeader("WWW-Authenticate", """MDTP detail="UnsupportedAuthProvider"""")
       ))
+
+  def authoriseShouldNotHaveBeenCalled(): Unit =
+    verify(0, postRequestedFor(urlPathEqualTo("/auth/authorise")))
 }
