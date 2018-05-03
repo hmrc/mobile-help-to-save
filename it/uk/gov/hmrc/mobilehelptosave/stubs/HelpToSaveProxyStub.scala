@@ -154,4 +154,7 @@ object HelpToSaveProxyStub {
       .willReturn(aResponse()
         .withStatus(500)))
 
+  def nsiAccountShouldNotHaveBeenCalled(): Unit =
+    verify(0, getRequestedFor(urlPathEqualTo("/help-to-save-proxy/nsi-services/account")))
+
 }

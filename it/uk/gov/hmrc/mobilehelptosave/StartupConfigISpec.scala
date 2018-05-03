@@ -25,7 +25,7 @@ import play.api.libs.ws.WSClient
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{WireMockSupport, WithTestServer}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -78,7 +78,7 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
     }
 
-    "only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndInvitationCleanup(
+    "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
@@ -91,7 +91,13 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveProxyStub.nsiAccountExists(nino)
+
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
+
       response.status shouldBe 200
       (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
       (response.json \ "shuttering" \ "title").as[String] shouldBe "Shuttered"
@@ -100,7 +106,9 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
       response.json.as[JsObject].keys should not contain "user"
 
+      AuthStub.authoriseShouldNotHaveBeenCalled()
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
+      HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
     }
 
     "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndInvitationCleanup(

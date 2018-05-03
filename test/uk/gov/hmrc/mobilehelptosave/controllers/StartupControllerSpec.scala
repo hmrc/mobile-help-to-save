@@ -190,7 +190,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         helpToSaveInvitationUrl = "/invitation",
         helpToSaveAccessAccountUrl = "/accessAccount")
 
-      "omit URLs and user from response" in {
+      "omit URLs and user from response, and not call UserService or AuthorisedWithIds" in {
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
