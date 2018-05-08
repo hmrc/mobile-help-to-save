@@ -39,7 +39,10 @@ class UserService @Inject() (
   accountService: AccountService,
   clock: Clock,
   @Named("helpToSave.enabled") enabled: Boolean,
-  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int
+  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int,
+  @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
+  @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
+  @Named("helpToSave.firstBonusEnabled") firstBonusEnabled: Boolean
 ) {
 
   def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
@@ -60,7 +63,7 @@ class UserService @Inject() (
     }
 
   private def userDetails(nino: Nino, state: UserState.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
-    val accountFO = if (state == UserState.Enrolled) {
+    val accountFO = if (state == UserState.Enrolled && anyAccountFeatureEnabled) {
       accountService.account(nino)
     } else {
       Future successful None
@@ -68,6 +71,9 @@ class UserService @Inject() (
 
     accountFO.map(accountO => UserDetails(state = state, account = accountO))
   }
+
+  private def anyAccountFeatureEnabled: Boolean =
+    balanceEnabled || paidInThisMonthEnabled || firstBonusEnabled
 
   private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
     if (enrolled) {

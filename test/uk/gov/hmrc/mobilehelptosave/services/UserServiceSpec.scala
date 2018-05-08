@@ -57,7 +57,10 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     accountService: AccountService = fakeAccountService(nino, None),
     clock: Clock = fixedClock,
     enabled: Boolean = true,
-    dailyInvitationCap: Int = 1000
+    dailyInvitationCap: Int = 1000,
+    balanceEnabled: Boolean = true,
+    paidInThisMonthEnabled: Boolean = true,
+    firstBonusEnabled: Boolean = true
   ) extends UserService(
     invitationEligibilityService,
     helpToSaveConnector,
@@ -66,7 +69,10 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     accountService,
     clock,
     enabled = enabled,
-    dailyInvitationCap = dailyInvitationCap
+    dailyInvitationCap = dailyInvitationCap,
+    balanceEnabled = balanceEnabled,
+    paidInThisMonthEnabled = paidInThisMonthEnabled,
+    firstBonusEnabled = firstBonusEnabled
   )
 
   "userDetails" should {
@@ -111,7 +117,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   }
 
   "userDetails" when {
-    "user is enrolled in Help to Save" should {
+    "user is enrolled in Help to Save and all account-related feature flags are enabled" should {
 
       val accountReturnedByAccountService = Account(isClosed = false, BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
@@ -131,7 +137,45 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
+    }
 
+    "user is enrolled in Help to Save and some but not all account-related feature flags are enabled" should {
+
+      val accountReturnedByAccountService = Account(isClosed = false, BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = fakeAccountService(nino, Some(accountReturnedByAccountService)),
+        balanceEnabled = false,
+        paidInThisMonthEnabled = false,
+        firstBonusEnabled = true
+      )
+
+      "include account information" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        user.account shouldBe Some(accountReturnedByAccountService)
+      }
+    }
+
+    "user is enrolled in Help to Save and no account-related feature flags are enabled" should {
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = shouldNotBeCalledAccountService,
+        balanceEnabled = false,
+        paidInThisMonthEnabled = false,
+        firstBonusEnabled = false
+      )
+
+      "not call accountService" in {
+        // lack of call to accountService is checked by use of shouldNotBeCalledAccountService when constructing UserService
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        user.account shouldBe None
+      }
     }
 
     "user is eligible to be invited" should {
@@ -418,14 +462,19 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     }
   }
 
-  private val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
+  private lazy val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
       Future failed new RuntimeException("HelpToSaveConnector should not be called in this situation")
   }
 
-  private val shouldNotBeCalledInvitationEligibilityService = new InvitationEligibilityService {
+  private lazy val shouldNotBeCalledInvitationEligibilityService = new InvitationEligibilityService {
     override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
       Future failed new RuntimeException("InvitationEligibilityService should not be called in this situation")
+  }
+
+  private lazy val shouldNotBeCalledAccountService = new AccountService {
+    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] =
+      Future failed new RuntimeException("AccountService should not be called in this situation")
   }
 
   // disable implicit
