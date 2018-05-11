@@ -16,9 +16,29 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
 class NinoWithoutWtcMongoRepositoryISpec extends NinoWithoutWtcRepositorySpec with MongoRepositoryISpec[NinoWithoutWtc, Nino] {
   override val repo: NinoWithoutWtcMongoRepository = app.injector.instanceOf[NinoWithoutWtcMongoRepository]
+
+  override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
+    "helpToSave.taxCreditsCache.expireAfterSeconds" -> 1L
+  )
+
+  "documents" should {
+    "expire" in {
+      val id = createId()
+      await(repo.insert(createEntity(id)))
+
+      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = 10 seconds)
+      eventually {
+        await(repo.findById(id)) shouldBe None
+      }
+    }
+  }
 }

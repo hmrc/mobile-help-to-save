@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.repos
 
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
 import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -33,9 +33,10 @@ trait NinoWithoutWtcRepository extends TestableRepository[NinoWithoutWtc, Nino]
 @Singleton
 class NinoWithoutWtcMongoRepository @Inject()(
   mongo: ReactiveMongoComponent,
-  configuration: Configuration
+  configuration: Configuration,
+  @Named("helpToSave.taxCreditsCache.expireAfterSeconds") expireAfterSeconds: Long
 ) extends ReactiveRepository[NinoWithoutWtc, Nino](
-  collectionName = "invitations" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
+  collectionName = "ninoWithoutWtc" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
   mongo = mongo.mongoConnector.db,
   domainFormat = RenameIdForMongoFormat("nino", Json.format[NinoWithoutWtc]),
   idFormat = Format(Nino.ninoRead, Nino.ninoWrite)
@@ -45,7 +46,7 @@ class NinoWithoutWtcMongoRepository @Inject()(
     Index(
       key = Seq("created" -> IndexType.Ascending),
       name = Some("createdIndex"),
-      options = BSONDocument("expireAfterSeconds" -> 180L * 60L * 60L * 24L)
+      options = BSONDocument("expireAfterSeconds" -> expireAfterSeconds)
     )
   )
 }

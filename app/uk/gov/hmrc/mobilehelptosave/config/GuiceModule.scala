@@ -48,6 +48,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigInt("helpToSave.dailyInvitationCap")
     bindConfigBoolean("helpToSave.invitationFilters.survey")
     bindConfigBoolean("helpToSave.invitationFilters.workingTaxCredits")
+    bindConfigLong("helpToSave.taxCreditsCache.expireAfterSeconds")
 
     bindBaseUrl("help-to-save")
     bindBaseUrl("help-to-save-proxy")
@@ -64,6 +65,10 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   private def bindConfigInt(path: String): Unit = {
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getInt(path))
+  }
+
+  private def bindConfigLong(path: String): Unit = {
+    bindConstant().annotatedWith(named(path)).to(configuration.underlying.getLong(path))
   }
 
   private def bindConfigString(path: String): Unit = {

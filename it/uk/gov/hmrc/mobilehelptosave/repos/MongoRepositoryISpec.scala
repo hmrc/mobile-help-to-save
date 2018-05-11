@@ -27,9 +27,12 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait MongoRepositoryISpec[A <: Any, ID <: Any] extends RepositorySpec[A, ID] with GuiceOneAppPerSuite with BeforeAndAfterAll {
-  override implicit lazy val app: Application = new GuiceApplicationBuilder()
-    .configure("mongodb.collectionName.suffix" -> s"-test-${UUID.randomUUID()}")
+  override implicit lazy val app: Application = appBuilder
     .build()
+
+  protected def appBuilder: GuiceApplicationBuilder =
+    new GuiceApplicationBuilder()
+      .configure("mongodb.collectionName.suffix" -> s"-test-${UUID.randomUUID()}")
 
   override val repo: ReactiveRepository[A, ID] with TestableRepository[A, ID]
 
