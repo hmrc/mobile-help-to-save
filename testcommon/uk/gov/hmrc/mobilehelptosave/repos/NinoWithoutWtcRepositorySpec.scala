@@ -16,8 +16,19 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
-class FakeInvitationRepositorySpec extends InvitationRepositorySpec {
+import org.joda.time.DateTime
+import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 
-  override val repo: InvitationRepository = new FakeInvitationRepository
+trait NinoWithoutWtcRepositorySpec extends RepositorySpec[NinoWithoutWtc, Nino] {
 
+  override val repo: NinoWithoutWtcRepository
+
+  private val generator = new Generator(0)
+
+  override def createId(): Nino = generator.nextNino
+  override def createOtherId(): Nino = generator.nextNino
+
+  override def createEntity(id: Nino): NinoWithoutWtc = NinoWithoutWtc(id, DateTime.now())
+  override def createOtherEntity(otherId: Nino): NinoWithoutWtc = NinoWithoutWtc(otherId, DateTime.now().minusDays(1))
 }

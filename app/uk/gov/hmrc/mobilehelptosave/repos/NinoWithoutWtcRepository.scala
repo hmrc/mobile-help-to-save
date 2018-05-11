@@ -16,44 +16,36 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
-import com.google.inject.{ImplementedBy, Inject}
-import javax.inject.Singleton
-import org.joda.time.DateTime
+import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.libs.json._
+import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
-import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation}
+import reactivemongo.bson.BSONDocument
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.{ExecutionContext, Future}
-
-@ImplementedBy(classOf[InvitationMongoRepository])
-trait InvitationRepository extends TestableRepository[Invitation, InternalAuthId] {
-  def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int]
-
-  def insert(entity: Invitation)(implicit ec: ExecutionContext): Future[WriteResult]
-}
+@ImplementedBy(classOf[NinoWithoutWtcMongoRepository])
+trait NinoWithoutWtcRepository extends TestableRepository[NinoWithoutWtc, Nino]
 
 @Singleton
-class InvitationMongoRepository @Inject()(
+class NinoWithoutWtcMongoRepository @Inject()(
   mongo: ReactiveMongoComponent,
   configuration: Configuration
-) extends ReactiveRepository[Invitation, InternalAuthId](
+) extends ReactiveRepository[NinoWithoutWtc, Nino](
   collectionName = "invitations" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
   mongo = mongo.mongoConnector.db,
-  domainFormat = RenameIdForMongoFormat("internalAuthId", Json.format[Invitation]),
-  idFormat = InternalAuthId.format
-) with InvitationRepository {
+  domainFormat = RenameIdForMongoFormat("nino", Json.format[NinoWithoutWtc]),
+  idFormat = Format(Nino.ninoRead, Nino.ninoWrite)
+) with NinoWithoutWtcRepository {
 
   override def indexes: Seq[Index] = Seq(
     Index(
       key = Seq("created" -> IndexType.Ascending),
-      name = Some("createdIndex")
+      name = Some("createdIndex"),
+      options = BSONDocument("expireAfterSeconds" -> 180L * 60L * 60L * 24L)
     )
   )
-
-  override def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int] =
-    collection.count(Some(Json.obj("created" -> Json.obj("$gte" -> dateTime))))
 }

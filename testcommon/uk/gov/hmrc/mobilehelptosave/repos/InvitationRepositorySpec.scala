@@ -19,10 +19,6 @@ package uk.gov.hmrc.mobilehelptosave.repos
 import java.util.UUID
 
 import org.joda.time.DateTime
-import org.scalatest.concurrent.Eventually
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import reactivemongo.core.errors.{DatabaseException, GenericDatabaseException}
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,60 +33,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * It is also used to make sure our test FakeInvitationRepository behaves like
   * the production InvitationMongoRepository
   */
-trait InvitationRepositorySpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout with Eventually with BeforeAndAfterAll {
+trait InvitationRepositorySpec extends RepositorySpec[Invitation, InternalAuthId] {
 
-  val repo: InvitationRepository
+  override val repo: InvitationRepository
 
-  "insert" should {
-    "save data so that it can be found with findById" in {
-      val id = InternalAuthId(s"test-${UUID.randomUUID()}")
-      val otherId = InternalAuthId(s"test-other-${UUID.randomUUID()}")
-      try {
-        val invitation = Invitation(id, DateTime.now())
-        val otherInvitation = Invitation(otherId, DateTime.now().minusDays(1))
+  def createId(): InternalAuthId = InternalAuthId(s"test-${UUID.randomUUID()}")
+  def createOtherId(): InternalAuthId = InternalAuthId(s"test-other-${UUID.randomUUID()}")
 
-        await(repo.insert(otherInvitation)).n shouldBe 1
-        await(repo.insert(invitation)).n shouldBe 1
-
-        eventually {
-          await(repo.findById(id)) shouldBe Some(invitation)
-        }
-      }
-      finally {
-        await(repo.removeById(id))
-        await(repo.removeById(otherId))
-      }
-    }
-
-    "not allow 2 invitations with the same ID to be inserted" in {
-      val id = InternalAuthId(s"test-${UUID.randomUUID()}")
-      try {
-        val invitation = Invitation(id, DateTime.now())
-        val invitation2 = Invitation(id, DateTime.now().minusDays(1))
-
-        await(repo.insert(invitation))
-        eventually {
-          await(repo.findById(id)) shouldBe Some(invitation)
-        }
-
-        val e = intercept[DatabaseException] {
-          await(repo.insert(invitation2))
-        }
-
-        repo.isDuplicateKey(e) shouldBe true
-
-        val someOtherE = GenericDatabaseException("something else", Some(1234))
-        repo.isDuplicateKey(someOtherE) shouldBe false
-      }
-      finally {
-        await(repo.removeById(id))
-
-        eventually {
-          await(repo.findById(id)) shouldBe None
-        }
-      }
-    }
-  }
+  def createEntity(id: InternalAuthId): Invitation = Invitation(id, DateTime.now())
+  def createOtherEntity(otherId: InternalAuthId): Invitation = Invitation(otherId, DateTime.now().minusDays(1))
 
   "countCreatedSince" should {
     "include invitations created at or after the time but not before" in {
@@ -120,20 +71,5 @@ trait InvitationRepositorySpec extends WordSpec with Matchers with FutureAwaits 
         ids.foreach(id => await(repo.removeById(id)))
       }
     }
-  }
-
-  "removeById" should {
-    "return the removed count" in {
-      val id = InternalAuthId(s"test-${UUID.randomUUID()}")
-      await(repo.removeById(id)).n shouldBe 0
-
-      await(repo.insert(Invitation(id, DateTime.now())))
-      await(repo.removeById(id)).n shouldBe 1
-    }
-  }
-
-  override def beforeAll() {
-    super.beforeAll()
-    await(repo.ensureIndexes)
   }
 }

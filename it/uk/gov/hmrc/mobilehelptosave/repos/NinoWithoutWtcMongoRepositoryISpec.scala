@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
-class FakeInvitationRepositorySpec extends InvitationRepositorySpec {
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 
-  override val repo: InvitationRepository = new FakeInvitationRepository
-
+class NinoWithoutWtcMongoRepositoryISpec extends NinoWithoutWtcRepositorySpec with MongoRepositoryISpec[NinoWithoutWtc, Nino] {
+  override val repo: NinoWithoutWtcMongoRepository = app.injector.instanceOf[NinoWithoutWtcMongoRepository]
 }

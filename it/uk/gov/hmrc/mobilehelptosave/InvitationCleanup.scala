@@ -22,11 +22,11 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.ServerProvider
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
-import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
+import uk.gov.hmrc.mobilehelptosave.repos.{InvitationRepository, NinoWithoutWtcMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait InvitationCleanup extends BeforeAndAfterEach { this: (Suite with ServerProvider with FutureAwaits with DefaultAwaitTimeout) =>
+trait InvitationCleanup extends BeforeAndAfterEach { this: Suite with ServerProvider with FutureAwaits with DefaultAwaitTimeout =>
 
   protected def internalAuthId: InternalAuthId = _internalAuthId
 
@@ -39,7 +39,11 @@ trait InvitationCleanup extends BeforeAndAfterEach { this: (Suite with ServerPro
 
   override protected def afterEach(): Unit = {
     await(app.injector.instanceOf[InvitationRepository].removeById(_internalAuthId))
+    clearTaxCreditsCache()
     super.afterEach()
   }
 
+  private def clearTaxCreditsCache() = {
+    await(app.injector.instanceOf[NinoWithoutWtcMongoRepository].remove())
+  }
 }
