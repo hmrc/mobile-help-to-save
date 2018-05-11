@@ -26,6 +26,7 @@ import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation}
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,7 +44,7 @@ class InvitationMongoRepository @Inject()(
 ) extends ReactiveRepository[Invitation, InternalAuthId](
   collectionName = "invitations" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
   mongo = mongo.mongoConnector.db,
-  domainFormat = RenameIdForMongoFormat("internalAuthId", Json.format[Invitation]),
+  domainFormat = InvitationMongoRepository.domainFormat,
   idFormat = InternalAuthId.format
 ) with InvitationRepository {
 
@@ -56,4 +57,8 @@ class InvitationMongoRepository @Inject()(
 
   override def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int] =
     collection.count(Some(Json.obj("created" -> Json.obj("$gte" -> dateTime))))
+}
+
+object InvitationMongoRepository {
+  private[repos] val domainFormat = RenameIdForMongoFormat("internalAuthId", Json.format[Invitation])
 }

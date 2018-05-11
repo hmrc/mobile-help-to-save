@@ -26,6 +26,7 @@ import reactivemongo.bson.BSONDocument
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats._
 
 @ImplementedBy(classOf[NinoWithoutWtcMongoRepository])
 trait NinoWithoutWtcRepository extends TestableRepository[NinoWithoutWtc, Nino]
@@ -38,7 +39,7 @@ class NinoWithoutWtcMongoRepository @Inject()(
 ) extends ReactiveRepository[NinoWithoutWtc, Nino](
   collectionName = "ninoWithoutWtc" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
   mongo = mongo.mongoConnector.db,
-  domainFormat = RenameIdForMongoFormat("nino", Json.format[NinoWithoutWtc]),
+  domainFormat = NinoWithoutWtcMongoRepository.domainFormat,
   idFormat = Format(Nino.ninoRead, Nino.ninoWrite)
 ) with NinoWithoutWtcRepository {
 
@@ -49,4 +50,8 @@ class NinoWithoutWtcMongoRepository @Inject()(
       options = BSONDocument("expireAfterSeconds" -> expireAfterSeconds)
     )
   )
+}
+
+object NinoWithoutWtcMongoRepository {
+  private[repos] val domainFormat = RenameIdForMongoFormat("nino", Json.format[NinoWithoutWtc])
 }

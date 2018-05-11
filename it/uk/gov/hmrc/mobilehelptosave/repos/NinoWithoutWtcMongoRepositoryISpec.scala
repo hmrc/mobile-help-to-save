@@ -33,9 +33,17 @@ class NinoWithoutWtcMongoRepositoryISpec extends NinoWithoutWtcRepositorySpec wi
   "documents" should {
     "expire" in {
       val id = createId()
-      await(repo.insert(createEntity(id)))
+      val entity = createEntity(id)
 
-      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = 10 seconds)
+      // https://docs.mongodb.com/v3.2/core/index-ttl/#timing-of-the-delete-operation
+      val mongoDeleteExpiredBackgroundTaskRunsEvery = 60 seconds
+      implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = mongoDeleteExpiredBackgroundTaskRunsEvery + (10 seconds))
+
+      await(repo.insert(entity))
+      eventually {
+        await(repo.findById(id)).isDefined shouldBe true
+      }
+
       eventually {
         await(repo.findById(id)) shouldBe None
       }

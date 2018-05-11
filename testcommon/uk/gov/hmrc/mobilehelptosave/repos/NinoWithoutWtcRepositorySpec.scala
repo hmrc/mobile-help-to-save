@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, DateTimeZone}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 
@@ -29,6 +29,6 @@ trait NinoWithoutWtcRepositorySpec extends RepositorySpec[NinoWithoutWtc, Nino] 
   override def createId(): Nino = generator.nextNino
   override def createOtherId(): Nino = generator.nextNino
 
-  override def createEntity(id: Nino): NinoWithoutWtc = NinoWithoutWtc(id, DateTime.now())
-  override def createOtherEntity(otherId: Nino): NinoWithoutWtc = NinoWithoutWtc(otherId, DateTime.now().minusDays(1))
+  override def createEntity(id: Nino): NinoWithoutWtc = NinoWithoutWtc(id, DateTime.now(DateTimeZone.UTC))
+  override def createOtherEntity(otherId: Nino): NinoWithoutWtc = NinoWithoutWtc(otherId, DateTime.now(DateTimeZone.UTC).minusDays(1))
 }
