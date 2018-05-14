@@ -110,8 +110,8 @@ class StartupConfigISpec extends WordSpec with Matchers with FutureAwaits with D
       HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
     }
 
-    "not call Get Account API when feature flags that require account information are all disabled" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
+    "not call Get Account API when feature flags that require account information are all disabled" in withTestServerAndMongoCleanup(
+      appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> false,
           "helpToSave.enabled" -> true,
