@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.repos
 
 import java.util.UUID
 
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.DateTime
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,8 +40,8 @@ trait InvitationRepositorySpec extends RepositorySpec[Invitation, InternalAuthId
   def createId(): InternalAuthId = InternalAuthId(s"test-${UUID.randomUUID()}")
   def createOtherId(): InternalAuthId = InternalAuthId(s"test-other-${UUID.randomUUID()}")
 
-  def createEntity(id: InternalAuthId): Invitation = Invitation(id, DateTime.now(DateTimeZone.UTC))
-  def createOtherEntity(otherId: InternalAuthId): Invitation = Invitation(otherId, DateTime.now(DateTimeZone.UTC).minusDays(1))
+  def createEntity(id: InternalAuthId): Invitation = Invitation(id, DateTime.now())
+  def createOtherEntity(otherId: InternalAuthId): Invitation = Invitation(otherId, DateTime.now().minusDays(1))
 
   "countCreatedSince" should {
     "include invitations created at or after the time but not before" in {

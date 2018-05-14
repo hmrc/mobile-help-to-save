@@ -26,7 +26,6 @@ import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation}
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats._
 
 import scala.concurrent.{ExecutionContext, Future}
 

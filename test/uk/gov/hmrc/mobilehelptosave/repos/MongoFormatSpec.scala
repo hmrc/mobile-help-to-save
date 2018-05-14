@@ -28,20 +28,20 @@ class MongoFormatSpec extends WordSpec with Matchers {
 
   "NinoWithoutWtcMongoRepository.domainFormat" should {
     // this behaviour depends on an import of ReactiveMongoFormats._, which IntelliJ will remove if you organise imports
-    "write date as a MongoDB Date, not an integer" in {
+    "write date as a MongoDB Date, not an integer, so that a TTL index can be used" in {
       val created = new DateTime("1980-01-01T00:00:00Z")
       val json = NinoWithoutWtcMongoRepository.domainFormat.writes(NinoWithoutWtc(nino, created))
-      (json \ "created" \ "$date").as[Long] shouldBe created.toInstant.getMillis
+      (json \ "created" \ "$date").toOption.isDefined shouldBe true
     }
   }
 
   "InvitationMongoRepository.domainFormat" should {
-    // this behaviour depends on an import of ReactiveMongoFormats._, which IntelliJ will remove if you organise imports
-    "write date as a MongoDB Date, not an integer" in {
+    "write date as a MongoDB Int64 for compatibility with existing data" in {
       val created = new DateTime("1980-01-01T00:00:00Z")
 
       val json = InvitationMongoRepository.domainFormat.writes(Invitation(InternalAuthId("testId"), created))
-      (json \ "created" \ "$date").as[Long] shouldBe created.toInstant.getMillis
+      (json \ "created").toOption.isDefined shouldBe true
+      (json \ "created" \ "$date").toOption.isDefined shouldBe false
     }
   }
 }
