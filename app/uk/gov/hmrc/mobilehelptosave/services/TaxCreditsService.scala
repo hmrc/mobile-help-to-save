@@ -26,6 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{Payment, TaxCreditsBrokerConnector}
 import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
+import uk.gov.hmrc.mobilehelptosave.metrics.MobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.NinoWithoutWtcRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,6 +40,7 @@ trait TaxCreditsService {
 class TaxCreditsServiceImpl @Inject() (
   logger: LoggerLike,
   taxCreditsBrokerConnector: TaxCreditsBrokerConnector,
+  metrics: MobileHelpToSaveMetrics,
   ninoWithoutWtcRepository: NinoWithoutWtcRepository,
   clock: Clock)
   extends TaxCreditsService {
@@ -46,16 +48,22 @@ class TaxCreditsServiceImpl @Inject() (
   override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
     findNegativeCachedResult(nino).flatMap {
       case Some(_) =>
+        metrics.taxCreditsCacheHitCounter.inc()
         Future successful Some(false)
       case None =>
         (for {
-          previousPayments <- OptionT(taxCreditsBrokerConnector.previousPayments(nino)(hc, ec))
+          previousPayments <- OptionT(previousPayments(nino))
           hasRecentWtc = containsRecentWtcPayment(previousPayments)
           _ <- OptionT.liftF(cacheResultIfNegative(nino, hasRecentWtc))
         } yield {
           hasRecentWtc
         }).value
     }
+
+  private def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext) = {
+    metrics.taxCreditsBrokerCallCounter.inc()
+    taxCreditsBrokerConnector.previousPayments(nino)
+  }
 
   private def containsRecentWtcPayment(previousPayments: Seq[Payment]) = {
     previousPayments.filter(p => !p.paymentDate.isBefore(clock.now())) foreach (p =>
