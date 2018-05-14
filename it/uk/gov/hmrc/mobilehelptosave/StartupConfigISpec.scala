@@ -111,6 +111,36 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
     }
 
+    "not call Get Account API when feature flags that require account information are all disabled" in withTestServerAndInvitationCleanup(
+      wireMockApplicationBuilder()
+        .configure(
+          "helpToSave.shuttering.shuttered" -> false,
+          "helpToSave.enabled" -> true,
+          "helpToSave.shareInvitationEnabled" -> true,
+          "helpToSave.savingRemindersEnabled" -> true,
+          "helpToSave.balanceEnabled" -> false,
+          "helpToSave.paidInThisMonthEnabled" -> false,
+          "helpToSave.firstBonusEnabled" -> false
+        )
+        .configure(InvitationConfig.NoFilters: _*)
+        .build()) { (app: Application, portNumber: PortNumber) =>
+      implicit val implicitPortNumber: PortNumber = portNumber
+      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveProxyStub.nsiAccountExists(nino)
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+
+      response.status shouldBe 200
+      (response.json \ "enabled").as[Boolean] shouldBe true
+      (response.json \ "user" \ "state").as[String] shouldBe "Enrolled"
+      (response.json \ "user").as[JsObject].keys should not contain "account"
+
+      HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
+    }
+
     "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndInvitationCleanup(
       wireMockApplicationBuilder()
         .configure("helpToSave.enabled" -> true)
