@@ -25,5 +25,7 @@ class MobileHelpToSaveMetrics @Inject() (val metrics: com.kenshoo.play.metrics.M
   def counter(name: String): Counter = metrics.defaultRegistry.counter(name)
 
   val invitationCounter: Counter = counter("invitation")
+  val taxCreditsBrokerCallCounter: Counter = counter("taxCreditsBrokerCall")
+  val taxCreditsCacheHitCounter: Counter = counter("taxCreditsCacheHit")
 
 }
