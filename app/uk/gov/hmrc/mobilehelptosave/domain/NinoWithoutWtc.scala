@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.repos
+package uk.gov.hmrc.mobilehelptosave.domain
 
-class FakeInvitationRepositorySpec extends InvitationRepositorySpec {
+import org.joda.time.DateTime
+import uk.gov.hmrc.domain.Nino
 
-  override val repo: InvitationRepository = new FakeInvitationRepository
-
-}
+case class NinoWithoutWtc(nino: Nino, created: DateTime)

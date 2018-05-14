@@ -16,33 +16,24 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
-import javax.inject.Singleton
-
 import com.google.inject.{ImplementedBy, Inject}
+import javax.inject.Singleton
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.ReadPreference
-import reactivemongo.api.commands.{WriteConcern, WriteResult}
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[InvitationMongoRepository])
-trait InvitationRepository {
-  def findById(id: InternalAuthId, readPreference: ReadPreference = ReadPreference.primaryPreferred)(implicit ec: ExecutionContext): Future[Option[Invitation]]
+trait InvitationRepository extends TestableRepository[Invitation, InternalAuthId] {
   def countCreatedSince(dateTime: DateTime)(implicit ec: ExecutionContext): Future[Int]
 
   def insert(entity: Invitation)(implicit ec: ExecutionContext): Future[WriteResult]
-  def removeById(id: InternalAuthId, writeConcern: WriteConcern = WriteConcern.Default)(implicit ec: ExecutionContext): Future[WriteResult]
-
-  def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]]
-
-  def isDuplicateKey(e: DatabaseException): Boolean = e.code.contains(11000)
 }
 
 @Singleton
@@ -52,7 +43,7 @@ class InvitationMongoRepository @Inject()(
 ) extends ReactiveRepository[Invitation, InternalAuthId](
   collectionName = "invitations" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
   mongo = mongo.mongoConnector.db,
-  domainFormat = InvitationMongoFormat.mongoFormat,
+  domainFormat = InvitationMongoRepository.domainFormat,
   idFormat = InternalAuthId.format
 ) with InvitationRepository {
 
@@ -67,20 +58,6 @@ class InvitationMongoRepository @Inject()(
     collection.count(Some(Json.obj("created" -> Json.obj("$gte" -> dateTime))))
 }
 
-private[repos] object InvitationMongoFormat {
-
-  private val caseClassIdPath: JsPath = JsPath \ "internalAuthId"
-  private val mongoIdPath: JsPath = JsPath \ "_id"
-
-  private def copyKey(fromPath: JsPath, toPath: JsPath) =
-    JsPath.json.update(toPath.json.copyFrom(fromPath.json.pick))
-
-  private def moveKey(fromPath: JsPath, toPath: JsPath) =
-    (json: JsValue) => json.transform(copyKey(fromPath, toPath) andThen fromPath.json.prune).get
-
-  private val mongoReads = Json.reads[Invitation].compose(JsPath.json.update(caseClassIdPath.json.copyFrom(mongoIdPath.json.pick)))
-  private val mongoWrites = Json.writes[Invitation].transform(moveKey(caseClassIdPath, mongoIdPath))
-
-  val mongoFormat: Format[Invitation] = Format(mongoReads, mongoWrites)
-
+object InvitationMongoRepository {
+  private[repos] val domainFormat = RenameIdForMongoFormat("internalAuthId", Json.format[Invitation])
 }

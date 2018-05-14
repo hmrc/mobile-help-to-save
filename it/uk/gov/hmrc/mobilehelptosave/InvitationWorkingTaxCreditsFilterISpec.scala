@@ -93,6 +93,24 @@ class InvitationWorkingTaxCreditsFilterISpec extends WordSpec with Matchers
         (response.json \ "enabled").asOpt[Boolean] should not be None
         (response.json \ "infoUrl").asOpt[String] should not be None
       }
+
+      """Only call tax-credits-broker once when multiple requests are made for an ineligible NINO (to reduce load on HoD)""" in {
+        AuthStub.userIsLoggedIn(internalAuthId, nino)
+        HelpToSaveStub.currentUserIsNotEnrolled()
+        TaxCreditBrokerStub.paymentSummaryReturnsExcluded(nino)
+
+        val response1 = await(wsUrl("/mobile-help-to-save/startup").get())
+        response1.status shouldBe 200
+        (response1.json \ "user" \ "state").asOpt[String] shouldBe Some("NotEnrolled")
+
+        TaxCreditBrokerStub.paymentSummaryShouldOnlyHaveBeenCalledOnce(nino)
+
+        val response2 = await(wsUrl("/mobile-help-to-save/startup").get())
+        response2.status shouldBe 200
+        (response2.json \ "user" \ "state").asOpt[String] shouldBe Some("NotEnrolled")
+
+        TaxCreditBrokerStub.paymentSummaryShouldOnlyHaveBeenCalledOnce(nino)
+      }
     }
   }
 }

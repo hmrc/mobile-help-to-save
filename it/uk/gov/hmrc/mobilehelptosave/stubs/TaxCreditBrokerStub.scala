@@ -81,4 +81,7 @@ object TaxCreditBrokerStub {
       .willReturn(aResponse()
         .withStatus(500)))
 
+  def paymentSummaryShouldOnlyHaveBeenCalledOnce(nino: Nino): Unit =
+    verify(1, getRequestedFor(urlPathEqualTo(encodePathSegments("tcs", nino.value, "payment-summary"))))
+
 }

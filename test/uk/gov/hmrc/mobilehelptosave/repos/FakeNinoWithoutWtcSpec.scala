@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.repos
 
-class FakeInvitationRepositorySpec extends InvitationRepositorySpec {
+class FakeNinoWithoutWtcSpec extends NinoWithoutWtcRepositorySpec {
 
-  override val repo: InvitationRepository = new FakeInvitationRepository
+  override val repo: NinoWithoutWtcRepository = new FakeNinoWithoutWtcRepository
 
 }
