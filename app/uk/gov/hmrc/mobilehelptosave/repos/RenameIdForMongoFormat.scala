@@ -32,7 +32,7 @@ object RenameIdForMongoFormat {
     val caseClassIdPath: JsPath = JsPath \ caseClassIdField
     val mongoIdPath: JsPath = JsPath \ "_id"
 
-    val mongoReads = defaultFormat.compose(JsPath.json.update(caseClassIdPath.json.copyFrom(mongoIdPath.json.pick)))
+    val mongoReads = defaultFormat.compose(copyKey(mongoIdPath, caseClassIdPath))
     val mongoWrites = defaultFormat.transform(moveKey(caseClassIdPath, mongoIdPath))
 
     Format(mongoReads, mongoWrites)
