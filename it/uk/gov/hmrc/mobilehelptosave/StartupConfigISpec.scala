@@ -18,24 +18,23 @@ package uk.gov.hmrc.mobilehelptosave
 
 import java.util.Base64
 
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSClient
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
-import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{WireMockSupport, WithTestServer}
-import uk.gov.hmrc.play.test.UnitSpec
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollections, WireMockSupport, WithTestServer}
 
 /**
   * Tests that the startup endpoint uses configuration values correctly
   * (e.g. changes its response when configuration is changed).
   */
-class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSupport with WithTestServer {
+class StartupConfigISpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout
+  with WsScalaTestClient with WireMockSupport with MongoTestCollections with WithTestServer {
 
   private val internalAuthId = InternalAuthId("test-internal-auth-id")
   private val generator = new Generator(0)
@@ -43,8 +42,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
   private val base64Encoder = Base64.getEncoder
 
   "GET /mobile-help-to-save/startup" should {
-    "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
+    "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndMongoCleanup(
+      appBuilder
         .configure("helpToSave.enabled" -> true)
         .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
@@ -59,8 +58,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       (response.json \ "enabled").as[Boolean] shouldBe true
     }
 
-    "return enabled=false, omit all other fields from the response and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
+    "return enabled=false, omit all other fields from the response and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndMongoCleanup(
+      appBuilder
         .configure("helpToSave.enabled" -> false)
         .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
@@ -78,8 +77,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
     }
 
-    "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
+    "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndMongoCleanup(
+      appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
           "helpToSave.shuttering.title" -> base64Encode("Shuttered"),
@@ -141,8 +140,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
       HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
     }
 
-    "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
+    "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
+      appBuilder
         .configure("helpToSave.enabled" -> true)
         .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
@@ -165,8 +164,8 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
     }
 
 
-    "allow feature flag and URL settings to be overridden in configuration" in withTestServerAndInvitationCleanup(
-      wireMockApplicationBuilder()
+    "allow feature flag and URL settings to be overridden in configuration" in withTestServerAndMongoCleanup(
+      appBuilder
         .configure(
           "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
           "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
@@ -203,12 +202,12 @@ class StartupConfigISpec extends UnitSpec with WsScalaTestClient with WireMockSu
     base64Encoder.encodeToString(s.getBytes("UTF-8"))
   }
 
-  private def withTestServerAndInvitationCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =
+  private def withTestServerAndMongoCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =
     withTestServer(app) { (app: Application, portNumber: PortNumber) =>
       try {
         testCode(app, portNumber)
       } finally {
-        await(app.injector.instanceOf[InvitationRepository].removeById(internalAuthId))
+        await(dropTestCollections(db(app)))
       }
     }
 }

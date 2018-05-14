@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.it.Port
 
 case class WireMockBaseUrl(value: URL)
 
-trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach {
+trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with AppBuilder {
   me: Suite =>
 
   val wireMockPort: Int = Port.randomAvailable
@@ -57,14 +57,12 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach {
     WireMock.reset()
   }
 
-  def wireMockApplicationBuilder(): GuiceApplicationBuilder =
-    new GuiceApplicationBuilder()
-      .configure(
-        "auditing.enabled" -> false,
-        "microservice.services.auth.port" -> wireMockPort,
-        "microservice.services.help-to-save.port" -> wireMockPort,
-        "microservice.services.help-to-save-proxy.port" -> wireMockPort,
-        "microservice.services.native-app-widget.port" -> wireMockPort,
-        "microservice.services.tax-credits-broker.port" -> wireMockPort
-      )
+  override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
+    "auditing.enabled" -> false,
+    "microservice.services.auth.port" -> wireMockPort,
+    "microservice.services.help-to-save.port" -> wireMockPort,
+    "microservice.services.help-to-save-proxy.port" -> wireMockPort,
+    "microservice.services.native-app-widget.port" -> wireMockPort,
+    "microservice.services.tax-credits-broker.port" -> wireMockPort
+  )
 }

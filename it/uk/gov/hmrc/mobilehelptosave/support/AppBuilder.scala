@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.repos
+package uk.gov.hmrc.mobilehelptosave.support
 
-import org.scalatest.TestSuite
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import uk.gov.hmrc.mobilehelptosave.support.MongoTestCollectionsDropAfterAll
-import uk.gov.hmrc.mongo.ReactiveRepository
+import play.api.inject.guice.GuiceApplicationBuilder
 
-trait MongoRepositoryISpec[A <: Any, ID <: Any] extends RepositorySpec[A, ID] with MongoTestCollectionsDropAfterAll with GuiceOneAppPerSuite { this: TestSuite =>
-  final override implicit lazy val app: Application = appBuilder
-    .build()
-  override val repo: ReactiveRepository[A, ID] with TestableRepository[A, ID]
+trait AppBuilder {
+  protected def appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
 }
