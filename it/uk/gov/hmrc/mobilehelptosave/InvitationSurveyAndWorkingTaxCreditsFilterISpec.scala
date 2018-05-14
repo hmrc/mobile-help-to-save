@@ -8,15 +8,15 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.services.{Clock, FixedFakeClock}
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, NativeAppWidgetStub, TaxCreditBrokerStub}
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
 class InvitationSurveyAndWorkingTaxCreditsFilterISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
-  with WireMockSupport with OneServerPerSuiteWsClient {
+  with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
 
   private val fixedClock = new FixedFakeClock(DateTime.parse("2018-02-08T12:34:56.000Z"))
 
-  override implicit lazy val app: Application = wireMockApplicationBuilder()
+  override implicit lazy val app: Application = appBuilder
     .configure(
       InvitationConfig.Enabled,
       "helpToSave.invitationFilters.survey" -> "true",

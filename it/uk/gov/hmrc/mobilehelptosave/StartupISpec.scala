@@ -22,13 +22,13 @@ import play.api.libs.json.{JsLookupResult, JsUndefined}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
-  with WireMockSupport with OneServerPerSuiteWsClient {
+  with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
 
-  override implicit lazy val app: Application = wireMockApplicationBuilder()
+  override implicit lazy val app: Application = appBuilder
     .configure(
       InvitationConfig.Enabled,
       "helpToSave.invitationFilters.survey" -> "false",
