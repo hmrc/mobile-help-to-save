@@ -22,22 +22,45 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.DefaultDB
+import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait MongoRepositoryISpec[A <: Any, ID <: Any] extends RepositorySpec[A, ID] with GuiceOneAppPerSuite with BeforeAndAfterAll {
   override implicit lazy val app: Application = appBuilder
     .build()
 
-  protected def appBuilder: GuiceApplicationBuilder =
+  private lazy val collectionNameSuffix = s"-test-${UUID.randomUUID()}"
+
+  protected def appBuilder: GuiceApplicationBuilder = {
     new GuiceApplicationBuilder()
-      .configure("mongodb.collectionName.suffix" -> s"-test-${UUID.randomUUID()}")
+      .configure("mongodb.collectionName.suffix" -> collectionNameSuffix)
+  }
 
   override val repo: ReactiveRepository[A, ID] with TestableRepository[A, ID]
 
+  private def mongo = app.injector.instanceOf[ReactiveMongoComponent]
+  private def db: DefaultDB = mongo.mongoConnector.db()
+
   override protected def afterAll(): Unit = {
     super.afterAll()
-    await(repo.collection.drop(failIfNotFound = false))
+
+    val dropTestCollectionsF = db.collectionNames.map { collectionNames =>
+      val dropOFs: Seq[Option[Future[Boolean]]] = collectionNames.map { collectionName =>
+        if (collectionName.endsWith(collectionNameSuffix)) {
+          val dropF = db.collection[JSONCollection](collectionName).drop(failIfNotFound = true)
+          Some(dropF)
+        } else {
+          None
+        }
+      }
+      val dropFs: Seq[Future[Boolean]] = dropOFs.flatten
+      Future.sequence(dropFs)
+    }
+    await(dropTestCollectionsF)
   }
 }
