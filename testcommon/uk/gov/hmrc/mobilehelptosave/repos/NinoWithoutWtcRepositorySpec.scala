@@ -22,8 +22,6 @@ import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 
 trait NinoWithoutWtcRepositorySpec extends RepositorySpec[NinoWithoutWtc, Nino] {
 
-  override val repo: NinoWithoutWtcRepository
-
   private val generator = new Generator(0)
 
   override def createId(): Nino = generator.nextNino
