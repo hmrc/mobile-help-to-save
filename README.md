@@ -42,6 +42,13 @@ Response format:
     // AND
     // - no errors were encountered whilst fetching the account data from NS&I
     "account": {
+      "blocked: {
+        "unspecified": false
+        // In future when we can reliably determine the blocking types we may add the following
+        // "payingIn": true,
+        // "withdrawing": false,
+        // "receivingBonus": false
+      }
       "isClosed": true,
       "closureDate": "2018-02-16",
       "closingBalance": 150
@@ -71,8 +78,35 @@ Response format:
 }
 ```
 
-If there is a problem obtaining the user-specific data then the user field will be omitted and the other fields will still be returned (as opposed to an error response being returned).
+#### Errors
+If there is a problem obtaining the user-specific data then the `user` object will be replaced with a `userError` object. Other fields (feature flags and shuttering) will be unaffected and still returned:
+```
+  "shuttering": {
+      "shuttered": false
+  },
+  "enabled": true,
+  // etc... other feature flags omitted for brevity
+  "userError": { "code": "GENERAL" }
+  // no "user" object
+}
+```
 
+If there is a problem obtaining the account data then the `user.account` object will be replaced with a `user.accountError` object. Other fields will be unaffected and still returned:
+```
+  "shuttering": {
+      "shuttered": false
+  },
+  "enabled": true,
+  // etc... other feature flags omitted for brevity
+  "user": {
+    "state": "Enrolled"
+    "accountError": { "code": "GENERAL" }
+    // no "account" object
+  }
+}
+```
+
+#### Shuttering
 When the Help to Save section of the app is shuttered then `shuttering.shuttered` will be true and other fields except for feature flags will be omitted:
 ```
 {
