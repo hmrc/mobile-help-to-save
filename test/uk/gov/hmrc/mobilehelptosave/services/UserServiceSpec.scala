@@ -119,7 +119,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   "userDetails" when {
     "user is enrolled in Help to Save and all account-related feature flags are enabled" should {
 
-      val accountReturnedByAccountService = Account(isClosed = false, BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
+      val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
@@ -141,7 +141,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
     "user is enrolled in Help to Save and some but not all account-related feature flags are enabled" should {
 
-      val accountReturnedByAccountService = Account(isClosed = false, BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
+      val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),

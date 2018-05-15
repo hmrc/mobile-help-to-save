@@ -33,6 +33,8 @@ object HelpToSaveProxyStub {
             |{
             |  "accountBalance": "123.45",
             |  "accountClosedFlag": "",
+            |  "accountBlockingCode": "00",
+            |  "clientBlockingCode": "00",
             |  "currentInvestmentMonth": {
             |    "endDate": "2018-02-28",
             |    "investmentRemaining": "22.12",
@@ -68,6 +70,8 @@ object HelpToSaveProxyStub {
             |{
             |  "accountBalance": "0.00",
             |  "accountClosedFlag": "C",
+            |  "accountBlockingCode": "00",
+            |  "clientBlockingCode": "00",
             |  "accountClosureDate": "2018-04-09",
             |  "accountClosingBalance": "10.00",
             |  "currentInvestmentMonth": {

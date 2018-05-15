@@ -63,6 +63,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                 |{
                 |  "accountBalance": "200.34",
                 |  "accountClosedFlag": "",
+                |  "accountBlockingCode": "00",
+                |  "clientBlockingCode": "00",
                 |  "currentInvestmentMonth": {
                 |    "investmentRemaining": "15.50",
                 |    "investmentLimit": "50.00",
@@ -88,6 +90,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(
         accountClosedFlag = "",
+        accountBlockingCode = "00",
+        clientBlockingCode = "00",
         accountBalance = BigDecimal("200.34"),
         currentInvestmentMonth = NsiCurrentInvestmentMonth(
           investmentRemaining = BigDecimal("15.50"),
@@ -109,6 +113,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                 |{
                 |  "accountBalance": "0.00",
                 |  "accountClosedFlag": "C",
+                |  "accountBlockingCode": "T1",
+                |  "clientBlockingCode": "client blocking test",
                 |  "accountClosureDate": "2018-04-09",
                 |  "accountClosingBalance": "10.11",
                 |  "currentInvestmentMonth": {
@@ -123,6 +129,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(
         accountClosedFlag = "C",
+        accountBlockingCode = "T1",
+        clientBlockingCode ="client blocking test",
         accountBalance = 0,
         currentInvestmentMonth = NsiCurrentInvestmentMonth(
           investmentRemaining = BigDecimal("12.34"),
@@ -153,6 +161,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                     """
                       |{
                       |  "accountClosedFlag": "",
+                      |  "accountBlockingCode": "00",
+                      |  "clientBlockingCode": "00",
                       |  "accountBalance": "200.34",
                       |  "currentInvestmentMonth": {
                       |    "investmentRemaining": "15.50",
@@ -173,6 +183,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(
         accountClosedFlag = "",
+        accountBlockingCode = "00",
+        clientBlockingCode = "00",
         BigDecimal("200.34"),
         NsiCurrentInvestmentMonth(
           investmentRemaining = BigDecimal("15.50"),

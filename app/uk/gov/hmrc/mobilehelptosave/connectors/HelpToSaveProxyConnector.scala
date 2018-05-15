@@ -79,6 +79,8 @@ object NsiBonusTerm {
 
 case class NsiAccount(
   accountClosedFlag: String,
+  accountBlockingCode: String,
+  clientBlockingCode: String,
   accountBalance: BigDecimal,
   currentInvestmentMonth: NsiCurrentInvestmentMonth,
   terms: Seq[NsiBonusTerm],

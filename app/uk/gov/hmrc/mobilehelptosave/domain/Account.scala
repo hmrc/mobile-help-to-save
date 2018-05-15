@@ -30,8 +30,18 @@ object BonusTerm {
   implicit val writes: Writes[BonusTerm] = Json.writes[BonusTerm]
 }
 
+case class Blocking(
+  unspecified: Boolean
+)
+
+object Blocking {
+  implicit val writes: Writes[Blocking] = Json.writes[Blocking]
+}
+
 case class Account(
   isClosed: Boolean,
+
+  blocked: Blocking,
 
   balance: BigDecimal,
 
