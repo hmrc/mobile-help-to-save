@@ -42,6 +42,13 @@ Response format:
     // AND
     // - no errors were encountered whilst fetching the account data from NS&I
     "account": {
+      "blocked: {
+        "unspecified": false
+        // In future when we can reliably determine the blocking types we may add the following
+        // "payingIn": true,
+        // "withdrawing": false,
+        // "receivingBonus": false
+      }
       "isClosed": true,
       "closureDate": "2018-02-16",
       "closingBalance": 150
