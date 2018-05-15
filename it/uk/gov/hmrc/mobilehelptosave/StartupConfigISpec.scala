@@ -27,13 +27,13 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollections, WireMockSupport, WithTestServer}
+import uk.gov.hmrc.mobilehelptosave.support.{JsonMatchers, MongoTestCollections, WireMockSupport, WithTestServer}
 
 /**
   * Tests that the startup endpoint uses configuration values correctly
   * (e.g. changes its response when configuration is changed).
   */
-class StartupConfigISpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout
+class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with FutureAwaits with DefaultAwaitTimeout
   with WsScalaTestClient with WireMockSupport with MongoTestCollections with WithTestServer {
 
   private val internalAuthId = InternalAuthId("test-internal-auth-id")
@@ -140,7 +140,7 @@ class StartupConfigISpec extends WordSpec with Matchers with FutureAwaits with D
       HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
     }
 
-    "include default feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
+    "include feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
       appBuilder
         .configure("helpToSave.enabled" -> true)
         .configure(InvitationConfig.NoFilters: _*)
@@ -153,11 +153,11 @@ class StartupConfigISpec extends WordSpec with Matchers with FutureAwaits with D
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
-      (response.json \ "balanceEnabled").as[Boolean] shouldBe false
-      (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe false
-      (response.json \ "firstBonusEnabled").as[Boolean] shouldBe false
-      (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
-      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
+      (response.json \ "balanceEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "paidInThisMonthEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "firstBonusEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "shareInvitationEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "savingRemindersEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
