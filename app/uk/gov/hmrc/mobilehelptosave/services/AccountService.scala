@@ -22,7 +22,7 @@ import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusTerm}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,6 +47,7 @@ class AccountServiceImpl @Inject() (
     if (paidInThisMonth >= 0) {
       Some(Account(
         isClosed = nsiAccountClosedFlagToIsClosed(nsiAccount.accountClosedFlag),
+        blocked = nsiAccountToBlocking(nsiAccount),
         balance = nsiAccount.accountBalance,
         paidInThisMonth = paidInThisMonth,
         canPayInThisMonth = nsiAccount.currentInvestmentMonth.investmentRemaining,
@@ -75,6 +76,10 @@ class AccountServiceImpl @Inject() (
       logger.warn(s"""Unknown value for accountClosedFlag: "$accountClosedFlag"""")
       false
     }
+
+  private def nsiAccountToBlocking(nsiAccount: NsiAccount): Blocking = Blocking(
+    unspecified = nsiAccount.accountBlockingCode != "00" || nsiAccount.clientBlockingCode != "00"
+  )
 
   private def nsiBonusTermToBonusTerm(nsiBonusTerm: NsiBonusTerm): BonusTerm = BonusTerm(
     bonusEstimate = nsiBonusTerm.bonusEstimate,

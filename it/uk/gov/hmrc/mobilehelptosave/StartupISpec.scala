@@ -53,6 +53,7 @@ class StartupISpec extends WordSpec with Matchers
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
       (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe false
+      (response.json \ "user" \ "account" \ "blocked" \ "unspecified").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "balance", BigDecimal("123.45"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", BigDecimal("22.12"))
@@ -85,6 +86,7 @@ class StartupISpec extends WordSpec with Matchers
       (response.json \ "user" \ "account" \ "closureDate").as[String] shouldBe "2018-04-09"
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "closingBalance", 10)
 
+      (response.json \ "user" \ "account" \ "blocked" \ "unspecified").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "balance", 0)
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", 0)
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", 50)

@@ -38,6 +38,8 @@ class AccountServiceSpec extends WordSpec with Matchers
 
   private val testNsiAccount = NsiAccount(
     accountClosedFlag = "",
+    accountBlockingCode = "00",
+    clientBlockingCode = "00",
     accountBalance = 0,
     currentInvestmentMonth = NsiCurrentInvestmentMonth(0, 0, new LocalDate(1900, 1, 1)),
     terms = Seq.empty
@@ -46,13 +48,14 @@ class AccountServiceSpec extends WordSpec with Matchers
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   "account" should {
-    "return account details for open account" in {
+    "return account details for open, unblocked account" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(accountBalance = BigDecimal("123.45"))))
       val service = new AccountServiceImpl(logger, connector)
 
       val returnedAccount = await(service.account(nino)).value
       returnedAccount.isClosed shouldBe false
       returnedAccount.balance shouldBe BigDecimal("123.45")
+      returnedAccount.blocked.unspecified shouldBe false
 
       (slf4jLoggerStub.warn(_: String)).verify(*).never()
     }
@@ -64,6 +67,26 @@ class AccountServiceSpec extends WordSpec with Matchers
       val returnedAccount = await(service.account(nino)).value
       returnedAccount.isClosed shouldBe false
       returnedAccount.balance shouldBe BigDecimal("123.45")
+
+      (slf4jLoggerStub.warn(_: String)).verify(*).never()
+    }
+
+    """return blocking.unspecified = true when accountBlockingCode is not "00"""" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(accountBlockingCode = "01")))
+      val service = new AccountServiceImpl(logger, connector)
+
+      val returnedAccount = await(service.account(nino)).value
+      returnedAccount.blocked.unspecified shouldBe true
+
+      (slf4jLoggerStub.warn(_: String)).verify(*).never()
+    }
+
+    """return blocking.unspecified = true when clientBlockingCode is not "00"""" in {
+      val connector = fakeHelpToSaveProxyConnector(nino, Some(testNsiAccount.copy(clientBlockingCode = "01")))
+      val service = new AccountServiceImpl(logger, connector)
+
+      val returnedAccount = await(service.account(nino)).value
+      returnedAccount.blocked.unspecified shouldBe true
 
       (slf4jLoggerStub.warn(_: String)).verify(*).never()
     }
