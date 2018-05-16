@@ -24,7 +24,7 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
-import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Invitation, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.metrics.MobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 
@@ -69,7 +69,7 @@ class UserService @Inject() (
       Future successful None
     }
 
-    accountFO.map(accountO => UserDetails(state = state, account = accountO))
+    accountFO.map(accountO => UserDetails(state = state, account = accountO, accountError = ErrorInfo.errorIfNone(accountO)))
   }
 
   private def anyAccountFeatureEnabled: Boolean =

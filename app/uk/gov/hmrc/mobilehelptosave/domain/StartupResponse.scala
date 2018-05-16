@@ -28,6 +28,7 @@ final case class EnabledStartupResponse(
   invitationUrl: Option[String],
   accessAccountUrl: Option[String],
   user: Option[UserDetails],
+  userError: Option[ErrorInfo],
   balanceEnabled: Boolean,
   paidInThisMonthEnabled: Boolean,
   firstBonusEnabled: Boolean,

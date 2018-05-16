@@ -139,6 +139,22 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       }
     }
 
+    "there is an error getting account details" should {
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = fakeAccountService(nino, None)
+      )
+
+      "include accountError" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        user.account shouldBe None
+        user.accountError shouldBe Some(ErrorInfo.General)
+      }
+    }
+
     "user is enrolled in Help to Save and some but not all account-related feature flags are enabled" should {
 
       val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)

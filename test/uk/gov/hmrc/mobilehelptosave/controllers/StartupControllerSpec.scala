@@ -57,12 +57,14 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
   val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   val falseShuttering = Shuttering(shuttered = false, "", "")
 
+  private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
+
   "startup" should {
     "pass internalAuthId and NINO obtained from auth into userService" in {
 
       (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Some(UserDetails(UserState.Invited, None)))
+        .returning(Future successful Some(testUserDetails.copy(state = UserState.Invited)))
 
       val controller = new StartupController(
         mockUserService,
@@ -124,7 +126,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Some(UserDetails(UserState.Invited, None)))
+          .returning(Future successful Some(testUserDetails.copy(state = UserState.Invited)))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -139,12 +141,47 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       "include shuttering information in response with shuttered = false" in {
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Some(UserDetails(UserState.Invited, None)))
+          .returning(Future successful Some(testUserDetails.copy(state = UserState.Invited)))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe false
+      }
+    }
+
+    "there is an error getting user details" should {
+      val controller = new StartupController(
+        mockUserService,
+        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        shuttering = falseShuttering,
+        helpToSaveEnabled = true,
+        balanceEnabled = false,
+        paidInThisMonthEnabled = false,
+        firstBonusEnabled = false,
+        shareInvitationEnabled = false,
+        savingRemindersEnabled = false,
+        helpToSaveInfoUrl = "/info",
+        helpToSaveInvitationUrl = "/invitation",
+        helpToSaveAccessAccountUrl = "/accessAccount")
+
+      "include userError and non-user fields such as URLs response" in {
+        val generator = new Generator(0)
+        val nino = generator.nextNino
+
+        (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(internalAuthId, nino, *, *)
+          .returning(Future successful None)
+
+        val resultF = controller.startup(FakeRequest())
+        status(resultF) shouldBe 200
+        val jsonBody = contentAsJson(resultF)
+        val jsonKeys = jsonBody.as[JsObject].keys
+        jsonKeys should not contain "user"
+        (jsonBody \ "userError" \ "code").as[String] shouldBe "GENERAL"
+        (jsonBody \ "infoUrl").as[String] shouldBe "/info"
+        (jsonBody \ "invitationUrl").as[String] shouldBe "/invitation"
+        (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
       }
     }
 
