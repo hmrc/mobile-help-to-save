@@ -29,13 +29,14 @@ import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[HelpToSaveProxyConnectorImpl])
 trait HelpToSaveProxyConnector {
 
-  def nsiAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[NsiAccount]]
+  def nsiAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, NsiAccount]]
 
 }
 
@@ -46,12 +47,12 @@ class HelpToSaveProxyConnectorImpl @Inject() (
   http: CoreGet
 ) extends HelpToSaveProxyConnector {
 
-  override def nsiAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[NsiAccount]] = {
-    http.GET[NsiAccount](nsiAccountUrl(nino)) map Some.apply
+  override def nsiAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, NsiAccount]] = {
+    http.GET[NsiAccount](nsiAccountUrl(nino)) map Right.apply
   } recover {
     case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException | _: JsonParseException) =>
       logger.warn("Couldn't get account from help-to-save-proxy service", e)
-      None
+      Left(ErrorInfo.General)
   }
 
   private def nsiAccountUrl(nino: Nino) = {

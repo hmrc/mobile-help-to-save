@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import org.joda.time.{DateTime, LocalDate, ReadableInstant}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.OptionValues
+import org.scalatest.{EitherValues, OptionValues}
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.commands.DefaultWriteResult
 import reactivemongo.core.errors.GenericDatabaseException
@@ -34,7 +34,7 @@ import scala.collection.GenTraversable
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
+class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with EitherValues {
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -54,7 +54,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     helpToSaveConnector: HelpToSaveConnector,
     metrics: MobileHelpToSaveMetrics,
     invitationRepository: InvitationRepository,
-    accountService: AccountService = fakeAccountService(nino, None),
+    accountService: AccountService = fakeAccountService(nino, Left(ErrorInfo.General)),
     clock: Clock = fixedClock,
     enabled: Boolean = true,
     dailyInvitationCap: Int = 1000,
@@ -76,7 +76,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   )
 
   "userDetails" should {
-    "return None and not call the connector when Help to Save is not enabled" in {
+    "return Right(None) and not call the connector when Help to Save is not enabled" in {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         shouldNotBeCalledHelpToSaveConnector,
@@ -85,18 +85,18 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         enabled = false
       )
 
-      await(service.userDetails(internalAuthId, nino)) shouldBe None
+      await(service.userDetails(internalAuthId, nino)) shouldBe Right(None)
     }
 
     "return state=Enrolled when the current user is enrolled in Help to Save, even if they are eligible to be invited" in {
       val service = new UserServiceWithTestDefaults(
-        fakeInvitationEligibilityService(nino, eligible = Some(true)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        fakeInvitationEligibilityService(nino, eligible = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
 
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
       user.state shouldBe UserState.Enrolled
     }
 
@@ -105,13 +105,13 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       await(repository.insert(Invitation(internalAuthId, fixedClock.now().minusDays(1))))
 
       val service = new UserServiceWithTestDefaults(
-        fakeInvitationEligibilityService(nino, eligible = Some(true)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        fakeInvitationEligibilityService(nino, eligible = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         repository
       )
 
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
       user.state shouldBe UserState.Enrolled
     }
   }
@@ -122,19 +122,19 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
-        accountService = fakeAccountService(nino, Some(accountReturnedByAccountService))
+        accountService = fakeAccountService(nino, Right(accountReturnedByAccountService))
       )
 
       "return state=Enrolled" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.state shouldBe UserState.Enrolled
       }
 
       "include account information" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
     }
@@ -142,14 +142,14 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     "there is an error getting account details" should {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
-        accountService = fakeAccountService(nino, None)
+        accountService = fakeAccountService(nino, Left(ErrorInfo.General))
       )
 
       "include accountError" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.account shouldBe None
         user.accountError shouldBe Some(ErrorInfo.General)
       }
@@ -160,17 +160,17 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
       val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
-        accountService = fakeAccountService(nino, Some(accountReturnedByAccountService)),
+        accountService = fakeAccountService(nino, Right(accountReturnedByAccountService)),
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
         firstBonusEnabled = true
       )
 
       "include account information" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
     }
@@ -178,7 +178,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     "user is enrolled in Help to Save and no account-related feature flags are enabled" should {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = shouldNotBeCalledAccountService,
@@ -189,14 +189,14 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
       "not call accountService" in {
         // lack of call to accountService is checked by use of shouldNotBeCalledAccountService when constructing UserService
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.account shouldBe None
       }
     }
 
     "user is eligible to be invited" should {
 
-      val invitationEligibilityService = fakeInvitationEligibilityService(allTestNinos, eligible = Some(true))
+      val invitationEligibilityService = fakeInvitationEligibilityService(allTestNinos, eligible = Right(true))
 
       "return state=InvitedFirstTime (invite the user), store the time of the invitation and increment the counter " +
       "if the user is not enrolled in Help to Save" in {
@@ -205,12 +205,12 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo
         )
 
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.state shouldBe UserState.InvitedFirstTime
 
         await(invitationRepo.findById(internalAuthId)).value.created shouldBe fixedClock.now()
@@ -223,14 +223,14 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           new FakeInvitationRepository
         )
 
-        await(service.userDetails(internalAuthId, nino)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(internalAuthId, nino)).value.state shouldBe UserState.Invited
-        await(service.userDetails(internalAuthId, nino)).value.state shouldBe UserState.Invited
+        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.Invited
+        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.Invited
 
         metrics.invitationCounter.getCount shouldBe 1
       }
@@ -240,7 +240,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           ShouldNotUpdateInvitationMetrics,
           stubRepo
         )
@@ -263,7 +263,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
           .when(*, *)
           .returns(Future successful 0)
 
-        await(service.userDetails(internalAuthId, nino)).value.state shouldBe UserState.Invited
+        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.Invited
       }
 
       "not change state from NotEnrolled to InvitedFirstTime when the daily cap has been reached" in {
@@ -272,17 +272,17 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           dailyInvitationCap = 3
         )
 
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).right.value.value.state shouldBe UserState.InvitedFirstTime
         val capExceededInternalAuthId = InternalAuthId("test-internal-auth-id-4")
-        await(service.userDetails(capExceededInternalAuthId, nino4)).value.state shouldBe UserState.NotEnrolled
+        await(service.userDetails(capExceededInternalAuthId, nino4)).right.value.value.state shouldBe UserState.NotEnrolled
 
         await(invitationRepo.findById(capExceededInternalAuthId)) shouldBe None
 
@@ -295,22 +295,22 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           dailyInvitationCap = 3
         )
 
         // fill up the cap
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
         val successfullyInvitedInternalAuthid = InternalAuthId("test-internal-auth-id-3")
         val successfullyInvitedNino = nino3
-        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-4"), nino4)).value.state shouldBe UserState.NotEnrolled
+        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-4"), nino4)).right.value.value.state shouldBe UserState.NotEnrolled
 
         // check an already-invited user's status again
-        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).value.state shouldBe UserState.Invited
+        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).right.value.value.state shouldBe UserState.Invited
 
         metrics.invitationCounter.getCount shouldBe 3
       }
@@ -322,22 +322,22 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           clock = clock,
           dailyInvitationCap = 3
         )
 
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).right.value.value.state shouldBe UserState.InvitedFirstTime
         val capExceededInternalAuthId = InternalAuthId("test-internal-auth-id-4")
         val capExceededNino = nino4
-        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).value.state shouldBe UserState.NotEnrolled
+        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).right.value.value.state shouldBe UserState.NotEnrolled
 
         clock.time = clock.time.plusDays(1)
-        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).right.value.value.state shouldBe UserState.InvitedFirstTime
 
         metrics.invitationCounter.getCount shouldBe 4
       }
@@ -347,7 +347,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
         val mockRepo = mock[InvitationRepository]
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           FakeMobileHelpToSaveMetrics(),
           mockRepo,
           clock = clock,
@@ -380,7 +380,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
           .expects(sameInstant(midnightBst), *)
           .never()
 
-        await(service.userDetails(internalAuthId, nino)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.InvitedFirstTime
       }
 
       "return state=InvitedFirstTime even when a different user has already been invited" in {
@@ -388,14 +388,14 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           new FakeInvitationRepository
         )
 
-        await(service.userDetails(internalAuthId, nino)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.InvitedFirstTime
         val otherInternalAuthId = InternalAuthId("other-test-internal-auth-id")
-        await(service.userDetails(otherInternalAuthId, nino2)).value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(otherInternalAuthId, nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
 
         metrics.invitationCounter.getCount shouldBe 2
       }
@@ -403,18 +403,18 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
     "user is not eligible to be invited" should {
 
-      val invitationEligibilityService = fakeInvitationEligibilityService(nino, eligible = Some(false))
+      val invitationEligibilityService = fakeInvitationEligibilityService(nino, eligible = Right(false))
 
       "return state=NotEnrolled (not invite the user) " +
       "if the user is not enrolled in Help to Save" in {
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           ShouldNotUpdateInvitationMetrics,
           new FakeInvitationRepository
         )
 
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
         user.state shouldBe UserState.NotEnrolled
       }
     }
@@ -422,32 +422,33 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
 
   "userDetails" should {
 
-    "return no details when the HelpToSaveConnector returns None" in {
+    "return an error when the HelpToSaveConnector return an error" in {
+      val error = ErrorInfo.General
       val service = new UserServiceWithTestDefaults(
-        fakeInvitationEligibilityService(nino, eligible = Some(false)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = None),
+        fakeInvitationEligibilityService(nino, eligible = Right(false)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Left(error)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
 
-      await(service.userDetails(internalAuthId, nino)) shouldBe None
+      await(service.userDetails(internalAuthId, nino)) shouldBe Left(error)
     }
 
-    "return no details when the InvitationEligibilityService returns None" in {
+    "return an error when the InvitationEligibilityService returns an error" in {
       val service = new UserServiceWithTestDefaults(
-        fakeInvitationEligibilityService(nino, eligible = None),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Some(false)),
+        fakeInvitationEligibilityService(nino, eligible = Left(ErrorInfo.General)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
 
-      await(service.userDetails(internalAuthId, nino)) shouldBe None
+      await(service.userDetails(internalAuthId, nino)) shouldBe Left(ErrorInfo.General)
     }
 
   }
 
-  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Option[Boolean]) = new HelpToSaveConnector {
-    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
+  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnector {
+    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
       ec shouldBe passedEc
 
@@ -455,11 +456,11 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     }
   }
 
-  private def fakeInvitationEligibilityService(expectedNino: Nino, eligible: Option[Boolean]): InvitationEligibilityService =
+  private def fakeInvitationEligibilityService(expectedNino: Nino, eligible: Either[ErrorInfo, Boolean]): InvitationEligibilityService =
     fakeInvitationEligibilityService(Seq(expectedNino), eligible)
 
-  private def fakeInvitationEligibilityService(expectedNinos: GenTraversable[Nino], eligible: Option[Boolean]) = new InvitationEligibilityService {
-    override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
+  private def fakeInvitationEligibilityService(expectedNinos: GenTraversable[Nino], eligible: Either[ErrorInfo, Boolean]) = new InvitationEligibilityService {
+    override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       expectedNinos should contain (nino)
       hc shouldBe passedHc
       ec shouldBe passedEc
@@ -468,8 +469,8 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
     }
   }
 
-  private def fakeAccountService(expectedNino: Nino, accountToReturn: Option[Account]): AccountService = new AccountService {
-    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] = {
+  private def fakeAccountService(expectedNino: Nino, accountToReturn: Either[ErrorInfo, Account]): AccountService = new AccountService {
+    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
       ec shouldBe passedEc
@@ -479,17 +480,17 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues {
   }
 
   private lazy val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
-    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
+    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] =
       Future failed new RuntimeException("HelpToSaveConnector should not be called in this situation")
   }
 
   private lazy val shouldNotBeCalledInvitationEligibilityService = new InvitationEligibilityService {
-    override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
+    override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] =
       Future failed new RuntimeException("InvitationEligibilityService should not be called in this situation")
   }
 
   private lazy val shouldNotBeCalledAccountService = new AccountService {
-    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] =
+    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] =
       Future failed new RuntimeException("AccountService should not be called in this situation")
   }
 

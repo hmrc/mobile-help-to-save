@@ -21,6 +21,7 @@ import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.NativeAppWidgetConnector
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -35,33 +36,33 @@ class SurveyServiceSpec extends
   "userWantsToBeContacted" should {
 
     "return false for users who haven't answered the survey question" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq.empty)))
-      await(service.userWantsToBeContacted()) shouldBe Some(false)
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq.empty)))
+      await(service.userWantsToBeContacted()) shouldBe Right(false)
     }
 
     "return true for users who have answered Yes to the survey question" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq("Yes"))))
-      await(service.userWantsToBeContacted()) shouldBe Some(true)
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq("Yes"))))
+      await(service.userWantsToBeContacted()) shouldBe Right(true)
     }
 
     "return false for users who have answered No to the survey question" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq("No"))))
-      await(service.userWantsToBeContacted()) shouldBe Some(false)
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq("No"))))
+      await(service.userWantsToBeContacted()) shouldBe Right(false)
     }
 
     "return true for users who have answered the survey more than once with a mixture of Yes and No answers" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq("No", "Yes", "No"))))
-      await(service.userWantsToBeContacted()) shouldBe Some(true)
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq("No", "Yes", "No"))))
+      await(service.userWantsToBeContacted()) shouldBe Right(true)
     }
 
     "return true for users who have answered yes (lowercase) to the survey question" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq("yes"))))
-      await(service.userWantsToBeContacted()) shouldBe Some(true)
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq("yes"))))
+      await(service.userWantsToBeContacted()) shouldBe Right(true)
     }
 
     """log a warning for answers other than "Yes" or "No"""" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq("no", "other", "not yes"))))
-      await(service.userWantsToBeContacted()) shouldBe Some(false)
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq("no", "other", "not yes"))))
+      await(service.userWantsToBeContacted()) shouldBe Right(false)
 
       (slf4jLoggerStub.warn(_: String)) verify """Unknown survey answer "other" found"""
       (slf4jLoggerStub.warn(_: String)) verify """Unknown survey answer "not yes" found"""
@@ -69,25 +70,25 @@ class SurveyServiceSpec extends
     }
 
     """not log a warning for answers "Yes" or "No"""" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Some(Seq("No", "no", "Yes", "yes"))))
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Right(Seq("No", "no", "Yes", "yes"))))
       await(service.userWantsToBeContacted())
 
       (slf4jLoggerStub.warn(_: String)).verify(*).never
     }
 
-    "return None when the survey answers cannot be retrieved" in {
-      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(None))
-      await(service.userWantsToBeContacted()) shouldBe None
+    "return an error (Left) when the survey answers cannot be retrieved" in {
+      val service = new SurveyServiceImpl(logger, fakeNativeAppWidgetConnector(Left(ErrorInfo.General)))
+      await(service.userWantsToBeContacted()) shouldBe Left(ErrorInfo.General)
     }
 
   }
 
-  private def fakeNativeAppWidgetConnector(answersForHtsQ3: Option[Seq[String]]) = new NativeAppWidgetConnector {
-    override def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
+  private def fakeNativeAppWidgetConnector(answersForHtsQ3: Either[ErrorInfo, Seq[String]]) = new NativeAppWidgetConnector {
+    override def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Seq[String]]] =
       if (campaignId == "HELP_TO_SAVE_1" && questionKey == "question_3")
         Future successful answersForHtsQ3
       else
-        Future successful Some(Seq.empty)
+        Future successful Right(Seq.empty)
   }
 
 }

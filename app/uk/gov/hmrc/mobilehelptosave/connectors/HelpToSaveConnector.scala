@@ -17,19 +17,20 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
-import javax.inject.{Inject, Named, Singleton}
 
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Named, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
 trait HelpToSaveConnector {
 
-  def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+  def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
 
 }
 
@@ -39,13 +40,13 @@ class HelpToSaveConnectorImpl @Inject() (
   @Named("help-to-save-baseUrl") baseUrl: URL,
   http: CoreGet) extends HelpToSaveConnector {
 
-  override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
+  override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
-      Some((json \ "enrolled").as[Boolean])
+      Right((json \ "enrolled").as[Boolean])
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
         logger.warn("Couldn't get enrolment status from help-to-save service", e)
-        None
+        Left(ErrorInfo.General)
     }
   }
 

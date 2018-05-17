@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.instances.future._
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
@@ -25,7 +25,7 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{Payment, TaxCreditsBrokerConnector}
-import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, NinoWithoutWtc}
 import uk.gov.hmrc.mobilehelptosave.metrics.MobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.NinoWithoutWtcRepository
 
@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[TaxCreditsServiceImpl])
 trait TaxCreditsService {
-  def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+  def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
 }
 
 @Singleton
@@ -45,16 +45,16 @@ class TaxCreditsServiceImpl @Inject() (
   clock: Clock)
   extends TaxCreditsService {
 
-  override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
+  override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] =
     findNegativeCachedResult(nino).flatMap {
       case Some(_) =>
         metrics.taxCreditsCacheHitCounter.inc()
-        Future successful Some(false)
+        Future successful Right(false)
       case None =>
         (for {
-          previousPayments <- OptionT(previousPayments(nino))
+          previousPayments <- EitherT(previousPayments(nino))
           hasRecentWtc = containsRecentWtcPayment(previousPayments)
-          _ <- OptionT.liftF(cacheResultIfNegative(nino, hasRecentWtc))
+          _ <- EitherT.right[ErrorInfo](cacheResultIfNegative(nino, hasRecentWtc))
         } yield {
           hasRecentWtc
         }).value

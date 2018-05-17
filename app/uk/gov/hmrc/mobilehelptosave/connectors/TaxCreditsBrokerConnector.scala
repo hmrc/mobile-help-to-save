@@ -25,6 +25,7 @@ import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegments
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[TaxCreditsBrokerConnectorImpl])
 trait TaxCreditsBrokerConnector {
 
-  def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[Payment]]]
+  def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Seq[Payment]]]
 
 }
 
@@ -43,17 +44,17 @@ class TaxCreditsBrokerConnectorImpl @Inject() (
   http: CoreGet
 ) extends TaxCreditsBrokerConnector {
 
-  override def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[Payment]]] =
+  override def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Seq[Payment]]] =
     http.GET[JsValue](previousPaymentsUrl(nino).toString).map { jsonBody =>
       if ((jsonBody \ "excluded").asOpt[Boolean].contains(true)) {
-        Some(Seq.empty)
+        Right(Seq.empty)
       } else {
-        Some((jsonBody \ "workingTaxCredit" \ "previousPaymentSeq").asOpt[JsValue].fold(Seq.empty[Payment])(_.as[Seq[Payment]]))
+        Right((jsonBody \ "workingTaxCredit" \ "previousPaymentSeq").asOpt[JsValue].fold(Seq.empty[Payment])(_.as[Seq[Payment]]))
       }
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsResultException) =>
         logger.warn("Couldn't get payments from tax-credits-broker service", e)
-        None
+        Left(ErrorInfo.General)
     }
 
   private def previousPaymentsUrl(nino: Nino) =

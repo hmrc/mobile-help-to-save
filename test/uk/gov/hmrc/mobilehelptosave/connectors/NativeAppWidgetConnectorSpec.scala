@@ -23,6 +23,7 @@ import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -61,10 +62,10 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), fakeHttp)
 
-      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Some(Seq("Yes", "No"))
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Right(Seq("Yes", "No"))
     }
 
-    "return None when there is an error connecting to native-app-widget" in {
+    "return a Left when there is an error connecting to native-app-widget" in {
       val connectionRefusedHttp = FakeHttpGet(
         "http://native-app-widget-service/native-app-widget/widget-data/TEST_CAMPAIGN_ID/test_question_1",
         Future {
@@ -73,7 +74,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), connectionRefusedHttp)
 
-      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get answers from native-app-widget service""",
@@ -81,14 +82,14 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return None when native-app-widget returns a 4xx error" in {
+    "return a Left when native-app-widget returns a 4xx error" in {
       val error4xxHttp = FakeHttpGet(
         "http://native-app-widget-service/native-app-widget/widget-data/TEST_CAMPAIGN_ID/test_question_1",
         HttpResponse(429))
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), error4xxHttp)
 
-      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get answers from native-app-widget service""",
@@ -96,14 +97,14 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return None when native-app-widget returns a 5xx error" in {
+    "return a Left when native-app-widget returns a 5xx error" in {
       val error5xxHttp = FakeHttpGet(
         "http://native-app-widget-service/native-app-widget/widget-data/TEST_CAMPAIGN_ID/test_question_1",
         HttpResponse(500))
 
       val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), error5xxHttp)
 
-      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe None
+      await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get answers from native-app-widget service""",

@@ -25,6 +25,7 @@ import play.api.libs.json.{JsResultException, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -74,7 +75,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe Some(Seq(
+      await(connector.previousPayments(nino)) shouldBe Right(Seq(
         Payment(BigDecimal("160.45"), new DateTime("2018-03-22T00:00:00.000Z")),
         Payment(BigDecimal("160.45"), new DateTime("2018-03-28T23:00:00.000Z")),
         Payment(BigDecimal("123.45"), new DateTime("2018-04-04T23:00:00.000Z"))
@@ -98,23 +99,23 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe Some(Seq.empty)
+      await(connector.previousPayments(nino)) shouldBe Right(Seq.empty)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(*, *) never()
       (slf4jLoggerStub.warn(_: String)) verify * never()
     }
 
-    "return None when tax-credits-broker returns 404 Not Found" in {
+    "return an error when tax-credits-broker returns 404 Not Found" in {
       // As far as I can tell /tcs/:nino/payment-summary will never return a 404 at present.
       // However I think it should do so (instead of returning excluded) when called with an unknown NINO.
-      // This test ensures that this service will continue to work if tax-credits-broker is fixed to do that.
+      // This test ensures that this microservice will continue to work if tax-credits-broker is fixed to do that.
       val taxCreditsBrokerResponse = HttpResponse(404)
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe None
+      await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
     }
 
     "return an empty Seq when tax-credits-broker does not include workingTaxCredit in its response" in {
@@ -127,7 +128,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe Some(Seq.empty[Payment])
+      await(connector.previousPayments(nino)) shouldBe Right(Seq.empty[Payment])
     }
 
     "return an empty Seq when tax-credits-broker does not include workingTaxCredit.previousPaymentSeq in its response" in {
@@ -155,10 +156,10 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe Some(Seq.empty[Payment])
+      await(connector.previousPayments(nino)) shouldBe Right(Seq.empty[Payment])
     }
 
-    "return None and log a warning when the payments cannot be parsed" in {
+    "return an error and log a warning when the payments cannot be parsed" in {
       val taxCreditsBrokerResponse = HttpResponse(
         200,
         Some(
@@ -183,7 +184,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
 
-      await(connector.previousPayments(nino)) shouldBe None
+      await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get payments from tax-credits-broker service""",
@@ -191,7 +192,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
       )
     }
 
-    "return None and log a warning when there is an error connecting to tax-credits-broker" in {
+    "return an error and log a warning when there is an error connecting to tax-credits-broker" in {
       val connectionRefusedHttp = FakeHttpGet(
         paymentSummaryForNinoUrl,
         Future {
@@ -200,7 +201,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), connectionRefusedHttp)
 
-      await(connector.previousPayments(nino)) shouldBe None
+      await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get payments from tax-credits-broker service""",
@@ -208,14 +209,14 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
       )
     }
 
-    "return None and log a warning when tax-credits-broker returns a 4xx error" in {
+    "return an error and log a warning when tax-credits-broker returns a 4xx error" in {
       val error4xxHttp = FakeHttpGet(
         paymentSummaryForNinoUrl,
         HttpResponse(429))
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), error4xxHttp)
 
-      await(connector.previousPayments(nino)) shouldBe None
+      await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get payments from tax-credits-broker service""",
@@ -223,14 +224,14 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
       )
     }
 
-    "return None and log a warning when tax-credits-broker returns a 5xx error" in {
+    "return an error and log a warning when tax-credits-broker returns a 5xx error" in {
       val error5xxHttp = FakeHttpGet(
         paymentSummaryForNinoUrl,
         HttpResponse(500))
 
       val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), error5xxHttp)
 
-      await(connector.previousPayments(nino)) shouldBe None
+      await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get payments from tax-credits-broker service""",

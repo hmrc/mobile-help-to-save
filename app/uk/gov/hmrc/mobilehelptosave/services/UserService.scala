@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.instances.future._
+import cats.syntax.either._
 import javax.inject.{Inject, Named, Singleton}
 import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.{UserState, _}
 import uk.gov.hmrc.mobilehelptosave.metrics.MobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
 
@@ -45,43 +46,49 @@ class UserService @Inject() (
   @Named("helpToSave.firstBonusEnabled") firstBonusEnabled: Boolean
 ) {
 
-  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserDetails]] = whenEnabled {
+  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] = whenEnabled {
     (for {
-      enrolled <- OptionT(helpToSaveConnector.enrolmentStatus())
-      state <- OptionT(determineState(internalAuthId, nino, enrolled))
-      userDetails <- OptionT.liftF(userDetails(nino, state))
+      enrolled <- EitherT(helpToSaveConnector.enrolmentStatus())
+      state <- EitherT(determineState(internalAuthId, nino, enrolled))
+      userDetails <- EitherT.right[ErrorInfo](userDetails(nino, state))
     } yield {
       userDetails
     }).value
   }
 
-  private def whenEnabled[T](body: => Future[Option[T]]) =
+  private def whenEnabled[T](body: => Future[Either[ErrorInfo, UserDetails]])(implicit ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] =
     if (enabled) {
-      body
+      EitherT(body).map(Some.apply).value
     } else {
-      Future successful None
+      Future successful Right(None)
     }
 
   private def userDetails(nino: Nino, state: UserState.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
-    val accountFO = if (state == UserState.Enrolled && anyAccountFeatureEnabled) {
-      accountService.account(nino)
+    val accountFEO: Future[Either[ErrorInfo, Option[Account]]] = if (state == UserState.Enrolled && anyAccountFeatureEnabled) {
+      accountService.account(nino).map(_.map(Some.apply))
     } else {
-      Future successful None
+      Future successful Right(None)
     }
 
-    accountFO.map(accountO => UserDetails(state = state, account = accountO, accountError = ErrorInfo.errorIfNone(accountO)))
+    accountFEO.map { accountEO =>
+      val (accountO, accountErrorO) = accountEO match {
+        case Right(aO) => (aO, None)
+        case Left(accountError) => (None, Some(accountError))
+      }
+      UserDetails(state = state, account = accountO, accountError = accountErrorO)
+    }
   }
 
   private def anyAccountFeatureEnabled: Boolean =
     balanceEnabled || paidInThisMonthEnabled || firstBonusEnabled
 
-  private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[UserState.Value]] =
+  private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserState.Value]] =
     if (enrolled) {
-      Future successful Some(UserState.Enrolled)
+      Future successful Right(UserState.Enrolled)
     } else {
-      OptionT(invitationEligibilityService.userIsEligibleToBeInvited(nino)).flatMap { eligibleToBeInvited =>
-        if (eligibleToBeInvited) OptionT.liftF(determineInvitedState(internalAuthId))
-        else OptionT.pure(UserState.NotEnrolled)
+      EitherT(invitationEligibilityService.userIsEligibleToBeInvited(nino)).flatMap { eligibleToBeInvited =>
+        if (eligibleToBeInvited) EitherT.right[ErrorInfo](determineInvitedState(internalAuthId))
+        else EitherT.pure[Future, ErrorInfo](UserState.NotEnrolled)
       }.value
     }
 

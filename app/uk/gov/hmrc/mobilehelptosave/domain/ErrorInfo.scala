@@ -24,11 +24,4 @@ object ErrorInfo {
   val General = ErrorInfo("GENERAL")
 
   implicit val writes: OWrites[ErrorInfo] = Json.writes[ErrorInfo]
-
-  def errorIfNone(option: Option[_]): Option[ErrorInfo] =
-    if (option.isEmpty) {
-      Some(ErrorInfo.General)
-    } else {
-      None
-    }
 }

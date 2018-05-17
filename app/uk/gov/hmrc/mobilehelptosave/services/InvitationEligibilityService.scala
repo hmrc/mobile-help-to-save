@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import javax.inject.{Inject, Singleton}
-
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.instances.future._
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.EnabledInvitationFilters
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[InvitationEligibilityServiceImpl])
 trait InvitationEligibilityService {
-  def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+  def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
 }
 
 @Singleton
@@ -39,18 +39,18 @@ class InvitationEligibilityServiceImpl @Inject() (
   enabledFilters: EnabledInvitationFilters
 ) extends InvitationEligibilityService {
 
-  override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
-    val trueFO = Future successful Some(true)
+  override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+    val trueFE = Future successful Right(true)
 
-    val surveyFO = if (enabledFilters.surveyInvitationFilter) surveyService.userWantsToBeContacted()
-    else trueFO
+    val surveyFE = if (enabledFilters.surveyInvitationFilter) surveyService.userWantsToBeContacted()
+    else trueFE
 
-    val wtcFO = if (enabledFilters.workingTaxCreditsInvitationFilter) taxCreditsService.hasRecentWtcPayments(nino)
-    else trueFO
+    val wtcFE = if (enabledFilters.workingTaxCreditsInvitationFilter) taxCreditsService.hasRecentWtcPayments(nino)
+    else trueFE
 
     (for {
-      survey <- OptionT(surveyFO)
-      wtc <- OptionT(wtcFO)
+      survey <- EitherT(surveyFE)
+      wtc <- EitherT(wtcFE)
     } yield {
       survey && wtc
     }).value

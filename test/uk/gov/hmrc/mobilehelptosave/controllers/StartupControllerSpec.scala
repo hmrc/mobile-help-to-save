@@ -24,7 +24,7 @@ import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, Shuttering, UserDetails, UserState}
+import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -64,7 +64,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
       (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Some(testUserDetails.copy(state = UserState.Invited)))
+        .returning(Future successful Right(Some(testUserDetails.copy(state = UserState.Invited))))
 
       val controller = new StartupController(
         mockUserService,
@@ -126,7 +126,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Some(testUserDetails.copy(state = UserState.Invited)))
+          .returning(Future successful Right(Some(testUserDetails.copy(state = UserState.Invited))))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -141,7 +141,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       "include shuttering information in response with shuttered = false" in {
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Some(testUserDetails.copy(state = UserState.Invited)))
+          .returning(Future successful Right(Some(testUserDetails.copy(state = UserState.Invited))))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -171,7 +171,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful None)
+          .returning(Future successful Left(ErrorInfo.General))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200

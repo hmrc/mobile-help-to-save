@@ -21,6 +21,7 @@ import java.net.{ConnectException, URL}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -32,7 +33,7 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "enrolmentStatus" should {
-    "return None when there is an error connecting to the help-to-save service" in {
+    "return a Left when there is an error connecting to the help-to-save service" in {
       val connectionRefusedHttp = FakeHttpGet(
         "http://help-to-save-service/help-to-save/enrolment-status",
         Future {
@@ -41,7 +42,7 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
       val connector = new HelpToSaveConnectorImpl(logger, new URL("http://help-to-save-service/"), connectionRefusedHttp)
 
-      await(connector.enrolmentStatus()) shouldBe None
+      await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get enrolment status from help-to-save service""",
@@ -49,14 +50,14 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
       )
     }
 
-    "return None when the help-to-save service returns a 4xx error" in {
+    "return a Left when the help-to-save service returns a 4xx error" in {
       val error4xxHttp = FakeHttpGet(
         "http://help-to-save-service/help-to-save/enrolment-status",
         HttpResponse(429))
 
       val connector = new HelpToSaveConnectorImpl(logger, new URL("http://help-to-save-service/"), error4xxHttp)
 
-      await(connector.enrolmentStatus()) shouldBe None
+      await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get enrolment status from help-to-save service""",
@@ -64,14 +65,14 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
       )
     }
 
-    "return None when the help-to-save service returns a 5xx error" in {
+    "return a Left when the help-to-save service returns a 5xx error" in {
       val error5xxHttp = FakeHttpGet(
         "http://help-to-save-service/help-to-save/enrolment-status",
         HttpResponse(500))
 
       val connector = new HelpToSaveConnectorImpl(logger, new URL("http://help-to-save-service/"), error5xxHttp)
 
-      await(connector.enrolmentStatus()) shouldBe None
+      await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get enrolment status from help-to-save service""",

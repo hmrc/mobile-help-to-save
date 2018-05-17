@@ -26,7 +26,7 @@ import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{Payment, TaxCreditsBrokerConnector}
-import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, NinoWithoutWtc}
 import uk.gov.hmrc.mobilehelptosave.metrics.FakeMobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.FakeNinoWithoutWtcRepository
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -49,23 +49,23 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
       }
 
       "only call tax-credits-broker once when called multiple times" in {
-        val connector = fakeTaxCreditsBrokerConnector(nino, Some(Seq.empty))
+        val connector = fakeTaxCreditsBrokerConnector(nino, Right(Seq.empty))
         val metrics = FakeMobileHelpToSaveMetrics()
         val service = new TaxCreditsServiceImpl(logger, connector, metrics, new FakeNinoWithoutWtcRepository(), fixedClock)
 
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(false)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(false)
         connector.callCount shouldBe 1
         metrics.taxCreditsBrokerCallCounter.getCount shouldBe 1
         metrics.taxCreditsCacheHitCounter.getCount shouldBe 0
 
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(false)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(false)
         connector.callCount shouldBe 1
         metrics.taxCreditsBrokerCallCounter.getCount shouldBe 1
         metrics.taxCreditsCacheHitCounter.getCount shouldBe 1
       }
 
       "skip caching (risk extra calls tax-credits-broker rather than showing errors to users) when there is a MongoDB error querying the cache" in {
-        val connector = fakeTaxCreditsBrokerConnector(nino, Some(Seq.empty))
+        val connector = fakeTaxCreditsBrokerConnector(nino, Right(Seq.empty))
         val exceptionThrownByFind = GenericDatabaseException("Test exception", None)
         val repository = new FakeNinoWithoutWtcRepository() {
           override def findById(id: Nino, readPreference: ReadPreference)(implicit ec: ExecutionContext): Future[Option[NinoWithoutWtc]] =
@@ -73,8 +73,8 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
         }
         val service = new TaxCreditsServiceImpl(logger, connector, FakeMobileHelpToSaveMetrics(), repository, fixedClock)
 
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(false)
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(false)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(false)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(false)
 
         (slf4jLoggerStub.warn(_: String, _: Throwable)).verify(
           "Couldn't check tax credits cache, this may result in extra calls to tax-credits-broker",
@@ -83,7 +83,7 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
       }
 
       "skip caching when there is a MongoDB error updating the cache" in {
-        val connector = fakeTaxCreditsBrokerConnector(nino, Some(Seq.empty))
+        val connector = fakeTaxCreditsBrokerConnector(nino, Right(Seq.empty))
         val exceptionThrownByInsert = GenericDatabaseException("Test exception", None)
         val repository = new FakeNinoWithoutWtcRepository() {
 
@@ -92,8 +92,8 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
         }
         val service = new TaxCreditsServiceImpl(logger, connector, FakeMobileHelpToSaveMetrics(), repository, fixedClock)
 
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(false)
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(false)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(false)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(false)
 
         (slf4jLoggerStub.warn(_: String, _: Throwable)).verify(
           "Couldn't update tax credits cache, this may result in extra calls to tax-credits-broker",
@@ -135,12 +135,12 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
 
       "continue to return true when called multiple times (not be broken by caching)" in {
         val metrics = FakeMobileHelpToSaveMetrics()
-        val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, Some(payments)), metrics, new FakeNinoWithoutWtcRepository(), fixedClock)
+        val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, Right(payments)), metrics, new FakeNinoWithoutWtcRepository(), fixedClock)
 
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(true)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(true)
         metrics.taxCreditsBrokerCallCounter.getCount shouldBe 1
         metrics.taxCreditsCacheHitCounter.getCount shouldBe 0
-        await(service.hasRecentWtcPayments(nino)) shouldBe Some(true)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Right(true)
         metrics.taxCreditsBrokerCallCounter.getCount shouldBe 2
         metrics.taxCreditsCacheHitCounter.getCount shouldBe 0
       }
@@ -167,34 +167,35 @@ class TaxCreditsServiceSpec extends WordSpec with Matchers with FutureAwaits wit
       }
     }
 
-    "previous payments are unknown" should {
-      "return None" in {
-        val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, None), FakeMobileHelpToSaveMetrics(), new FakeNinoWithoutWtcRepository(), fixedClock)
-        await(service.hasRecentWtcPayments(nino)) shouldBe None
+    "there is an error getting previous payments" should {
+      "return the error" in {
+        val error = ErrorInfo.General
+        val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, Left(error)), FakeMobileHelpToSaveMetrics(), new FakeNinoWithoutWtcRepository(), fixedClock)
+        await(service.hasRecentWtcPayments(nino)) shouldBe Left(error)
       }
     }
   }
 
   private def resultForPaymentsShouldBe(payments: Seq[Payment], expectedResult: Boolean): Unit = {
-    val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, Some(payments)), FakeMobileHelpToSaveMetrics(), new FakeNinoWithoutWtcRepository(), fixedClock)
-    await(service.hasRecentWtcPayments(nino)) shouldBe Some(expectedResult)
+    val service = new TaxCreditsServiceImpl(logger, fakeTaxCreditsBrokerConnector(nino, Right(payments)), FakeMobileHelpToSaveMetrics(), new FakeNinoWithoutWtcRepository(), fixedClock)
+    await(service.hasRecentWtcPayments(nino)) shouldBe Right(expectedResult)
   }
 
-  private def fakeTaxCreditsBrokerConnector(expectedNino: Nino, maybePreviousPayments: Option[Seq[Payment]]) =
-    new FakeTaxCreditsBrokerConnector(expectedNino, maybePreviousPayments)
+  private def fakeTaxCreditsBrokerConnector(expectedNino: Nino, previousPayments: Either[ErrorInfo, Seq[Payment]]) =
+    new FakeTaxCreditsBrokerConnector(expectedNino, previousPayments)
 
-  private class FakeTaxCreditsBrokerConnector(expectedNino: Nino, maybePreviousPayments: Option[Seq[Payment]]) extends TaxCreditsBrokerConnector {
+  private class FakeTaxCreditsBrokerConnector(expectedNino: Nino, previousPayments: Either[ErrorInfo, Seq[Payment]]) extends TaxCreditsBrokerConnector {
     private var _callCount = 0
 
     def callCount: Int = _callCount
 
-    override def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[Payment]]] = {
+    override def previousPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Seq[Payment]]] = {
       _callCount = _callCount + 1
 
       nino shouldBe expectedNino
       hc shouldBe passedHc
       ec shouldBe passedEc
-      Future successful maybePreviousPayments
+      Future successful previousPayments
     }
   }
 

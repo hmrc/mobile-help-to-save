@@ -42,14 +42,14 @@ class StartupController @Inject() (
 
   val startup: Action[AnyContent] = if (helpToSaveEnabled && !shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>
-      val responseF = userService.userDetails(request.internalAuthId, request.nino).map { user =>
+      val responseF = userService.userDetails(request.internalAuthId, request.nino).map { userOrError =>
         EnabledStartupResponse(
           shuttering = shuttering,
           infoUrl = Some(helpToSaveInfoUrl),
           invitationUrl = Some(helpToSaveInvitationUrl),
           accessAccountUrl = Some(helpToSaveAccessAccountUrl),
-          user = user,
-          userError = ErrorInfo.errorIfNone(user),
+          user = userOrError.right.toOption.flatten,
+          userError = userOrError.left.toOption,
           balanceEnabled = balanceEnabled,
           paidInThisMonthEnabled = paidInThisMonthEnabled,
           firstBonusEnabled = firstBonusEnabled,

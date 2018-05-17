@@ -16,20 +16,21 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import cats.syntax.either._
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm, ErrorInfo}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[AccountServiceImpl])
 trait AccountService {
 
-  def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]]
+  def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]]
 
 }
 
@@ -39,13 +40,13 @@ class AccountServiceImpl @Inject() (
   helpToSaveProxyConnector: HelpToSaveProxyConnector
 ) extends AccountService {
 
-  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Account]] =
+  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] =
     helpToSaveProxyConnector.nsiAccount(nino).map(_.flatMap(nsiAccountToAccount))
 
-  private def nsiAccountToAccount(nsiAccount: NsiAccount): Option[Account] = {
+  private def nsiAccountToAccount(nsiAccount: NsiAccount): Either[ErrorInfo, Account] = {
     val paidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit - nsiAccount.currentInvestmentMonth.investmentRemaining
     if (paidInThisMonth >= 0) {
-      Some(Account(
+      Right(Account(
         isClosed = nsiAccountClosedFlagToIsClosed(nsiAccount.accountClosedFlag),
         blocked = nsiAccountToBlocking(nsiAccount),
         balance = nsiAccount.accountBalance,
@@ -63,7 +64,7 @@ class AccountServiceImpl @Inject() (
         s"investmentRemaining = ${nsiAccount.currentInvestmentMonth.investmentRemaining} and investmentLimit = ${nsiAccount.currentInvestmentMonth.investmentLimit} " +
         s"values returned by NS&I don't make sense because they imply a negative amount paid in this month"
       )
-      None
+      Left(ErrorInfo.General)
     }
   }
 
