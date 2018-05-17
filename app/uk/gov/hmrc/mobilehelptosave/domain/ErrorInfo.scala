@@ -16,18 +16,12 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{Json, OWrites}
 
-object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
-}
+case class ErrorInfo(code: String)
 
-case class UserDetails(
-  state: UserState.Value,
-  account: Option[Account],
-  accountError: Option[ErrorInfo]
-)
+object ErrorInfo {
+  val General = ErrorInfo("GENERAL")
 
-object UserDetails {
-  implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]
+  implicit val writes: OWrites[ErrorInfo] = Json.writes[ErrorInfo]
 }

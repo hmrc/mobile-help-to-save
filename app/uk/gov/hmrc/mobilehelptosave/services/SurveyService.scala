@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import javax.inject.{Inject, Singleton}
-
-import cats.data.OptionT
+import cats.data.EitherT
 import cats.instances.future._
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.NativeAppWidgetConnector
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SurveyServiceImpl])
 trait SurveyService {
-  def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]]
+  def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
 }
 
 @Singleton
@@ -51,8 +51,8 @@ class SurveyServiceImpl @Inject() (
   private val yesAnswer = "Yes"
   private val noAnswer = "No"
 
-  override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] =
-    OptionT(nativeAppWidgetConnector.answers(helpToSaveCampaignId, wantsToBeContactedQuestionKey)).map { answers: Seq[String] =>
+  override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] =
+    EitherT(nativeAppWidgetConnector.answers(helpToSaveCampaignId, wantsToBeContactedQuestionKey)).map { answers: Seq[String] =>
       answers
         .filterNot(answer => answer.equalsIgnoreCase(yesAnswer) || answer.equalsIgnoreCase(noAnswer))
         .foreach(answer => logger.warn(s"""Unknown survey answer "$answer" found"""))

@@ -29,6 +29,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -88,7 +89,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               """.stripMargin)
           ))))
 
-      await(connector1.nsiAccount(nino)) shouldBe Some(NsiAccount(
+      await(connector1.nsiAccount(nino)) shouldBe Right(NsiAccount(
         accountClosedFlag = "",
         accountBlockingCode = "00",
         clientBlockingCode = "00",
@@ -127,7 +128,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               """.stripMargin)
           ))))
 
-      await(connector2.nsiAccount(nino)) shouldBe Some(NsiAccount(
+      await(connector2.nsiAccount(nino)) shouldBe Right(NsiAccount(
         accountClosedFlag = "C",
         accountBlockingCode = "T1",
         clientBlockingCode ="client blocking test",
@@ -181,7 +182,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, http)
 
-      await(connector.nsiAccount(nino)) shouldBe Some(NsiAccount(
+      await(connector.nsiAccount(nino)) shouldBe Right(NsiAccount(
         accountClosedFlag = "",
         accountBlockingCode = "00",
         clientBlockingCode = "00",
@@ -196,7 +197,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       sentCorrelationId.value.length should be <= 38
     }
 
-    "return None when there is an error connecting to native-app-widget" in {
+    "return a Left[ErrorInfo] when there is an error connecting to native-app-widget" in {
       val connectionRefusedHttp = FakeHttpGet(
         isAccountUrlForNino _,
         Future {
@@ -205,7 +206,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, connectionRefusedHttp)
 
-      await(connector.nsiAccount(nino)) shouldBe None
+      await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get account from help-to-save-proxy service""",
@@ -213,14 +214,14 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return None when native-app-widget returns a 4xx error" in {
+    "return a Left[ErrorInfo] when native-app-widget returns a 4xx error" in {
       val error4xxHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(429))
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, error4xxHttp)
 
-      await(connector.nsiAccount(nino)) shouldBe None
+      await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get account from help-to-save-proxy service""",
@@ -228,14 +229,14 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return None when native-app-widget returns a 5xx error" in {
+    "return a Left[ErrorInfo] when native-app-widget returns a 5xx error" in {
       val error5xxHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(500))
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, error5xxHttp)
 
-      await(connector.nsiAccount(nino)) shouldBe None
+      await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get account from help-to-save-proxy service""",
@@ -243,7 +244,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return None when native-app-widget returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
+    "return a Left[ErrorInfo] when native-app-widget returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
       val invalidJsonHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
@@ -276,7 +277,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
       val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, invalidJsonHttp)
 
-      await(connector.nsiAccount(nino)) shouldBe None
+      await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
         """Couldn't get account from help-to-save-proxy service""",

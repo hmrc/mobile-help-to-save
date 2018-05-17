@@ -136,7 +136,8 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe None
-      // check that only the user state field has been omitted, not all fields
+      (response.json \ "userError" \ "code").as[String] shouldBe "GENERAL"
+      // check that only the user field has been omitted, not all fields
       (response.json \ "enabled").asOpt[Boolean] should not be None
       (response.json \ "infoUrl").asOpt[String] should not be None
     }
@@ -150,6 +151,7 @@ class StartupISpec extends WordSpec with Matchers
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
       (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+      (response.json \ "user" \ "accountError" \ "code").as[String] shouldBe "GENERAL"
     }
 
     "omit account details but still include user state if get account returns JSON that doesn't conform to the schema" in {

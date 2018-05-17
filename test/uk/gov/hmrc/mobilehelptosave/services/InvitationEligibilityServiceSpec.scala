@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.{EitherValues, Matchers, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.EnabledInvitationFilters
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
 class InvitationEligibilityServiceSpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout with OptionValues {
+  with FutureAwaits with DefaultAwaitTimeout with EitherValues {
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
@@ -47,7 +48,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
           enabledFilters
         )
 
-        await(service.userIsEligibleToBeInvited(nino)).value shouldBe true
+        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe true
       }
     }
 
@@ -59,22 +60,22 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
 
       "return false if the user has not said they wanted to be contacted in the survey" in {
         val service = new InvitationEligibilityServiceImpl(
-          fakeSurveyService(wantsToBeContacted = Some(false)),
+          fakeSurveyService(wantsToBeContacted = Right(false)),
           shouldNotBeCalledTaxCreditsService,
           enabledFilters
         )
 
-        await(service.userIsEligibleToBeInvited(nino)).value shouldBe false
+        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe false
       }
 
       "return true if the user has said they wanted to be contacted in the survey" in {
         val service = new InvitationEligibilityServiceImpl(
-          fakeSurveyService(wantsToBeContacted = Some(true)),
+          fakeSurveyService(wantsToBeContacted = Right(true)),
           shouldNotBeCalledTaxCreditsService,
           enabledFilters
         )
 
-        await(service.userIsEligibleToBeInvited(nino)).value shouldBe true
+        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe true
       }
     }
 
@@ -91,7 +92,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
           enabledFilters
         )
 
-        await(service.userIsEligibleToBeInvited(nino)).value shouldBe false
+        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe false
       }
 
       "return true if the user has recent WTC payments" in {
@@ -101,7 +102,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
           enabledFilters
         )
 
-        await(service.userIsEligibleToBeInvited(nino)).value shouldBe true
+        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe true
       }
     }
 
@@ -113,18 +114,18 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
 
       "return false when survey filter accepts user but WTC filter rejects them" in {
         val service = new InvitationEligibilityServiceImpl(
-          fakeSurveyService(wantsToBeContacted = Some(true)),
+          fakeSurveyService(wantsToBeContacted = Right(true)),
           fakeTaxCreditsService(nino, wtc = false),
           enabledFilters
         )
 
-        await(service.userIsEligibleToBeInvited(nino)).value shouldBe false
+        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe false
       }
     }
   }
 
-  private def fakeSurveyService(wantsToBeContacted: Option[Boolean]) = new SurveyService {
-    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
+  private def fakeSurveyService(wantsToBeContacted: Either[ErrorInfo, Boolean]) = new SurveyService {
+    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
       ec shouldBe passedEc
 
@@ -133,21 +134,21 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
   }
 
   private val shouldNotBeCalledSurveyService = new SurveyService {
-    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = Future failed new RuntimeException("SurveyService should not be called in this situation")
+    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = Future failed new RuntimeException("SurveyService should not be called in this situation")
   }
 
   private def fakeTaxCreditsService(expectedNino: Nino, wtc: Boolean) = new TaxCreditsService {
-    override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = {
+    override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
       ec shouldBe passedEc
 
-      Future successful Some(wtc)
+      Future successful Right(wtc)
     }
   }
 
   private val shouldNotBeCalledTaxCreditsService = new TaxCreditsService {
-    override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Boolean]] = Future failed new RuntimeException("TaxCreditsService should not be called in this situation")
+    override def hasRecentWtcPayments(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = Future failed new RuntimeException("TaxCreditsService should not be called in this situation")
   }
 
 }

@@ -17,12 +17,13 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
-import javax.inject.{Inject, Named, Singleton}
 
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Named, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegments
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[NativeAppWidgetConnectorImpl])
 trait NativeAppWidgetConnector {
 
-  def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]]
+  def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Seq[String]]]
 
 }
 
@@ -41,13 +42,13 @@ class NativeAppWidgetConnectorImpl @Inject() (
   http: CoreGet
 ) extends NativeAppWidgetConnector {
 
-  override def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[Seq[String]]] =
+  override def answers(campaignId: String, questionKey: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Seq[String]]] =
     http.GET[JsValue](answersUrl(campaignId, questionKey).toString).map { jsonBody =>
-      Some((jsonBody \\ "content").map(_.as[String]))
+      Right((jsonBody \\ "content").map(_.as[String]))
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
         logger.warn("Couldn't get answers from native-app-widget service", e)
-        None
+        Left(ErrorInfo.General)
     }
 
   private def answersUrl(campaignId: String, questionKey: String) =
