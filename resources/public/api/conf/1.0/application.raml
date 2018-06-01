@@ -38,7 +38,7 @@ traits:
             type: types.errorResponse
             examples:
               noPermissionOnAccountNino:
-                description: The logged in user is not permitted to access the account for the specified NINO.
+                description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
                 value:
                   code: NO_PERMISSION_ON_ACCOUNT_NINO
 
@@ -54,22 +54,22 @@ traits:
                 value:
                   code: BLOCKED
 
-/individuals/help-to-save/account
+/mobile-help-to-save/savings-account
   {nino}:
-    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-    uriParameters:
-      nino:
-        type: nino
-        description: The account holder's national insurance number
-    get:
-      displayName: Get account information
-      responses:
-        200:
-          body:
-            application/json:
-              #TODO
+# An API resource for
+#    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+#    uriParameters:
+#      nino:
+#        type: nino
+#        description: The account holder's national insurance number
+#    get:
+#      displayName: Get account information
+#      responses:
+#        200:
+#          body:
+#            application/json:
 #              type: !include schemas/account.json
-              example: !include examples/account.json
+#              example: !include examples/account.json
     /transactions:
       is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
       get:
