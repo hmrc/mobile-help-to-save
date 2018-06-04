@@ -54,9 +54,8 @@ traits:
                 value:
                   code: BLOCKED
 
-/mobile-help-to-save/savings-account
+/individuals/mobile-help-to-save/savings-account
   {nino}:
-# An API resource for
 #    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
 #    uriParameters:
 #      nino:
@@ -81,11 +80,11 @@ traits:
               application/json:
                 type: !include schemas/transactions.json
                 example: !include examples/transactions.json
-    /messages:
-      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-      get:
-        displayName: Get message list
-      /{messageId}:
-        is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-        get:
-          displayName: Get message
+#    /messages:
+#      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+#      get:
+#        displayName: Get message list
+#      /{messageId}:
+#        is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+#        get:
+#          displayName: Get message

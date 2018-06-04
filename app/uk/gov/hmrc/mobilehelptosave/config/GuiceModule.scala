@@ -23,7 +23,10 @@ import com.google.inject.name.Names.named
 import javax.inject.Provider
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Logger, LoggerLike}
-import uk.gov.hmrc.http.CoreGet
+import uk.gov.hmrc.api.connector.ServiceLocatorConnector
+import uk.gov.hmrc.api.controllers.DocumentationController
+import uk.gov.hmrc.http.{CoreGet, CorePost}
+import uk.gov.hmrc.mobilehelptosave.api.{ApiServiceLocatorConnector, ServiceLocatorRegistrationTask}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -56,7 +59,12 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindBaseUrl("tax-credits-broker")
 
     bind(classOf[CoreGet]).to(classOf[DefaultHttpClient])
+    bind(classOf[CorePost]).to(classOf[DefaultHttpClient])
     bind(classOf[LoggerLike]).toInstance(Logger)
+
+    bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
+    bind(classOf[DocumentationController]).toInstance(DocumentationController)
+    bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
   }
 
   private def bindConfigBoolean(path: String): Unit = {

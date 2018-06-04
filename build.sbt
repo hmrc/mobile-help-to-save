@@ -24,6 +24,7 @@ lazy val scoverageSettings = {
 scoverageSettings
 scalaSettings
 publishingSettings
+unmanagedResourceDirectories in Compile += baseDirectory.value / "resources"
 defaultSettings()
 
 PlayKeys.playDefaultPort := 8248
