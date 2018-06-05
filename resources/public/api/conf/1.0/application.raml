@@ -14,7 +14,7 @@ uses:
 
 types:
   nino:
-    type: String
+    type: string
     example: AA999999A
 
 traits:
@@ -42,20 +42,25 @@ traits:
                 value:
                   code: NO_PERMISSION_ON_ACCOUNT_NINO
 
-  blocked:
+  ninoInvalid:
     responses:
-      403:
+      400:
         body:
           application/json:
             type: types.errorResponse
             examples:
-              isBlocked:
-                description: The specified Help to Save account has a block applied. Try accessing the account via the web for more details.
+              ninoInvalid:
+                description: Invalid NINO (incorrect format)
                 value:
-                  code: BLOCKED
+                  code: NINO_INVALID
 
-/individuals/mobile-help-to-save/savings-account
-  {nino}:
+/individuals/mobile-help-to-save/savings-account:
+  /{nino}:
+    uriParameters:
+      nino:
+        description: Savings account holder's National Insurance Number
+        type: string
+        example: AA000003D
 #    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
 #    uriParameters:
 #      nino:
@@ -70,10 +75,12 @@ traits:
 #              type: !include schemas/account.json
 #              example: !include examples/account.json
     /transactions:
-      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid]
       get:
         displayName: Get transactions
         description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned.
+        (annotations.scope): "read:help-to-save"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "read:help-to-save" ] } ]
         responses:
           200:
             body:

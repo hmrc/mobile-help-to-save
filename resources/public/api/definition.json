@@ -1,9 +1,9 @@
-{
+{      "name": "Read Help to Save Account Data",
+
   "scopes": [
     {
-      "key": "read:help-to-save-account",
-      "name": "Read Help to Save Account Data",
-      "description": "Read Help to Save account and transactions data"
+      "key": "read:help-to-save",
+      "description": "Read Help to Save Savings account and transactions data"
     }
   ],
   "api": {
