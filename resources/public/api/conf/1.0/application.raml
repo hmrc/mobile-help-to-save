@@ -54,13 +54,13 @@ traits:
                 value:
                   code: NINO_INVALID
 
-/individuals/mobile-help-to-save/savings-account:
-  /{nino}:
-    uriParameters:
-      nino:
-        description: Savings account holder's National Insurance Number
-        type: string
-        example: AA000003D
+/individuals/mobile-help-to-save/{nino}:
+  uriParameters:
+    nino:
+      description: Savings account holder's National Insurance Number
+      type: string
+      example: AA000003D
+  /savings-account:
 #    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
 #    uriParameters:
 #      nino:
