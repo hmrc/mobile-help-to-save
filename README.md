@@ -25,6 +25,7 @@ Response format:
   "firstBonusEnabled": true,
   "shareInvitationEnabled": true,
   "savingRemindersEnabled": true,
+  "transactionsEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
   // URL of invitation call to action
@@ -122,7 +123,8 @@ When the Help to Save section of the app is shuttered then `shuttering.shuttered
   "paidInThisMonthEnabled": true,
   "firstBonusEnabled": true,
   "shareInvitationEnabled": true,
-  "savingRemindersEnabled": true
+  "savingRemindersEnabled": true,
+  "transactionsEnabled": true
 }
 ```
 
