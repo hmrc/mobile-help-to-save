@@ -16,32 +16,32 @@
 
 package uk.gov.hmrc.mobilehelptosave.connectors
 
-import java.net.URL
-
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Transactions}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
 trait HelpToSaveConnector {
 
   def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
-
+  def getTransactions(nino:String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]]
 }
 
 @Singleton
 class HelpToSaveConnectorImpl @Inject() (
   logger: LoggerLike,
-  @Named("help-to-save-baseUrl") baseUrl: URL,
+  config: HelpToSaveConnectorConfig,
   http: CoreGet) extends HelpToSaveConnector {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
-    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
+    http.GET[JsValue](config.enrolmentStatusUrl.toString) map { json: JsValue =>
       Right((json \ "enrolled").as[Boolean])
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
@@ -50,6 +50,13 @@ class HelpToSaveConnectorImpl @Inject() (
     }
   }
 
-  private val enrolmentStatusUrl = new URL(baseUrl, "/help-to-save/enrolment-status")
-
+  // TODO why is the systemId never used anywhere?
+  override def getTransactions(nino:String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
+    val string = config.transactionsUrl(nino).toString
+    http.GET[Transactions](string) map (Right.apply _) recover {
+      case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
+        logger.warn("Couldn't get transaction information from help-to-save service", e)
+        Left(ErrorInfo.General)
+    }
+  }
 }

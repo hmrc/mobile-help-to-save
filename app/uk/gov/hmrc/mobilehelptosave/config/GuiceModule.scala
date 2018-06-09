@@ -18,11 +18,13 @@ package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
 
-import com.google.inject.AbstractModule
 import com.google.inject.name.Names.named
+import com.google.inject.{AbstractModule, Provides}
 import javax.inject.Provider
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Logger, LoggerLike}
+import uk.gov.hmrc.config.HelpToSaveConfig
+import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.http.{CoreGet, CorePost}
@@ -34,6 +36,11 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
 
   override protected lazy val mode: Mode = environment.mode
   override protected lazy val runModeConfiguration: Configuration = configuration
+
+  @Provides
+  def helpToSaveConfig : HelpToSaveConfig = {
+    HelpToSaveConfig(configuration, environment.mode)
+  }
 
   override def configure(): Unit = {
     bindConfigBoolean("helpToSave.shuttering.shuttered")
@@ -95,5 +102,4 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   private class BaseUrlProvider(serviceName: String) extends Provider[URL] {
     override lazy val get = new URL(baseUrl(serviceName))
   }
-
 }

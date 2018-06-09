@@ -454,6 +454,9 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
 
       Future successful userIsEnrolledInHelpToSave
     }
+
+    // TODO: implementation is required? BL
+    override def getTransactions(nino: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
   }
 
   private def fakeInvitationEligibilityService(expectedNino: Nino, eligible: Either[ErrorInfo, Boolean]): InvitationEligibilityService =
@@ -482,6 +485,9 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
   private lazy val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] =
       Future failed new RuntimeException("HelpToSaveConnector should not be called in this situation")
+
+    // TODO: implementation is required? BL
+    override def getTransactions(nino: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
   }
 
   private lazy val shouldNotBeCalledInvitationEligibilityService = new InvitationEligibilityService {
