@@ -29,7 +29,13 @@ import uk.gov.hmrc.mobilehelptosave.services.UserService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class StartupControllerSpec extends WordSpec with Matchers with MockFactory with OneInstancePerTest with FutureAwaits with DefaultAwaitTimeout {
+class StartupControllerSpec
+  extends WordSpec
+    with Matchers
+    with MockFactory
+    with OneInstancePerTest
+    with FutureAwaits
+    with DefaultAwaitTimeout {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 

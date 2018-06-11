@@ -57,7 +57,7 @@ class HelpToSaveConnectorImpl @Inject() (
 
 
   override def getTransactions(nino:String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
-    val string = transactionsUrl(nino, "").toString
+    val string = transactionsUrl(nino).toString
     http.GET[Transactions](string) map Right.apply recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
         logger.warn("Couldn't get transaction information from help-to-save service", e)
@@ -66,6 +66,6 @@ class HelpToSaveConnectorImpl @Inject() (
   }
 
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
-  private def transactionsUrl(nino: String, systemId: String): URL = new URL(
+  private def transactionsUrl(nino: String): URL = new URL(
     config.helpToSaveBaseUrl, s"/help-to-save/$nino/account/transactions" ? ("systemId" -> SystemId))
 }
