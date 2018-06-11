@@ -58,7 +58,7 @@ class HelpToSaveConnectorImpl @Inject() (
 
   override def getTransactions(nino:String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
     val string = transactionsUrl(nino, "").toString
-    http.GET[Transactions](string) map (Right.apply _) recover {
+    http.GET[Transactions](string) map Right.apply recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
         logger.warn("Couldn't get transaction information from help-to-save service", e)
         Left(ErrorInfo.General)
