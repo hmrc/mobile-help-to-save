@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(addCommandAlias("testAll", ";clean;reload;update;test;it:test"))
+  .settings(addCommandAlias("testAll", ";reload;test;it:test"))
 
 lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
@@ -52,5 +52,3 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("hmrc", "releases"),
   Resolver.jcenterRepo
 )
-
-

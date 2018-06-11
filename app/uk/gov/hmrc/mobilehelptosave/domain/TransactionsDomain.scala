@@ -51,8 +51,6 @@ case class Transaction(
   amount:               BigDecimal,
   transactionDate:      LocalDate,
   accountingDate:       LocalDate,
-  description:          String,
-  transactionReference: String,
   balanceAfter:         BigDecimal
 )
 

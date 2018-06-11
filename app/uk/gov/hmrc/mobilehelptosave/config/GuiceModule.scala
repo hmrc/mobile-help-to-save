@@ -23,7 +23,7 @@ import com.google.inject.{AbstractModule, Provides}
 import javax.inject.Provider
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Logger, LoggerLike}
-import uk.gov.hmrc.config.HelpToSaveConfig
+import uk.gov.hmrc.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
@@ -38,8 +38,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
   override protected lazy val runModeConfiguration: Configuration = configuration
 
   @Provides
-  def helpToSaveConfig : HelpToSaveConfig = {
-    HelpToSaveConfig(configuration, environment.mode)
+  def helpToSaveConfig : MobileHelpToSaveConfig = {
+    MobileHelpToSaveConfig(configuration, environment.mode)
   }
 
   override def configure(): Unit = {

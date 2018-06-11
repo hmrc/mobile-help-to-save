@@ -16,58 +16,63 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-
 import java.time.LocalDate
 
-import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transactions}
 
 trait TestData {
 
-  val transactionsJsonString: String = """
-                                         |{
-                                         |  "transactions" : [ {
-                                         |    "operation" : "credit",
-                                         |    "amount" : 11.5,
-                                         |    "transactionDate" : "2017-11-20",
-                                         |    "accountingDate" : "2017-11-20",
-                                         |    "description" : "Debit card online deposit",
-                                         |    "transactionReference" : "A1A11AA1A00A0034",
-                                         |    "balanceAfter" : 11.5
-                                         |  }, {
-                                         |    "operation" : "debit",
-                                         |    "amount" : 1.01,
-                                         |    "transactionDate" : "2017-11-27",
-                                         |    "accountingDate" : "2017-11-27",
-                                         |    "description" : "BACS payment",
-                                         |    "transactionReference" : "A1A11AA1A00A000I",
-                                         |    "balanceAfter" : 10.49
-                                         |  }, {
-                                         |    "operation" : "debit",
-                                         |    "amount" : 1.11,
-                                         |    "transactionDate" : "2017-11-27",
-                                         |    "accountingDate" : "2017-11-27",
-                                         |    "description" : "BACS payment",
-                                         |    "transactionReference" : "A1A11AA1A00A000G",
-                                         |    "balanceAfter" : 9.38
-                                         |  }, {
-                                         |    "operation" : "credit",
-                                         |    "amount" : 1.11,
-                                         |    "transactionDate" : "2017-11-27",
-                                         |    "accountingDate" : "2017-12-04",
-                                         |    "description" : "Reinstatement Adjustment",
-                                         |    "transactionReference" : "A1A11AA1A00A000G",
-                                         |    "balanceAfter" : 10.49
-                                         |  }, {
-                                         |    "operation" : "credit",
-                                         |    "amount" : 50,
-                                         |    "transactionDate" : "2018-04-10",
-                                         |    "accountingDate" : "2018-04-10",
-                                         |    "description" : "Debit card online deposit",
-                                         |    "transactionReference" : "A1A11AA1A00A0059",
-                                         |    "balanceAfter" : 60.49
-                                         |  } ]
-                                         |}""".stripMargin
+  val transactionsJsonString: String =
+    """
+      |{
+      |  "transactions" : [ {
+      |    "operation" : "credit",
+      |    "amount" : 11.5,
+      |    "transactionDate" : "2017-11-20",
+      |    "accountingDate" : "2017-11-20",
+      |    "description" : "Debit card online deposit",
+      |    "transactionReference" : "A1A11AA1A00A0034",
+      |    "balanceAfter" : 11.5
+      |  }, {
+      |    "operation" : "debit",
+      |    "amount" : 1.01,
+      |    "transactionDate" : "2017-11-27",
+      |    "accountingDate" : "2017-11-27",
+      |    "description" : "BACS payment",
+      |    "transactionReference" : "A1A11AA1A00A000I",
+      |    "balanceAfter" : 10.49
+      |  }, {
+      |    "operation" : "debit",
+      |    "amount" : 1.11,
+      |    "transactionDate" : "2017-11-27",
+      |    "accountingDate" : "2017-11-27",
+      |    "description" : "BACS payment",
+      |    "transactionReference" : "A1A11AA1A00A000G",
+      |    "balanceAfter" : 9.38
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 1.11,
+      |    "transactionDate" : "2017-11-27",
+      |    "accountingDate" : "2017-12-04",
+      |    "description" : "Reinstatement Adjustment",
+      |    "transactionReference" : "A1A11AA1A00A000G",
+      |    "balanceAfter" : 10.49
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 50,
+      |    "transactionDate" : "2018-04-10",
+      |    "accountingDate" : "2018-04-10",
+      |    "description" : "Debit card online deposit",
+      |    "transactionReference" : "A1A11AA1A00A0059",
+      |    "balanceAfter" : 60.49
+      |  } ]
+      |}""".stripMargin
 
-  val transactionsJson: Transactions = Json.parse(transactionsJsonString).as[Transactions]
+  val transactions: Transactions = Transactions(Seq(
+    Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50")),
+    Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),
+    Transaction(Debit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("9.38")),
+    Transaction(Credit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-12-04"), BigDecimal("10.49")),
+    Transaction(Credit, BigDecimal(50), LocalDate.parse("2018-04-10"), LocalDate.parse("2018-04-10"), BigDecimal("60.49"))
+  ))
 }

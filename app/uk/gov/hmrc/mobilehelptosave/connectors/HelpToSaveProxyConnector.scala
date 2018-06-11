@@ -29,6 +29,7 @@ import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
+import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,7 +58,7 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 
   private def nsiAccountUrl(nino: Nino) = {
     val correlationId = UUID.randomUUID().toString
-    new URL(baseUrl, "/help-to-save-proxy/nsi-services/account").toString ? ("nino" -> nino.value) & ("version" -> "V1.0") & ("systemId" -> "MDTP-MOBILE") & ("correlationId" -> correlationId)
+    new URL(baseUrl, "/help-to-save-proxy/nsi-services/account").toString ? ("nino" -> nino.value) & ("version" -> "V1.0") & ("systemId" -> SystemId) & ("correlationId" -> correlationId)
   }
 
 }

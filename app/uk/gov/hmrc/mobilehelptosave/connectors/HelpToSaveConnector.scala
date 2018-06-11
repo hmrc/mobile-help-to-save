@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.mobilehelptosave.connectors
 
+import java.net.URL
+
 import com.google.inject.ImplementedBy
+import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
+import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Transactions}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,7 +46,7 @@ class HelpToSaveConnectorImpl @Inject() (
   http: CoreGet) extends HelpToSaveConnector {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
-    http.GET[JsValue](config.enrolmentStatusUrl.toString) map { json: JsValue =>
+    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
       Right((json \ "enrolled").as[Boolean])
     } recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
@@ -50,13 +55,17 @@ class HelpToSaveConnectorImpl @Inject() (
     }
   }
 
-  // TODO why is the systemId never used anywhere?
+
   override def getTransactions(nino:String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
-    val string = config.transactionsUrl(nino).toString
+    val string = transactionsUrl(nino, "").toString
     http.GET[Transactions](string) map (Right.apply _) recover {
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
         logger.warn("Couldn't get transaction information from help-to-save service", e)
         Left(ErrorInfo.General)
     }
   }
+
+  private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
+  private def transactionsUrl(nino: String, systemId: String): URL = new URL(
+    config.helpToSaveBaseUrl, s"/help-to-save/$nino/account/transactions" ? ("systemId" -> SystemId))
 }
