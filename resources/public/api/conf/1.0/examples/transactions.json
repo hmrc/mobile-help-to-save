@@ -3,7 +3,6 @@
     {
       "amount": 3.00,
       "operation": "credit",
-      "transactionReference": "B41519121620238A",
       "transactionDate": "2018-02-18",
       "accountingDate": "2018-02-18",
       "balanceAfter": 3.00
