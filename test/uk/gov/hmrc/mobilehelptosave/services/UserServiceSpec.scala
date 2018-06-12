@@ -456,7 +456,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
     }
 
     // TODO: implementation is required? BL
-    override def getTransactions(nino: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
+    override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
   }
 
   private def fakeInvitationEligibilityService(expectedNino: Nino, eligible: Either[ErrorInfo, Boolean]): InvitationEligibilityService =
@@ -487,7 +487,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
       Future failed new RuntimeException("HelpToSaveConnector should not be called in this situation")
 
     // TODO: implementation is required? BL
-    override def getTransactions(nino: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
+    override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
   }
 
   private lazy val shouldNotBeCalledInvitationEligibilityService = new InvitationEligibilityService {

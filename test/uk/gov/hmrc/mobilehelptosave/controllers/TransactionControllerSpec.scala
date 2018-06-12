@@ -1,8 +1,24 @@
+/*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import play.api.mvc.{Request, Result, Results}
+import play.api.mvc.{Request, Result}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -36,12 +52,13 @@ class TransactionControllerSpec
   "getTransactions" should {
 
     "pass NINO obtained from auth into the HelpToSaveConnector" in {
+      pending
       val controller = new TransactionController(helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino))
 
       controller.getTransactions(nino.value)
 
-      (helpToSaveConnector.getTransactions(_:String)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino.value, *, *)
+      (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(nino, *, *)
         .returning(Future successful Right(transactions))
     }
   }

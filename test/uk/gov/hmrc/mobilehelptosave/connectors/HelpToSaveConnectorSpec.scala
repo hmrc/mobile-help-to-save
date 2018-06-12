@@ -23,6 +23,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import play.api.libs.json.Json
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.TestData
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
@@ -39,10 +40,11 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
   private val baseUrl = "http://help-to-save-service"
 
-  private val nino = "AA000000A"
+  private val ninoString = "AA000000A"
+  private val nino = Nino(ninoString)
 
   private def isTransactionsUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
-    case AbsoluteUrl("http", Authority(_, Host("help-to-save-service"), None), AbsolutePath(Vector("help-to-save", this.nino, "account", "transactions")), query, _)
+    case AbsoluteUrl("http", Authority(_, Host("help-to-save-service"), None), AbsolutePath(Vector("help-to-save", this.ninoString, "account", "transactions")), query, _)
       if query.param("systemId").contains("MDTP-MOBILE") =>
       true
     case _ =>
