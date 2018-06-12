@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.JsObject
-import play.api.mvc.{Request, Result, Results}
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -44,21 +43,6 @@ class StartupControllerSpec
   private val internalAuthId = InternalAuthId("some-internal-auth-id")
 
   private val mockUserService = mock[UserService]
-
-  private class AlwaysAuthorisedWithIds(id: InternalAuthId, nino: Nino) extends AuthorisedWithIds {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-      Future successful Right(new RequestWithIds(id, nino, request))
-  }
-
-  private object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-      Future successful Left(Forbidden)
-  }
-
-  private object ShouldNotBeCalledAuthorisedWithIds extends AuthorisedWithIds with Results {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-      Future failed new RuntimeException("AuthorisedWithIds should not be called in this situation")
-  }
 
   val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   val falseShuttering = Shuttering(shuttered = false, "", "")
