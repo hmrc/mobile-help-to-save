@@ -33,8 +33,6 @@ Response format:
   "accessAccountUrl": "/mobile-help-to-save/access-account",
   // User-specific Help to Save data
   "user": {
-    // users name, optional
-    "name": "Beth Planner",
     // user state, can be NotEnrolled, InvitedFirstTime, Invited or Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
     "state": "Enrolled",
     // Account section is present if:
