@@ -58,6 +58,12 @@ traits:
   # because:
   # 1) The response returned when API platform shuttering is used (503 with code: "SERVER_ERROR") is difficult to distinguish from the response when certain errors occur.
   # 2) API platform shuttering does not support custom error messages
+  #
+  # Note that api-documentation-frontend doesn't display anything for this
+  # trait, probably because it goes outside API platform norms (errors are
+  # usually specified using types.errorResponse, like in ninoInvalid above,
+  # but we have more fields in this error response than there are in the API
+  # platform standard error response so we can't use types.errorResponse).
   mobileHelpToSaveShuttered:
     responses:
       503:
