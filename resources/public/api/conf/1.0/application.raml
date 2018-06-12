@@ -54,6 +54,18 @@ traits:
                 value:
                   code: NINO_INVALID
 
+  # We implement our own shuttering instead of using the API platform shuttering (<confluence>/display/DTRG/How+to+emergency+shutter+an+API)
+  # because:
+  # 1) The response returned when API platform shuttering is used (503 with code: "SERVER_ERROR") is difficult to distinguish from the response when certain errors occur.
+  # 2) API platform shuttering does not support custom error messages
+  mobileHelpToSaveShuttered:
+    responses:
+      503:
+        body:
+          application/json:
+            type: !include schemas/shuttering.json
+            example: !include examples/shuttering.json
+
 /individuals/mobile-help-to-save/{nino}:
   uriParameters:
     nino:
@@ -61,7 +73,7 @@ traits:
       type: string
       example: AA000003D
   /savings-account:
-#    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
+#    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
 #    uriParameters:
 #      nino:
 #        type: nino
@@ -75,7 +87,7 @@ traits:
 #              type: !include schemas/account.json
 #              example: !include examples/account.json
     /transactions:
-      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid]
+      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
       get:
         displayName: Get transactions
         description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned.
@@ -87,6 +99,7 @@ traits:
               application/json:
                 type: !include schemas/transactions.json
                 example: !include examples/transactions.json
+
 #    /messages:
 #      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
 #      get:

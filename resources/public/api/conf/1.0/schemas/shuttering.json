@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Error code, allows shuttering response to be distinguished from other 503 responses",
+      "examples": [
+        "SHUTTERED"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "description": "Title to be shown to user",
+      "examples": [
+        "Service Unavailable"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Message to be shown to user",
+      "examples": [
+        "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
+      ]
+    }
+  },
+  "required": [
+    "code",
+    "title",
+    "message"
+  ]
+}

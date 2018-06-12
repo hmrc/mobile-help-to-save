@@ -126,7 +126,10 @@ class TransactionControllerSpec
     }
 
     "helpToSaveShuttered = true" should {
-      "do ???" is pending
+      // "code": SHUTTERED - or maybe SCHEDULED_MAINTENANCE per <confluence>/display/DTRG/How+to+emergency+shutter+an+API?focusedCommentId=88251625#comment-88251625
+      //     "title": from setting, for example "Service Unavailable",
+      //    "message": from setting, for example, for example "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
+      "return 503 SHUTTERED" is pending
     }
   }
 }
