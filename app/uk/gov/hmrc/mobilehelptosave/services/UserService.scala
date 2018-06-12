@@ -24,7 +24,7 @@ import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain.{UserState, _}
 import uk.gov.hmrc.mobilehelptosave.metrics.MobileHelpToSaveMetrics
 import uk.gov.hmrc.mobilehelptosave.repos.InvitationRepository
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UserService @Inject() (
   invitationEligibilityService: InvitationEligibilityService,
-  helpToSaveConnector: HelpToSaveConnector,
+  helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus,
   metrics: MobileHelpToSaveMetrics,
   invitationRepository: InvitationRepository,
   accountService: AccountService,

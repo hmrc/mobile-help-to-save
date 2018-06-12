@@ -24,7 +24,7 @@ import reactivemongo.api.commands.DefaultWriteResult
 import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, MobileHelpToSaveMetrics, ShouldNotUpdateInvitationMetrics}
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository, ShouldNotBeCalledInvitationRepository}
@@ -51,7 +51,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
 
   private class UserServiceWithTestDefaults(
     invitationEligibilityService: InvitationEligibilityService,
-    helpToSaveConnector: HelpToSaveConnector,
+    helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus,
     metrics: MobileHelpToSaveMetrics,
     invitationRepository: InvitationRepository,
     accountService: AccountService = fakeAccountService(nino, Left(ErrorInfo.General)),
@@ -447,16 +447,13 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
 
   }
 
-  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnector {
+  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnectorEnrolmentStatus {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
       ec shouldBe passedEc
 
       Future successful userIsEnrolledInHelpToSave
     }
-
-    // TODO: implementation is required? BL
-    override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
   }
 
   private def fakeInvitationEligibilityService(expectedNino: Nino, eligible: Either[ErrorInfo, Boolean]): InvitationEligibilityService =
@@ -482,12 +479,9 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
     }
   }
 
-  private lazy val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnector {
+  private lazy val shouldNotBeCalledHelpToSaveConnector = new HelpToSaveConnectorEnrolmentStatus {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] =
       Future failed new RuntimeException("HelpToSaveConnector should not be called in this situation")
-
-    // TODO: implementation is required? BL
-    override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = ???
   }
 
   private lazy val shouldNotBeCalledInvitationEligibilityService = new InvitationEligibilityService {

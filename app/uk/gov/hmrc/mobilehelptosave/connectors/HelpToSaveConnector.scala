@@ -35,9 +35,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveConnector {
-
+trait HelpToSaveConnectorEnrolmentStatus {
   def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
+}
+
+@ImplementedBy(classOf[HelpToSaveConnectorImpl])
+trait HelpToSaveConnectorGetTransactions {
   def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]]
 }
 
@@ -45,7 +48,7 @@ trait HelpToSaveConnector {
 class HelpToSaveConnectorImpl @Inject() (
   logger: LoggerLike,
   config: HelpToSaveConnectorConfig,
-  http: CoreGet) extends HelpToSaveConnector {
+  http: CoreGet) extends HelpToSaveConnectorEnrolmentStatus with HelpToSaveConnectorGetTransactions {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>

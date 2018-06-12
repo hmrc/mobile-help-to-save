@@ -23,7 +23,7 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.TestData
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnector
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +42,7 @@ class TransactionControllerSpec
   private val generator = new Generator(0)
   private val nino = generator.nextNino
   private val internalAuthId = InternalAuthId("some-internal-auth-id")
-  private val helpToSaveConnector = mock[HelpToSaveConnector]
+  private val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
 
   private class AlwaysAuthorisedWithIds(id: InternalAuthId, nino: Nino) extends AuthorisedWithIds {
     override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
