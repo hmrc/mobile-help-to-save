@@ -46,10 +46,10 @@ case class MobileHelpToSaveConfig @Inject()(
   override protected def runModeConfiguration: Configuration = configuration
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
-  override val helpToSaveBaseUrl: URL = baseUrlAsUrl("help-to-save")
-  override val helpToSaveProxyBaseUrl: URL = baseUrlAsUrl("help-to-save-proxy")
-  override val nativeAppWidgetBaseUrl: URL = baseUrlAsUrl("native-app-widget")
-  override val taxCreditsBrokerBaseUrl: URL = baseUrlAsUrl("tax-credits-broker")
+  override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
+  override val helpToSaveProxyBaseUrl: URL = configBaseUrl("help-to-save-proxy")
+  override val nativeAppWidgetBaseUrl: URL = configBaseUrl("native-app-widget")
+  override val taxCreditsBrokerBaseUrl: URL = configBaseUrl("tax-credits-broker")
 
   override val shuttering: Shuttering = Shuttering(
     shuttered = configBoolean("helpToSave.shuttering.shuttered"),
@@ -72,7 +72,7 @@ case class MobileHelpToSaveConfig @Inject()(
   override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
   override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
-  protected def baseUrlAsUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
+  protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
 
