@@ -22,22 +22,68 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.Mode.Mode
+import uk.gov.hmrc.mobilehelptosave.config.Base64
+import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.config.ServicesConfig
 
 @Singleton
 case class MobileHelpToSaveConfig @Inject()(configuration: Configuration, override val mode:Mode)
   extends ServicesConfig
-    with HelpToSaveConnectorConfig {
+    with HelpToSaveConnectorConfig
+    with StartupControllerConfig {
 
   override protected def runModeConfiguration: Configuration = configuration
 
+  // These are eager vals so that missing or invalid configuration will be detected on startup
+  override val helpToSaveBaseUrl: URL = baseUrlAsUrl("help-to-save")
+
+  override val shuttering: Shuttering = Shuttering(
+    shuttered = configBoolean("helpToSave.shuttering.shuttered"),
+    title = configBase64String("helpToSave.shuttering.title"),
+    message = configBase64String("helpToSave.shuttering.message")
+  )
+
+  override val helpToSaveEnabled: Boolean = configBoolean("helpToSave.enabled")
+  override val balanceEnabled: Boolean = configBoolean("helpToSave.balanceEnabled")
+  override val paidInThisMonthEnabled: Boolean = configBoolean("helpToSave.paidInThisMonthEnabled")
+  override val firstBonusEnabled: Boolean = configBoolean("helpToSave.firstBonusEnabled")
+  override val shareInvitationEnabled: Boolean = configBoolean("helpToSave.shareInvitationEnabled")
+  override val savingRemindersEnabled: Boolean = configBoolean("helpToSave.savingRemindersEnabled")
+  override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
+  override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
+  override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
+
   protected def baseUrlAsUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 
-  lazy val helpToSaveBaseUrl: URL = baseUrlAsUrl("help-to-save")
-  lazy val helpToSaveProxyBaseUrl: URL = baseUrlAsUrl("help-to-save-proxy")
+  private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
+
+  private def configInt(path: String): Int = configuration.underlying.getInt(path)
+
+  private def configLong(path: String): Long = configuration.underlying.getLong(path)
+
+  private def configString(path: String): String = configuration.underlying.getString(path)
+
+  private def configBase64String(path: String): String = {
+    val encoded = configuration.underlying.getString(path)
+    Base64.decode(encoded)
+  }
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveConnectorConfig {
   def helpToSaveBaseUrl: URL
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait StartupControllerConfig {
+  def shuttering: Shuttering
+  def helpToSaveEnabled: Boolean
+  def balanceEnabled: Boolean
+  def paidInThisMonthEnabled: Boolean
+  def firstBonusEnabled: Boolean
+  def shareInvitationEnabled: Boolean
+  def savingRemindersEnabled: Boolean
+  def helpToSaveInfoUrl: String
+  def helpToSaveInvitationUrl: String
+  def helpToSaveAccessAccountUrl: String  
 }

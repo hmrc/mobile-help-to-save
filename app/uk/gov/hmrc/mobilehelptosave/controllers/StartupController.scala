@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
+import uk.gov.hmrc.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -28,52 +29,43 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetai
 class StartupController @Inject() (
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
-  shuttering: Shuttering,
-  @Named("helpToSave.enabled") helpToSaveEnabled: Boolean,
-  @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
-  @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
-  @Named("helpToSave.firstBonusEnabled") firstBonusEnabled: Boolean,
-  @Named("helpToSave.shareInvitationEnabled") shareInvitationEnabled: Boolean,
-  @Named("helpToSave.savingRemindersEnabled") savingRemindersEnabled: Boolean,
-  @Named("helpToSave.infoUrl") helpToSaveInfoUrl: String,
-  @Named("helpToSave.invitationUrl") helpToSaveInvitationUrl: String,
-  @Named("helpToSave.accessAccountUrl") helpToSaveAccessAccountUrl: String
+  config: StartupControllerConfig
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = if (helpToSaveEnabled && !shuttering.shuttered) {
+  val startup: Action[AnyContent] = if (config.helpToSaveEnabled && !config.shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>
       val responseF = userService.userDetails(request.internalAuthId, request.nino).map { userOrError =>
         EnabledStartupResponse(
-          shuttering = shuttering,
-          infoUrl = Some(helpToSaveInfoUrl),
-          invitationUrl = Some(helpToSaveInvitationUrl),
-          accessAccountUrl = Some(helpToSaveAccessAccountUrl),
+          shuttering = config.shuttering,
+          infoUrl = Some(config.helpToSaveInfoUrl),
+          invitationUrl = Some(config.helpToSaveInvitationUrl),
+          accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
           user = userOrError.right.toOption.flatten,
           userError = userOrError.left.toOption,
-          balanceEnabled = balanceEnabled,
-          paidInThisMonthEnabled = paidInThisMonthEnabled,
-          firstBonusEnabled = firstBonusEnabled,
-          shareInvitationEnabled = shareInvitationEnabled,
-          savingRemindersEnabled = savingRemindersEnabled
+          balanceEnabled = config.balanceEnabled,
+          paidInThisMonthEnabled = config.paidInThisMonthEnabled,
+          firstBonusEnabled = config.firstBonusEnabled,
+          shareInvitationEnabled = config.shareInvitationEnabled,
+          savingRemindersEnabled = config.savingRemindersEnabled
         )
       }
       responseF.map(response => Ok(Json.toJson(response)))
     }
   } else {
     Action { implicit request =>
-      val response = if (helpToSaveEnabled) {
+      val response = if (config.helpToSaveEnabled) {
         EnabledStartupResponse(
-          shuttering = shuttering,
+          shuttering = config.shuttering,
           infoUrl = None,
           invitationUrl = None,
           accessAccountUrl = None,
           user = None,
           userError = None,
-          balanceEnabled = balanceEnabled,
-          paidInThisMonthEnabled = paidInThisMonthEnabled,
-          firstBonusEnabled = firstBonusEnabled,
-          shareInvitationEnabled = shareInvitationEnabled,
-          savingRemindersEnabled = savingRemindersEnabled
+          balanceEnabled = config.balanceEnabled,
+          paidInThisMonthEnabled = config.paidInThisMonthEnabled,
+          firstBonusEnabled = config.firstBonusEnabled,
+          shareInvitationEnabled = config.shareInvitationEnabled,
+          savingRemindersEnabled = config.savingRemindersEnabled
         )
       } else {
         DisabledStartupResponse

@@ -21,6 +21,7 @@ import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.JsObject
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.config.StartupControllerConfig
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -44,8 +45,22 @@ class StartupControllerSpec
 
   private val mockUserService = mock[UserService]
 
-  val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
-  val falseShuttering = Shuttering(shuttered = false, "", "")
+  private val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
+  private val falseShuttering = Shuttering(shuttered = false, "", "")
+
+  private val config = TestStartupControllerConfig(
+    falseShuttering,
+    helpToSaveEnabled = true,
+    balanceEnabled = false,
+    paidInThisMonthEnabled = false,
+    firstBonusEnabled = false,
+    shareInvitationEnabled = false,
+    savingRemindersEnabled = false,
+    helpToSaveInfoUrl = "/info",
+    helpToSaveInvitationUrl = "/invitation",
+    helpToSaveAccessAccountUrl = "/accessAccount"
+  )
+
 
   private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
 
@@ -59,16 +74,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        "",
-        "",
-        "")
+        config)
 
       status(controller.startup(FakeRequest())) shouldBe 200
     }
@@ -79,16 +85,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         NeverAuthorisedWithIds,
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        "",
-        "",
-        "")
+        config)
 
       status(controller.startup()(FakeRequest())) shouldBe 403
     }
@@ -99,16 +96,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config)
 
       "include URLs and user in response" in {
         val generator = new Generator(0)
@@ -144,16 +132,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config)
 
       "include userError and non-user fields such as URLs response" in {
         val generator = new Generator(0)
@@ -179,16 +158,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = false,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config.copy(helpToSaveEnabled = false))
 
       "omit URLs and user from response" in {
         val resultF = controller.startup(FakeRequest())
@@ -206,16 +176,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        shuttering = trueShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = true,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config.copy(shuttering = trueShuttering, paidInThisMonthEnabled = true))
 
       "omit URLs and user from response, and not call UserService or AuthorisedWithIds" in {
         val resultF = controller.startup(FakeRequest())
@@ -256,16 +217,10 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        shuttering = Shuttering(shuttered = true, "something", "some message"),
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = true,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config.copy(
+          shuttering = Shuttering(shuttered = true, "something", "some message"),
+          paidInThisMonthEnabled = true
+        ))
 
       "include the passed in shuttering info in response" in {
         val resultF = controller.startup(FakeRequest())
@@ -278,3 +233,17 @@ class StartupControllerSpec
     }
   }
 }
+
+case class TestStartupControllerConfig(
+  shuttering: Shuttering,
+
+  helpToSaveEnabled: Boolean,
+  balanceEnabled: Boolean,
+  paidInThisMonthEnabled: Boolean,
+  firstBonusEnabled: Boolean,
+  shareInvitationEnabled: Boolean,
+  savingRemindersEnabled: Boolean,
+  helpToSaveInfoUrl: String,
+  helpToSaveInvitationUrl: String,
+  helpToSaveAccessAccountUrl: String
+) extends StartupControllerConfig

@@ -23,10 +23,9 @@ import com.google.inject.{AbstractModule, Provides}
 import javax.inject.Provider
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment, Logger, LoggerLike}
-import uk.gov.hmrc.config.MobileHelpToSaveConfig
-import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
+import uk.gov.hmrc.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilehelptosave.api.{ApiServiceLocatorConnector, ServiceLocatorRegistrationTask}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
