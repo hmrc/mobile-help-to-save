@@ -22,15 +22,16 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.Mode.Mode
-import uk.gov.hmrc.mobilehelptosave.config.Base64
+import uk.gov.hmrc.mobilehelptosave.config.{Base64, EnabledInvitationFilters}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.config.ServicesConfig
 
 @Singleton
-case class MobileHelpToSaveConfig @Inject()(configuration: Configuration, override val mode:Mode)
+case class MobileHelpToSaveConfig @Inject()(configuration: Configuration, override val mode: Mode)
   extends ServicesConfig
     with HelpToSaveConnectorConfig
-    with StartupControllerConfig {
+    with StartupControllerConfig
+    with EnabledInvitationFilters {
 
   override protected def runModeConfiguration: Configuration = configuration
 
@@ -52,6 +53,9 @@ case class MobileHelpToSaveConfig @Inject()(configuration: Configuration, overri
   override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
+
+  override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
+  override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
   protected def baseUrlAsUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 

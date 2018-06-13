@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.config
 
-import javax.inject.{Inject, Named, Singleton}
+import com.google.inject.ImplementedBy
+import uk.gov.hmrc.config.MobileHelpToSaveConfig
 
-@Singleton
-case class EnabledInvitationFilters @Inject() (
-  @Named("helpToSave.invitationFilters.survey") surveyInvitationFilter: Boolean,
-  @Named("helpToSave.invitationFilters.workingTaxCredits") workingTaxCreditsInvitationFilter: Boolean
-)
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait EnabledInvitationFilters {
+  def surveyInvitationFilter: Boolean
+  def workingTaxCreditsInvitationFilter: Boolean
+}

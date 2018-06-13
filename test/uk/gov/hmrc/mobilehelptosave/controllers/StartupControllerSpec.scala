@@ -61,7 +61,6 @@ class StartupControllerSpec
     helpToSaveAccessAccountUrl = "/accessAccount"
   )
 
-
   private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
 
   "startup" should {
