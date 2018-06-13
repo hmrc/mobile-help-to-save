@@ -113,7 +113,7 @@ class TransactionControllerSpec
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
-        //TODO message
+        (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
       }
     }
 
@@ -126,7 +126,7 @@ class TransactionControllerSpec
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
-        //TODO message
+        (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
       }
     }
 

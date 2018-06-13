@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Shuttering, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Shuttering, Transactions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
@@ -46,7 +46,7 @@ class TransactionController @Inject()
     else {
       validateNino(nino).fold(
         { validationError =>
-          Future successful BadRequest(Json.toJson(ErrorInfo("NINO_INVALID")))
+          Future successful BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError)))
         },
         { ninoAsNino: Nino =>
           if (ninoAsNino == request.nino) {
@@ -78,6 +78,6 @@ class TransactionController @Inject()
           }
           .get
       case _ =>
-        Left(s"$nino does not match NINO validation regex")
+        Left(s""""$nino" does not match NINO validation regex""")
     }
 }
