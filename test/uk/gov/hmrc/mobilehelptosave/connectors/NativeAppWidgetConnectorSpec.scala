@@ -22,6 +22,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.config.NativeAppWidgetConnectorConfig
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
@@ -32,6 +33,10 @@ import scala.concurrent.Future
 class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining with FutureAwaits with DefaultAwaitTimeout {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private val config: NativeAppWidgetConnectorConfig = new NativeAppWidgetConnectorConfig {
+    override val nativeAppWidgetBaseUrl = new URL("http://native-app-widget-service")
+  }
+
 
   "answers" should {
     "return the answers when native-app-widget returns 200 OK" in {
@@ -60,7 +65,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
         "http://native-app-widget-service/native-app-widget/widget-data/TEST_CAMPAIGN_ID/test_question_1",
         nativeAppWidgetAnswersResponse)
 
-      val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), fakeHttp)
+      val connector = new NativeAppWidgetConnectorImpl(logger, config, fakeHttp)
 
       await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Right(Seq("Yes", "No"))
     }
@@ -72,7 +77,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
           throw new ConnectException("Connection refused")
         })
 
-      val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), connectionRefusedHttp)
+      val connector = new NativeAppWidgetConnectorImpl(logger, config, connectionRefusedHttp)
 
       await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Left(ErrorInfo.General)
 
@@ -87,7 +92,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
         "http://native-app-widget-service/native-app-widget/widget-data/TEST_CAMPAIGN_ID/test_question_1",
         HttpResponse(429))
 
-      val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), error4xxHttp)
+      val connector = new NativeAppWidgetConnectorImpl(logger, config, error4xxHttp)
 
       await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Left(ErrorInfo.General)
 
@@ -102,7 +107,7 @@ class NativeAppWidgetConnectorSpec extends WordSpec with Matchers with MockFacto
         "http://native-app-widget-service/native-app-widget/widget-data/TEST_CAMPAIGN_ID/test_question_1",
         HttpResponse(500))
 
-      val connector = new NativeAppWidgetConnectorImpl(logger, new URL("http://native-app-widget-service"), error5xxHttp)
+      val connector = new NativeAppWidgetConnectorImpl(logger, config, error5xxHttp)
 
       await(connector.answers("TEST_CAMPAIGN_ID", "test_question_1")) shouldBe Left(ErrorInfo.General)
 

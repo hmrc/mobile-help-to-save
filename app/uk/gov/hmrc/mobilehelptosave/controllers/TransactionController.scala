@@ -20,9 +20,10 @@ import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.config.TransactionControllerConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Shuttering, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Transactions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
@@ -34,14 +35,14 @@ import scala.util.matching.Regex
 class TransactionController @Inject()
 (
   logger: LoggerLike,
-  shuttering: Shuttering,
   helpToSaveConnector: HelpToSaveConnectorGetTransactions,
-  authorisedWithIds: AuthorisedWithIds
+  authorisedWithIds: AuthorisedWithIds,
+  config: TransactionControllerConfig
 ) extends BaseController {
 
   def getTransactions(nino: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    if (shuttering.shuttered) {
-      Future successful ServiceUnavailable(Json.toJson(shuttering))
+    if (config.shuttering.shuttered) {
+      Future successful ServiceUnavailable(Json.toJson(config.shuttering))
     }
     else {
       validateNino(nino).fold(

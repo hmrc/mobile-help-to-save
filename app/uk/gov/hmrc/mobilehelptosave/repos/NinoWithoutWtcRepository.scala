@@ -17,12 +17,13 @@
 package uk.gov.hmrc.mobilehelptosave.repos
 
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
+import uk.gov.hmrc.config.NinoWithoutWtcMongoRepositoryConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -35,7 +36,7 @@ trait NinoWithoutWtcRepository extends TestableRepository[NinoWithoutWtc, Nino]
 class NinoWithoutWtcMongoRepository @Inject()(
   mongo: ReactiveMongoComponent,
   configuration: Configuration,
-  @Named("helpToSave.taxCreditsCache.expireAfterSeconds") expireAfterSeconds: Long
+  config: NinoWithoutWtcMongoRepositoryConfig
 ) extends ReactiveRepository[NinoWithoutWtc, Nino](
   collectionName = "ninoWithoutWtc" + configuration.getString("mongodb.collectionName.suffix").getOrElse(""),
   mongo = mongo.mongoConnector.db,
@@ -47,7 +48,7 @@ class NinoWithoutWtcMongoRepository @Inject()(
     Index(
       key = Seq("created" -> IndexType.Ascending),
       name = Some("createdIndex"),
-      options = BSONDocument("expireAfterSeconds" -> expireAfterSeconds)
+      options = BSONDocument("expireAfterSeconds" -> config.taxCreditsCacheExpireAfterSeconds)
     )
   )
 }

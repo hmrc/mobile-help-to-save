@@ -19,10 +19,11 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.LoggerLike
 import play.api.libs.json._
+import uk.gov.hmrc.config.TaxCreditsBrokerConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
@@ -40,7 +41,7 @@ trait TaxCreditsBrokerConnector {
 @Singleton
 class TaxCreditsBrokerConnectorImpl @Inject() (
   logger: LoggerLike,
-  @Named("tax-credits-broker-baseUrl") baseUrl: URL,
+  config: TaxCreditsBrokerConnectorConfig,
   http: CoreGet
 ) extends TaxCreditsBrokerConnector {
 
@@ -59,7 +60,7 @@ class TaxCreditsBrokerConnectorImpl @Inject() (
 
   private def previousPaymentsUrl(nino: Nino) =
     new URL(
-      baseUrl,
+      config.taxCreditsBrokerBaseUrl,
       encodePathSegments("tcs", nino.value, "payment-summary")
     )
 }

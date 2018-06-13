@@ -19,9 +19,10 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.config.NativeAppWidgetConnectorConfig
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegments
@@ -38,7 +39,7 @@ trait NativeAppWidgetConnector {
 @Singleton
 class NativeAppWidgetConnectorImpl @Inject() (
   logger: LoggerLike,
-  @Named("native-app-widget-baseUrl") baseUrl: URL,
+  config: NativeAppWidgetConnectorConfig,
   http: CoreGet
 ) extends NativeAppWidgetConnector {
 
@@ -53,7 +54,7 @@ class NativeAppWidgetConnectorImpl @Inject() (
 
   private def answersUrl(campaignId: String, questionKey: String) =
     new URL(
-      baseUrl,
+      config.nativeAppWidgetBaseUrl,
       encodePathSegments("native-app-widget", "widget-data", campaignId, questionKey)
     )
 

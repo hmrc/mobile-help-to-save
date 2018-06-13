@@ -29,13 +29,17 @@ import uk.gov.hmrc.play.config.ServicesConfig
 @Singleton
 case class MobileHelpToSaveConfig @Inject()(
   environment: Environment,
-  configuration: Configuration,
-  override val shuttering: Shuttering
+  configuration: Configuration
 )
   extends ServicesConfig
     with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
+    with HelpToSaveProxyConnectorConfig
+    with NativeAppWidgetConnectorConfig
+    with NinoWithoutWtcMongoRepositoryConfig
     with StartupControllerConfig
+    with TaxCreditsBrokerConnectorConfig
+    with TransactionControllerConfig
     with UserServiceConfig {
 
   override protected lazy val mode: Mode = environment.mode
@@ -43,6 +47,15 @@ case class MobileHelpToSaveConfig @Inject()(
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = baseUrlAsUrl("help-to-save")
+  override val helpToSaveProxyBaseUrl: URL = baseUrlAsUrl("help-to-save-proxy")
+  override val nativeAppWidgetBaseUrl: URL = baseUrlAsUrl("native-app-widget")
+  override val taxCreditsBrokerBaseUrl: URL = baseUrlAsUrl("tax-credits-broker")
+
+  override val shuttering: Shuttering = Shuttering(
+    shuttered = configBoolean("helpToSave.shuttering.shuttered"),
+    title = configBase64String("helpToSave.shuttering.title"),
+    message = configBase64String("helpToSave.shuttering.message")
+  )
 
   override val helpToSaveEnabled: Boolean = configBoolean("helpToSave.enabled")
   override val balanceEnabled: Boolean = configBoolean("helpToSave.balanceEnabled")
@@ -54,6 +67,7 @@ case class MobileHelpToSaveConfig @Inject()(
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
   override val dailyInvitationCap: Int = configInt("helpToSave.dailyInvitationCap")
+  override val taxCreditsCacheExpireAfterSeconds: Long = configLong("helpToSave.taxCreditsCache.expireAfterSeconds")
 
   override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
   override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
@@ -80,6 +94,21 @@ trait HelpToSaveConnectorConfig {
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait HelpToSaveProxyConnectorConfig {
+  def helpToSaveProxyBaseUrl: URL
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait NativeAppWidgetConnectorConfig {
+  def nativeAppWidgetBaseUrl: URL
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait NinoWithoutWtcMongoRepositoryConfig {
+  def taxCreditsCacheExpireAfterSeconds: Long
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait StartupControllerConfig {
   def shuttering: Shuttering
   def helpToSaveEnabled: Boolean
@@ -91,6 +120,16 @@ trait StartupControllerConfig {
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
   def helpToSaveAccessAccountUrl: String  
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait TaxCreditsBrokerConnectorConfig {
+  def taxCreditsBrokerBaseUrl: URL
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait TransactionControllerConfig {
+  def shuttering: Shuttering
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])

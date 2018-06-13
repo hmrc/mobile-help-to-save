@@ -58,7 +58,7 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
 
   private val config: HelpToSaveConnectorConfig = new HelpToSaveConnectorConfig {
-    override lazy val helpToSaveBaseUrl: URL = new URL(baseUrl)
+    override val helpToSaveBaseUrl: URL = new URL(baseUrl)
   }
 
   "getTransactions" should {
