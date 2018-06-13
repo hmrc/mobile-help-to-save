@@ -39,19 +39,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConfigBoolean("helpToSave.shuttering.shuttered")
     bindConfigBase64String("helpToSave.shuttering.title")
     bindConfigBase64String("helpToSave.shuttering.message")
-    bindConfigBoolean("helpToSave.enabled")
-    bindConfigBoolean("helpToSave.balanceEnabled")
-    bindConfigBoolean("helpToSave.paidInThisMonthEnabled")
-    bindConfigBoolean("helpToSave.firstBonusEnabled")
-    bindConfigBoolean("helpToSave.shareInvitationEnabled")
-    bindConfigBoolean("helpToSave.savingRemindersEnabled")
-    bindConfigString("helpToSave.infoUrl")
-    bindConfigString("helpToSave.invitationUrl")
-    bindConfigString("helpToSave.accessAccountUrl")
-    bindConfigInt("helpToSave.dailyInvitationCap")
     bindConfigLong("helpToSave.taxCreditsCache.expireAfterSeconds")
 
-    bindBaseUrl("help-to-save")
     bindBaseUrl("help-to-save-proxy")
     bindBaseUrl("native-app-widget")
     bindBaseUrl("tax-credits-broker")
@@ -69,16 +58,8 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getBoolean(path))
   }
 
-  private def bindConfigInt(path: String): Unit = {
-    bindConstant().annotatedWith(named(path)).to(configuration.underlying.getInt(path))
-  }
-
   private def bindConfigLong(path: String): Unit = {
     bindConstant().annotatedWith(named(path)).to(configuration.underlying.getLong(path))
-  }
-
-  private def bindConfigString(path: String): Unit = {
-    bindConstant().annotatedWith(named(path)).to(configuration.underlying.getString(path))
   }
 
   private def bindConfigBase64String(path: String): Unit = {
