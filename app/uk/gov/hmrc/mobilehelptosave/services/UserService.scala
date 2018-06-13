@@ -19,9 +19,10 @@ package uk.gov.hmrc.mobilehelptosave.services
 import cats.data.EitherT
 import cats.instances.future._
 import cats.syntax.either._
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTimeZone
 import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.config.UserServiceConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
@@ -39,11 +40,7 @@ class UserService @Inject() (
   invitationRepository: InvitationRepository,
   accountService: AccountService,
   clock: Clock,
-  @Named("helpToSave.enabled") enabled: Boolean,
-  @Named("helpToSave.dailyInvitationCap") dailyInvitationCap: Int,
-  @Named("helpToSave.balanceEnabled") balanceEnabled: Boolean,
-  @Named("helpToSave.paidInThisMonthEnabled") paidInThisMonthEnabled: Boolean,
-  @Named("helpToSave.firstBonusEnabled") firstBonusEnabled: Boolean
+  config: UserServiceConfig
 ) {
 
   def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] = whenEnabled {
@@ -57,7 +54,7 @@ class UserService @Inject() (
   }
 
   private def whenEnabled[T](body: => Future[Either[ErrorInfo, UserDetails]])(implicit ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] =
-    if (enabled) {
+    if (config.helpToSaveEnabled) {
       EitherT(body).map(Some.apply).value
     } else {
       Future successful Right(None)
@@ -80,7 +77,7 @@ class UserService @Inject() (
   }
 
   private def anyAccountFeatureEnabled: Boolean =
-    balanceEnabled || paidInThisMonthEnabled || firstBonusEnabled
+    config.balanceEnabled || config.paidInThisMonthEnabled || config.firstBonusEnabled
 
   private def determineState(internalAuthId: InternalAuthId, nino: Nino, enrolled: Boolean)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserState.Value]] =
     if (enrolled) {
@@ -98,7 +95,7 @@ class UserService @Inject() (
         Future.successful(UserState.Invited)
       } else {
         invitationRepository.countCreatedSince(startOfTodayUtc()).flatMap { alreadyCreatedTodayCount =>
-          if (alreadyCreatedTodayCount >= dailyInvitationCap) {
+          if (alreadyCreatedTodayCount >= config.dailyInvitationCap) {
             Future.successful(UserState.NotEnrolled)
           } else {
             invitationRepository.insert(Invitation(internalAuthId, clock.now()))

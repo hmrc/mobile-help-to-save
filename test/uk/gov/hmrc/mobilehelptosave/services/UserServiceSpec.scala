@@ -22,6 +22,7 @@ import org.scalatest.{EitherValues, OptionValues}
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.commands.DefaultWriteResult
 import reactivemongo.core.errors.GenericDatabaseException
+import uk.gov.hmrc.config.UserServiceConfig
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
@@ -56,7 +57,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
     invitationRepository: InvitationRepository,
     accountService: AccountService = fakeAccountService(nino, Left(ErrorInfo.General)),
     clock: Clock = fixedClock,
-    enabled: Boolean = true,
+    helpToSaveEnabled: Boolean = true,
     dailyInvitationCap: Int = 1000,
     balanceEnabled: Boolean = true,
     paidInThisMonthEnabled: Boolean = true,
@@ -68,11 +69,13 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
     invitationRepository,
     accountService,
     clock,
-    enabled = enabled,
+    config = TestUserServiceConfig(
+    helpToSaveEnabled = helpToSaveEnabled,
     dailyInvitationCap = dailyInvitationCap,
     balanceEnabled = balanceEnabled,
     paidInThisMonthEnabled = paidInThisMonthEnabled,
     firstBonusEnabled = firstBonusEnabled
+    )
   )
 
   "userDetails" should {
@@ -82,7 +85,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
         shouldNotBeCalledHelpToSaveConnector,
         ShouldNotUpdateInvitationMetrics,
         ShouldNotBeCalledInvitationRepository,
-        enabled = false
+        helpToSaveEnabled = false
       )
 
       await(service.userDetails(internalAuthId, nino)) shouldBe Right(None)
@@ -497,3 +500,11 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
   // disable implicit
   override def liftFuture[A](v: A): Future[A] = super.liftFuture(v)
 }
+
+private case class TestUserServiceConfig(
+  helpToSaveEnabled: Boolean,
+  dailyInvitationCap: Int,
+  balanceEnabled: Boolean,
+  paidInThisMonthEnabled: Boolean,
+  firstBonusEnabled: Boolean
+) extends UserServiceConfig

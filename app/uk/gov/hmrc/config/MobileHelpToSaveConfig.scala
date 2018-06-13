@@ -20,29 +20,29 @@ import java.net.URL
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
 import play.api.Mode.Mode
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.mobilehelptosave.config.{Base64, EnabledInvitationFilters}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.config.ServicesConfig
 
 @Singleton
-case class MobileHelpToSaveConfig @Inject()(configuration: Configuration, override val mode: Mode)
+case class MobileHelpToSaveConfig @Inject()(
+  environment: Environment,
+  configuration: Configuration,
+  override val shuttering: Shuttering
+)
   extends ServicesConfig
+    with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
     with StartupControllerConfig
-    with EnabledInvitationFilters {
+    with UserServiceConfig {
 
+  override protected lazy val mode: Mode = environment.mode
   override protected def runModeConfiguration: Configuration = configuration
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = baseUrlAsUrl("help-to-save")
-
-  override val shuttering: Shuttering = Shuttering(
-    shuttered = configBoolean("helpToSave.shuttering.shuttered"),
-    title = configBase64String("helpToSave.shuttering.title"),
-    message = configBase64String("helpToSave.shuttering.message")
-  )
 
   override val helpToSaveEnabled: Boolean = configBoolean("helpToSave.enabled")
   override val balanceEnabled: Boolean = configBoolean("helpToSave.balanceEnabled")
@@ -53,6 +53,7 @@ case class MobileHelpToSaveConfig @Inject()(configuration: Configuration, overri
   override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
+  override val dailyInvitationCap: Int = configInt("helpToSave.dailyInvitationCap")
 
   override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
   override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
@@ -90,4 +91,13 @@ trait StartupControllerConfig {
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
   def helpToSaveAccessAccountUrl: String  
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait UserServiceConfig {
+  def helpToSaveEnabled: Boolean
+  def dailyInvitationCap: Int
+  def balanceEnabled: Boolean
+  def paidInThisMonthEnabled: Boolean
+  def firstBonusEnabled: Boolean
 }
