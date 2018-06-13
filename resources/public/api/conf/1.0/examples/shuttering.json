@@ -1,5 +1,5 @@
 {
-  "code": "SHUTTERED",
+  "shuttered": true,
   "title": "Service Unavailable",
   "message": "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
 }

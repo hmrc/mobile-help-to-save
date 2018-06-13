@@ -2,11 +2,11 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-06/schema#",
   "properties": {
-    "code": {
-      "type": "string",
-      "description": "Error code, allows shuttering response to be distinguished from other 503 responses",
+    "shuttered": {
+      "type": "boolean",
+      "description": "Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled",
       "examples": [
-        "SHUTTERED"
+        "true"
       ]
     },
     "title": {
@@ -25,7 +25,7 @@
     }
   },
   "required": [
-    "code",
+    "shuttered",
     "title",
     "message"
   ]
