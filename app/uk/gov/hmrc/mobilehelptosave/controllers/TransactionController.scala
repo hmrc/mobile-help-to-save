@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Shuttering, Transactions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
@@ -34,29 +34,35 @@ import scala.util.matching.Regex
 class TransactionController @Inject()
 (
   logger: LoggerLike,
+  shuttering: Shuttering,
   helpToSaveConnector: HelpToSaveConnectorGetTransactions,
   authorisedWithIds: AuthorisedWithIds
 ) extends BaseController {
 
   def getTransactions(nino: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    validateNino(nino).fold(
-      { validationError =>
-        Future successful BadRequest(Json.toJson(ErrorInfo("NINO_INVALID")))
-      },
-      { ninoAsNino: Nino =>
-        if (ninoAsNino == request.nino) {
-          helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError: Either[ErrorInfo, Transactions] =>
-            transactionsOrError.fold(
-              errorInfo => InternalServerError(Json.toJson(errorInfo)),
-              transactions => Ok(Json.toJson(transactions))
-            )
+    if (shuttering.shuttered) {
+      Future successful ServiceUnavailable(Json.toJson(shuttering))
+    }
+    else {
+      validateNino(nino).fold(
+        { validationError =>
+          Future successful BadRequest(Json.toJson(ErrorInfo("NINO_INVALID")))
+        },
+        { ninoAsNino: Nino =>
+          if (ninoAsNino == request.nino) {
+            helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError: Either[ErrorInfo, Transactions] =>
+              transactionsOrError.fold(
+                errorInfo => InternalServerError(Json.toJson(errorInfo)),
+                transactions => Ok(Json.toJson(transactions))
+              )
+            }
+          } else {
+            logger.warn(s"Attempt by ${request.nino} to access $ninoAsNino's transactions")
+            Future successful Forbidden
           }
-        } else {
-          logger.warn(s"Attempt by ${request.nino} to access $ninoAsNino's transactions")
-          Future successful Forbidden
         }
-      }
-    )
+      )
+    }
   }
 
   // CTO's HMRC-wide NINO regex
