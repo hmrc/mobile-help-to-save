@@ -22,7 +22,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transact
 
 trait TestData {
 
-  val transactionsJsonString: String =
+  protected val transactionsJsonString: String =
     """
       |{
       |  "transactions" : [ {
