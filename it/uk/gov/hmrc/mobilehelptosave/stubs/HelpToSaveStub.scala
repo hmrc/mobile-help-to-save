@@ -17,8 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import play.api.http.Status
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.TestData
 
-object HelpToSaveStub {
+object HelpToSaveStub extends TestData {
   def currentUserIsEnrolled(): Unit = enrolmentStatusIs(true)
   def currentUserIsNotEnrolled(): Unit = enrolmentStatusIs(false)
 
@@ -28,13 +31,26 @@ object HelpToSaveStub {
   def enrolmentStatusReturnsInternalServerError(): Unit =
     stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
       .willReturn(aResponse()
-        .withStatus(500)))
+        .withStatus(Status.INTERNAL_SERVER_ERROR)))
 
   private def enrolmentStatusIs(status: Boolean): Unit =
     stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
       .willReturn(aResponse()
-        .withStatus(200)
+        .withStatus(Status.OK)
         .withBody(
           s"""{"enrolled":$status}"""
         )))
+
+  def transactionsExistForUser(nino:Nino): Unit = {
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      .willReturn(aResponse()
+        .withStatus(Status.OK)
+        .withBody(transactionsJsonString)))
+  }
+
+  def userDoesNotHaveAnHTSAccount(nino:Nino): Unit = {
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      .willReturn(aResponse()
+        .withStatus(Status.FORBIDDEN)))
+  }
 }

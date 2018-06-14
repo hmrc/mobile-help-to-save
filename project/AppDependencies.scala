@@ -5,17 +5,19 @@ import sbt.{ModuleID, _}
 
 object AppDependencies {
 
+
   def appDependencies: Seq[Setting[_]] = Seq(
     libraryDependencies ++= compile ++ test ++ integrationTest
   )
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.6.0",
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.6.0" withSources(),
     "uk.gov.hmrc" %% "domain" % "5.1.0",
     "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
     "org.typelevel" %% "cats-core" % "1.0.1",
-    "io.lemonlabs" %% "scala-uri" % "1.1.1"
+    "io.lemonlabs" %% "scala-uri" % "1.1.1",
+    "uk.gov.hmrc" %% "play-hmrc-api" % "2.1.0"
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(

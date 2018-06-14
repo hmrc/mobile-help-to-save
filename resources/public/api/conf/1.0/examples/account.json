@@ -1,27 +1,28 @@
 {
-  "accountNumber":"1100000000001",
-  "balance": 60.12,
-  "availableForWithdrawal": 20, // TODO rename to "cleared" or "clearedBalance"?
-  "closed": false,
-  
-  "currentMonth": {
-    "paidIn": 40.12,
-    "investmentRemaining": 9.88,
-    "investmentLimit": 50,
-    "endDate": "2018-02-28"
-  },
-  "bonusTerms": [
-    {
-      "startDate": "2018-01-01",
-      "endDate": "2019-12-31",
-      "bonusPaidOnOrAfterDate": "2020-01-01",
-      "bonusEstimate": 30.06
+  "account": {
+    "isClosed": false,
+    "blocked": {
+      "unspecified": false
     },
-    {
-      "startDate": "2020-01-01",
-      "endDate": "2021-12-31",
-      "bonusPaidOnOrAfterDate": "2022-01-01",
-      "bonusEstimate": 0
-    }
-  ]
+    "balance": 200,
+    "paidInThisMonth": 50,
+    "canPayInThisMonth": 0,
+    "maximumPaidInThisMonth": 50,
+    "thisMonthEndDate": "2018-03-31",
+    "bonusTerms": [
+      {
+        "bonusEstimate": 100,
+        "bonusPaid": 0,
+        "endDate": "2019-10-31",
+        "bonusPaidOnOrAfterDate": "2019-11-01"
+      },
+      {
+        "bonusEstimate": 0,
+        "bonusPaid": 0,
+        "endDate": "2021-10-31",
+        "bonusPaidOnOrAfterDate": "2021-11-01"
+      }
+    ]
+  }
 }
+

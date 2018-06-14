@@ -23,6 +23,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.{JsResultException, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.config.TaxCreditsBrokerConnectorConfig
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
@@ -38,6 +39,10 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
   private val generator = new Generator(0)
   private val nino = generator.nextNino
   private val paymentSummaryForNinoUrl = s"http://tax-credits-broker-service/tcs/${nino.value}/payment-summary"
+  private val config: TaxCreditsBrokerConnectorConfig = new TaxCreditsBrokerConnectorConfig {
+    override val taxCreditsBrokerBaseUrl: URL = new URL("http://tax-credits-broker-service")
+  }
+
 
   "previousPayments" should {
     "return the payments when tax-credits-broker returns 200 OK" in {
@@ -73,7 +78,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, fakeHttp)
 
       await(connector.previousPayments(nino)) shouldBe Right(Seq(
         Payment(BigDecimal("160.45"), new DateTime("2018-03-22T00:00:00.000Z")),
@@ -97,7 +102,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, fakeHttp)
 
       await(connector.previousPayments(nino)) shouldBe Right(Seq.empty)
 
@@ -113,7 +118,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, fakeHttp)
 
       await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
     }
@@ -126,7 +131,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, fakeHttp)
 
       await(connector.previousPayments(nino)) shouldBe Right(Seq.empty[Payment])
     }
@@ -154,7 +159,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, fakeHttp)
 
       await(connector.previousPayments(nino)) shouldBe Right(Seq.empty[Payment])
     }
@@ -182,7 +187,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
 
       val fakeHttp = FakeHttpGet(paymentSummaryForNinoUrl, taxCreditsBrokerResponse)
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), fakeHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, fakeHttp)
 
       await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -199,7 +204,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
           throw new ConnectException("Connection refused")
         })
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), connectionRefusedHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, connectionRefusedHttp)
 
       await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -214,7 +219,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
         paymentSummaryForNinoUrl,
         HttpResponse(429))
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), error4xxHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, error4xxHttp)
 
       await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -229,7 +234,7 @@ class TaxCreditsBrokerConnectorSpec extends WordSpec with Matchers with MockFact
         paymentSummaryForNinoUrl,
         HttpResponse(500))
 
-      val connector = new TaxCreditsBrokerConnectorImpl(logger, new URL("http://tax-credits-broker-service"), error5xxHttp)
+      val connector = new TaxCreditsBrokerConnectorImpl(logger, config, error5xxHttp)
 
       await(connector.previousPayments(nino)) shouldBe Left(ErrorInfo.General)
 

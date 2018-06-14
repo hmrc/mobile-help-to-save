@@ -19,9 +19,9 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.JsObject
-import play.api.mvc.{Request, Result, Results}
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.config.StartupControllerConfig
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -29,7 +29,13 @@ import uk.gov.hmrc.mobilehelptosave.services.UserService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class StartupControllerSpec extends WordSpec with Matchers with MockFactory with OneInstancePerTest with FutureAwaits with DefaultAwaitTimeout {
+class StartupControllerSpec
+  extends WordSpec
+    with Matchers
+    with MockFactory
+    with OneInstancePerTest
+    with FutureAwaits
+    with DefaultAwaitTimeout {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -39,23 +45,21 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
   private val mockUserService = mock[UserService]
 
-  private class AlwaysAuthorisedWithIds(id: InternalAuthId, nino: Nino) extends AuthorisedWithIds {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-      Future successful Right(new RequestWithIds(id, nino, request))
-  }
+  private val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
+  private val falseShuttering = Shuttering(shuttered = false, "", "")
 
-  private object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-      Future successful Left(Forbidden)
-  }
-
-  private object ShouldNotBeCalledAuthorisedWithIds extends AuthorisedWithIds with Results {
-    override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-      Future failed new RuntimeException("AuthorisedWithIds should not be called in this situation")
-  }
-
-  val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
-  val falseShuttering = Shuttering(shuttered = false, "", "")
+  private val config = TestStartupControllerConfig(
+    falseShuttering,
+    helpToSaveEnabled = true,
+    balanceEnabled = false,
+    paidInThisMonthEnabled = false,
+    firstBonusEnabled = false,
+    shareInvitationEnabled = false,
+    savingRemindersEnabled = false,
+    helpToSaveInfoUrl = "/info",
+    helpToSaveInvitationUrl = "/invitation",
+    helpToSaveAccessAccountUrl = "/accessAccount"
+  )
 
   private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
 
@@ -69,16 +73,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        "",
-        "",
-        "")
+        config)
 
       status(controller.startup(FakeRequest())) shouldBe 200
     }
@@ -89,16 +84,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         NeverAuthorisedWithIds,
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        "",
-        "",
-        "")
+        config)
 
       status(controller.startup()(FakeRequest())) shouldBe 403
     }
@@ -109,16 +95,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config)
 
       "include URLs and user in response" in {
         val generator = new Generator(0)
@@ -154,16 +131,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config)
 
       "include userError and non-user fields such as URLs response" in {
         val generator = new Generator(0)
@@ -189,16 +157,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        shuttering = falseShuttering,
-        helpToSaveEnabled = false,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = false,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config.copy(helpToSaveEnabled = false))
 
       "omit URLs and user from response" in {
         val resultF = controller.startup(FakeRequest())
@@ -216,16 +175,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        shuttering = trueShuttering,
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = true,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config.copy(shuttering = trueShuttering, paidInThisMonthEnabled = true))
 
       "omit URLs and user from response, and not call UserService or AuthorisedWithIds" in {
         val resultF = controller.startup(FakeRequest())
@@ -266,16 +216,10 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        shuttering = Shuttering(shuttered = true, "something", "some message"),
-        helpToSaveEnabled = true,
-        balanceEnabled = false,
-        paidInThisMonthEnabled = true,
-        firstBonusEnabled = false,
-        shareInvitationEnabled = false,
-        savingRemindersEnabled = false,
-        helpToSaveInfoUrl = "/info",
-        helpToSaveInvitationUrl = "/invitation",
-        helpToSaveAccessAccountUrl = "/accessAccount")
+        config.copy(
+          shuttering = Shuttering(shuttered = true, "something", "some message"),
+          paidInThisMonthEnabled = true
+        ))
 
       "include the passed in shuttering info in response" in {
         val resultF = controller.startup(FakeRequest())
@@ -288,3 +232,17 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
     }
   }
 }
+
+case class TestStartupControllerConfig(
+  shuttering: Shuttering,
+
+  helpToSaveEnabled: Boolean,
+  balanceEnabled: Boolean,
+  paidInThisMonthEnabled: Boolean,
+  firstBonusEnabled: Boolean,
+  shareInvitationEnabled: Boolean,
+  savingRemindersEnabled: Boolean,
+  helpToSaveInfoUrl: String,
+  helpToSaveInvitationUrl: String,
+  helpToSaveAccessAccountUrl: String
+) extends StartupControllerConfig

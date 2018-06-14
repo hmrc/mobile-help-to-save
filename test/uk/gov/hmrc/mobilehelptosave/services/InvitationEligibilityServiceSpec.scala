@@ -36,7 +36,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
 
   "userIsEligibleToBeInvited" when {
     "all filters are disabled" should {
-      val enabledFilters = EnabledInvitationFilters(
+      val enabledFilters = TestEnabledInvitationFilters(
         surveyInvitationFilter = false,
         workingTaxCreditsInvitationFilter = false
       )
@@ -53,7 +53,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
     }
 
     "survey invitation filter is enabled" should {
-      val enabledFilters = EnabledInvitationFilters(
+      val enabledFilters = TestEnabledInvitationFilters(
         surveyInvitationFilter = true,
         workingTaxCreditsInvitationFilter = false
       )
@@ -80,7 +80,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
     }
 
     "Working Tax Credits filter is enabled" should {
-      val enabledFilters = EnabledInvitationFilters(
+      val enabledFilters = TestEnabledInvitationFilters(
         surveyInvitationFilter = false,
         workingTaxCreditsInvitationFilter = true
       )
@@ -107,7 +107,7 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
     }
 
     "both filters are enabled" should {
-      val enabledFilters = EnabledInvitationFilters(
+      val enabledFilters = TestEnabledInvitationFilters(
         surveyInvitationFilter = true,
         workingTaxCreditsInvitationFilter = true
       )
@@ -152,3 +152,8 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
   }
 
 }
+
+private case class TestEnabledInvitationFilters(
+  surveyInvitationFilter: Boolean,
+  workingTaxCreditsInvitationFilter: Boolean
+) extends EnabledInvitationFilters

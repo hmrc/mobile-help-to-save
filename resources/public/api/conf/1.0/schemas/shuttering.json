@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "properties": {
+    "shuttered": {
+      "type": "boolean",
+      "description": "Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled",
+      "examples": [
+        "true"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "description": "Title to be shown to user",
+      "examples": [
+        "Service Unavailable"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Message to be shown to user",
+      "examples": [
+        "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
+      ]
+    }
+  },
+  "required": [
+    "shuttered",
+    "title",
+    "message"
+  ]
+}

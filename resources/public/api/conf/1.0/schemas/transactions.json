@@ -20,27 +20,19 @@
           "operation": {
             "$id": "/properties/transactions/items/properties/operation",
             "type": "string",
-            "description": "The Operation type - C=Credit, D=Debit",
-            "minLength": 1,
-            "maxLength": 1,
-            "pattern": "^[CD]$",
-            "examples": [
-              "C"
-            ]
-          },
-          "transactionReference": {
-            "$id": "/properties/transactions/items/properties/operationReference",
-            "type": "string",
-            "description": "The reference for this transaction.",
+            "description": "Credit or debit",
             "minLength": 1,
             "maxLength": 16,
+            "pattern": "^(credit|debit)$",
             "examples": [
-              "B41519121620238A"
+              "credit",
+              "debit"
             ]
           },
           "transactionDate": {
             "$id": "/properties/transactions/items/properties/transactionDate",
             "type": "string",
+            "description": "Date that the transaction occurred",
             "minLength": 10,
             "maxLength": 10,
             "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
@@ -58,14 +50,22 @@
             "examples": [
               "2018-02-19"
             ]
+          },
+          "balanceAfter": {
+            "$id": "/properties/transactions/items/properties/balanceAfter",
+            "type": "number",
+            "description": "The account balance after this transaction was applied",
+            "examples": [
+              1.23
+            ]
           }
         },
         "required": [
           "amount",
           "operation",
-          "transactionReference",
           "transactionDate",
-          "accountingDate"
+          "accountingDate",
+          "balanceAfter"
         ]
       }
     }

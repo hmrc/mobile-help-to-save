@@ -25,6 +25,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.config.HelpToSaveProxyConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHook
@@ -41,6 +42,9 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
   private val nino = Nino("AA000000A")
   private val testBaseUrl = new URL("http://help-to-save-proxy-service")
+  private val config: HelpToSaveProxyConnectorConfig = new HelpToSaveProxyConnectorConfig {
+    override val helpToSaveProxyBaseUrl: URL = testBaseUrl
+  }
 
   private def isAccountUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
     case AbsoluteUrl("http", Authority(_, Host("help-to-save-proxy-service"), None), AbsolutePath(Vector("help-to-save-proxy", "nsi-services", "account")), query, _)
@@ -54,7 +58,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
 
   "nsiAccount" should {
     "return the account when native-app-widget returns 200 OK" in {
-      val connector1 = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, FakeHttpGet(
+      val connector1 = new HelpToSaveProxyConnectorImpl(logger, config, FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
           200,
@@ -104,7 +108,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
         )
       ))
 
-      val connector2 = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, FakeHttpGet(
+      val connector2 = new HelpToSaveProxyConnectorImpl(logger, config, FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
           200,
@@ -180,7 +184,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
         }
       }
 
-      val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, http)
+      val connector = new HelpToSaveProxyConnectorImpl(logger, config, http)
 
       await(connector.nsiAccount(nino)) shouldBe Right(NsiAccount(
         accountClosedFlag = "",
@@ -204,7 +208,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
           throw new ConnectException("Connection refused")
         })
 
-      val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, connectionRefusedHttp)
+      val connector = new HelpToSaveProxyConnectorImpl(logger, config, connectionRefusedHttp)
 
       await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -219,7 +223,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
         isAccountUrlForNino _,
         HttpResponse(429))
 
-      val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, error4xxHttp)
+      val connector = new HelpToSaveProxyConnectorImpl(logger, config, error4xxHttp)
 
       await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -234,7 +238,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
         isAccountUrlForNino _,
         HttpResponse(500))
 
-      val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, error5xxHttp)
+      val connector = new HelpToSaveProxyConnectorImpl(logger, config, error5xxHttp)
 
       await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -275,7 +279,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                 |}""".stripMargin)
           )))
 
-      val connector = new HelpToSaveProxyConnectorImpl(logger, testBaseUrl, invalidJsonHttp)
+      val connector = new HelpToSaveProxyConnectorImpl(logger, config, invalidJsonHttp)
 
       await(connector.nsiAccount(nino)) shouldBe Left(ErrorInfo.General)
 

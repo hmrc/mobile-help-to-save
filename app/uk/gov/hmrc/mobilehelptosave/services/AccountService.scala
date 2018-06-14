@@ -23,7 +23,7 @@ import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm, ErrorInfo}
+import uk.gov.hmrc.mobilehelptosave.domain._
 
 import scala.concurrent.{ExecutionContext, Future}
 

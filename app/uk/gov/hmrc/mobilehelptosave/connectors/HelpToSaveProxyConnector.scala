@@ -22,13 +22,15 @@ import java.util.UUID
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.ImplementedBy
 import io.lemonlabs.uri.dsl._
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Singleton}
 import org.joda.time.LocalDate
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Reads}
+import uk.gov.hmrc.config.HelpToSaveProxyConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
+import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,7 +45,7 @@ trait HelpToSaveProxyConnector {
 @Singleton
 class HelpToSaveProxyConnectorImpl @Inject() (
   logger: LoggerLike,
-  @Named("help-to-save-proxy-baseUrl") baseUrl: URL,
+  config: HelpToSaveProxyConnectorConfig,
   http: CoreGet
 ) extends HelpToSaveProxyConnector {
 
@@ -57,7 +59,7 @@ class HelpToSaveProxyConnectorImpl @Inject() (
 
   private def nsiAccountUrl(nino: Nino) = {
     val correlationId = UUID.randomUUID().toString
-    new URL(baseUrl, "/help-to-save-proxy/nsi-services/account").toString ? ("nino" -> nino.value) & ("version" -> "V1.0") & ("systemId" -> "MDTP-MOBILE") & ("correlationId" -> correlationId)
+    new URL(config.helpToSaveProxyBaseUrl, "/help-to-save-proxy/nsi-services/account").toString ? ("nino" -> nino.value) & ("version" -> "V1.0") & ("systemId" -> SystemId) & ("correlationId" -> correlationId)
   }
 
 }

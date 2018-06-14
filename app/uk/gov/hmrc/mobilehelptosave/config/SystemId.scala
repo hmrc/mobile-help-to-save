@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.config
 
-import com.google.inject.ImplementedBy
-import uk.gov.hmrc.config.MobileHelpToSaveConfig
+object SystemId {
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait EnabledInvitationFilters {
-  def surveyInvitationFilter: Boolean
-  def workingTaxCreditsInvitationFilter: Boolean
+  final val SystemId = "MDTP-MOBILE"
+
 }

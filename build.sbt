@@ -8,6 +8,7 @@ lazy val root = (project in file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(addCommandAlias("testAll", ";reload;test;it:test"))
 
 lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
@@ -24,6 +25,7 @@ lazy val scoverageSettings = {
 scoverageSettings
 scalaSettings
 publishingSettings
+unmanagedResourceDirectories in Compile += baseDirectory.value / "resources"
 defaultSettings()
 
 PlayKeys.playDefaultPort := 8248
@@ -38,7 +40,7 @@ evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScala
 unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon"
 
 Keys.fork in IntegrationTest := false
-unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base => Seq(
+unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(
   base / "it",
   base / "testcommon"
 )).value

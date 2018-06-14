@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.config
+package uk.gov.hmrc.mobilehelptosave.domain
 
-import com.google.inject.ImplementedBy
-import uk.gov.hmrc.config.MobileHelpToSaveConfig
+import play.api.libs.json.{Json, OWrites}
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait EnabledInvitationFilters {
-  def surveyInvitationFilter: Boolean
-  def workingTaxCreditsInvitationFilter: Boolean
+case class ErrorBody(code: String, message: String)
+
+object ErrorBody {
+  implicit val writes: OWrites[ErrorBody] = Json.writes[ErrorBody]
 }

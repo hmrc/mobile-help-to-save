@@ -19,26 +19,36 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Named, Singleton}
+import io.lemonlabs.uri.dsl._
+import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.config.HelpToSaveConnectorConfig
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
+import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
+import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Transactions}
+import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegment
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveConnector {
-
+trait HelpToSaveConnectorEnrolmentStatus {
   def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
+}
 
+@ImplementedBy(classOf[HelpToSaveConnectorImpl])
+trait HelpToSaveConnectorGetTransactions {
+  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]]
 }
 
 @Singleton
 class HelpToSaveConnectorImpl @Inject() (
   logger: LoggerLike,
-  @Named("help-to-save-baseUrl") baseUrl: URL,
-  http: CoreGet) extends HelpToSaveConnector {
+  config: HelpToSaveConnectorConfig,
+  http: CoreGet) extends HelpToSaveConnectorEnrolmentStatus with HelpToSaveConnectorGetTransactions {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
@@ -50,6 +60,17 @@ class HelpToSaveConnectorImpl @Inject() (
     }
   }
 
-  private val enrolmentStatusUrl = new URL(baseUrl, "/help-to-save/enrolment-status")
 
+  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
+    val string = transactionsUrl(nino).toString
+    http.GET[Transactions](string) map Right.apply recover {
+      case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
+        logger.warn("Couldn't get transaction information from help-to-save service", e)
+        Left(ErrorInfo.General)
+    }
+  }
+
+  private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
+  private def transactionsUrl(nino: Nino): URL = new URL(
+    config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
 }
