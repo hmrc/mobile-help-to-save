@@ -41,7 +41,7 @@ object HelpToSaveStub extends TestData {
           s"""{"enrolled":$status}"""
         )))
 
-  def transactionsForUser(nino:Nino): Unit = {
+  def transactionsExistForUser(nino:Nino): Unit = {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)

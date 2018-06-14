@@ -20,12 +20,12 @@ package uk.gov.hmrc.mobilehelptosave
 import org.scalatest.{Assertion, Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
-import play.api.libs.json.{JsLookupResult, JsUndefined}
+import play.api.libs.json.JsLookupResult
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.Transactions
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
 class TransactionsISpec extends WordSpec with Matchers
@@ -42,7 +42,7 @@ class TransactionsISpec extends WordSpec with Matchers
     "respond with 200 and the users transactions" in new TestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.transactionsForUser(nino)
+      HelpToSaveStub.transactionsExistForUser(nino)
 
       val response: WSResponse = await(wsUrl(s"/individuals/mobile-help-to-save/$nino/savings-account/transactions").get())
       response.status shouldBe Status.OK
