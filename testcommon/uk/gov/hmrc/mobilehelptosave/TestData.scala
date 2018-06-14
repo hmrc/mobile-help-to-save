@@ -22,7 +22,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transact
 
 trait TestData {
 
-  protected val transactionsJsonString: String =
+  protected val transactionsReturnedByHelpToSaveJsonString: String =
     """
       |{
       |  "transactions" : [ {
@@ -64,6 +64,42 @@ trait TestData {
       |    "accountingDate" : "2018-04-10",
       |    "description" : "Debit card online deposit",
       |    "transactionReference" : "A1A11AA1A00A0059",
+      |    "balanceAfter" : 60.49
+      |  } ]
+      |}""".stripMargin
+
+  protected val transactionsReturnedByMobileHelpToSaveJsonString: String =
+    """
+      |{
+      |  "transactions" : [ {
+      |    "operation" : "credit",
+      |    "amount" : 11.5,
+      |    "transactionDate" : "2017-11-20",
+      |    "accountingDate" : "2017-11-20",
+      |    "balanceAfter" : 11.5
+      |  }, {
+      |    "operation" : "debit",
+      |    "amount" : 1.01,
+      |    "transactionDate" : "2017-11-27",
+      |    "accountingDate" : "2017-11-27",
+      |    "balanceAfter" : 10.49
+      |  }, {
+      |    "operation" : "debit",
+      |    "amount" : 1.11,
+      |    "transactionDate" : "2017-11-27",
+      |    "accountingDate" : "2017-11-27",
+      |    "balanceAfter" : 9.38
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 1.11,
+      |    "transactionDate" : "2017-11-27",
+      |    "accountingDate" : "2017-12-04",
+      |    "balanceAfter" : 10.49
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 50,
+      |    "transactionDate" : "2018-04-10",
+      |    "accountingDate" : "2018-04-10",
       |    "balanceAfter" : 60.49
       |  } ]
       |}""".stripMargin

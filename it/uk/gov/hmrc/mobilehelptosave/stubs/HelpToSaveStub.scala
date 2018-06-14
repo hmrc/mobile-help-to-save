@@ -45,7 +45,7 @@ object HelpToSaveStub extends TestData {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
-        .withBody(transactionsJsonString)))
+        .withBody(transactionsReturnedByHelpToSaveJsonString)))
   }
 
   def userDoesNotHaveAnHTSAccount(nino: Nino): Unit = {

@@ -94,7 +94,7 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
     "return a Right (with Transactions) when the help-to-save service returns a 2xx response" in {
 
-      val okResponse = httpGet(isTransactionsUrlForNino _, HttpResponse(200, Some(Json.parse(transactionsJsonString))))
+      val okResponse = httpGet(isTransactionsUrlForNino _, HttpResponse(200, Some(Json.parse(transactionsReturnedByHelpToSaveJsonString))))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 

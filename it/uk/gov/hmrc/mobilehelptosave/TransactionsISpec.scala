@@ -17,14 +17,13 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Assertion, Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
-import play.api.libs.json.{JsLookupResult, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.Transactions
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -46,7 +45,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/individuals/mobile-help-to-save/$nino/savings-account/transactions").get())
       response.status shouldBe Status.OK
-      response.json.as[Transactions] shouldBe transactions
+      response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
 
@@ -73,11 +72,5 @@ class TransactionsISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
     }
-  }
-
-  private def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
-    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
-    jsLookupResult.as[BigDecimal] shouldBe expectedValue
   }
 }

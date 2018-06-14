@@ -40,8 +40,8 @@ object Operation {
     override def reads(json: JsValue): JsResult[Operation] = json match {
       case JsString("credit") => JsSuccess(Credit)
       case JsString("debit") => JsSuccess(Debit)
-      case JsString(unknown) => JsError(s"[$unknown] in not a valid Operation e.g. [Cradit|Debit]")
-      case unknown => JsError(s"Cannot parse $unknown to a valid Operation e.g. [Cradit|Debit]")
+      case JsString(unknown) => JsError(s"[$unknown] in not a valid Operation e.g. [credit|debit]")
+      case unknown => JsError(s"Cannot parse $unknown to a valid Operation e.g. [credit|debit]")
     }
   }
 }
