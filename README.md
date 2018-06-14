@@ -50,6 +50,7 @@ Response format:
         // "withdrawing": false,
         // "receivingBonus": false
       }
+      "openedYearMonth": "2018-01",
       "isClosed": true,
       "closureDate": "2018-02-16",
       "closingBalance": 150
