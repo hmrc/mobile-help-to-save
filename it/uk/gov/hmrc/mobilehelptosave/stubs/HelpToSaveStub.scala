@@ -41,16 +41,16 @@ object HelpToSaveStub extends TestData {
           s"""{"enrolled":$status}"""
         )))
 
-  def transactionsExistForUser(nino:Nino): Unit = {
+  def transactionsExistForUser(nino: Nino): Unit = {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
         .withBody(transactionsJsonString)))
   }
 
-  def userDoesNotHaveAnHTSAccount(nino:Nino): Unit = {
+  def userDoesNotHaveAnHTSAccount(nino: Nino): Unit = {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
-        .withStatus(Status.FORBIDDEN)))
+        .withStatus(Status.NOT_FOUND)))
   }
 }

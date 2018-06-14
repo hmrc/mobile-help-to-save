@@ -20,7 +20,7 @@ package uk.gov.hmrc.mobilehelptosave
 import org.scalatest.{Assertion, Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
-import play.api.libs.json.JsLookupResult
+import play.api.libs.json.{JsLookupResult, JsValue}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
@@ -50,17 +50,16 @@ class TransactionsISpec extends WordSpec with Matchers
     }
 
 
-    // TODO Is this the correct behaviour for someone without and HTS account
-    "respond with a 500 Internal Server Error if the users NINO isn't found" in new TestData {
-
-      pending
-      
+    "respond with a 404 if the user's NINO isn't found" in new TestData {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.userDoesNotHaveAnHTSAccount(nino)
 
       val response: WSResponse = await(wsUrl(s"/individuals/mobile-help-to-save/$nino/savings-account/transactions").get())
 
-      response.status shouldBe Status.INTERNAL_SERVER_ERROR
+      response.status shouldBe 404
+      val jsonBody: JsValue = response.json
+      (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
     }
 
     "return 401 when the user is not logged in" in {

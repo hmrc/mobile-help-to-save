@@ -40,6 +40,8 @@ class TransactionController @Inject()
   config: TransactionControllerConfig
 ) extends BaseController {
 
+  private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
+
   def getTransactions(nino: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     if (config.shuttering.shuttered) {
       Future successful ServiceUnavailable(Json.toJson(config.shuttering))
@@ -51,10 +53,10 @@ class TransactionController @Inject()
         },
         { ninoAsNino: Nino =>
           if (ninoAsNino == request.nino) {
-            helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError: Either[ErrorInfo, Transactions] =>
+            helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError: Either[ErrorInfo, Option[Transactions]] =>
               transactionsOrError.fold(
                 errorInfo => InternalServerError(Json.toJson(errorInfo)),
-                transactions => Ok(Json.toJson(transactions))
+                maybeTransactions => maybeTransactions.fold(AccountNotFound)(transactions => Ok(Json.toJson(transactions)))
               )
             }
           } else {
