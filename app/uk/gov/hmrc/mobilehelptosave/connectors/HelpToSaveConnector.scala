@@ -41,7 +41,7 @@ trait HelpToSaveConnectorEnrolmentStatus {
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
 trait HelpToSaveConnectorGetTransactions {
-  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]]
+  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]]
 }
 
 @Singleton
@@ -61,9 +61,11 @@ class HelpToSaveConnectorImpl @Inject() (
   }
 
 
-  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
+  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]] = {
     val string = transactionsUrl(nino).toString
-    http.GET[Transactions](string) map Right.apply recover {
+    http.GET[Transactions](string) map(transactions => Right(Some(transactions))) recover {
+      case _: NotFoundException =>
+        Right(None)
       case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse) =>
         logger.warn("Couldn't get transaction information from help-to-save service", e)
         Left(ErrorInfo.General)

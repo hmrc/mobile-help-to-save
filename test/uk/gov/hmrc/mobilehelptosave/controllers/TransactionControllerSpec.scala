@@ -71,12 +71,29 @@ class TransactionControllerSpec
 
         (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(nino, *, *)
-          .returning(Future successful Right(transactions))
+          .returning(Future successful Right(Some(transactions)))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         jsonBody shouldBe Json.toJson(transactions)
+      }
+    }
+
+    "no account is found by HelpToSaveConnector for the NINO" should {
+      "return 404" in {
+        val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
+        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+
+        (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(nino, *, *)
+          .returning(Future successful Right(None))
+
+        val resultF = controller.getTransactions(nino.value)(FakeRequest())
+        status(resultF) shouldBe 404
+        val jsonBody = contentAsJson(resultF)
+        (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+        (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
       }
     }
 

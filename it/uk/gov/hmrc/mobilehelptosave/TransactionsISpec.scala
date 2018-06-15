@@ -17,14 +17,13 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Assertion, Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
-import play.api.libs.json.JsLookupResult
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.Transactions
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -46,21 +45,20 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/individuals/mobile-help-to-save/$nino/savings-account/transactions").get())
       response.status shouldBe Status.OK
-      response.json.as[Transactions] shouldBe transactions
+      response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
 
-    // TODO Is this the correct behaviour for someone without and HTS account
-    "respond with a 500 Internal Server Error if the users NINO isn't found" in new TestData {
-
-      pending
-      
+    "respond with a 404 if the user's NINO isn't found" in new TestData {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.userDoesNotHaveAnHTSAccount(nino)
 
       val response: WSResponse = await(wsUrl(s"/individuals/mobile-help-to-save/$nino/savings-account/transactions").get())
 
-      response.status shouldBe Status.INTERNAL_SERVER_ERROR
+      response.status shouldBe 404
+      val jsonBody: JsValue = response.json
+      (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
     }
 
     "return 401 when the user is not logged in" in {
@@ -74,11 +72,5 @@ class TransactionsISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
     }
-  }
-
-  private def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
-    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
-    jsLookupResult.as[BigDecimal] shouldBe expectedValue
   }
 }
