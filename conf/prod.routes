@@ -1,6 +1,6 @@
 # Add all the application routes to the app.routes file
 ->    /mobile-help-to-save                app.Routes
-->    /individuals/mobile-help-to-save    api.Routes
+->    /                                   api.Routes
 ->    /                                   health.Routes
 
 ->    /                                   definition.Routes
