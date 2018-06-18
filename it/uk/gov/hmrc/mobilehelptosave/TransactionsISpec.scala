@@ -36,14 +36,14 @@ class TransactionsISpec extends WordSpec with Matchers
   private val generator = new Generator(0)
   private val nino = generator.nextNino
 
-  "GET /{nino}/savings-account/transactions" should {
+  "GET /savings-account/{nino}/transactions" should {
 
     "respond with 200 and the users transactions" in new TestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.transactionsExistForUser(nino)
 
-      val response: WSResponse = await(wsUrl(s"/$nino/savings-account/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
@@ -53,7 +53,7 @@ class TransactionsISpec extends WordSpec with Matchers
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.userDoesNotHaveAnHTSAccount(nino)
 
-      val response: WSResponse = await(wsUrl(s"/$nino/savings-account/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
 
       response.status shouldBe 404
       val jsonBody: JsValue = response.json
