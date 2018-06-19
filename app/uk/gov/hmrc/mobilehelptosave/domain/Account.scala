@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.joda.time.LocalDate
-import play.api.libs.json.{Json, Writes}
+import org.joda.time.{LocalDate, YearMonth}
+import play.api.libs.json.{JsString, JsValue, Json, Writes}
 
 case class BonusTerm(
   bonusEstimate: BigDecimal,
@@ -39,6 +39,8 @@ object Blocking {
 }
 
 case class Account(
+  openedYearMonth: YearMonth,
+
   isClosed: Boolean,
 
   blocked: Blocking,
@@ -57,5 +59,10 @@ case class Account(
 )
 
 object Account {
+
+  implicit object JodaYearMonthWrites extends Writes[YearMonth] {
+    def writes(yearMonth: YearMonth): JsValue = JsString(yearMonth.toString)
+  }
+
   implicit val writes: Writes[Account] = Json.writes[Account]
 }

@@ -52,6 +52,8 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+
+      (response.json \ "user" \ "account" \ "openedYearMonth").as[String] shouldBe "2018-01"
       (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe false
       (response.json \ "user" \ "account" \ "blocked" \ "unspecified").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "balance", BigDecimal("123.45"))
@@ -81,6 +83,8 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
+
+      (response.json \ "user" \ "account" \ "openedYearMonth").as[String] shouldBe "2018-03"
 
       (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe true
       (response.json \ "user" \ "account" \ "closureDate").as[String] shouldBe "2018-04-09"

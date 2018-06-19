@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 import cats.syntax.either._
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+import org.joda.time.YearMonth
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -41,23 +42,31 @@ class AccountServiceImpl @Inject() (
 ) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] =
-    helpToSaveProxyConnector.nsiAccount(nino).map(_.flatMap(nsiAccountToAccount))
+    helpToSaveProxyConnector.nsiAccount(nino).map(_.flatMap(nsiAccount => nsiAccountToAccount(nino, nsiAccount)))
 
-  private def nsiAccountToAccount(nsiAccount: NsiAccount): Either[ErrorInfo, Account] = {
+  private def nsiAccountToAccount(nino: Nino, nsiAccount: NsiAccount): Either[ErrorInfo, Account] = {
     val paidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit - nsiAccount.currentInvestmentMonth.investmentRemaining
     if (paidInThisMonth >= 0) {
-      Right(Account(
-        isClosed = nsiAccountClosedFlagToIsClosed(nsiAccount.accountClosedFlag),
-        blocked = nsiAccountToBlocking(nsiAccount),
-        balance = nsiAccount.accountBalance,
-        paidInThisMonth = paidInThisMonth,
-        canPayInThisMonth = nsiAccount.currentInvestmentMonth.investmentRemaining,
-        maximumPaidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit,
-        thisMonthEndDate = nsiAccount.currentInvestmentMonth.endDate,
-        bonusTerms = nsiAccount.terms.sortBy(_.termNumber).map(nsiBonusTermToBonusTerm),
-        closureDate = nsiAccount.accountClosureDate,
-        closingBalance = nsiAccount.accountClosingBalance
-      ))
+      val sortedNsiTerms = nsiAccount.terms.sortBy(_.termNumber)
+      sortedNsiTerms.headOption.fold[Either[ErrorInfo, Account]] {
+        logger.warn(s"Account returned by NS&I for $nino contained no bonus terms")
+        Left(ErrorInfo.General)
+      } { firstNsiTerm =>
+        val terms = sortedNsiTerms.map(nsiBonusTermToBonusTerm)
+        Right(Account(
+          openedYearMonth = new YearMonth(firstNsiTerm.startDate),
+          isClosed = nsiAccountClosedFlagToIsClosed(nsiAccount.accountClosedFlag),
+          blocked = nsiAccountToBlocking(nsiAccount),
+          balance = nsiAccount.accountBalance,
+          paidInThisMonth = paidInThisMonth,
+          canPayInThisMonth = nsiAccount.currentInvestmentMonth.investmentRemaining,
+          maximumPaidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit,
+          thisMonthEndDate = nsiAccount.currentInvestmentMonth.endDate,
+          bonusTerms = terms,
+          closureDate = nsiAccount.accountClosureDate,
+          closingBalance = nsiAccount.accountClosingBalance
+        ))
+      }
     } else {
       // investmentRemaining is unaffected by debits (only credits) so should never exceed investmentLimit
       logger.warn(

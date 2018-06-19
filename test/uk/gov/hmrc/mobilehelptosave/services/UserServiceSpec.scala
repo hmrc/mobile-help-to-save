@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.joda.time.{DateTime, LocalDate, ReadableInstant}
+import org.joda.time.{DateTime, LocalDate, ReadableInstant, YearMonth}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{EitherValues, OptionValues}
 import reactivemongo.api.ReadPreference
@@ -49,6 +49,16 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
   private val nino3 = generator.nextNino
   private val nino4 = generator.nextNino
   private val allTestNinos = Seq(nino, nino1, nino2, nino3, nino4)
+
+  private val testAccount = Account(
+    openedYearMonth = new YearMonth(2018, 5),
+    isClosed = false,
+    Blocking(false),
+    BigDecimal("543.12"),
+    0, 0, 0,
+    thisMonthEndDate = new LocalDate(2020, 12, 31),
+    bonusTerms = Seq.empty)
+
 
   private class UserServiceWithTestDefaults(
     invitationEligibilityService: InvitationEligibilityService,
@@ -122,7 +132,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
   "userDetails" when {
     "user is enrolled in Help to Save and all account-related feature flags are enabled" should {
 
-      val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
+      val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
@@ -160,7 +170,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
 
     "user is enrolled in Help to Save and some but not all account-related feature flags are enabled" should {
 
-      val accountReturnedByAccountService = Account(isClosed = false, Blocking(false), BigDecimal("543.12"), 0, 0, 0, thisMonthEndDate = new LocalDate(2020, 12, 31), bonusTerms = Seq.empty)
+      val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),

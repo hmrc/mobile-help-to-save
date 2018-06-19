@@ -43,12 +43,14 @@ object HelpToSaveProxyStub {
             |  "terms": [
             |     {
             |       "termNumber":1,
+            |       "startDate":"2018-01-01",
             |       "endDate":"2019-12-31",
             |       "bonusEstimate":"90.99",
             |       "bonusPaid":"90.99"
             |    },
             |    {
             |       "termNumber":2,
+            |       "startDate":"2020-01-01",
             |       "endDate":"2021-12-31",
             |       "bonusEstimate":"12.00",
             |       "bonusPaid":"00.00"
@@ -82,12 +84,14 @@ object HelpToSaveProxyStub {
             |  "terms": [
             |     {
             |       "termNumber":1,
+            |       "startDate": "2018-03-01",
             |       "endDate": "2020-02-29",
             |       "bonusEstimate": "7.50",
             |       "bonusPaid": "0.00"
             |    },
             |    {
             |       "termNumber":2,
+            |       "startDate": "2020-03-01",
             |       "endDate": "2022-02-28",
             |       "bonusEstimate": "0.00",
             |       "bonusPaid": "0.00"
