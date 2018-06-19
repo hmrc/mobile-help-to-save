@@ -31,7 +31,8 @@ final case class EnabledStartupResponse(
   paidInThisMonthEnabled: Boolean,
   firstBonusEnabled: Boolean,
   shareInvitationEnabled: Boolean,
-  savingRemindersEnabled: Boolean
+  savingRemindersEnabled: Boolean,
+  transactionsEnabled: Boolean
 ) extends StartupResponse
 
 case class Shuttering (

@@ -158,6 +158,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "firstBonusEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "shareInvitationEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "savingRemindersEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "transactionsEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
@@ -174,7 +175,8 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           "helpToSave.paidInThisMonthEnabled" -> "true",
           "helpToSave.firstBonusEnabled" -> "true",
           "helpToSave.shareInvitationEnabled" -> "true",
-          "helpToSave.savingRemindersEnabled" -> "true"
+          "helpToSave.savingRemindersEnabled" -> "true",
+          "helpToSave.transactionsEnabled" -> "true"
         )
         .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
@@ -191,6 +193,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "firstBonusEnabled").as[Boolean] shouldBe true
       (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
       (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
+      (response.json \ "transactionsEnabled").as[Boolean] shouldBe true
       (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
       (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
       (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"

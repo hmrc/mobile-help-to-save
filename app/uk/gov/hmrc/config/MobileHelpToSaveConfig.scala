@@ -63,6 +63,7 @@ case class MobileHelpToSaveConfig @Inject()(
   override val firstBonusEnabled: Boolean = configBoolean("helpToSave.firstBonusEnabled")
   override val shareInvitationEnabled: Boolean = configBoolean("helpToSave.shareInvitationEnabled")
   override val savingRemindersEnabled: Boolean = configBoolean("helpToSave.savingRemindersEnabled")
+  override val transactionsEnabled: Boolean = configBoolean("helpToSave.transactionsEnabled")
   override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
@@ -117,6 +118,7 @@ trait StartupControllerConfig {
   def firstBonusEnabled: Boolean
   def shareInvitationEnabled: Boolean
   def savingRemindersEnabled: Boolean
+  def transactionsEnabled: Boolean
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
   def helpToSaveAccessAccountUrl: String  

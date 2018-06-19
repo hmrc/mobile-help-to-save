@@ -25,6 +25,7 @@ Response format:
   "firstBonusEnabled": true,
   "shareInvitationEnabled": true,
   "savingRemindersEnabled": true,
+  // whether the transaction feature is enabled - this exists in case we release the apps before our transactions API is approved for production
   "transactionsEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",

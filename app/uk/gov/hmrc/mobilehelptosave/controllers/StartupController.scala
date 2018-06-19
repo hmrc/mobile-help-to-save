@@ -46,7 +46,8 @@ class StartupController @Inject() (
           paidInThisMonthEnabled = config.paidInThisMonthEnabled,
           firstBonusEnabled = config.firstBonusEnabled,
           shareInvitationEnabled = config.shareInvitationEnabled,
-          savingRemindersEnabled = config.savingRemindersEnabled
+          savingRemindersEnabled = config.savingRemindersEnabled,
+          transactionsEnabled = config.transactionsEnabled
         )
       }
       responseF.map(response => Ok(Json.toJson(response)))
@@ -65,7 +66,8 @@ class StartupController @Inject() (
           paidInThisMonthEnabled = config.paidInThisMonthEnabled,
           firstBonusEnabled = config.firstBonusEnabled,
           shareInvitationEnabled = config.shareInvitationEnabled,
-          savingRemindersEnabled = config.savingRemindersEnabled
+          savingRemindersEnabled = config.savingRemindersEnabled,
+          transactionsEnabled = config.transactionsEnabled
         )
       } else {
         DisabledStartupResponse
