@@ -56,6 +56,7 @@ class StartupControllerSpec
     firstBonusEnabled = false,
     shareInvitationEnabled = false,
     savingRemindersEnabled = false,
+    transactionsEnabled = false,
     helpToSaveInfoUrl = "/info",
     helpToSaveInvitationUrl = "/invitation",
     helpToSaveAccessAccountUrl = "/accessAccount"
@@ -209,6 +210,7 @@ class StartupControllerSpec
         (jsonBody \ "firstBonusEnabled").as[Boolean] shouldBe false
         (jsonBody \ "shareInvitationEnabled").as[Boolean] shouldBe false
         (jsonBody \ "savingRemindersEnabled").as[Boolean] shouldBe false
+        (jsonBody \ "transactionsEnabled").as[Boolean] shouldBe false
       }
     }
 
@@ -242,6 +244,7 @@ case class TestStartupControllerConfig(
   firstBonusEnabled: Boolean,
   shareInvitationEnabled: Boolean,
   savingRemindersEnabled: Boolean,
+  transactionsEnabled: Boolean,
   helpToSaveInfoUrl: String,
   helpToSaveInvitationUrl: String,
   helpToSaveAccessAccountUrl: String
