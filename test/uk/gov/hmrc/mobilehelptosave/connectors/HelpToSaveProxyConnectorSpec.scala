@@ -78,12 +78,14 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                 |  "terms": [
                 |     {
                 |       "termNumber":2,
+                |       "startDate":"2020-01-01",
                 |       "endDate":"2021-12-31",
                 |       "bonusEstimate":"67.00",
                 |       "bonusPaid":"0.00"
                 |    },
                 |    {
                 |       "termNumber":1,
+                |       "startDate":"2018-01-01",
                 |       "endDate":"2019-12-31",
                 |       "bonusEstimate":"123.45",
                 |       "bonusPaid":"123.45"
@@ -103,8 +105,8 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
           investmentLimit = 50,
           endDate = new LocalDate(2018, 2, 28)),
         terms = Seq(
-          NsiBonusTerm(termNumber = 2, endDate = new LocalDate(2021, 12, 31), bonusEstimate = 67, bonusPaid = 0),
-          NsiBonusTerm(termNumber = 1, endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
+          NsiBonusTerm(termNumber = 2, startDate = new LocalDate(2020, 1, 1), endDate = new LocalDate(2021, 12, 31), bonusEstimate = 67, bonusPaid = 0),
+          NsiBonusTerm(termNumber = 1, startDate = new LocalDate(2018, 1, 1), endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
         )
       ))
 
