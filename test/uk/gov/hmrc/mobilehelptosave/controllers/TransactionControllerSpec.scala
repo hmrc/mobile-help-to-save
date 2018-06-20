@@ -18,7 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import play.api.http.HeaderNames
 import play.api.libs.json.Json
+import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.config.TransactionControllerConfig
@@ -51,15 +53,18 @@ class TransactionControllerSpec
   private val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
 
-  private val config = TestTransactionControllerConfig(falseShuttering)
+  private val MaxAgeHeaderValue = 1000
+  private val config = TestTransactionControllerConfig(falseShuttering, MaxAgeHeaderValue)
+
 
   "getTransactions" should {
+
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
       val controller = new TransactionController(logger, helpToSaveConnector, NeverAuthorisedWithIds, config)
 
       val resultF = controller.getTransactions(nino.value)(FakeRequest())
-      status(resultF) shouldBe 403
+      status(resultF) shouldBe FORBIDDEN
     }
   }
 
@@ -74,10 +79,23 @@ class TransactionControllerSpec
           .returning(Future successful Right(Some(transactions)))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) shouldBe OK
         val jsonBody = contentAsJson(resultF)
         jsonBody shouldBe Json.toJson(transactions)
       }
+    }
+
+    "include a maxAge header for a successful response" in {
+
+      val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
+      val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+
+      (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(nino, *, *)
+        .returning(Future successful Right(Some(transactions)))
+
+      val resultF = controller.getTransactions(nino.value)(FakeRequest())
+      getCacheControlHeaders(resultF) shouldBe Some(s"max-age=${config.maxAgeForSuccessInSeconds}")
     }
 
     "no account is found by HelpToSaveConnector for the NINO" should {
@@ -90,10 +108,12 @@ class TransactionControllerSpec
           .returning(Future successful Right(None))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 404
+        status(resultF) shouldBe NOT_FOUND
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
         (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+
+        getCacheControlHeaders(resultF) shouldBe None
       }
     }
 
@@ -107,9 +127,11 @@ class TransactionControllerSpec
           .returning(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 500
+        status(resultF) shouldBe INTERNAL_SERVER_ERROR
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "TEST_ERROR_CODE"
+
+        getCacheControlHeaders(resultF) shouldBe None
       }
     }
 
@@ -119,8 +141,10 @@ class TransactionControllerSpec
         val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         val resultF = controller.getTransactions(otherNino.value)(FakeRequest())
-        status(resultF) shouldBe 403
+        status(resultF) shouldBe FORBIDDEN
         (slf4jLoggerStub.warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s transactions"
+
+        getCacheControlHeaders(resultF) shouldBe None
       }
     }
 
@@ -130,10 +154,12 @@ class TransactionControllerSpec
         val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         val resultF = controller.getTransactions("invalidNino")(FakeRequest())
-        status(resultF) shouldBe 400
+        status(resultF) shouldBe BAD_REQUEST
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
         (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
+
+        getCacheControlHeaders(resultF) shouldBe None
       }
     }
 
@@ -143,7 +169,7 @@ class TransactionControllerSpec
         val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         val resultF = controller.getTransactions("AA 00 00 03 D")(FakeRequest())
-        status(resultF) shouldBe 400
+        status(resultF) shouldBe BAD_REQUEST
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
         (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
@@ -156,15 +182,21 @@ class TransactionControllerSpec
         val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config.copy(shuttering = trueShuttering))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 503
+        status(resultF) shouldBe SERVICE_UNAVAILABLE
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
         (jsonBody \ "title").as[String] shouldBe "Shuttered"
         (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
+
+        getCacheControlHeaders(resultF) shouldBe None
       }
     }
   }
+
+  private def getCacheControlHeaders(resultF: Future[Result]): Option[String] = {
+    await(resultF).header.headers.get(HeaderNames.CACHE_CONTROL)
+  }
 }
 
-private case class TestTransactionControllerConfig(shuttering: Shuttering)
+private case class TestTransactionControllerConfig(shuttering: Shuttering, maxAgeForSuccessInSeconds:Long)
   extends TransactionControllerConfig

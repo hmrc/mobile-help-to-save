@@ -21,6 +21,7 @@ import java.time.LocalDate
 import cats.Eq
 import play.api.libs.json._
 
+
 sealed trait Operation {
   def stringValue =  this match {
     case Credit => "credit"

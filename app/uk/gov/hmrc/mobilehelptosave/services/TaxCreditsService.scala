@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import cats.MonadError
 import cats.data.EitherT
 import cats.instances.future._
 import com.google.inject.ImplementedBy

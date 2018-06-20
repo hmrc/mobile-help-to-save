@@ -19,11 +19,11 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.config.TransactionControllerConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, Transactions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
@@ -48,24 +48,28 @@ class TransactionController @Inject()
     }
     else {
       validateNino(nino).fold(
-        { validationError =>
-          Future successful BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError)))
-        },
-        { ninoAsNino: Nino =>
-          if (ninoAsNino == request.nino) {
-            helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError: Either[ErrorInfo, Option[Transactions]] =>
-              transactionsOrError.fold(
-                errorInfo => InternalServerError(Json.toJson(errorInfo)),
-                maybeTransactions => maybeTransactions.fold(AccountNotFound)(transactions => Ok(Json.toJson(transactions)))
-              )
-            }
-          } else {
-            logger.warn(s"Attempt by ${request.nino} to access $ninoAsNino's transactions")
-            Future successful Forbidden
+      { validationError =>
+        Future successful BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError)))
+      },
+      { ninoAsNino: Nino =>
+        if (ninoAsNino == request.nino) {
+          helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError =>
+            transactionsOrError.fold(
+              errorInfo => InternalServerError(Json.toJson(errorInfo)),
+              maybeTransactions => maybeTransactions.fold(AccountNotFound)(okWithCacheControl)
+            )
           }
+        } else {
+          logger.warn(s"Attempt by ${request.nino} to access $ninoAsNino's transactions")
+          Future successful Forbidden
         }
+      }
       )
     }
+  }
+
+  private def okWithCacheControl(transactions: Transactions): Result = {
+    Ok(Json.toJson(transactions)).withHeaders(CACHE_CONTROL -> s"max-age=${config.maxAgeForSuccessInSeconds}")
   }
 
   // CTO's HMRC-wide NINO regex

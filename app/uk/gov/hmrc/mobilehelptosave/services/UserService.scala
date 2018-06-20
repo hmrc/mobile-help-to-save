@@ -45,8 +45,8 @@ class UserService @Inject() (
 
   def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] = whenEnabled {
     (for {
-      enrolled <- EitherT(helpToSaveConnector.enrolmentStatus())
-      state <- EitherT(determineState(internalAuthId, nino, enrolled))
+      enrolled    <- EitherT(helpToSaveConnector.enrolmentStatus())
+      state       <- EitherT(determineState(internalAuthId, nino, enrolled))
       userDetails <- EitherT.right[ErrorInfo](userDetails(nino, state))
     } yield {
       userDetails
