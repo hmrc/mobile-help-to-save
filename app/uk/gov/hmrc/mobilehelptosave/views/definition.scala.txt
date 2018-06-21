@@ -1,4 +1,9 @@
-{      "name": "Read Help to Save Account Data",
+@import uk.gov.hmrc.mobilehelptosave.api.ApiAccess
+@import play.api.libs.json.Json
+
+@(apiAccess: ApiAccess)
+{
+  "name": "Read Help to Save Account Data",
 
   "scopes": [
     {
@@ -10,12 +15,12 @@
     "name": "Mobile Help To Save",
     "description": "Help to Save API specifically for HMRC mobile apps",
     "context": "individuals/mobile-help-to-save",
-    "requiresTrust": true,
     "versions": [
       {
         "version": "1.0",
         "status": "STABLE",
-        "endpointsEnabled": true
+        "endpointsEnabled": true,
+        "access": @Json.toJson(apiAccess)
       }
     ]
   }

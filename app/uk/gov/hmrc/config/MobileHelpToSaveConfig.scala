@@ -26,12 +26,15 @@ import uk.gov.hmrc.mobilehelptosave.config.{Base64, EnabledInvitationFilters}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.config.ServicesConfig
 
+import scala.collection.JavaConverters._
+
 @Singleton
 case class MobileHelpToSaveConfig @Inject()(
   environment: Environment,
   configuration: Configuration
 )
   extends ServicesConfig
+    with DocumentationControllerConfig
     with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
     with HelpToSaveProxyConnectorConfig
@@ -73,6 +76,10 @@ case class MobileHelpToSaveConfig @Inject()(
   override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
   override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
+  private val accessConfig = configuration.underlying.getConfig("api.access")
+  override val apiAccessType: String = accessConfig.getString("type")
+  override val apiWhiteListApplicationIds: Seq[String] = accessConfig.getStringList("white-list.applicationIds").asScala
+
   protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
@@ -87,6 +94,12 @@ case class MobileHelpToSaveConfig @Inject()(
     val encoded = configuration.underlying.getString(path)
     Base64.decode(encoded)
   }
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait DocumentationControllerConfig {
+  def apiAccessType: String
+  def apiWhiteListApplicationIds: Seq[String]
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
