@@ -26,7 +26,6 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, PlayRunners}
-import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.mobilehelptosave.stubs.ServiceLocatorStub
 import uk.gov.hmrc.mobilehelptosave.support.WireMockSupport
 
@@ -57,7 +56,9 @@ class PlatformIntegrationSpec extends WordSpec with Matchers with Eventually wit
 
   override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
     "microservice.services.service-locator.host" -> wireMockHost,
-    "microservice.services.service-locator.port" -> wireMockPort
+    "microservice.services.service-locator.port" -> wireMockPort,
+    "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008", "00090002-0003-0004-0005-000600070008"),
+    "api.access.type" -> "TEST_ACCESS_TYPE"
   )
 
   "microservice" should {
@@ -71,14 +72,22 @@ class PlatformIntegrationSpec extends WordSpec with Matchers with Eventually wit
       }
     }
 
-    "provide definition api" in new Setup {
+    "provide definition with configurable whitelist" in new Setup {
       running(app) {
 
         val result = documentationController.definition()(request)
         status(result) shouldBe 200
 
-        val jsonResponse = contentAsJson(result)
-        (jsonResponse \\ "version").map(_.as[String]).head shouldBe "1.0"
+        val definition = contentAsJson(result)
+        (definition \\ "version").map(_.as[String]).head shouldBe "1.0"
+
+        val accessConfigs = definition \ "api" \ "versions" \\ "access"
+        accessConfigs.length should be > 0
+        accessConfigs.foreach { accessConfig =>
+          (accessConfig \ "type").as[String] shouldBe "TEST_ACCESS_TYPE"
+          (accessConfig \ "whitelistedApplicationIds").head.as[String] shouldBe "00010002-0003-0004-0005-000600070008"
+          (accessConfig \ "whitelistedApplicationIds") (1).as[String] shouldBe "00090002-0003-0004-0005-000600070008"
+        }
       }
     }
 
