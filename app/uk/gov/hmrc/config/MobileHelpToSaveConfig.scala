@@ -73,6 +73,8 @@ case class MobileHelpToSaveConfig @Inject()(
   override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
   override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
+  override val maxAgeForSuccessInSeconds: Long = configLong("helpToSave.cacheControl.maxAgeInSeconds")
+
   protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
@@ -121,7 +123,7 @@ trait StartupControllerConfig {
   def transactionsEnabled: Boolean
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
-  def helpToSaveAccessAccountUrl: String  
+  def helpToSaveAccessAccountUrl: String
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
@@ -132,6 +134,7 @@ trait TaxCreditsBrokerConnectorConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait TransactionControllerConfig {
   def shuttering: Shuttering
+  def maxAgeForSuccessInSeconds: Long
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])

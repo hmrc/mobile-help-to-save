@@ -19,24 +19,41 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
-import play.api.http.Status
+import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
+import play.api.http.HeaderNames.CACHE_CONTROL
 
 class TransactionsISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
   with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
 
-  override implicit lazy val app: Application = appBuilder.build()
+  private val MaxAgeValue = 1001
+  override implicit lazy val app: Application = appBuilder.configure(Map("helpToSave.cacheControl.maxAgeInSeconds" -> MaxAgeValue)).build()
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
 
   "GET /savings-account/{nino}/transactions" should {
+
+    "should include a maxAge header for successful responses" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.transactionsExistForUser(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val containsMaxAgeHeader = (headers:(String, Seq[String])) => {
+        headers._1 == CACHE_CONTROL && headers._2.head == s"max-age=$MaxAgeValue"
+      }
+
+      withClue(s"$CACHE_CONTROL headers are ${response.allHeaders.find(_ == CACHE_CONTROL)}") {
+        response.allHeaders.exists(containsMaxAgeHeader) shouldBe true
+      }
+    }
 
     "respond with 200 and the users transactions" in new TestData {
 
@@ -44,7 +61,7 @@ class TransactionsISpec extends WordSpec with Matchers
       HelpToSaveStub.transactionsExistForUser(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
-      response.status shouldBe Status.OK
+      response.status shouldBe OK
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
@@ -84,7 +101,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
 
-      response.status shouldBe 404
+      response.status shouldBe NOT_FOUND
       val jsonBody: JsValue = response.json
       (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
@@ -93,13 +110,13 @@ class TransactionsISpec extends WordSpec with Matchers
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 401
+      response.status shouldBe UNAUTHORIZED
     }
 
     "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
       AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 403
+      response.status shouldBe FORBIDDEN
     }
   }
 }
