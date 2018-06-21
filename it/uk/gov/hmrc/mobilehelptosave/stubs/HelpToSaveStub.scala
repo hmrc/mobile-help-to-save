@@ -55,7 +55,7 @@ object HelpToSaveStub extends TestData {
         .withBody(zeroTransactionsReturnedByHelpToSaveJsonString)))
   }
 
-  def transactionsWithDebitMoreThan50Pound(nino: Nino): Unit = {
+  def transactionsWithOver50PoundDebit(nino: Nino): Unit = {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
