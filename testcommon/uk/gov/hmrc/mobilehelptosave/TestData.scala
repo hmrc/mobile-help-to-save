@@ -332,28 +332,6 @@ trait TestData {
     """.stripMargin
   }
 
-  protected val transactionsWithCreditOver50PoundReturnByHelpToSaveJsonString: String = {
-    """
-      |{
-      |    "transactions": [
-      |        {
-      |            "operation": "credit",
-      |            "amount": 100,
-      |            "transactionDate": "2014-03-01",
-      |            "accountingDate": "2014-03-01",
-      |            "balanceAfter": 100
-      |        }
-      |     ]
-      |}
-    """.stripMargin
-  }
-
-  protected val transactionsWithCreditOver50PoundReturnByMobileHelpToSaveJsonString: String = {
-    """
-      |
-    """.stripMargin
-  }
-
   val transactions: Transactions = Transactions(Seq(
     Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50")),
     Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),
