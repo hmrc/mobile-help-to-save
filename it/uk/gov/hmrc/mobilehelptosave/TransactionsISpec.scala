@@ -20,7 +20,7 @@ package uk.gov.hmrc.mobilehelptosave
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsUndefined, JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
@@ -48,6 +48,51 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
+    "response with 200 and credit transactions only" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.creditOnlyTransactionsForUser(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      response.json shouldBe Json.parse(creditOnlyTransactionsReturnedByMobileHelpToSaveJsonString)
+    }
+
+    "response with 200 and zero users transaction" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.zeroTransactionsExistForUser(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      val jsonBody: JsValue = response.json
+      (jsonBody \ "transactions" \ "operation") shouldBe a [JsUndefined]
+      (jsonBody \ "transactions" \ "amount") shouldBe a [JsUndefined]
+      (jsonBody \ "transactions" \ "transactionDate") shouldBe a [JsUndefined]
+      (jsonBody \ "transactions" \ "accountingDate") shouldBe a [JsUndefined]
+      (jsonBody \ "transactions" \ "balanceAfter") shouldBe a [JsUndefined]
+      jsonBody shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
+    }
+
+    "response with 200 and users debit transaction more than 50 pounds" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.transactionsWithDebitMoreThan50Pound(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      response.json shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
+    }
+
+    "response with 200 and multiple transactions within same month and same day" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      response.json shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
+    }
 
     "respond with a 404 if the user's NINO isn't found" in new TestData {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
