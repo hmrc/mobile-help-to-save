@@ -3,8 +3,6 @@
 
 @(apiAccess: ApiAccess)
 {
-  "name": "Read Help to Save Account Data",
-
   "scopes": [
     {
       "key": "read:help-to-save",
