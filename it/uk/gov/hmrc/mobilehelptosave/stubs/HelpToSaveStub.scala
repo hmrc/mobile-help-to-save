@@ -48,6 +48,27 @@ object HelpToSaveStub extends TestData {
         .withBody(transactionsReturnedByHelpToSaveJsonString)))
   }
 
+  def zeroTransactionsExistForUser(nino: Nino): Unit = {
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      .willReturn(aResponse()
+        .withStatus(Status.OK)
+        .withBody(zeroTransactionsReturnedByHelpToSaveJsonString)))
+  }
+
+  def transactionsWithOver50PoundDebit(nino: Nino): Unit = {
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      .willReturn(aResponse()
+        .withStatus(Status.OK)
+        .withBody(transactionsWithOver50PoundDebitReturnedByHelpToSaveJsonString)))
+  }
+
+  def multipleTransactionsWithinSameMonthAndDay(nino: Nino): Unit = {
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      .willReturn(aResponse()
+        .withStatus(Status.OK)
+        .withBody(multipleTransactionsWithinSameMonthAndDayReturnedByHelpToSaveJsonString)))
+  }
+
   def userDoesNotHaveAnHTSAccount(nino: Nino): Unit = {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()

@@ -104,6 +104,234 @@ trait TestData {
       |  } ]
       |}""".stripMargin
 
+  protected val zeroTransactionsReturnedByHelpToSaveJsonString: String =
+    """
+      |{
+      |    "transactions": []
+      |}
+    """.stripMargin
+
+  protected val zeroTransactionsReturnedByMobileHelpToSaveJsonString: String = {
+    """
+      |{
+      |    "transactions": []
+      |}
+    """.stripMargin
+  }
+
+
+  protected val transactionsWithOver50PoundDebitReturnedByHelpToSaveJsonString: String = {
+    """
+      |{
+      |    "transactions": [
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 50
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-04-01",
+      |            "accountingDate": "2014-04-01",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 100
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 100,
+      |            "transactionDate": "2014-05-01",
+      |            "accountingDate": "2014-05-01",
+      |            "description": "BACS payment",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 0
+      |        }
+      |    ]
+      |}
+    """.stripMargin
+  }
+
+  protected val transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString: String = {
+    """
+      |{
+      |    "transactions": [
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "balanceAfter": 50
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-04-01",
+      |            "accountingDate": "2014-04-01",
+      |            "balanceAfter": 100
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 100,
+      |            "transactionDate": "2014-05-01",
+      |            "accountingDate": "2014-05-01",
+      |            "balanceAfter": 0
+      |        }
+      |    ]
+      |}
+    """.stripMargin
+  }
+
+  protected val multipleTransactionsWithinSameMonthAndDayReturnedByHelpToSaveJsonString: String = {
+    """
+      |{
+      |    "transactions": [
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 50
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 100
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 150
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 200
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "description": "Debit card online deposit",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 250
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 10,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "description": "BACS payment",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 240
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 5,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "description": "BACS payment",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 235
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 15,
+      |            "transactionDate": "2014-03-04",
+      |            "accountingDate": "2014-03-04",
+      |            "description": "BACS payment",
+      |            "transactionReference": "B8C29ZY4A00A0018",
+      |            "balanceAfter": 220
+      |        }
+      |    ]
+      |}
+    """.stripMargin
+  }
+
+  protected val multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString: String = {
+    """
+      |{
+      |    "transactions": [
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "balanceAfter": 50
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "balanceAfter": 100
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-01",
+      |            "accountingDate": "2014-03-01",
+      |            "balanceAfter": 150
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "balanceAfter": 200
+      |        },
+      |        {
+      |            "operation": "credit",
+      |            "amount": 50,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "balanceAfter": 250
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 10,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "balanceAfter": 240
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 5,
+      |            "transactionDate": "2014-03-02",
+      |            "accountingDate": "2014-03-02",
+      |            "balanceAfter": 235
+      |        },
+      |        {
+      |            "operation": "debit",
+      |            "amount": 15,
+      |            "transactionDate": "2014-03-04",
+      |            "accountingDate": "2014-03-04",
+      |            "balanceAfter": 220
+      |        }
+      |    ]
+      |}
+    """.stripMargin
+  }
+
   val transactions: Transactions = Transactions(Seq(
     Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50")),
     Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),

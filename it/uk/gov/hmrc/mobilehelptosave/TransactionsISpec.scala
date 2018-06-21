@@ -48,6 +48,35 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
+    "respond with 200 and an empty transactions list when there are no transactions for the NINO" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.zeroTransactionsExistForUser(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      response.json shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
+    }
+
+    "respond with 200 and users debit transaction more than 50 pounds" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      response.json shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
+    }
+
+    "respond with 200 and multiple transactions within same month and same day" in new TestData {
+
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe Status.OK
+      response.json shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
+    }
 
     "respond with a 404 if the user's NINO isn't found" in new TestData {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
