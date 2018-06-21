@@ -48,16 +48,6 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
-    "response with 200 and credit transactions only" in new TestData {
-
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.creditOnlyTransactionsForUser(nino)
-
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
-      response.status shouldBe Status.OK
-      response.json shouldBe Json.parse(creditOnlyTransactionsReturnedByMobileHelpToSaveJsonString)
-    }
-
     "response with 200 and zero users transaction" in new TestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
