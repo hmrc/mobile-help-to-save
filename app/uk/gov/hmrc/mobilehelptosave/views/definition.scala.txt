@@ -6,6 +6,7 @@
   "scopes": [
     {
       "key": "read:help-to-save",
+      "name": "Read Help to Save Account Data",
       "description": "Read Help to Save Savings account and transactions data"
     }
   ],
