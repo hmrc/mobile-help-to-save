@@ -78,19 +78,15 @@ traits:
       description: Savings account holder's National Insurance Number
       type: string
       example: AA000003D
-#  is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
-#  uriParameters:
-#    nino:
-#      type: nino
-#      description: The account holder's national insurance number
-#  get:
-#    displayName: Get account information
-#    responses:
-#      200:
-#        body:
-#          application/json:
-#            type: !include schemas/account.json
-#            example: !include examples/account.json
+  is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
+  get:
+    displayName: Get account information
+    responses:
+      200:
+        body:
+          application/json:
+            type: !include schemas/account.json
+            example: !include examples/account.json
   /transactions:
     is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
     get:
@@ -105,11 +101,3 @@ traits:
               type: !include schemas/transactions.json
               example: !include examples/transactions.json
 
-#  /messages:
-#    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-#    get:
-#      displayName: Get message list
-#    /{messageId}:
-#      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-#      get:
-#        displayName: Get message
