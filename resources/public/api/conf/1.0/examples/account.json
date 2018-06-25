@@ -5,6 +5,7 @@
       "unspecified": false
     },
     "balance": 200,
+    "openedYearMonth": "2018-01",
     "paidInThisMonth": 50,
     "canPayInThisMonth": 0,
     "maximumPaidInThisMonth": 50,
@@ -25,4 +26,5 @@
     ]
   }
 }
+
 

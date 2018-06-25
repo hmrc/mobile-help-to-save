@@ -78,26 +78,25 @@ traits:
       description: Savings account holder's National Insurance Number
       type: string
       example: AA000003D
-#  is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
-#  uriParameters:
-#    nino:
-#      type: nino
-#      description: The account holder's national insurance number
-#  get:
-#    displayName: Get account information
-#    responses:
-#      200:
-#        body:
-#          application/json:
-#            type: !include schemas/account.json
-#            example: !include examples/account.json
+  is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
+  get:
+    displayName: Get account information
+    description: Retrieves the details of the Help to Save account
+    (annotations.scope): "read:native-apps-api-orchestration"
+    securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+    responses:
+      200:
+        body:
+          application/json:
+            type: !include schemas/account.json
+            example: !include examples/account.json
   /transactions:
     is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
     get:
       displayName: Get transactions
       description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned.
-      (annotations.scope): "read:help-to-save"
-      securedBy: [ sec.oauth_2_0: { scopes: [ "read:help-to-save" ] } ]
+      (annotations.scope): "read:native-apps-api-orchestration"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
       responses:
         200:
           body:
@@ -105,11 +104,3 @@ traits:
               type: !include schemas/transactions.json
               example: !include examples/transactions.json
 
-#  /messages:
-#    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-#    get:
-#      displayName: Get message list
-#    /{messageId}:
-#      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, blocked]
-#      get:
-#        displayName: Get message
