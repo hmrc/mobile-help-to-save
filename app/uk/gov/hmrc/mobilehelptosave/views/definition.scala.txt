@@ -7,7 +7,7 @@
     {
       "key": "read:native-apps-api-orchestration",
       "name": "Native Apps API Orchestration",
-      "description": "Access mobile app-specific APIs"
+      "description": "Access APIs that are provided specifically for use by the HMRC mobile apps"
     }
   ],
   "api": {
