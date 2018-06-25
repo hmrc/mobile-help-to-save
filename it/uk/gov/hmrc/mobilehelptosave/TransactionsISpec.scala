@@ -100,14 +100,23 @@ class TransactionsISpec extends WordSpec with Matchers
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe 401
       checkTransactionsResponseInvariants(response)
+      response.body shouldBe "Authorisation failure [Bearer token not supplied]"
+    }
+
+    "return 401 when the user is logged in with an insufficient confidence level" in {
+      AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
+      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe 401
+      checkTransactionsResponseInvariants(response)
+      response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
       AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe 403
       checkTransactionsResponseInvariants(response)
     }

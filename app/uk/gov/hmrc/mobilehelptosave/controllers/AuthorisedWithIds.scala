@@ -17,13 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import com.google.inject.ImplementedBy
 import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
 import uk.gov.hmrc.auth.core.retrieve.{Retrievals, ~}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, AuthorisationException, NoActiveSession}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
@@ -41,7 +40,11 @@ trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner
 class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends AuthorisedWithIds with Results {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
-    authConnector.authorise(AuthProviders(GovernmentGateway, Verify), Retrievals.internalId and Retrievals.nino).map {
+
+    val providers = AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200
+    val retrievals = Retrievals.internalId and Retrievals.nino
+
+    authConnector.authorise(providers, retrievals).map {
       case Some(internalAuthId) ~ Some(nino) =>
         Right(new RequestWithIds(InternalAuthId(internalAuthId), Nino(nino), request))
       case None ~ _ =>
@@ -55,7 +58,8 @@ class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends Aut
         Logger.warn("NINO not found")
         Left(Forbidden("NINO not found"))
     }.recover {
-      case _: NoActiveSession => Left(Unauthorized)
+      case x: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${x.reason}]"))
+      case x: InsufficientConfidenceLevel =>  Left(Unauthorized(s"Authorisation failure [${x.reason}]"))
       case _: AuthorisationException => Left(Forbidden)
     }
   }

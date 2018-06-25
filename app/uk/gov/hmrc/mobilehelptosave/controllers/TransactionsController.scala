@@ -32,7 +32,7 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 @Singleton
-class TransactionController @Inject()
+class TransactionsController @Inject()
 (
   logger: LoggerLike,
   helpToSaveConnector: HelpToSaveConnectorGetTransactions,

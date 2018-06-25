@@ -22,13 +22,20 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 
 object AuthStub {
+
+
+  private val retrievals: String = {
+    """
+      |{
+      |	"authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}, {"confidenceLevel" : 200}],
+      |	"retrieve": ["internalId", "nino"]
+      |}""".stripMargin
+  }
+
+
   def userIsLoggedIn(internalId: InternalAuthId, nino: Nino): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(
-        """{
-          |	"authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}],
-          |	"retrieve": ["internalId", "nino"]
-          |}""".stripMargin))
+      .withRequestBody(equalToJson(retrievals))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
@@ -38,13 +45,17 @@ object AuthStub {
           ).toString
         )))
 
+  def userIsLoggedInWithInsufficientConfidenceLevel(): Unit =
+    stubFor(post(urlPathEqualTo("/auth/authorise"))
+      .withRequestBody(equalToJson(retrievals))
+      .willReturn(aResponse()
+        .withStatus(401)
+        .withHeader("WWW-Authenticate", """MDTP detail="InsufficientConfidenceLevel"""")
+      ))
+
   def userIsNotLoggedIn(): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(
-        """{
-          |	"authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}],
-          |	"retrieve": ["internalId", "nino"]
-          |}""".stripMargin))
+      .withRequestBody(equalToJson(retrievals))
       .willReturn(aResponse()
         .withStatus(401)
           .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
@@ -52,11 +63,7 @@ object AuthStub {
 
   def userIsLoggedInButNotWithGovernmentGatewayOrVerify(): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(
-        """{
-          |	"authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}],
-          |	"retrieve": ["internalId", "nino"]
-          |}""".stripMargin))
+      .withRequestBody(equalToJson(retrievals))
       .willReturn(aResponse()
         .withStatus(401)
           .withHeader("WWW-Authenticate", """MDTP detail="UnsupportedAuthProvider"""")

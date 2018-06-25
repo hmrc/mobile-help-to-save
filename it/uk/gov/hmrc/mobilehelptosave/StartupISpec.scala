@@ -184,6 +184,14 @@ class StartupISpec extends WordSpec with Matchers
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 401
+      response.body shouldBe "Authorisation failure [Bearer token not supplied]"
+    }
+
+    "return 401 when the user is logged in with an insufficient confidence level" in {
+      AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 401
+      response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
