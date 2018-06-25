@@ -21,7 +21,10 @@
             "false"
           ]
         }
-      }
+      },
+      "required": [
+        "unspecified"
+      ]
     },
     "balance": {
       "type": "number",
@@ -111,8 +114,42 @@
               "2019-11-01"
             ]
           }
-        }
+        },
+        "required": [
+          "bonusEstimate",
+          "bonusPaid",
+          "endDate",
+          "bonusPaidOnOrAfterDate"
+        ]
       }
+    },
+    "closingBalance": {
+      "type": "number",
+      "description": "The balance before the final transaction to close the account (only present when isClosed=true)",
+      "examples": [
+        20.16
+      ]
+    },
+    "closureDate": {
+      "type": "string",
+      "description": "The date the account was closed (only present when isClosed=true)",
+      "minLength": 10,
+      "maxLength": 10,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "examples": [
+        "2018-03-31"
+      ]
     }
-  }
+  },
+  "required": [
+    "openedYearMonth",
+    "isClosed",
+    "blocked",
+    "balance",
+    "paidInThisMonth",
+    "canPayInThisMonth",
+    "maximumPaidInThisMonth",
+    "thisMonthEndDate",
+    "bonusTerms"
+  ]
 }
