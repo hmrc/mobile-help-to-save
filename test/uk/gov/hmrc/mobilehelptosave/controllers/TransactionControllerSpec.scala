@@ -24,7 +24,7 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.config.TransactionControllerConfig
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.TestData
+import uk.gov.hmrc.mobilehelptosave.TransactionTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, InternalAuthId, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -38,7 +38,7 @@ class TransactionControllerSpec
     with OneInstancePerTest
     with LoggerStub
     with FutureAwaits
-    with TestData
+    with TransactionTestData
     with DefaultAwaitTimeout {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()

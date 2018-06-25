@@ -38,7 +38,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
   "GET /savings-account/{nino}/transactions" should {
 
-    "respond with 200 and the users transactions" in new TestData {
+    "respond with 200 and the users transactions" in new TransactionTestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.transactionsExistForUser(nino)
@@ -48,7 +48,7 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
     }
 
-    "respond with 200 and an empty transactions list when there are no transactions for the NINO" in new TestData {
+    "respond with 200 and an empty transactions list when there are no transactions for the NINO" in new TransactionTestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
@@ -58,7 +58,7 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
     }
 
-    "respond with 200 and users debit transaction more than 50 pounds" in new TestData {
+    "respond with 200 and users debit transaction more than 50 pounds" in new TransactionTestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
@@ -68,7 +68,7 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
     }
 
-    "respond with 200 and multiple transactions within same month and same day" in new TestData {
+    "respond with 200 and multiple transactions within same month and same day" in new TransactionTestData {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
@@ -78,7 +78,7 @@ class TransactionsISpec extends WordSpec with Matchers
       response.json shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
     }
 
-    "respond with a 404 if the user's NINO isn't found" in new TestData {
+    "respond with a 404 if the user's NINO isn't found" in new TransactionTestData {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.userDoesNotHaveAnHTSAccount(nino)
 
