@@ -3,14 +3,11 @@
   "$schema": "http://json-schema.org/draft-06/schema#",
   "properties": {
     "transactions": {
-      "$id": "/properties/transactions",
       "type": "array",
       "items": {
-        "$id": "/properties/transactions/items",
         "type": "object",
         "properties": {
           "amount": {
-            "$id": "/properties/transactions/items/properties/operationAmount",
             "type": "number",
             "description": "The transaction value",
             "examples": [
@@ -18,7 +15,6 @@
             ]
           },
           "operation": {
-            "$id": "/properties/transactions/items/properties/operation",
             "type": "string",
             "description": "Credit or debit",
             "minLength": 1,
@@ -30,7 +26,6 @@
             ]
           },
           "transactionDate": {
-            "$id": "/properties/transactions/items/properties/transactionDate",
             "type": "string",
             "description": "Date that the transaction occurred",
             "minLength": 10,
@@ -41,7 +36,6 @@
             ]
           },
           "accountingDate": {
-            "$id": "/properties/transactions/items/properties/accountingDate",
             "type": "string",
             "description": "Date that the transaction was applied to the account.",
             "minLength": 10,
@@ -52,7 +46,6 @@
             ]
           },
           "balanceAfter": {
-            "$id": "/properties/transactions/items/properties/balanceAfter",
             "type": "number",
             "description": "The account balance after this transaction was applied",
             "examples": [
