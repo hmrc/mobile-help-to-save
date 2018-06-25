@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "properties": {
+    "line1": {
+      "type": "string"
+    },
+    "line2": {
+      "type": "string"
+    },
+    "line3": {
+      "type": "string"
+    },
+    "line4": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "line1",
+    "line2",
+    "line3"
+  ]
+}

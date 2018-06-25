@@ -1,126 +1,155 @@
 {
   "type": "object",
   "$schema": "http://json-schema.org/draft-06/schema#",
+  "description": "The Help To Save account details",
   "properties": {
-    "account": {
+    "isClosed": {
+      "type": "boolean",
+      "description": "Is the account closed",
+      "examples": [
+        "false"
+      ]
+    },
+    "blocked": {
       "type": "object",
-      "description": "The Help To Save account details",
+      "description": "Actions that are blocked for this account",
       "properties": {
-        "isClosed": {
+        "unspecified" : {
           "type": "boolean",
-          "description": "Is the account closed",
+          "description": "Some unspecified action(s) is/are blocked. More specific blocking flags may be added in a future version of the API.",
           "examples": [
             "false"
           ]
-        },
-        "blocked": {
-          "type": "object",
-          "description": "Actions that are blocked for this account",
-          "properties": {
-            "unspecified" : {
-              "type": "boolean",
-              "description": "Some unspecified action(s) is/are blocked. More specific blocking flags may be added in a future version of the API.",
-              "examples": [
-                "false"
-              ]
-            }
-          }
-        },
-        "balance": {
-          "type": "number",
-          "description": "The current account balance",
-          "examples": [
-            20.16
-          ]
-        },
-        "openedYearMonth": {
-          "type": "string",
-          "description": "The year and month the account was opened",
-          "minLength": 7,
-          "maxLength": 7,
-          "pattern": "^[0-9]{4}-[0-9]{2}$",
-          "examples": [
-            "2018-01"
-          ]
-        },
-        "paidInThisMonth": {
-          "type": "number",
-          "description": "The total money (credits) to the account this month",
-          "examples": [
-            5.00
-          ]
-        },
-        "canPayInThisMonth": {
-          "type": "number",
-          "description": "The remaining amount that can be credited to the account this month",
-          "examples": [
-            5.00
-          ]
-        },
-        "maximumPaidInThisMonth": {
-          "type": "number",
-          "description": "The maximum sum allowed to be paid (credited) in a month",
-          "examples": [
-            50
-          ]
-        },
-        "thisMonthEndDate": {
-          "type": "string",
-          "description": "The date the month ends",
-          "minLength": 10,
-          "maxLength": 10,
-          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-          "examples": [
-            "2018-03-31"
-          ]
-        },
-        "bonusTerms": {
-          "type": "array",
-          "description": "The bonus terms applicable for the account",
-          "items": {
-            "type": "object",
-            "properties": {
-              "bonusEstimate": {
-                "type": "number",
-                "description": "The estimated value of the bonus to be applied",
-                "examples": [
-                  100
-                ]
-              },
-              "bonusPaid": {
-                "type": "number",
-                "description": "The actual value of the bonus applied",
-                "examples": [
-                  50
-                ]
-              },
-              "endDate": {
-                "type": "string",
-                "description": "The date the bonus term ends",
-                "minLength": 10,
-                "maxLength": 10,
-                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-                "examples": [
-                  "2019-10-31"
-                ]
-              },
-              "bonusPaidOnOrAfterDate": {
-                "type": "string",
-                "description": "The earliest date the bonus will be paid (i.e. on or after the date specified)",
-                "minLength": 10,
-                "maxLength": 10,
-                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-                "examples": [
-                  "2019-11-01"
-                ]
-              }
-            }
-          }
         }
+      },
+      "required": [
+        "unspecified"
+      ]
+    },
+    "balance": {
+      "type": "number",
+      "description": "The current account balance",
+      "examples": [
+        20.16
+      ]
+    },
+    "openedYearMonth": {
+      "type": "string",
+      "description": "The year and month the account was opened",
+      "minLength": 7,
+      "maxLength": 7,
+      "pattern": "^[0-9]{4}-[0-9]{2}$",
+      "examples": [
+        "2018-01"
+      ]
+    },
+    "paidInThisMonth": {
+      "type": "number",
+      "description": "The total money (credits) to the account this month",
+      "examples": [
+        5.00
+      ]
+    },
+    "canPayInThisMonth": {
+      "type": "number",
+      "description": "The remaining amount that can be credited to the account this month",
+      "examples": [
+        5.00
+      ]
+    },
+    "maximumPaidInThisMonth": {
+      "type": "number",
+      "description": "The maximum sum allowed to be paid (credited) in a month",
+      "examples": [
+        50
+      ]
+    },
+    "thisMonthEndDate": {
+      "type": "string",
+      "description": "The date the month ends",
+      "minLength": 10,
+      "maxLength": 10,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "examples": [
+        "2018-03-31"
+      ]
+    },
+    "bonusTerms": {
+      "type": "array",
+      "description": "The bonus terms applicable for the account",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bonusEstimate": {
+            "type": "number",
+            "description": "The estimated value of the bonus to be applied",
+            "examples": [
+              100
+            ]
+          },
+          "bonusPaid": {
+            "type": "number",
+            "description": "The actual value of the bonus applied",
+            "examples": [
+              50
+            ]
+          },
+          "endDate": {
+            "type": "string",
+            "description": "The date the bonus term ends",
+            "minLength": 10,
+            "maxLength": 10,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "examples": [
+              "2019-10-31"
+            ]
+          },
+          "bonusPaidOnOrAfterDate": {
+            "type": "string",
+            "description": "The earliest date the bonus will be paid (i.e. on or after the date specified)",
+            "minLength": 10,
+            "maxLength": 10,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "examples": [
+              "2019-11-01"
+            ]
+          }
+        },
+        "required": [
+          "bonusEstimate",
+          "bonusPaid",
+          "endDate",
+          "bonusPaidOnOrAfterDate"
+        ]
       }
+    },
+    "closingBalance": {
+      "type": "number",
+      "description": "The balance before the final transaction to close the account (only present when isClosed=true)",
+      "examples": [
+        20.16
+      ]
+    },
+    "closureDate": {
+      "type": "string",
+      "description": "The date the account was closed (only present when isClosed=true)",
+      "minLength": 10,
+      "maxLength": 10,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "examples": [
+        "2018-03-31"
+      ]
     }
   },
   "required": [
-    "account"
+    "openedYearMonth",
+    "isClosed",
+    "blocked",
+    "balance",
+    "paidInThisMonth",
+    "canPayInThisMonth",
+    "maximumPaidInThisMonth",
+    "thisMonthEndDate",
+    "bonusTerms"
   ]
 }

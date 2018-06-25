@@ -7,7 +7,8 @@ object AppDependencies {
 
 
   def appDependencies: Seq[Setting[_]] = Seq(
-    libraryDependencies ++= compile ++ test ++ integrationTest
+    libraryDependencies ++= compile ++ test ++ integrationTest,
+    resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
   )
 
   val compile = Seq(
@@ -21,7 +22,8 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(
-    "org.scalamock" %% "scalamock" % "4.0.0" % "test"
+    "org.scalamock" %% "scalamock" % "4.0.0" % "test",
+    "com.eclipsesource" %% "play-json-schema-validator" % "0.8.9" % "test"
   )
 
   val integrationTest: Seq[ModuleID] = testCommon("it") ++ Seq(
