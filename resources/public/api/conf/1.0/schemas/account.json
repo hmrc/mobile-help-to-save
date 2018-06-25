@@ -13,13 +13,13 @@
             "false"
           ]
         },
-        "isBlocked": {
+        "blocked": {
           "type": "object",
           "description": "Actions that are blocked for this account",
           "properties": {
             "unspecified" : {
               "type": "boolean",
-              "description": "The actions that are blocked are currently unspecified",
+              "description": "Some unspecified action(s) is/are blocked. More specific blocking flags may be added in a future version of the API.",
               "examples": [
                 "false"
               ]
