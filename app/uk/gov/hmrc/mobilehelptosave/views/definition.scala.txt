@@ -5,8 +5,8 @@
 {
   "scopes": [
     {
-      "key": "read:help-to-save",
-      "description": "Read Help to Save Savings account and transactions data"
+      "key": "read:native-apps-api-orchestration",
+      "description": "Access mobile app-specific APIs"
     }
   ],
   "api": {
