@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transactions}
 
-trait TestData {
+trait TransactionTestData {
 
   protected val transactionsReturnedByHelpToSaveJsonString: String =
     """

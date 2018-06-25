@@ -24,10 +24,13 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
+import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
 class TransactionsISpec extends WordSpec with Matchers
+  with SchemaMatchers with TransactionTestData
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
   with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
 
@@ -38,7 +41,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
   "GET /savings-account/{nino}/transactions" should {
 
-    "respond with 200 and the users transactions" in new TestData {
+    "respond with 200 and the users transactions" in {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.transactionsExistForUser(nino)
@@ -46,9 +49,10 @@ class TransactionsISpec extends WordSpec with Matchers
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
       response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
+      checkTransactionsResponseInvariants(response)
     }
 
-    "respond with 200 and an empty transactions list when there are no transactions for the NINO" in new TestData {
+    "respond with 200 and an empty transactions list when there are no transactions for the NINO" in {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
@@ -56,9 +60,10 @@ class TransactionsISpec extends WordSpec with Matchers
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
       response.json shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
+      checkTransactionsResponseInvariants(response)
     }
 
-    "respond with 200 and users debit transaction more than 50 pounds" in new TestData {
+    "respond with 200 and users debit transaction more than 50 pounds" in {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
@@ -66,9 +71,10 @@ class TransactionsISpec extends WordSpec with Matchers
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
       response.json shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
+      checkTransactionsResponseInvariants(response)
     }
 
-    "respond with 200 and multiple transactions within same month and same day" in new TestData {
+    "respond with 200 and multiple transactions within same month and same day" in {
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
@@ -76,9 +82,10 @@ class TransactionsISpec extends WordSpec with Matchers
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
       response.json shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
+      checkTransactionsResponseInvariants(response)
     }
 
-    "respond with a 404 if the user's NINO isn't found" in new TestData {
+    "respond with a 404 if the user's NINO isn't found" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.userDoesNotHaveAnHTSAccount(nino)
 
@@ -88,18 +95,27 @@ class TransactionsISpec extends WordSpec with Matchers
       val jsonBody: JsValue = response.json
       (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+      checkTransactionsResponseInvariants(response)
     }
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 401
+      checkTransactionsResponseInvariants(response)
     }
 
     "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
       AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
+      checkTransactionsResponseInvariants(response)
+    }
+  }
+
+  private def checkTransactionsResponseInvariants(response: WSResponse): Unit = {
+    if (response.status == Status.OK) {
+      response.json should validateAgainstSchema(strictRamlTransactionsSchema)
     }
   }
 }

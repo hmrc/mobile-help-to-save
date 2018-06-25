@@ -25,7 +25,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilehelptosave.TestData
+import uk.gov.hmrc.mobilehelptosave.TransactionTestData
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future._
 
-class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining with TestData {
+class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining with TransactionTestData {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 

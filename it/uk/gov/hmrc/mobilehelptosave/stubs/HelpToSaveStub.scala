@@ -19,9 +19,9 @@ package uk.gov.hmrc.mobilehelptosave.stubs
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.TestData
+import uk.gov.hmrc.mobilehelptosave.TransactionTestData
 
-object HelpToSaveStub extends TestData {
+object HelpToSaveStub extends TransactionTestData {
   def currentUserIsEnrolled(): Unit = enrolmentStatusIs(true)
   def currentUserIsNotEnrolled(): Unit = enrolmentStatusIs(false)
 
