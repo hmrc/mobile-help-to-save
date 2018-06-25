@@ -6,6 +6,7 @@
   "scopes": [
     {
       "key": "read:native-apps-api-orchestration",
+      "name": "Native Apps API Orchestration",
       "description": "Access mobile app-specific APIs"
     }
   ],
