@@ -16,31 +16,25 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import com.eclipsesource.schema.SchemaType
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.TransactionTestData
-import uk.gov.hmrc.mobilehelptosave.json.JsonResource.loadResourceJson
-import uk.gov.hmrc.mobilehelptosave.json.Schema.banAdditionalProperties
+import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 
 class TransactionsJsonSpec extends WordSpec with Matchers with SchemaMatchers with TransactionTestData {
 
-  private val ramlTransactionsSchema =
-    banAdditionalProperties(loadResourceJson("/public/api/conf/1.0/schemas/transactions.json"))
-      .as[SchemaType]
-
   "Transactions JSON" when {
     "there is a typical list of transactions" should {
       "be a valid instance of the schema used in the RAML" in {
-        Json.toJson(transactions) should validateAgainstSchema(ramlTransactionsSchema)
+        Json.toJson(transactions) should validateAgainstSchema(strictRamlTransactionsSchema)
       }
     }
 
     "there are no transactions" should {
       "be a valid instance of the schema used in the RAML" in {
         val emptyTransactionsList = Transactions(transactions = Seq.empty)
-        Json.toJson(emptyTransactionsList) should validateAgainstSchema(ramlTransactionsSchema)
+        Json.toJson(emptyTransactionsList) should validateAgainstSchema(strictRamlTransactionsSchema)
       }
     }
   }

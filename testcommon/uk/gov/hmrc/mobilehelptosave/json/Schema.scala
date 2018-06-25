@@ -16,15 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.json
 
-import play.api.libs.json.{JsBoolean, JsObject, JsValue, Json}
-import uk.gov.hmrc.mobilehelptosave.io.Resources
-
-object JsonResource {
-
-  def loadResourceJson(resourceName: String): JsValue =
-    Resources.withResource(resourceName)(Json.parse)
-
-}
+import play.api.libs.json.{JsBoolean, JsObject, JsValue}
 
 object Schema {
 

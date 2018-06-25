@@ -26,7 +26,7 @@ import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 
 class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
 
-  private val ramlAccountSchema =
+  private val strictRamlAccountSchema =
     banAdditionalProperties(loadResourceJson("/public/api/conf/1.0/schemas/account.json"))
       .as[SchemaType]
 
@@ -45,14 +45,14 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
   "Account JSON" when {
     "account is in happy path state" should {
       "be a valid instance of the schema used in the RAML" in {
-        Json.toJson(testAccount) should validateAgainstSchema(ramlAccountSchema)
+        Json.toJson(testAccount) should validateAgainstSchema(strictRamlAccountSchema)
       }
     }
 
     "account is blocked" should {
       "be a valid instance of the schema used in the RAML" in {
         val blockedAccount = testAccount.copy(blocked = Blocking(true))
-        Json.toJson(blockedAccount) should validateAgainstSchema(ramlAccountSchema)
+        Json.toJson(blockedAccount) should validateAgainstSchema(strictRamlAccountSchema)
       }
     }
 
@@ -68,7 +68,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
             testAccount.bonusTerms(1).copy(bonusEstimate = 0)
           )
         )
-        Json.toJson(closedAccount) should validateAgainstSchema(ramlAccountSchema)
+        Json.toJson(closedAccount) should validateAgainstSchema(strictRamlAccountSchema)
       }
     }
   }
