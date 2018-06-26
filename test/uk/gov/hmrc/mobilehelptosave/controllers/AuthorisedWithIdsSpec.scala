@@ -16,24 +16,30 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import org.scalamock.scalatest.MockFactory
 import play.api.mvc.Results
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals, ~}
 import uk.gov.hmrc.auth.core.syntax.retrieved._
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, AuthorisationException, NoActiveSession}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.play.test.UnitSpec
+import play.api.http.Status._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals with Results {
+
   private val generator = new Generator(0)
   private val testNino = generator.nextNino
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   "AuthorisedWithIds" should {
     "include the internal auth ID and NINO in the request" in {
@@ -63,7 +69,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
         Ok
       }
 
-      status(action(FakeRequest())) shouldBe 500
+      status(action(FakeRequest())) shouldBe INTERNAL_SERVER_ERROR
     }
 
     "return 403 when no NINO can be retrieved" in {
@@ -75,7 +81,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
         Ok
       }
 
-      status(action(FakeRequest())) shouldBe 403
+      status(action(FakeRequest())) shouldBe FORBIDDEN
     }
 
     "return 401 when AuthConnector throws NoActiveSession" in {
@@ -87,7 +93,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
         Ok
       }
 
-      status(action(FakeRequest())) shouldBe 401
+      status(action(FakeRequest())) shouldBe UNAUTHORIZED
     }
 
     "return 403 when AuthConnector throws any other AuthorisationException" in {
@@ -99,9 +105,24 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
         Ok
       }
 
-      status(action(FakeRequest())) shouldBe 403
+      status(action(FakeRequest())) shouldBe FORBIDDEN
+    }
+
+    "return 403 Forbidden when AuthConnector throws InsufficientConfidenceLevel" in {
+      val authConnectorStub = authConnectorStubThatWillReturn(Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
+
+      val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
+
+      val action = authorised { _ =>
+        Ok
+      }
+
+      val result = await(action(FakeRequest()))
+      status(result) shouldBe FORBIDDEN
+      bodyOf(result) shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
   }
+
 
   private def authConnectorStubThatWillReturn(internalAuthId: Option[String], nino: Option[String]): AuthConnector =
     authConnectorStubThatWillReturn(Future successful (internalAuthId and nino))
@@ -109,7 +130,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
   private def authConnectorStubThatWillReturn(futureIds: Future[Option[String] ~ Option[String]]): AuthConnector = {
     val authConnectorStub = stub[AuthConnector]
     (authConnectorStub.authorise[Option[String] ~ Option[String]](_: Predicate, _: Retrieval[Option[String] ~ Option[String]])(_: HeaderCarrier, _: ExecutionContext))
-      .when(AuthProviders(GovernmentGateway, Verify), internalId and nino, *, *)
+      .when(AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200, internalId and nino, *, *)
       .returns(futureIds)
     authConnectorStub
   }

@@ -32,7 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TransactionControllerSpec
+class TransactionsControllerSpec
   extends WordSpec
     with Matchers
     with SchemaMatchers
@@ -58,7 +58,7 @@ class TransactionControllerSpec
   "getTransactions" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-      val controller = new TransactionController(logger, helpToSaveConnector, NeverAuthorisedWithIds, config)
+      val controller = new TransactionsController(logger, helpToSaveConnector, NeverAuthorisedWithIds, config)
 
       val resultF = controller.getTransactions(nino.value)(FakeRequest())
       status(resultF) shouldBe 403
@@ -69,7 +69,7 @@ class TransactionControllerSpec
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(nino, *, *)
@@ -85,7 +85,7 @@ class TransactionControllerSpec
     "no account is found by HelpToSaveConnector for the NINO" should {
       "return 404" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(nino, *, *)
@@ -102,7 +102,7 @@ class TransactionControllerSpec
     "HelpToSaveConnector returns an error" should {
       "return 500" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(nino, *, *)
@@ -118,7 +118,7 @@ class TransactionControllerSpec
     "the NINO in the URL does not match the logged in user's NINO" should {
       "return 403" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         val resultF = controller.getTransactions(otherNino.value)(FakeRequest())
         status(resultF) shouldBe 403
@@ -129,7 +129,7 @@ class TransactionControllerSpec
     "the NINO is not in the correct format" should {
       "return 400 NINO_INVALID" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         val resultF = controller.getTransactions("invalidNino")(FakeRequest())
         status(resultF) shouldBe 400
@@ -142,7 +142,7 @@ class TransactionControllerSpec
     "the NINO in the URL contains spaces" should {
       "return 400 NINO_INVALID" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
 
         val resultF = controller.getTransactions("AA 00 00 03 D")(FakeRequest())
         status(resultF) shouldBe 400
@@ -155,7 +155,7 @@ class TransactionControllerSpec
     "helpToSaveShuttered = true" should {
       """return 503 "shuttered": true""" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
-        val controller = new TransactionController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config.copy(shuttering = trueShuttering))
+        val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config.copy(shuttering = trueShuttering))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 503
