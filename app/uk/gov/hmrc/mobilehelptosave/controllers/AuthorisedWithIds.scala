@@ -41,10 +41,10 @@ class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends Aut
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
-    val providers = AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200
+    val predicates = AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200
     val retrievals = Retrievals.internalId and Retrievals.nino
 
-    authConnector.authorise(providers, retrievals).map {
+    authConnector.authorise(predicates, retrievals).map {
       case Some(internalAuthId) ~ Some(nino) =>
         Right(new RequestWithIds(InternalAuthId(internalAuthId), Nino(nino), request))
       case None ~ _ =>

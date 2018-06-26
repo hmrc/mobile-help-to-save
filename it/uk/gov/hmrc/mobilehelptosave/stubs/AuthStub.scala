@@ -24,18 +24,18 @@ import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 object AuthStub {
 
 
-  private val retrievals: String = {
+  private val authoriseRequestBody: String = {
     """
       |{
-      |	"authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}, {"confidenceLevel" : 200}],
-      |	"retrieve": ["internalId", "nino"]
+      | "authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}, {"confidenceLevel" : 200}],
+      | "retrieve": ["internalId", "nino"]
       |}""".stripMargin
   }
 
 
   def userIsLoggedIn(internalId: InternalAuthId, nino: Nino): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(retrievals))
+      .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
@@ -47,7 +47,7 @@ object AuthStub {
 
   def userIsLoggedInWithInsufficientConfidenceLevel(): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(retrievals))
+      .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(401)
         .withHeader("WWW-Authenticate", """MDTP detail="InsufficientConfidenceLevel"""")
@@ -55,7 +55,7 @@ object AuthStub {
 
   def userIsNotLoggedIn(): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(retrievals))
+      .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(401)
           .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
@@ -63,7 +63,7 @@ object AuthStub {
 
   def userIsLoggedInButNotWithGovernmentGatewayOrVerify(): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(retrievals))
+      .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(401)
           .withHeader("WWW-Authenticate", """MDTP detail="UnsupportedAuthProvider"""")
