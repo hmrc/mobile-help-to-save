@@ -108,7 +108,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
       status(action(FakeRequest())) shouldBe FORBIDDEN
     }
 
-    "return 403 when AuthConnector throws InsufficientConfidenceLevel" in {
+    "return 403 Forbidden when AuthConnector throws InsufficientConfidenceLevel" in {
       val authConnectorStub = authConnectorStubThatWillReturn(Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
 
       val authorised = new AuthorisedWithIdsImpl(authConnectorStub)
@@ -118,7 +118,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with Retrievals wi
       }
 
       val result = await(action(FakeRequest()))
-      status(result) shouldBe UNAUTHORIZED
+      status(result) shouldBe FORBIDDEN
       bodyOf(result) shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
   }

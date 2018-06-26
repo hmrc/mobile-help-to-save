@@ -106,10 +106,10 @@ class TransactionsISpec extends WordSpec with Matchers
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
-    "return 401 when the user is logged in with an insufficient confidence level" in {
+    "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
-      response.status shouldBe 401
+      response.status shouldBe 403
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
@@ -119,6 +119,7 @@ class TransactionsISpec extends WordSpec with Matchers
       val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe 403
       checkTransactionsResponseInvariants(response)
+      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
   }
 

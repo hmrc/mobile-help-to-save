@@ -58,9 +58,9 @@ class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends Aut
         Logger.warn("NINO not found")
         Left(Forbidden("NINO not found"))
     }.recover {
-      case x: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${x.reason}]"))
-      case x: InsufficientConfidenceLevel =>  Left(Unauthorized(s"Authorisation failure [${x.reason}]"))
-      case _: AuthorisationException => Left(Forbidden)
+      case e: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
+      case e: InsufficientConfidenceLevel =>  Left(Forbidden(s"Authorisation failure [${e.reason}]"))
+      case e: AuthorisationException => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
     }
   }
 }
