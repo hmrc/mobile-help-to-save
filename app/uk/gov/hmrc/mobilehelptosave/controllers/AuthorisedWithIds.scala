@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
-import play.api.Logger
+import javax.inject.{Inject, Singleton}
+import play.api.LoggerLike
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
-import uk.gov.hmrc.auth.core.retrieve.{Retrievals, ~}
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.{Retrievals, ~}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
@@ -37,7 +37,10 @@ class RequestWithIds[+A](val internalAuthId: InternalAuthId, val nino: Nino, req
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
 
 @Singleton
-class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends AuthorisedWithIds with Results {
+class AuthorisedWithIdsImpl @Inject() (
+  logger: LoggerLike,
+  authConnector: AuthConnector
+) extends AuthorisedWithIds with Results {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
@@ -52,14 +55,16 @@ class AuthorisedWithIdsImpl @Inject() (authConnector: AuthConnector) extends Aut
         // "always defined for Government Gateway and Verify auth providers"
         // and we have specified AuthProviders(GovernmentGateway, Verify) so internalId
         // should always be defined.
-        Logger.warn("Internal auth id not found")
+        logger.warn("Internal auth id not found")
         Left(InternalServerError("Internal id not found"))
       case _ ~ None =>
-        Logger.warn("NINO not found")
+        logger.warn("NINO not found")
         Left(Forbidden("NINO not found"))
     }.recover {
       case e: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
-      case e: InsufficientConfidenceLevel =>  Left(Forbidden(s"Authorisation failure [${e.reason}]"))
+      case e: InsufficientConfidenceLevel =>
+        logger.warn("Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
+        Left(Forbidden(s"Authorisation failure [${e.reason}]"))
       case e: AuthorisationException => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
     }
   }
