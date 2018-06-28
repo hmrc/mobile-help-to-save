@@ -42,9 +42,12 @@ class TransactionsController @Inject()
 
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
 
+  private val WebServerIsDown = new Status(521)
+
   def getTransactions(nino: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     if (config.shuttering.shuttered) {
-      Future successful ServiceUnavailable(Json.toJson(config.shuttering))
+      // we'd rather use 503 instead of 521 but can't use 503 because the API platform nginx discards any bodies in 503 responses returned by microservices - see NGC-3396
+      Future successful WebServerIsDown(Json.toJson(config.shuttering))
     }
     else {
       validateNino(nino).fold(
