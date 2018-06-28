@@ -153,12 +153,12 @@ class TransactionsControllerSpec
     }
 
     "helpToSaveShuttered = true" should {
-      """return 503 "shuttered": true""" in {
+      """return 521 "shuttered": true""" in {
         val helpToSaveConnector = mock[HelpToSaveConnectorGetTransactions]
         val controller = new TransactionsController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config.copy(shuttering = trueShuttering))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 503
+        status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
         (jsonBody \ "title").as[String] shouldBe "Shuttered"
