@@ -21,16 +21,22 @@ import play.api.Application
 import play.api.libs.json.{JsLookupResult, JsUndefined}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
-class StartupISpec extends WordSpec with Matchers
+/**
+  * We are migrating to getting the account from help-to-save instead of help-to-save-proxy.
+  * This test checks that the old way (help-to-save-proxy) still works.
+  * We can remove it when we've finished migrating to the new way (i.e.
+  * "helpToSave.getAccountFrom" is "help-to-save" in all environments).
+  */
+class LegacyStartupISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
   with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
 
   override implicit lazy val app: Application = appBuilder
     .configure(
-      "helpToSave.getAccountFrom" -> "help-to-save",
+      "helpToSave.getAccountFrom" -> "help-to-save-proxy",
       InvitationConfig.Enabled,
       "helpToSave.invitationFilters.survey" -> "false",
       "helpToSave.invitationFilters.workingTaxCredits" -> "false",
@@ -48,7 +54,7 @@ class StartupISpec extends WordSpec with Matchers
     "include user.state and user.account" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
+      HelpToSaveProxyStub.nsiAccountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -61,10 +67,7 @@ class StartupISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", BigDecimal("22.12"))
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", BigDecimal(50))
-      // Date used for testing is a date when BST applied to test that the
-      // service still returns the date supplied by NS&I unmodified during
-      // BST.
-      (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+      (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-02-28"
 
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
@@ -82,7 +85,7 @@ class StartupISpec extends WordSpec with Matchers
     "include account closure fields when account is closed" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.closedAccountExists(nino)
+      HelpToSaveProxyStub.closedNsiAccountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -99,6 +102,9 @@ class StartupISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "paidInThisMonth", 0)
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", 50)
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", 50)
+      // Date used for testing is a date when BST applied to test that the
+      // service still returns the date supplied by NS&I unmodified during
+      // BST.
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
@@ -150,7 +156,7 @@ class StartupISpec extends WordSpec with Matchers
     "omit account details but still include user state if call to get account fails" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountReturnsInternalServerError(nino)
+      HelpToSaveProxyStub.nsiAccountReturnsInternalServerError()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
@@ -162,25 +168,23 @@ class StartupISpec extends WordSpec with Matchers
     "omit account details but still include user state if get account returns JSON that doesn't conform to the schema" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountReturnsInvalidJson(nino)
+      HelpToSaveProxyStub.nsiAccountReturnsInvalidAccordingToSchemaJson(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
       (response.json \ "user" \ "account") shouldBe a [JsUndefined]
-      (response.json \ "user" \ "accountError" \ "code").as[String] shouldBe "GENERAL"
     }
 
     "omit account details but still include user state if get account returns badly formed JSON" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountReturnsBadlyFormedJson(nino)
+      HelpToSaveProxyStub.nsiAccountReturnsBadlyFormedJson(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
       (response.json \ "user" \ "account") shouldBe a [JsUndefined]
-      (response.json \ "user" \ "accountError" \ "code").as[String] shouldBe "GENERAL"
     }
 
     "return 401 when the user is not logged in" in {

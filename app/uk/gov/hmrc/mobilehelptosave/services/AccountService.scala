@@ -17,32 +17,40 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.either._
-import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import org.joda.time.YearMonth
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveConnectorGetAccount, HelpToSaveProxyConnector, NsiAccount, NsiBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[AccountServiceImpl])
 trait AccountService {
 
-  def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]]
+  def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]]
 
 }
 
 @Singleton
-class AccountServiceImpl @Inject() (
+class HelpToSaveAccountService @Inject() (
+  helpToSaveConnector: HelpToSaveConnectorGetAccount
+) extends AccountService {
+
+  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
+    helpToSaveConnector.getAccount(nino)
+
+}
+
+@Singleton
+class HelpToSaveProxyAccountService @Inject() (
   logger: LoggerLike,
   helpToSaveProxyConnector: HelpToSaveProxyConnector
 ) extends AccountService {
 
-  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] =
-    helpToSaveProxyConnector.nsiAccount(nino).map(_.flatMap(nsiAccount => nsiAccountToAccount(nino, nsiAccount)))
+  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
+    helpToSaveProxyConnector.nsiAccount(nino).map(_.flatMap(nsiAccount => nsiAccountToAccount(nino, nsiAccount).map(Some.apply)))
 
   private def nsiAccountToAccount(nino: Nino, nsiAccount: NsiAccount): Either[ErrorInfo, Account] = {
     val paidInThisMonth = nsiAccount.currentInvestmentMonth.investmentLimit - nsiAccount.currentInvestmentMonth.investmentRemaining

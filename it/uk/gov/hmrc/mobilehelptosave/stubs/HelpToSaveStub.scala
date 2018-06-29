@@ -19,9 +19,9 @@ package uk.gov.hmrc.mobilehelptosave.stubs
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.TransactionTestData
+import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
-object HelpToSaveStub extends TransactionTestData {
+object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def currentUserIsEnrolled(): Unit = enrolmentStatusIs(true)
   def currentUserIsNotEnrolled(): Unit = enrolmentStatusIs(false)
 
@@ -69,9 +69,45 @@ object HelpToSaveStub extends TransactionTestData {
         .withBody(multipleTransactionsWithinSameMonthAndDayReturnedByHelpToSaveJsonString)))
   }
 
-  def userDoesNotHaveAnHTSAccount(nino: Nino): Unit = {
+  def userDoesNotHaveAnHtsAccount(nino: Nino): Unit = {
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.NOT_FOUND)))
   }
+
+  def accountExists(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(accountReturnedByHelpToSaveJsonString)))
+
+  def closedAccountExists(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(closedAccountReturnedByHelpToSaveJsonString)))
+
+  def accountReturnsInvalidJson(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(accountReturnedByHelpToSaveInvalidJsonString)))
+
+  def accountReturnsBadlyFormedJson(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(
+          """not JSON""".stripMargin
+        )))
+
+  def accountReturnsInternalServerError(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(500)))
 }

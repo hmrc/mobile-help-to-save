@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 
 import org.joda.time.{LocalDate, YearMonth}
-import play.api.libs.json.{JsString, JsValue, Json, Writes}
+import play.api.libs.json._
 
 case class BonusTerm(
   bonusEstimate: BigDecimal,
@@ -27,7 +27,7 @@ case class BonusTerm(
 )
 
 object BonusTerm {
-  implicit val writes: Writes[BonusTerm] = Json.writes[BonusTerm]
+  implicit val format: OFormat[BonusTerm] = Json.format[BonusTerm]
 }
 
 case class Blocking(
@@ -35,7 +35,7 @@ case class Blocking(
 )
 
 object Blocking {
-  implicit val writes: Writes[Blocking] = Json.writes[Blocking]
+  implicit val format: OFormat[Blocking] = Json.format[Blocking]
 }
 
 case class Account(
@@ -60,9 +60,20 @@ case class Account(
 
 object Account {
 
-  implicit object JodaYearMonthWrites extends Writes[YearMonth] {
+  implicit object JodaYearMonthFormat extends Format[YearMonth] {
     def writes(yearMonth: YearMonth): JsValue = JsString(yearMonth.toString)
+
+    override def reads(json: JsValue): JsResult[YearMonth] = json match {
+      case JsString(s) =>
+        try {
+          JsSuccess(YearMonth.parse(s))
+        } catch {
+          case _: IllegalArgumentException => JsError("error.expected.jodayearmonth.format")
+        }
+
+      case _ => JsError("error.expected.yearmonth")
+    }
   }
 
-  implicit val writes: Writes[Account] = Json.writes[Account]
+  implicit val format: OFormat[Account] = Json.format[Account]
 }

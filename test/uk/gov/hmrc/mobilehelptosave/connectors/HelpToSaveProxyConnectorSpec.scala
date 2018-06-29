@@ -57,7 +57,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
   }
 
   "nsiAccount" should {
-    "return the account when native-app-widget returns 200 OK" in {
+    "return the account when help-to-save-proxy returns 200 OK" in {
       val connector1 = new HelpToSaveProxyConnectorImpl(logger, config, FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
@@ -203,7 +203,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       sentCorrelationId.value.length should be <= 38
     }
 
-    "return a Left[ErrorInfo] when there is an error connecting to native-app-widget" in {
+    "return a Left[ErrorInfo] when there is an error connecting to help-to-save-proxy" in {
       val connectionRefusedHttp = FakeHttpGet(
         isAccountUrlForNino _,
         Future {
@@ -220,7 +220,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return a Left[ErrorInfo] when native-app-widget returns a 4xx error" in {
+    "return a Left[ErrorInfo] when help-to-save-proxy returns a 4xx error" in {
       val error4xxHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(429))
@@ -235,7 +235,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return a Left[ErrorInfo] when native-app-widget returns a 5xx error" in {
+    "return a Left[ErrorInfo] when help-to-save-proxy returns a 5xx error" in {
       val error5xxHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(500))
@@ -250,7 +250,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return a Left[ErrorInfo] when native-app-widget returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
+    "return a Left[ErrorInfo] when help-to-save-proxy returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
       val invalidJsonHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
