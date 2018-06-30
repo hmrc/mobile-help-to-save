@@ -54,6 +54,7 @@ class StartupISpec extends WordSpec with Matchers
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
 
+      (response.json \ "user" \ "account" \ "number").as[String] shouldBe "1000000000001"
       (response.json \ "user" \ "account" \ "openedYearMonth").as[String] shouldBe "2018-01"
       (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe false
       (response.json \ "user" \ "account" \ "blocked" \ "unspecified").as[Boolean] shouldBe false
@@ -88,6 +89,7 @@ class StartupISpec extends WordSpec with Matchers
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
 
+      (response.json \ "user" \ "account" \ "number").as[String] shouldBe "1000000000002"
       (response.json \ "user" \ "account" \ "openedYearMonth").as[String] shouldBe "2018-03"
 
       (response.json \ "user" \ "account" \ "isClosed").as[Boolean] shouldBe true

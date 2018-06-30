@@ -37,6 +37,7 @@ class HelpToSaveProxyAccountServiceSpec extends WordSpec with Matchers
   private val nino = generator.nextNino
 
   private val testNsiAccount = NsiAccount(
+    accountNumber = "",
     accountClosedFlag = "",
     accountBlockingCode = "00",
     clientBlockingCode = "00",
@@ -52,11 +53,15 @@ class HelpToSaveProxyAccountServiceSpec extends WordSpec with Matchers
 
   "account" should {
     "return account details for open, unblocked account" in {
-      val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(accountBalance = BigDecimal("123.45"))))
+      val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(
+        accountNumber = "1100000000001",
+        accountBalance = BigDecimal("123.45")
+      )))
       val service = new HelpToSaveProxyAccountService(logger, connector)
 
       val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.isClosed shouldBe false
+      returnedAccount.number shouldBe "1100000000001"
       returnedAccount.balance shouldBe BigDecimal("123.45")
       returnedAccount.blocked.unspecified shouldBe false
 

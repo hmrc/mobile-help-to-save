@@ -66,6 +66,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
+                |  "accountNumber": "1100000000001",
                 |  "accountBalance": "200.34",
                 |  "accountClosedFlag": "",
                 |  "accountBlockingCode": "00",
@@ -96,6 +97,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
           ))))
 
       await(connector1.nsiAccount(nino)) shouldBe Right(NsiAccount(
+        accountNumber = "1100000000001",
         accountClosedFlag = "",
         accountBlockingCode = "00",
         clientBlockingCode = "00",
@@ -118,6 +120,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
+                |  "accountNumber": "1100000000002",
                 |  "accountBalance": "0.00",
                 |  "accountClosedFlag": "C",
                 |  "accountBlockingCode": "T1",
@@ -135,6 +138,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
           ))))
 
       await(connector2.nsiAccount(nino)) shouldBe Right(NsiAccount(
+        accountNumber = "1100000000002",
         accountClosedFlag = "C",
         accountBlockingCode = "T1",
         clientBlockingCode ="client blocking test",
@@ -167,6 +171,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                   Json.parse(
                     """
                       |{
+                      |  "accountNumber":"1100000000001",
                       |  "accountClosedFlag": "",
                       |  "accountBlockingCode": "00",
                       |  "clientBlockingCode": "00",
@@ -189,6 +194,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       val connector = new HelpToSaveProxyConnectorImpl(logger, config, http)
 
       await(connector.nsiAccount(nino)) shouldBe Right(NsiAccount(
+        accountNumber = "1100000000001",
         accountClosedFlag = "",
         accountBlockingCode = "00",
         clientBlockingCode = "00",
@@ -260,6 +266,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               // invalid because required field bonusPaid is omitted from first term
               """
                 |{
+                |  "accountNumber":"1100000000001",
                 |  "accountBalance": "123.45",
                 |  "currentInvestmentMonth": {
                 |    "investmentRemaining": "15.50",

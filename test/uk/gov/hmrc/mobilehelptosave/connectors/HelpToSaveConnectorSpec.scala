@@ -83,7 +83,7 @@ class HelpToSaveConnectorSpec
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
-      await(connector.getAccount(nino)) shouldBe Right(Some(account))
+      await(connector.getAccount(nino)) shouldBe Right(Some(helpToSaveAccount))
     }
 
     "return Right(None) when the help-to-save service returns a 404 response" in {

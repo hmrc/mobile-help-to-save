@@ -22,14 +22,16 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.ImplementedBy
 import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
+import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json, Reads}
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
 import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegment
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +44,7 @@ trait HelpToSaveConnectorEnrolmentStatus {
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
 trait HelpToSaveConnectorGetAccount {
-  def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]]
+  def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]
 }
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
@@ -65,9 +67,9 @@ class HelpToSaveConnectorImpl @Inject() (
     } recover handleEnrolmentStatusHttpErrors
   }
 
-  override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] = {
+  override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
     val string = accountUrl(nino).toString
-    http.GET[Account](string) map (account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
+    http.GET[HelpToSaveAccount](string) map (account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
   }
 
   override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]] = {
@@ -97,4 +99,30 @@ class HelpToSaveConnectorImpl @Inject() (
 
   private def transactionsUrl(nino: Nino): URL = new URL(
     config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
+}
+
+/** Account in help-to-save microservice's domain */
+case class HelpToSaveAccount(
+  accountNumber: String,
+  openedYearMonth: YearMonth,
+
+  isClosed: Boolean,
+
+  blocked: Blocking,
+
+  balance: BigDecimal,
+
+  paidInThisMonth: BigDecimal,
+  canPayInThisMonth: BigDecimal,
+  maximumPaidInThisMonth: BigDecimal,
+  thisMonthEndDate: LocalDate,
+
+  bonusTerms: Seq[BonusTerm],
+
+  closureDate: Option[LocalDate],
+  closingBalance: Option[BigDecimal]
+)
+
+object HelpToSaveAccount {
+  implicit val reads: Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
 }

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import cats.data.EitherT
+import cats.instances.future._
 import cats.syntax.either._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.YearMonth
@@ -39,7 +41,9 @@ class HelpToSaveAccountService @Inject() (
 ) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
-    helpToSaveConnector.getAccount(nino)
+    EitherT(helpToSaveConnector.getAccount(nino))
+      .map{maybeHtsAccount => maybeHtsAccount.map(Account.apply)}
+      .value
 
 }
 
@@ -62,6 +66,7 @@ class HelpToSaveProxyAccountService @Inject() (
       } { firstNsiTerm =>
         val terms = sortedNsiTerms.map(nsiBonusTermToBonusTerm)
         Right(Account(
+          number = nsiAccount.accountNumber,
           openedYearMonth = new YearMonth(firstNsiTerm.startDate),
           isClosed = nsiAccountClosedFlagToIsClosed(nsiAccount.accountClosedFlag),
           blocked = nsiAccountToBlocking(nsiAccount),

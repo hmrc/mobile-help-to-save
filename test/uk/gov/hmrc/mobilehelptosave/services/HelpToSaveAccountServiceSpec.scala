@@ -21,8 +21,8 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetAccount
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveConnectorGetAccount}
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,8 +37,8 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   "account" should {
-    "return the same account returned by the connector" in {
-      val connector = fakeHelpToSaveConnector(nino, Right(Some(account)))
+    "convert the account from the help-to-save domain to the mobile-help-to-save domain" in {
+      val connector = fakeHelpToSaveConnector(nino, Right(Some(helpToSaveAccount)))
       val service = new HelpToSaveAccountService(connector)
       await(service.account(nino)) shouldBe Right(Some(account))
     }
@@ -56,8 +56,8 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
     }
   }
 
-  private def fakeHelpToSaveConnector(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[Account]]): HelpToSaveConnectorGetAccount = new HelpToSaveConnectorGetAccount {
-    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] = {
+  private def fakeHelpToSaveConnector(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveConnectorGetAccount = new HelpToSaveConnectorGetAccount {
+    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
       ec shouldBe passedEc

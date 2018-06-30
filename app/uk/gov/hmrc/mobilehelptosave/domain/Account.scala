@@ -18,6 +18,8 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.libs.json._
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveAccount
+import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
 
 case class BonusTerm(
   bonusEstimate: BigDecimal,
@@ -39,6 +41,7 @@ object Blocking {
 }
 
 case class Account(
+  number: String,
   openedYearMonth: YearMonth,
 
   isClosed: Boolean,
@@ -59,21 +62,20 @@ case class Account(
 )
 
 object Account {
-
-  implicit object JodaYearMonthFormat extends Format[YearMonth] {
-    def writes(yearMonth: YearMonth): JsValue = JsString(yearMonth.toString)
-
-    override def reads(json: JsValue): JsResult[YearMonth] = json match {
-      case JsString(s) =>
-        try {
-          JsSuccess(YearMonth.parse(s))
-        } catch {
-          case _: IllegalArgumentException => JsError("error.expected.jodayearmonth.format")
-        }
-
-      case _ => JsError("error.expected.yearmonth")
-    }
-  }
-
   implicit val format: OFormat[Account] = Json.format[Account]
+
+  def apply(h: HelpToSaveAccount): Account = Account(
+    number = h.accountNumber,
+    openedYearMonth = h.openedYearMonth,
+    isClosed = h.isClosed,
+    blocked = h.blocked,
+    balance = h.balance,
+    paidInThisMonth = h.paidInThisMonth,
+    canPayInThisMonth = h.canPayInThisMonth,
+    maximumPaidInThisMonth = h.maximumPaidInThisMonth,
+    thisMonthEndDate = h.thisMonthEndDate,
+    bonusTerms = h.bonusTerms,
+    closureDate = h.closureDate,
+    closingBalance = h.closingBalance
+  )
 }

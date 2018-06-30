@@ -31,6 +31,7 @@ object HelpToSaveProxyStub {
         .withBody(
           """
             |{
+            |  "accountNumber": "1100000000001",
             |  "accountBalance": "123.45",
             |  "accountClosedFlag": "",
             |  "accountBlockingCode": "00",
@@ -70,6 +71,7 @@ object HelpToSaveProxyStub {
         .withBody(
           """
             |{
+            |  "accountNumber": "1100000000002",
             |  "accountBalance": "0.00",
             |  "accountClosedFlag": "C",
             |  "accountBlockingCode": "00",

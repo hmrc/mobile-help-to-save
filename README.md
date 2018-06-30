@@ -48,7 +48,8 @@ Response format:
         // "payingIn": true,
         // "withdrawing": false,
         // "receivingBonus": false
-      }
+      },
+      "number":"1000000000001",
       "openedYearMonth": "2018-01",
       "isClosed": true,
       "closureDate": "2018-02-16",

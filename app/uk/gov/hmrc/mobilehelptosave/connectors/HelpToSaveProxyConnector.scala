@@ -87,6 +87,7 @@ object NsiBonusTerm {
 }
 
 case class NsiAccount(
+  accountNumber: String,
   accountClosedFlag: String,
   accountBlockingCode: String,
   clientBlockingCode: String,

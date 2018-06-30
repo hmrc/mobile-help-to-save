@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.domain
+package uk.gov.hmrc.mobilehelptosave.json
 
 import org.joda.time.YearMonth
 import org.scalatest.{Matchers, WordSpec}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
-import uk.gov.hmrc.mobilehelptosave.domain.Account.JodaYearMonthFormat
+import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
 
 class JodaYearMonthJsonSpec extends WordSpec with Matchers {
   "YearMonth JSON writes" should {

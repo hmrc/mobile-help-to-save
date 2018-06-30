@@ -55,6 +55,7 @@ class UserServiceSpec
   private val allTestNinos = Seq(nino, nino1, nino2, nino3, nino4)
 
   private val testAccount = Account(
+    number = "2000000000001",
     openedYearMonth = new YearMonth(2018, 5),
     isClosed = false,
     Blocking(false),
