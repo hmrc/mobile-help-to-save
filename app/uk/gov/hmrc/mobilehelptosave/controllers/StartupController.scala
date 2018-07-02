@@ -32,15 +32,15 @@ class StartupController @Inject() (
   config: StartupControllerConfig
 ) extends BaseController {
 
-  val startup: Action[AnyContent] = if (config.helpToSaveEnabled && !config.shuttering.shuttered) {
+  val startup: Action[AnyContent] = if (!config.shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>
       val responseF = userService.userDetails(request.internalAuthId, request.nino).map { userOrError =>
-        EnabledStartupResponse(
+        StartupResponse(
           shuttering = config.shuttering,
           infoUrl = Some(config.helpToSaveInfoUrl),
           invitationUrl = Some(config.helpToSaveInvitationUrl),
           accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
-          user = userOrError.right.toOption.flatten,
+          user = userOrError.right.toOption,
           userError = userOrError.left.toOption,
           balanceEnabled = config.balanceEnabled,
           paidInThisMonthEnabled = config.paidInThisMonthEnabled,
@@ -54,8 +54,8 @@ class StartupController @Inject() (
     }
   } else {
     Action { implicit request =>
-      val response = if (config.helpToSaveEnabled) {
-        EnabledStartupResponse(
+      val response =
+        StartupResponse(
           shuttering = config.shuttering,
           infoUrl = None,
           invitationUrl = None,
@@ -69,9 +69,6 @@ class StartupController @Inject() (
           savingRemindersEnabled = config.savingRemindersEnabled,
           transactionsEnabled = config.transactionsEnabled
         )
-      } else {
-        DisabledStartupResponse
-      }
 
       Ok(Json.toJson(response))
     }

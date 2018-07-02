@@ -18,9 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json._
 
-sealed trait StartupResponse
-
-final case class EnabledStartupResponse(
+case class StartupResponse(
   shuttering: Shuttering,
   infoUrl: Option[String],
   invitationUrl: Option[String],
@@ -33,7 +31,7 @@ final case class EnabledStartupResponse(
   shareInvitationEnabled: Boolean,
   savingRemindersEnabled: Boolean,
   transactionsEnabled: Boolean
-) extends StartupResponse
+)
 
 case class Shuttering (
   shuttered: Boolean,
@@ -45,21 +43,7 @@ case object Shuttering {
   implicit val writes: Writes[Shuttering] = Json.writes[Shuttering]
 }
 
-case object DisabledStartupResponse extends StartupResponse
-
 object StartupResponse {
-  implicit val writes: Writes[StartupResponse] = new Writes[StartupResponse] {
-    override def writes(o: StartupResponse): JsValue = o match {
-      case e: EnabledStartupResponse => enabledWrites.writes(e)
-      case d: DisabledStartupResponse.type => disabledWrites.writes(d)
-    }
-  }
-
-  private val enabledWrites: Writes[EnabledStartupResponse] = Json.writes[EnabledStartupResponse]
+  implicit val enabledWrites: Writes[StartupResponse] = Json.writes[StartupResponse]
     .transform((_: JsObject) + ("enabled" -> JsBoolean(true)))
-
-  private val disabledWrites: Writes[DisabledStartupResponse.type] = new Writes[DisabledStartupResponse.type] {
-    override def writes(o: DisabledStartupResponse.type): JsValue = Json.obj("enabled" -> false)
-  }
-
 }

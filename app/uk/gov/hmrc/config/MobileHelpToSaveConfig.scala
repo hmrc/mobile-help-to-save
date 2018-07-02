@@ -60,7 +60,6 @@ case class MobileHelpToSaveConfig @Inject()(
     message = configBase64String("helpToSave.shuttering.message")
   )
 
-  override val helpToSaveEnabled: Boolean = configBoolean("helpToSave.enabled")
   override val balanceEnabled: Boolean = configBoolean("helpToSave.balanceEnabled")
   override val paidInThisMonthEnabled: Boolean = configBoolean("helpToSave.paidInThisMonthEnabled")
   override val firstBonusEnabled: Boolean = configBoolean("helpToSave.firstBonusEnabled")
@@ -125,7 +124,6 @@ trait NinoWithoutWtcMongoRepositoryConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait StartupControllerConfig {
   def shuttering: Shuttering
-  def helpToSaveEnabled: Boolean
   def balanceEnabled: Boolean
   def paidInThisMonthEnabled: Boolean
   def firstBonusEnabled: Boolean
@@ -149,7 +147,6 @@ trait TransactionControllerConfig {
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait UserServiceConfig {
-  def helpToSaveEnabled: Boolean
   def dailyInvitationCap: Int
   def balanceEnabled: Boolean
   def paidInThisMonthEnabled: Boolean
