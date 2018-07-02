@@ -18,9 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.data.EitherT
 import cats.instances.future._
-import cats.syntax.either._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTimeZone
+import play.api.LoggerLike
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.config.UserServiceConfig
 import uk.gov.hmrc.domain.Nino
@@ -34,6 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserService @Inject() (
+  logger: LoggerLike,
   invitationEligibilityService: InvitationEligibilityService,
   helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus,
   metrics: MobileHelpToSaveMetrics,
@@ -61,18 +62,20 @@ class UserService @Inject() (
     }
 
   private def userDetails(nino: Nino, state: UserState.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
-    val accountFEO: Future[Either[ErrorInfo, Option[Account]]] = if (state == UserState.Enrolled && anyAccountFeatureEnabled) {
-      accountService.account(nino).map(_.map(Some.apply))
-    } else {
-      Future successful Right(None)
-    }
-
-    accountFEO.map { accountEO =>
-      val (accountO, accountErrorO) = accountEO match {
-        case Right(aO) => (aO, None)
-        case Left(accountError) => (None, Some(accountError))
+    if (state == UserState.Enrolled && anyAccountFeatureEnabled) {
+      val accountFEO: Future[Either[ErrorInfo, Option[Account]]] = accountService.account(nino)
+      accountFEO.map { accountEO =>
+        val (accountO, accountErrorO) = accountEO match {
+          case Right(None) =>
+            logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+            (None, Some(ErrorInfo.General))
+          case Right(aO) => (aO, None)
+          case Left(accountError) => (None, Some(accountError))
+        }
+        UserDetails(state = state, account = accountO, accountError = accountErrorO)
       }
-      UserDetails(state = state, account = accountO, accountError = accountErrorO)
+    } else {
+      Future successful UserDetails(state = state, account = None, accountError = None)
     }
   }
 

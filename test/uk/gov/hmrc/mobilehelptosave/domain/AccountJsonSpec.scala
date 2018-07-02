@@ -31,6 +31,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
       .as[SchemaType]
 
   private val testAccount = Account(
+    number = "2000000000001",
     openedYearMonth = new YearMonth(2018, 5),
     isClosed = false,
     Blocking(false),

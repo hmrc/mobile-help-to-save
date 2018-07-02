@@ -25,16 +25,19 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.mobilehelptosave.TransactionTestData
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
+import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future._
 
-class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining with TransactionTestData {
+class HelpToSaveConnectorSpec
+  extends UnitSpec
+    with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining
+    with AccountTestData with TransactionTestData {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -42,6 +45,15 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
   private val ninoString = "AA000000A"
   private val nino = Nino(ninoString)
+
+  private def isAccountUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
+    case AbsoluteUrl("http", Authority(_, Host("help-to-save-service"), None), AbsolutePath(Vector("help-to-save", this.ninoString, "account")), query, _)
+      if query.param("systemId").contains("MDTP-MOBILE") =>
+      true
+    case _ =>
+      info(s"URL failed to match: $urlString")
+      false
+  }
 
   private def isTransactionsUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
     case AbsoluteUrl("http", Authority(_, Host("help-to-save-service"), None), AbsolutePath(Vector("help-to-save", this.ninoString, "account", "transactions")), query, _)
@@ -59,6 +71,73 @@ class HelpToSaveConnectorSpec extends UnitSpec with MockFactory with OneInstance
 
   private val config: HelpToSaveConnectorConfig = new HelpToSaveConnectorConfig {
     override val helpToSaveBaseUrl: URL = new URL(baseUrl)
+  }
+
+  "getAccount" should {
+
+    val errorMessage = """Couldn't get account from help-to-save service"""
+
+    "return a Right (with Account) when the help-to-save service returns a 2xx response" in {
+
+      val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveJsonString))))
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
+
+      await(connector.getAccount(nino)) shouldBe Right(Some(helpToSaveAccount))
+    }
+
+    "return Right(None) when the help-to-save service returns a 404 response" in {
+
+      val notFoundResponse = httpGet(isAccountUrlForNino _, HttpResponse(404))
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, notFoundResponse)
+
+      await(connector.getAccount(nino)) shouldBe Right(None)
+    }
+
+    "return a Left when there is an error connecting to the help-to-save service" in {
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, failed(new ConnectException("Connection refused"))))
+
+      await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
+
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(errorMessage, throwableWithMessageContaining("Connection refused"))
+    }
+
+    "return a Left when the help-to-save service returns a 4xx error" in {
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, HttpResponse(429)))
+
+      await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
+
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(errorMessage, throwableWithMessageContaining("429"))
+    }
+
+    "return a Left when the help-to-save service returns a 5xx error" in {
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, HttpResponse(500)))
+
+      await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
+
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(errorMessage, throwableWithMessageContaining("500"))
+    }
+
+    "return a Left[ErrorInfo] when help-to-save returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
+      val invalidJsonHttp = FakeHttpGet(
+        isAccountUrlForNino _,
+        HttpResponse(
+          200,
+          Some(Json.parse(accountReturnedByHelpToSaveInvalidJsonString))))
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, invalidJsonHttp)
+
+      await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
+
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify(
+        """Couldn't get account from help-to-save service""",
+        throwableWithMessageContaining("invalid json")
+      )
+    }
   }
 
   "getTransactions" should {

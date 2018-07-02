@@ -17,14 +17,16 @@
 package uk.gov.hmrc.mobilehelptosave.config
 
 import com.google.inject.AbstractModule
-import play.api.{Logger, LoggerLike}
+import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilehelptosave.api.{ApiServiceLocatorConnector, ServiceLocatorRegistrationTask}
+import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HelpToSaveAccountService, HelpToSaveProxyAccountService}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
-class GuiceModule extends AbstractModule {
+class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule {
+
   override def configure(): Unit = {
     bind(classOf[CoreGet]).to(classOf[DefaultHttpClient])
     bind(classOf[CorePost]).to(classOf[DefaultHttpClient])
@@ -33,5 +35,16 @@ class GuiceModule extends AbstractModule {
     bind(classOf[ServiceLocatorConnector]).to(classOf[ApiServiceLocatorConnector])
     bind(classOf[DocumentationController]).toInstance(DocumentationController)
     bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
+
+    bindAccountService()
+  }
+
+  private def bindAccountService(): Unit = {
+    configuration.getString("helpToSave.getAccountFrom", Some(Set("help-to-save", "help-to-save-proxy"))).map {
+      case "help-to-save" =>
+        bind(classOf[AccountService]).to(classOf[HelpToSaveAccountService])
+      case "help-to-save-proxy" =>
+        bind(classOf[AccountService]).to(classOf[HelpToSaveProxyAccountService])
+    }
   }
 }

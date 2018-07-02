@@ -87,7 +87,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
     "respond with a 404 if the user's NINO isn't found" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.userDoesNotHaveAnHTSAccount(nino)
+      HelpToSaveStub.userDoesNotHaveAnHtsAccount(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
 

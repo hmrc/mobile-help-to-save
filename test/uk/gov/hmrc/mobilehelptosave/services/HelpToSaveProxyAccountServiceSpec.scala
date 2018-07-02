@@ -29,14 +29,15 @@ import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
-class AccountServiceSpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout with EitherValues
+class HelpToSaveProxyAccountServiceSpec extends WordSpec with Matchers
+  with FutureAwaits with DefaultAwaitTimeout with EitherValues with OptionValues
   with MockFactory with OneInstancePerTest with LoggerStub {
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
 
   private val testNsiAccount = NsiAccount(
+    accountNumber = "",
     accountClosedFlag = "",
     accountBlockingCode = "00",
     clientBlockingCode = "00",
@@ -52,11 +53,15 @@ class AccountServiceSpec extends WordSpec with Matchers
 
   "account" should {
     "return account details for open, unblocked account" in {
-      val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(accountBalance = BigDecimal("123.45"))))
-      val service = new AccountServiceImpl(logger, connector)
+      val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(
+        accountNumber = "1100000000001",
+        accountBalance = BigDecimal("123.45")
+      )))
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val returnedAccount = await(service.account(nino)).right.value
+      val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.isClosed shouldBe false
+      returnedAccount.number shouldBe "1100000000001"
       returnedAccount.balance shouldBe BigDecimal("123.45")
       returnedAccount.blocked.unspecified shouldBe false
 
@@ -65,9 +70,9 @@ class AccountServiceSpec extends WordSpec with Matchers
 
     """accept accountClosedFlag = " " (space) to mean not closed""" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(accountClosedFlag = " ", accountBalance = BigDecimal("123.45"))))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val returnedAccount = await(service.account(nino)).right.value
+      val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.isClosed shouldBe false
       returnedAccount.balance shouldBe BigDecimal("123.45")
 
@@ -76,9 +81,9 @@ class AccountServiceSpec extends WordSpec with Matchers
 
     """return blocking.unspecified = true when accountBlockingCode is not "00"""" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(accountBlockingCode = "01")))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val returnedAccount = await(service.account(nino)).right.value
+      val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.blocked.unspecified shouldBe true
 
       (slf4jLoggerStub.warn(_: String)).verify(*).never()
@@ -86,9 +91,9 @@ class AccountServiceSpec extends WordSpec with Matchers
 
     """return blocking.unspecified = true when clientBlockingCode is not "00"""" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(clientBlockingCode = "01")))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val returnedAccount = await(service.account(nino)).right.value
+      val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.blocked.unspecified shouldBe true
 
       (slf4jLoggerStub.warn(_: String)).verify(*).never()
@@ -96,9 +101,9 @@ class AccountServiceSpec extends WordSpec with Matchers
 
     "log warning for unknown accountClosedFlag values" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(accountClosedFlag = "O", accountBalance = BigDecimal("123.45"))))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val returnedAccount = await(service.account(nino)).right.value
+      val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.isClosed shouldBe false
 
       (slf4jLoggerStub.warn(_: String)) verify """Unknown value for accountClosedFlag: "O""""
@@ -111,9 +116,9 @@ class AccountServiceSpec extends WordSpec with Matchers
         accountClosureDate = Some(new LocalDate(2018, 2, 16)),
         accountClosingBalance = Some(BigDecimal("123.45"))
       )))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val returnedAccount = await(service.account(nino)).right.value
+      val returnedAccount = await(service.account(nino)).right.value.value
       returnedAccount.isClosed shouldBe true
       returnedAccount.balance shouldBe BigDecimal(0)
       returnedAccount.closingBalance shouldBe Some(BigDecimal("123.45"))
@@ -129,9 +134,9 @@ class AccountServiceSpec extends WordSpec with Matchers
           investmentLimit = 50,
           endDate = new LocalDate(2019, 6, 23)
         ))))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val account = await(service.account(nino)).right.value
+      val account = await(service.account(nino)).right.value.value
       account.paidInThisMonth shouldBe BigDecimal("37.66")
       account.canPayInThisMonth shouldBe BigDecimal("12.34")
       account.maximumPaidInThisMonth shouldBe BigDecimal(50)
@@ -143,7 +148,7 @@ class AccountServiceSpec extends WordSpec with Matchers
     "return a Left when the payment amounts for current month don't make sense because investmentRemaining > investmentLimit" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(
         currentInvestmentMonth = testNsiAccount.currentInvestmentMonth.copy(investmentRemaining = BigDecimal("50.01"), investmentLimit = 50))))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -153,9 +158,9 @@ class AccountServiceSpec extends WordSpec with Matchers
     "return payment amounts for current month when investmentRemaining == investmentLimit (boundary case for previous test)" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(
         currentInvestmentMonth = testNsiAccount.currentInvestmentMonth.copy(investmentRemaining = 50, investmentLimit = 50))))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      val account = await(service.account(nino)).right.value
+      val account = await(service.account(nino)).right.value.value
       account.paidInThisMonth shouldBe BigDecimal(0)
       account.canPayInThisMonth shouldBe BigDecimal(50)
       account.maximumPaidInThisMonth shouldBe BigDecimal(50)
@@ -168,9 +173,9 @@ class AccountServiceSpec extends WordSpec with Matchers
         terms = Seq(
           NsiBonusTerm(termNumber = 1, startDate = new LocalDate(2018, 10, 23), endDate = new LocalDate(2020, 10, 22), bonusEstimate = BigDecimal("65.43"), bonusPaid = 0)))))
 
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      await(service.account(nino)).right.value.bonusTerms shouldBe Seq(
+      await(service.account(nino)).right.value.value.bonusTerms shouldBe Seq(
         BonusTerm(bonusEstimate = BigDecimal("65.43"), bonusPaid = 0, endDate = new LocalDate(2020, 10, 22), bonusPaidOnOrAfterDate = new LocalDate(2020, 10, 23))
       )
 
@@ -185,9 +190,9 @@ class AccountServiceSpec extends WordSpec with Matchers
           NsiBonusTerm(termNumber = 1, startDate = new LocalDate(2018, 1, 1), endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
         ))))
 
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      await(service.account(nino)).right.value.bonusTerms shouldBe Seq(
+      await(service.account(nino)).right.value.value.bonusTerms shouldBe Seq(
         BonusTerm(bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"), endDate = new LocalDate(2019, 12, 31), bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)),
         BonusTerm(bonusEstimate = 67, bonusPaid = 0, endDate = new LocalDate(2021, 12, 31), bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1))
       )
@@ -203,9 +208,9 @@ class AccountServiceSpec extends WordSpec with Matchers
           NsiBonusTerm(termNumber = 1, startDate = new LocalDate(2018, 1, 1), endDate = new LocalDate(2019, 12, 31), bonusEstimate = BigDecimal("123.45"), bonusPaid = BigDecimal("123.45"))
         ))))
 
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
-      await(service.account(nino)).right.value.openedYearMonth shouldBe new YearMonth(2018, 1)
+      await(service.account(nino)).right.value.value.openedYearMonth shouldBe new YearMonth(2018, 1)
 
       (slf4jLoggerStub.warn(_: String)).verify(*).never()
     }
@@ -215,7 +220,7 @@ class AccountServiceSpec extends WordSpec with Matchers
       val connector = fakeHelpToSaveProxyConnector(nino, Right(testNsiAccount.copy(
         terms = Seq.empty)))
 
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -224,7 +229,7 @@ class AccountServiceSpec extends WordSpec with Matchers
 
     "return a Left when the NS&I account cannot be retrieved" in {
       val connector = fakeHelpToSaveProxyConnector(nino, Left(ErrorInfo.General))
-      val service = new AccountServiceImpl(logger, connector)
+      val service = new HelpToSaveProxyAccountService(logger, connector)
 
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
     }

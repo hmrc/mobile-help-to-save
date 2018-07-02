@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import org.joda.time.{DateTime, LocalDate, ReadableInstant, YearMonth}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{EitherValues, OptionValues}
+import org.scalatest.{EitherValues, OneInstancePerTest, OptionValues}
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.commands.DefaultWriteResult
 import reactivemongo.core.errors.GenericDatabaseException
@@ -29,13 +29,17 @@ import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatu
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, MobileHelpToSaveMetrics, ShouldNotUpdateInvitationMetrics}
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository, ShouldNotBeCalledInvitationRepository}
+import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.collection.GenTraversable
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with EitherValues {
+class UserServiceSpec
+  extends UnitSpec
+    with MockFactory with OneInstancePerTest with LoggerStub
+    with OptionValues with EitherValues {
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -51,6 +55,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
   private val allTestNinos = Seq(nino, nino1, nino2, nino3, nino4)
 
   private val testAccount = Account(
+    number = "2000000000001",
     openedYearMonth = new YearMonth(2018, 5),
     isClosed = false,
     Blocking(false),
@@ -73,6 +78,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
     paidInThisMonthEnabled: Boolean = true,
     firstBonusEnabled: Boolean = true
   ) extends UserService(
+    logger,
     invitationEligibilityService,
     helpToSaveConnector,
     metrics,
@@ -138,7 +144,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
-        accountService = fakeAccountService(nino, Right(accountReturnedByAccountService))
+        accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService)))
       )
 
       "return state=Enrolled" in {
@@ -168,6 +174,30 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
       }
     }
 
+    "user is enrolled in Help to Save but no account exists in NS&I" should {
+
+      val accountReturnedByAccountService = testAccount
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = fakeAccountService(nino, Right(None))
+      )
+
+      "return state=Enrolled" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        user.state shouldBe UserState.Enrolled
+      }
+
+      "include accountError and log a warning" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        user.account shouldBe None
+        user.accountError shouldBe Some(ErrorInfo.General)
+        (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
+      }
+    }
+
     "user is enrolled in Help to Save and some but not all account-related feature flags are enabled" should {
 
       val accountReturnedByAccountService = testAccount
@@ -176,7 +206,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
-        accountService = fakeAccountService(nino, Right(accountReturnedByAccountService)),
+        accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService))),
         balanceEnabled = false,
         paidInThisMonthEnabled = false,
         firstBonusEnabled = true
@@ -482,8 +512,8 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
     }
   }
 
-  private def fakeAccountService(expectedNino: Nino, accountToReturn: Either[ErrorInfo, Account]): AccountService = new AccountService {
-    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] = {
+  private def fakeAccountService(expectedNino: Nino, accountToReturn: Either[ErrorInfo, Option[Account]]): AccountService = new AccountService {
+    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
       ec shouldBe passedEc
@@ -503,7 +533,7 @@ class UserServiceSpec extends UnitSpec with MockFactory with OptionValues with E
   }
 
   private lazy val shouldNotBeCalledAccountService = new AccountService {
-    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Account]] =
+    override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
       Future failed new RuntimeException("AccountService should not be called in this situation")
   }
 

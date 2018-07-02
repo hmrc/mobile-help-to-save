@@ -3,6 +3,13 @@
   "$schema": "http://json-schema.org/draft-06/schema#",
   "description": "The Help To Save account details",
   "properties": {
+    "number": {
+      "type": "string",
+      "description": "Help to Save account number",
+      "examples": [
+        "1000000000001"
+      ]
+    },
     "isClosed": {
       "type": "boolean",
       "description": "Is the account closed",

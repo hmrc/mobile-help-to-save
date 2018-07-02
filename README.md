@@ -48,7 +48,8 @@ Response format:
         // "payingIn": true,
         // "withdrawing": false,
         // "receivingBonus": false
-      }
+      },
+      "number":"1000000000001",
       "openedYearMonth": "2018-01",
       "isClosed": true,
       "closureDate": "2018-02-16",
@@ -106,6 +107,10 @@ If there is a problem obtaining the account data then the `user.account` object 
   }
 }
 ```
+
+If the `user.state` is not `Enrolled` or none of the feature flags that
+require account data are `true` then no attempt is made to fetch the account
+data and neither `user.account` nor `user.accountError` will be present.
 
 #### Shuttering
 When the Help to Save section of the app is shuttered then `shuttering.shuttered` will be true and other fields except for feature flags will be omitted:

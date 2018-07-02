@@ -57,7 +57,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
   }
 
   "nsiAccount" should {
-    "return the account when native-app-widget returns 200 OK" in {
+    "return the account when help-to-save-proxy returns 200 OK" in {
       val connector1 = new HelpToSaveProxyConnectorImpl(logger, config, FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
@@ -66,6 +66,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
+                |  "accountNumber": "1100000000001",
                 |  "accountBalance": "200.34",
                 |  "accountClosedFlag": "",
                 |  "accountBlockingCode": "00",
@@ -96,6 +97,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
           ))))
 
       await(connector1.nsiAccount(nino)) shouldBe Right(NsiAccount(
+        accountNumber = "1100000000001",
         accountClosedFlag = "",
         accountBlockingCode = "00",
         clientBlockingCode = "00",
@@ -118,6 +120,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
             Json.parse(
               """
                 |{
+                |  "accountNumber": "1100000000002",
                 |  "accountBalance": "0.00",
                 |  "accountClosedFlag": "C",
                 |  "accountBlockingCode": "T1",
@@ -135,6 +138,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
           ))))
 
       await(connector2.nsiAccount(nino)) shouldBe Right(NsiAccount(
+        accountNumber = "1100000000002",
         accountClosedFlag = "C",
         accountBlockingCode = "T1",
         clientBlockingCode ="client blocking test",
@@ -167,6 +171,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
                   Json.parse(
                     """
                       |{
+                      |  "accountNumber":"1100000000001",
                       |  "accountClosedFlag": "",
                       |  "accountBlockingCode": "00",
                       |  "clientBlockingCode": "00",
@@ -189,6 +194,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       val connector = new HelpToSaveProxyConnectorImpl(logger, config, http)
 
       await(connector.nsiAccount(nino)) shouldBe Right(NsiAccount(
+        accountNumber = "1100000000001",
         accountClosedFlag = "",
         accountBlockingCode = "00",
         clientBlockingCode = "00",
@@ -203,7 +209,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       sentCorrelationId.value.length should be <= 38
     }
 
-    "return a Left[ErrorInfo] when there is an error connecting to native-app-widget" in {
+    "return a Left[ErrorInfo] when there is an error connecting to help-to-save-proxy" in {
       val connectionRefusedHttp = FakeHttpGet(
         isAccountUrlForNino _,
         Future {
@@ -220,7 +226,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return a Left[ErrorInfo] when native-app-widget returns a 4xx error" in {
+    "return a Left[ErrorInfo] when help-to-save-proxy returns a 4xx error" in {
       val error4xxHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(429))
@@ -235,7 +241,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return a Left[ErrorInfo] when native-app-widget returns a 5xx error" in {
+    "return a Left[ErrorInfo] when help-to-save-proxy returns a 5xx error" in {
       val error5xxHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(500))
@@ -250,7 +256,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
       )
     }
 
-    "return a Left[ErrorInfo] when native-app-widget returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
+    "return a Left[ErrorInfo] when help-to-save-proxy returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
       val invalidJsonHttp = FakeHttpGet(
         isAccountUrlForNino _,
         HttpResponse(
@@ -260,6 +266,7 @@ class HelpToSaveProxyConnectorSpec extends WordSpec with Matchers with MockFacto
               // invalid because required field bonusPaid is omitted from first term
               """
                 |{
+                |  "accountNumber":"1100000000001",
                 |  "accountBalance": "123.45",
                 |  "currentInvestmentMonth": {
                 |    "investmentRemaining": "15.50",
