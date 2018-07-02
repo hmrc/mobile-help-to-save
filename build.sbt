@@ -34,7 +34,6 @@ PlayKeys.playDefaultPort := 8248
 scalacOptions += "-Ypartial-unification"
 
 AppDependencies.appDependencies
-retrieveManaged := true
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
 
 unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon"
