@@ -38,7 +38,6 @@ case class MobileHelpToSaveConfig @Inject()(
     with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
     with HelpToSaveProxyConnectorConfig
-    with NativeAppWidgetConnectorConfig
     with NinoWithoutWtcMongoRepositoryConfig
     with StartupControllerConfig
     with TaxCreditsBrokerConnectorConfig
@@ -51,7 +50,6 @@ case class MobileHelpToSaveConfig @Inject()(
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
   override val helpToSaveProxyBaseUrl: URL = configBaseUrl("help-to-save-proxy")
-  override val nativeAppWidgetBaseUrl: URL = configBaseUrl("native-app-widget")
   override val taxCreditsBrokerBaseUrl: URL = configBaseUrl("tax-credits-broker")
 
   override val shuttering: Shuttering = Shuttering(
@@ -72,7 +70,6 @@ case class MobileHelpToSaveConfig @Inject()(
   override val dailyInvitationCap: Int = configInt("helpToSave.dailyInvitationCap")
   override val taxCreditsCacheExpireAfterSeconds: Long = configLong("helpToSave.taxCreditsCache.expireAfterSeconds")
 
-  override val surveyInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.survey")
   override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
@@ -109,11 +106,6 @@ trait HelpToSaveConnectorConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveProxyConnectorConfig {
   def helpToSaveProxyBaseUrl: URL
-}
-
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait NativeAppWidgetConnectorConfig {
-  def nativeAppWidgetBaseUrl: URL
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])

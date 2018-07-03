@@ -21,6 +21,5 @@ import uk.gov.hmrc.config.MobileHelpToSaveConfig
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait EnabledInvitationFilters {
-  def surveyInvitationFilter: Boolean
   def workingTaxCreditsInvitationFilter: Boolean
 }

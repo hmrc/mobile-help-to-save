@@ -35,7 +35,6 @@ class InvitationWorkingTaxCreditsFilterISpec extends WordSpec with Matchers
   override implicit lazy val app: Application = appBuilder
     .configure(
       InvitationConfig.Enabled,
-      "helpToSave.invitationFilters.survey" -> "false",
       "helpToSave.invitationFilters.workingTaxCredits" -> "true"
     )
     .overrides(bind[Clock].toInstance(fixedClock))

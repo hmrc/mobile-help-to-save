@@ -32,7 +32,6 @@ class StartupISpec extends WordSpec with Matchers
     .configure(
       "helpToSave.getAccountFrom" -> "help-to-save",
       InvitationConfig.Enabled,
-      "helpToSave.invitationFilters.survey" -> "false",
       "helpToSave.invitationFilters.workingTaxCredits" -> "false",
       "helpToSave.balanceEnabled" -> true,
       "helpToSave.paidInThisMonthEnabled" -> true,

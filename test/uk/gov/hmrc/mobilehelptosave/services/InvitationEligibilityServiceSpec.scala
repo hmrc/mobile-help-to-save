@@ -37,40 +37,11 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
   "userIsEligibleToBeInvited" when {
     "all filters are disabled" should {
       val enabledFilters = TestEnabledInvitationFilters(
-        surveyInvitationFilter = false,
         workingTaxCreditsInvitationFilter = false
       )
 
       "return true regardless of the user's characteristics" in {
         val service = new InvitationEligibilityServiceImpl(
-          shouldNotBeCalledSurveyService,
-          shouldNotBeCalledTaxCreditsService,
-          enabledFilters
-        )
-
-        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe true
-      }
-    }
-
-    "survey invitation filter is enabled" should {
-      val enabledFilters = TestEnabledInvitationFilters(
-        surveyInvitationFilter = true,
-        workingTaxCreditsInvitationFilter = false
-      )
-
-      "return false if the user has not said they wanted to be contacted in the survey" in {
-        val service = new InvitationEligibilityServiceImpl(
-          fakeSurveyService(wantsToBeContacted = Right(false)),
-          shouldNotBeCalledTaxCreditsService,
-          enabledFilters
-        )
-
-        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe false
-      }
-
-      "return true if the user has said they wanted to be contacted in the survey" in {
-        val service = new InvitationEligibilityServiceImpl(
-          fakeSurveyService(wantsToBeContacted = Right(true)),
           shouldNotBeCalledTaxCreditsService,
           enabledFilters
         )
@@ -81,13 +52,11 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
 
     "Working Tax Credits filter is enabled" should {
       val enabledFilters = TestEnabledInvitationFilters(
-        surveyInvitationFilter = false,
         workingTaxCreditsInvitationFilter = true
       )
 
       "return false if the user does not have recent WTC payments" in {
         val service = new InvitationEligibilityServiceImpl(
-          shouldNotBeCalledSurveyService,
           fakeTaxCreditsService(nino, wtc = false),
           enabledFilters
         )
@@ -97,7 +66,6 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
 
       "return true if the user has recent WTC payments" in {
         val service = new InvitationEligibilityServiceImpl(
-          shouldNotBeCalledSurveyService,
           fakeTaxCreditsService(nino, wtc = true),
           enabledFilters
         )
@@ -105,36 +73,6 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
         await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe true
       }
     }
-
-    "both filters are enabled" should {
-      val enabledFilters = TestEnabledInvitationFilters(
-        surveyInvitationFilter = true,
-        workingTaxCreditsInvitationFilter = true
-      )
-
-      "return false when survey filter accepts user but WTC filter rejects them" in {
-        val service = new InvitationEligibilityServiceImpl(
-          fakeSurveyService(wantsToBeContacted = Right(true)),
-          fakeTaxCreditsService(nino, wtc = false),
-          enabledFilters
-        )
-
-        await(service.userIsEligibleToBeInvited(nino)).right.value shouldBe false
-      }
-    }
-  }
-
-  private def fakeSurveyService(wantsToBeContacted: Either[ErrorInfo, Boolean]) = new SurveyService {
-    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
-      hc shouldBe passedHc
-      ec shouldBe passedEc
-
-      Future successful wantsToBeContacted
-    }
-  }
-
-  private val shouldNotBeCalledSurveyService = new SurveyService {
-    override def userWantsToBeContacted()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = Future failed new RuntimeException("SurveyService should not be called in this situation")
   }
 
   private def fakeTaxCreditsService(expectedNino: Nino, wtc: Boolean) = new TaxCreditsService {
@@ -154,6 +92,5 @@ class InvitationEligibilityServiceSpec extends WordSpec with Matchers
 }
 
 private case class TestEnabledInvitationFilters(
-  surveyInvitationFilter: Boolean,
   workingTaxCreditsInvitationFilter: Boolean
 ) extends EnabledInvitationFilters
