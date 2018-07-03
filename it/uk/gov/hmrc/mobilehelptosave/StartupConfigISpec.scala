@@ -21,7 +21,7 @@ import java.util.Base64
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
@@ -42,48 +42,12 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
   private val base64Encoder = Base64.getEncoder
 
   "GET /mobile-help-to-save/startup" should {
-    "return enabled=true when configuration value helpToSave.enabled=true" in withTestServerAndMongoCleanup(
-      appBuilder
-        .configure("helpToSave.enabled" -> true)
-        .configure(InvitationConfig.NoFilters: _*)
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "enabled").as[Boolean] shouldBe true
-    }
-
-    "return enabled=false, omit all other fields from the response and not call help-to-save when configuration value helpToSave.enabled=false" in withTestServerAndMongoCleanup(
-      appBuilder
-        .configure("helpToSave.enabled" -> false)
-        .configure(InvitationConfig.NoFilters: _*)
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "enabled").as[Boolean] shouldBe false
-      response.json.as[JsObject] - "enabled" shouldBe Json.obj()
-
-      HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
-    }
-
     "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndMongoCleanup(
       appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
           "helpToSave.shuttering.title" -> base64Encode("Shuttered"),
           "helpToSave.shuttering.message" -> base64Encode("HTS is currently not available"),
-          "helpToSave.enabled" -> true,
           "helpToSave.savingRemindersEnabled" -> true
         )
         .configure(InvitationConfig.NoFilters: _*)
@@ -114,7 +78,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> false,
-          "helpToSave.enabled" -> true,
           "helpToSave.shareInvitationEnabled" -> true,
           "helpToSave.savingRemindersEnabled" -> true,
           "helpToSave.balanceEnabled" -> false,
@@ -142,7 +105,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
     "include feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
       appBuilder
-        .configure("helpToSave.enabled" -> true)
         .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber

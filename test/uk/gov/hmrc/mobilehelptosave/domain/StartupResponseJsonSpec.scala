@@ -21,9 +21,9 @@ import play.api.libs.json.Json
 
 class StartupResponseJsonSpec extends WordSpec with Matchers {
 
-  "EnabledStartupResponse JSON" should {
+  "StartupResponse JSON" should {
     """include "enabled": true""" in {
-      val response = EnabledStartupResponse(
+      val response = StartupResponse(
         Shuttering(shuttered = false, "", ""),
         None, None, None, None, None,
         balanceEnabled = false, paidInThisMonthEnabled = false, firstBonusEnabled = false,
@@ -33,12 +33,4 @@ class StartupResponseJsonSpec extends WordSpec with Matchers {
       (json \ "enabled").as[Boolean] shouldBe true
     }
   }
-
-  "DisabledStartupResponse JSON" should {
-    """include "enabled": false""" in {
-      val json = Json.toJson(DisabledStartupResponse)
-      (json \ "enabled").as[Boolean] shouldBe false
-    }
-  }
-
 }

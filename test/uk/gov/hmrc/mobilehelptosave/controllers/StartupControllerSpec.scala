@@ -50,7 +50,6 @@ class StartupControllerSpec
 
   private val config = TestStartupControllerConfig(
     falseShuttering,
-    helpToSaveEnabled = true,
     balanceEnabled = false,
     paidInThisMonthEnabled = false,
     firstBonusEnabled = false,
@@ -66,10 +65,9 @@ class StartupControllerSpec
 
   "startup" should {
     "pass internalAuthId and NINO obtained from auth into userService" in {
-
       (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Right(Some(testUserDetails.copy(state = UserState.Invited))))
+        .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
 
       val controller = new StartupController(
         mockUserService,
@@ -80,8 +78,6 @@ class StartupControllerSpec
     }
 
     "check permissions using AuthorisedWithIds" in {
-      val mockUserService = mock[UserService]
-
       val controller = new StartupController(
         mockUserService,
         NeverAuthorisedWithIds,
@@ -99,12 +95,9 @@ class StartupControllerSpec
         config)
 
       "include URLs and user in response" in {
-        val generator = new Generator(0)
-        val nino = generator.nextNino
-
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Right(Some(testUserDetails.copy(state = UserState.Invited))))
+          .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -119,7 +112,7 @@ class StartupControllerSpec
       "include shuttering information in response with shuttered = false" in {
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Right(Some(testUserDetails.copy(state = UserState.Invited))))
+          .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -154,24 +147,6 @@ class StartupControllerSpec
       }
     }
 
-    "helpToSaveEnabled = false" should {
-      val controller = new StartupController(
-        mockUserService,
-        new AlwaysAuthorisedWithIds(internalAuthId, nino),
-        config.copy(helpToSaveEnabled = false))
-
-      "omit URLs and user from response" in {
-        val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
-        val jsonBody = contentAsJson(resultF)
-        val jsonKeys = jsonBody.as[JsObject].keys
-        jsonKeys should not contain "user"
-        jsonKeys should not contain "infoUrl"
-        jsonKeys should not contain "invitationUrl"
-        jsonKeys should not contain "accessAccountUrl"
-      }
-    }
-
     "helpToSaveShuttered = true" should {
       val controller = new StartupController(
         mockUserService,
@@ -199,8 +174,6 @@ class StartupControllerSpec
       }
 
       "continue to include feature flags because some of them take priority over shuttering" in {
-        val mockUserService = mock[UserService]
-
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
@@ -238,7 +211,6 @@ class StartupControllerSpec
 case class TestStartupControllerConfig(
   shuttering: Shuttering,
 
-  helpToSaveEnabled: Boolean,
   balanceEnabled: Boolean,
   paidInThisMonthEnabled: Boolean,
   firstBonusEnabled: Boolean,

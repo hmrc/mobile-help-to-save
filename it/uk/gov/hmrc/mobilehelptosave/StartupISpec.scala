@@ -45,6 +45,15 @@ class StartupISpec extends WordSpec with Matchers
 
   "GET /mobile-help-to-save/startup" should {
 
+    "return enabled=true for backwards compatibility until we do NGC-3244" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+
+      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      response.status shouldBe 200
+      (response.json \ "enabled").as[Boolean] shouldBe true
+    }
+
     "include user.state and user.account" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()

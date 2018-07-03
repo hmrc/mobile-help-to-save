@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import org.joda.time.{DateTime, LocalDate, ReadableInstant, YearMonth}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{EitherValues, OneInstancePerTest, OptionValues}
+import org.scalatest.{EitherValues, OneInstancePerTest}
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.commands.DefaultWriteResult
 import reactivemongo.core.errors.GenericDatabaseException
@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, MobileHelpToSaveMetrics, ShouldNotUpdateInvitationMetrics}
-import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository, ShouldNotBeCalledInvitationRepository}
+import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -39,7 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserServiceSpec
   extends UnitSpec
     with MockFactory with OneInstancePerTest with LoggerStub
-    with OptionValues with EitherValues {
+    with EitherValues {
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -72,7 +72,6 @@ class UserServiceSpec
     invitationRepository: InvitationRepository,
     accountService: AccountService = fakeAccountService(nino, Left(ErrorInfo.General)),
     clock: Clock = fixedClock,
-    helpToSaveEnabled: Boolean = true,
     dailyInvitationCap: Int = 1000,
     balanceEnabled: Boolean = true,
     paidInThisMonthEnabled: Boolean = true,
@@ -86,7 +85,6 @@ class UserServiceSpec
     accountService,
     clock,
     config = TestUserServiceConfig(
-    helpToSaveEnabled = helpToSaveEnabled,
     dailyInvitationCap = dailyInvitationCap,
     balanceEnabled = balanceEnabled,
     paidInThisMonthEnabled = paidInThisMonthEnabled,
@@ -95,18 +93,6 @@ class UserServiceSpec
   )
 
   "userDetails" should {
-    "return Right(None) and not call the connector when Help to Save is not enabled" in {
-      val service = new UserServiceWithTestDefaults(
-        shouldNotBeCalledInvitationEligibilityService,
-        shouldNotBeCalledHelpToSaveConnector,
-        ShouldNotUpdateInvitationMetrics,
-        ShouldNotBeCalledInvitationRepository,
-        helpToSaveEnabled = false
-      )
-
-      await(service.userDetails(internalAuthId, nino)) shouldBe Right(None)
-    }
-
     "return state=Enrolled when the current user is enrolled in Help to Save, even if they are eligible to be invited" in {
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(true)),
@@ -115,7 +101,7 @@ class UserServiceSpec
         new FakeInvitationRepository
       )
 
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
       user.state shouldBe UserState.Enrolled
     }
 
@@ -130,7 +116,7 @@ class UserServiceSpec
         repository
       )
 
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
       user.state shouldBe UserState.Enrolled
     }
   }
@@ -148,12 +134,12 @@ class UserServiceSpec
       )
 
       "return state=Enrolled" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.state shouldBe UserState.Enrolled
       }
 
       "include account information" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
     }
@@ -168,7 +154,7 @@ class UserServiceSpec
       )
 
       "include accountError" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.account shouldBe None
         user.accountError shouldBe Some(ErrorInfo.General)
       }
@@ -176,7 +162,6 @@ class UserServiceSpec
 
     "user is enrolled in Help to Save but no account exists in NS&I" should {
 
-      val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
@@ -186,12 +171,12 @@ class UserServiceSpec
       )
 
       "return state=Enrolled" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.state shouldBe UserState.Enrolled
       }
 
       "include accountError and log a warning" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.account shouldBe None
         user.accountError shouldBe Some(ErrorInfo.General)
         (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
@@ -213,7 +198,7 @@ class UserServiceSpec
       )
 
       "include account information" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
     }
@@ -232,7 +217,7 @@ class UserServiceSpec
 
       "not call accountService" in {
         // lack of call to accountService is checked by use of shouldNotBeCalledAccountService when constructing UserService
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.account shouldBe None
       }
     }
@@ -253,7 +238,7 @@ class UserServiceSpec
           invitationRepo
         )
 
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.state shouldBe UserState.InvitedFirstTime
 
         await(invitationRepo.findById(internalAuthId)).value.created shouldBe fixedClock.now()
@@ -271,9 +256,9 @@ class UserServiceSpec
           new FakeInvitationRepository
         )
 
-        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.Invited
-        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.Invited
+        await(service.userDetails(internalAuthId, nino)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(internalAuthId, nino)).right.value.state shouldBe UserState.Invited
+        await(service.userDetails(internalAuthId, nino)).right.value.state shouldBe UserState.Invited
 
         metrics.invitationCounter.getCount shouldBe 1
       }
@@ -306,7 +291,7 @@ class UserServiceSpec
           .when(*, *)
           .returns(Future successful 0)
 
-        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.Invited
+        await(service.userDetails(internalAuthId, nino)).right.value.state shouldBe UserState.Invited
       }
 
       "not change state from NotEnrolled to InvitedFirstTime when the daily cap has been reached" in {
@@ -321,11 +306,11 @@ class UserServiceSpec
           dailyInvitationCap = 3
         )
 
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).right.value.state shouldBe UserState.InvitedFirstTime
         val capExceededInternalAuthId = InternalAuthId("test-internal-auth-id-4")
-        await(service.userDetails(capExceededInternalAuthId, nino4)).right.value.value.state shouldBe UserState.NotEnrolled
+        await(service.userDetails(capExceededInternalAuthId, nino4)).right.value.state shouldBe UserState.NotEnrolled
 
         await(invitationRepo.findById(capExceededInternalAuthId)) shouldBe None
 
@@ -345,15 +330,15 @@ class UserServiceSpec
         )
 
         // fill up the cap
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.state shouldBe UserState.InvitedFirstTime
         val successfullyInvitedInternalAuthid = InternalAuthId("test-internal-auth-id-3")
         val successfullyInvitedNino = nino3
-        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-4"), nino4)).right.value.value.state shouldBe UserState.NotEnrolled
+        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-4"), nino4)).right.value.state shouldBe UserState.NotEnrolled
 
         // check an already-invited user's status again
-        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).right.value.value.state shouldBe UserState.Invited
+        await(service.userDetails(successfullyInvitedInternalAuthid, successfullyInvitedNino)).right.value.state shouldBe UserState.Invited
 
         metrics.invitationCounter.getCount shouldBe 3
       }
@@ -372,15 +357,15 @@ class UserServiceSpec
           dailyInvitationCap = 3
         )
 
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
-        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-3"), nino3)).right.value.state shouldBe UserState.InvitedFirstTime
         val capExceededInternalAuthId = InternalAuthId("test-internal-auth-id-4")
         val capExceededNino = nino4
-        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).right.value.value.state shouldBe UserState.NotEnrolled
+        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).right.value.state shouldBe UserState.NotEnrolled
 
         clock.time = clock.time.plusDays(1)
-        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(capExceededInternalAuthId, capExceededNino)).right.value.state shouldBe UserState.InvitedFirstTime
 
         metrics.invitationCounter.getCount shouldBe 4
       }
@@ -423,7 +408,7 @@ class UserServiceSpec
           .expects(sameInstant(midnightBst), *)
           .never()
 
-        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(internalAuthId, nino)).right.value.state shouldBe UserState.InvitedFirstTime
       }
 
       "return state=InvitedFirstTime even when a different user has already been invited" in {
@@ -436,9 +421,9 @@ class UserServiceSpec
           new FakeInvitationRepository
         )
 
-        await(service.userDetails(internalAuthId, nino)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(internalAuthId, nino)).right.value.state shouldBe UserState.InvitedFirstTime
         val otherInternalAuthId = InternalAuthId("other-test-internal-auth-id")
-        await(service.userDetails(otherInternalAuthId, nino2)).right.value.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(otherInternalAuthId, nino2)).right.value.state shouldBe UserState.InvitedFirstTime
 
         metrics.invitationCounter.getCount shouldBe 2
       }
@@ -457,7 +442,7 @@ class UserServiceSpec
           new FakeInvitationRepository
         )
 
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value.value
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
         user.state shouldBe UserState.NotEnrolled
       }
     }
@@ -542,7 +527,6 @@ class UserServiceSpec
 }
 
 private case class TestUserServiceConfig(
-  helpToSaveEnabled: Boolean,
   dailyInvitationCap: Int,
   balanceEnabled: Boolean,
   paidInThisMonthEnabled: Boolean,

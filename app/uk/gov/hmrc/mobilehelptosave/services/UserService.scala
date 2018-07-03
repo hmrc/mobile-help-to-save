@@ -44,7 +44,7 @@ class UserService @Inject() (
   config: UserServiceConfig
 ) {
 
-  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] = whenEnabled {
+  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {
     (for {
       enrolled <- EitherT(helpToSaveConnector.enrolmentStatus())
       state <- EitherT(determineState(internalAuthId, nino, enrolled))
@@ -53,13 +53,6 @@ class UserService @Inject() (
       userDetails
     }).value
   }
-
-  private def whenEnabled[T](body: => Future[Either[ErrorInfo, UserDetails]])(implicit ec: ExecutionContext): Future[Either[ErrorInfo, Option[UserDetails]]] =
-    if (config.helpToSaveEnabled) {
-      EitherT(body).map(Some.apply).value
-    } else {
-      Future successful Right(None)
-    }
 
   private def userDetails(nino: Nino, state: UserState.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
     if (state == UserState.Enrolled && anyAccountFeatureEnabled) {
