@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave
 object InvitationConfig {
   val Enabled: (String, Any) = "helpToSave.dailyInvitationCap" -> 1000000
   val NoFilters: Seq[(String, Any)] = Seq(
-    "helpToSave.invitationFilters.survey" -> "false",
     "helpToSave.invitationFilters.workingTaxCredits" -> "false"
   )
 }

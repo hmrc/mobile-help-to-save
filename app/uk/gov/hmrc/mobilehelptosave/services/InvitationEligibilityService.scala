@@ -34,7 +34,6 @@ trait InvitationEligibilityService {
 
 @Singleton
 class InvitationEligibilityServiceImpl @Inject() (
-  surveyService: SurveyService,
   taxCreditsService: TaxCreditsService,
   enabledFilters: EnabledInvitationFilters
 ) extends InvitationEligibilityService {
@@ -42,17 +41,13 @@ class InvitationEligibilityServiceImpl @Inject() (
   override def userIsEligibleToBeInvited(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
     val trueFE = Future successful Right(true)
 
-    val surveyFE = if (enabledFilters.surveyInvitationFilter) surveyService.userWantsToBeContacted()
-    else trueFE
-
     val wtcFE = if (enabledFilters.workingTaxCreditsInvitationFilter) taxCreditsService.hasRecentWtcPayments(nino)
     else trueFE
 
     (for {
-      survey <- EitherT(surveyFE)
       wtc <- EitherT(wtcFE)
     } yield {
-      survey && wtc
+      wtc
     }).value
   }
 }

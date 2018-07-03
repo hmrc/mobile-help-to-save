@@ -38,7 +38,6 @@ class LegacyStartupISpec extends WordSpec with Matchers
     .configure(
       "helpToSave.getAccountFrom" -> "help-to-save-proxy",
       InvitationConfig.Enabled,
-      "helpToSave.invitationFilters.survey" -> "false",
       "helpToSave.invitationFilters.workingTaxCredits" -> "false",
       "helpToSave.balanceEnabled" -> true,
       "helpToSave.paidInThisMonthEnabled" -> true,
