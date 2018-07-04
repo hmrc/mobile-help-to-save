@@ -73,12 +73,12 @@ class TransactionsControllerSpec
 
         (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(nino, *, *)
-          .returning(Future successful Right(Some(transactions)))
+          .returning(Future successful Right(Some(transactionsSortedInHelpToSaveOrder)))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
-        jsonBody shouldBe Json.toJson(transactions)
+        jsonBody shouldBe Json.toJson(transactionsSortedInMobileHelpToSaveOrder)
       }
     }
 
