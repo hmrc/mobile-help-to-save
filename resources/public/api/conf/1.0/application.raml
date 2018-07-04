@@ -95,7 +95,7 @@ traits:
     is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
     get:
       displayName: Get transactions
-      description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned.
+      description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned. Transactions will be returned in the reverse of the order they were applied to the account (i.e. newest first).
       (annotations.scope): "read:native-apps-api-orchestration"
       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
       responses:

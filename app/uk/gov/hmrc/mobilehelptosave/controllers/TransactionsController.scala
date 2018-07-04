@@ -59,7 +59,7 @@ class TransactionsController @Inject()
             helpToSaveConnector.getTransactions(ninoAsNino).map { transactionsOrError: Either[ErrorInfo, Option[Transactions]] =>
               transactionsOrError.fold(
                 errorInfo => InternalServerError(Json.toJson(errorInfo)),
-                maybeTransactions => maybeTransactions.fold(AccountNotFound)(transactions => Ok(Json.toJson(transactions)))
+                maybeTransactions => maybeTransactions.fold(AccountNotFound)(transactions => Ok(Json.toJson(transactions.reverse)))
               )
             }
           } else {

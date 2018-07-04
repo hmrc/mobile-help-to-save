@@ -22,7 +22,7 @@ import cats.Eq
 import play.api.libs.json._
 
 sealed trait Operation {
-  def stringValue =  this match {
+  def stringValue: String = this match {
     case Credit => "credit"
     case Debit  => "debit"
   }
@@ -58,7 +58,9 @@ object Transaction {
   implicit val format: OFormat[Transaction] = Json.format[Transaction]
 }
 
-case class Transactions(transactions: Seq[Transaction])
+case class Transactions(transactions: Seq[Transaction]) {
+  def reverse = Transactions(transactions.reverse)
+}
 
 object Transactions {
 
