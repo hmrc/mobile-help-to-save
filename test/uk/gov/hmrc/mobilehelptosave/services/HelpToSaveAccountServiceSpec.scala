@@ -40,7 +40,7 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
     "convert the account from the help-to-save domain to the mobile-help-to-save domain" in {
       val connector = fakeHelpToSaveConnector(nino, Right(Some(helpToSaveAccount)))
       val service = new HelpToSaveAccountService(connector)
-      await(service.account(nino)) shouldBe Right(Some(account))
+      await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount))
     }
 
     "return None when no account was found" in {

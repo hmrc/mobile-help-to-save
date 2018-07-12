@@ -41,7 +41,7 @@ case class MobileHelpToSaveConfig @Inject()(
     with NinoWithoutWtcMongoRepositoryConfig
     with StartupControllerConfig
     with TaxCreditsBrokerConnectorConfig
-    with TransactionControllerConfig
+    with HelpToSaveControllerConfig
     with UserServiceConfig {
 
   override protected lazy val mode: Mode = environment.mode
@@ -124,7 +124,7 @@ trait StartupControllerConfig {
   def transactionsEnabled: Boolean
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
-  def helpToSaveAccessAccountUrl: String  
+  def helpToSaveAccessAccountUrl: String
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
@@ -133,7 +133,7 @@ trait TaxCreditsBrokerConnectorConfig {
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait TransactionControllerConfig {
+trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
 }
 

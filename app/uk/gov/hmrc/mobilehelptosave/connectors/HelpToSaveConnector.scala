@@ -24,7 +24,7 @@ import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json.{JsValue, Json, OFormat, Reads}
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
@@ -52,14 +52,15 @@ trait HelpToSaveConnectorGetTransactions {
   def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]]
 }
 
+@ImplementedBy(classOf[HelpToSaveConnectorImpl])
+trait HelpToSaveApi extends  HelpToSaveConnectorGetTransactions with HelpToSaveConnectorGetAccount with HelpToSaveConnectorEnrolmentStatus
+
 @Singleton
 class HelpToSaveConnectorImpl @Inject() (
   logger: LoggerLike,
   config: HelpToSaveConnectorConfig,
   http: CoreGet)
-  extends HelpToSaveConnectorEnrolmentStatus
-    with HelpToSaveConnectorGetAccount
-    with HelpToSaveConnectorGetTransactions {
+  extends HelpToSaveApi {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
@@ -124,5 +125,5 @@ case class HelpToSaveAccount(
 )
 
 object HelpToSaveAccount {
-  implicit val reads: Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
+  implicit val format: OFormat[HelpToSaveAccount] = Json.format[HelpToSaveAccount]
 }
