@@ -1,3 +1,5 @@
 # microservice specific routes
 
-GET    /savings-account/:nino/transactions    uk.gov.hmrc.mobilehelptosave.controllers.TransactionsController.getTransactions(nino:String)
+GET    /savings-account/:nino/transactions    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino:String)
+
+GET    /savings-account/:nino                 uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino:String)

@@ -83,7 +83,7 @@ trait AccountTestData {
   )
 
   /** An Account object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
-  protected val account: Account = Account(
+  protected val mobileHelpToSaveAccount: Account = Account(
     number = "1000000000001",
     openedYearMonth = new YearMonth(2018, 1),
     isClosed = false,
