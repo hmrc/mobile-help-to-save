@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest._
 import play.api.Application
-import play.api.http.Status
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
@@ -48,7 +47,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
 
-      response.status shouldBe Status.OK
+      response.status shouldBe 200
 
       (response.json \ "number").as[String] shouldBe "1000000000001"
       (response.json \ "openedYearMonth").as[String] shouldBe "2018-01"
@@ -79,7 +78,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
 
-      response.status shouldBe Status.NOT_FOUND
+      response.status shouldBe 404
 
       (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
@@ -92,7 +91,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
 
-      response.status shouldBe Status.INTERNAL_SERVER_ERROR
+      response.status shouldBe 500
 
       (response.json\ "code").as[String] shouldBe "GENERAL"
     }
@@ -104,7 +103,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
 
-      response.status shouldBe Status.INTERNAL_SERVER_ERROR
+      response.status shouldBe 500
 
       (response.json\ "code").as[String] shouldBe "GENERAL"
     }
