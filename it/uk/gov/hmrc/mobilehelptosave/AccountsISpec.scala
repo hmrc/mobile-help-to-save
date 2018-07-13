@@ -73,6 +73,42 @@ class AccountsISpec extends WordSpec with Matchers
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
     }
 
+    "respond with 404 and account not found" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      response.status shouldBe Status.NOT_FOUND
+
+      (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+    }
+
+    "respond with 500 with general error message body when get account fails" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountReturnsInternalServerError(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      response.status shouldBe Status.INTERNAL_SERVER_ERROR
+
+      (response.json\ "code").as[String] shouldBe "GENERAL"
+    }
+
+    "respond with 500 with general error message body when get account returns JSON that doesn't conform to the schema" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountReturnsInvalidJson(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      response.status shouldBe Status.INTERNAL_SERVER_ERROR
+
+      (response.json\ "code").as[String] shouldBe "GENERAL"
+    }
+
     "include account closure fields when account is closed" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
@@ -86,13 +122,13 @@ class AccountsISpec extends WordSpec with Matchers
 
       (response.json \ "isClosed").as[Boolean] shouldBe true
       (response.json \ "closureDate").as[String] shouldBe "2018-04-09"
-      shouldBeBigDecimal(response.json \ "closingBalance", 10)
+      shouldBeBigDecimal(response.json \ "closingBalance", BigDecimal(10))
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
-      shouldBeBigDecimal(response.json \ "balance", 0)
-      shouldBeBigDecimal(response.json \ "paidInThisMonth", 0)
-      shouldBeBigDecimal(response.json \ "canPayInThisMonth", 50)
-      shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", 50)
+      shouldBeBigDecimal(response.json \ "balance", BigDecimal(0))
+      shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal(0))
+      shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(50))
+      shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
@@ -124,10 +160,10 @@ class AccountsISpec extends WordSpec with Matchers
       (response.json \ "closingBalance").asOpt[String] shouldBe None
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe true
-      shouldBeBigDecimal(response.json \ "balance", 250)
-      shouldBeBigDecimal(response.json \ "paidInThisMonth", 50)
-      shouldBeBigDecimal(response.json \ "canPayInThisMonth", 0)
-      shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", 50)
+      shouldBeBigDecimal(response.json \ "balance", BigDecimal(250))
+      shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal(50))
+      shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(0))
+      shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-03-31"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
@@ -141,6 +177,27 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-10-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2021-11-01"
+    }
+
+    "return 401 when the user is not logged in" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 401
+      response.body shouldBe "Authorisation failure [Bearer token not supplied]"
+    }
+
+    "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
+      AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 403
+      response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+    }
+
+    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
+      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 403
+      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
   }
 }

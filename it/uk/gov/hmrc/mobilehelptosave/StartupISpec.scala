@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Assertion, Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
-import play.api.libs.json.{JsLookupResult, JsUndefined}
+import play.api.libs.json.JsUndefined
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
