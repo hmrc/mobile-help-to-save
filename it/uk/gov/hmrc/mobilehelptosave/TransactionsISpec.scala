@@ -32,7 +32,8 @@ import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, O
 class TransactionsISpec extends WordSpec with Matchers
   with SchemaMatchers with TransactionTestData
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
-  with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
+  with WireMockSupport with MongoTestCollectionsDropAfterAll
+  with OneServerPerSuiteWsClient {
 
   override implicit lazy val app: Application = appBuilder.build()
 

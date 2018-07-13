@@ -32,7 +32,8 @@ import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, O
   */
 class LegacyStartupISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
-  with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
+  with WireMockSupport with MongoTestCollectionsDropAfterAll
+  with OneServerPerSuiteWsClient with NumberVerification  {
 
   override implicit lazy val app: Application = appBuilder
     .configure(
@@ -208,11 +209,5 @@ class LegacyStartupISpec extends WordSpec with Matchers
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
-  }
-
-  private def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
-    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
-    jsLookupResult.as[BigDecimal] shouldBe expectedValue
   }
 }

@@ -26,7 +26,8 @@ import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, O
 
 class StartupISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
-  with WireMockSupport with MongoTestCollectionsDropAfterAll with OneServerPerSuiteWsClient {
+  with WireMockSupport with MongoTestCollectionsDropAfterAll
+  with OneServerPerSuiteWsClient with NumberVerification  {
 
   override implicit lazy val app: Application = appBuilder
     .configure(
@@ -75,13 +76,13 @@ class StartupISpec extends WordSpec with Matchers
       // BST.
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
-      val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
+      val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
       (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-12-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
 
-      val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
+      val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
@@ -111,13 +112,13 @@ class StartupISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", 50)
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
-      val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(0)
+      val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("7.50"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
       (firstBonusTermJson \ "endDate").as[String] shouldBe "2020-02-29"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-03-01"
 
-      val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms")(1)
+      val secondBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-02-28"
@@ -165,7 +166,7 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
-      (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+      (response.json \ "user" \ "account") shouldBe a[JsUndefined]
       (response.json \ "user" \ "accountError" \ "code").as[String] shouldBe "GENERAL"
     }
 
@@ -177,7 +178,7 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
-      (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+      (response.json \ "user" \ "account") shouldBe a[JsUndefined]
       (response.json \ "user" \ "accountError" \ "code").as[String] shouldBe "GENERAL"
     }
 
@@ -189,7 +190,7 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
-      (response.json \ "user" \ "account") shouldBe a [JsUndefined]
+      (response.json \ "user" \ "account") shouldBe a[JsUndefined]
       (response.json \ "user" \ "accountError" \ "code").as[String] shouldBe "GENERAL"
     }
 
@@ -213,11 +214,5 @@ class StartupISpec extends WordSpec with Matchers
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
-  }
-
-  private def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
-    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
-    jsLookupResult.as[BigDecimal] shouldBe expectedValue
   }
 }
