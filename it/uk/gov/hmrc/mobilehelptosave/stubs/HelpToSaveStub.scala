@@ -89,6 +89,14 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         .withStatus(200)
         .withBody(closedAccountReturnedByHelpToSaveJsonString)))
 
+  def blockedAccountExists(nino: Nino): Unit =
+    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(enrolledButBlockedReturnedByHelpToSaveJsonString)))
+
+
   def accountReturnsInvalidJson(nino: Nino): Unit =
     stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))

@@ -144,6 +144,32 @@ trait AccountTestData {
       |}
     """.stripMargin
 
+  protected val enrolledButBlockedReturnedByHelpToSaveJsonString: String =
+    """{
+      |  "accountNumber" : "1100000112068",
+      |  "openedYearMonth" : "2017-11",
+      |  "isClosed" : false,
+      |  "blocked" : {
+      |    "unspecified" : true
+      |  },
+      |  "balance" : 250,
+      |  "paidInThisMonth" : 50,
+      |  "canPayInThisMonth" : 0,
+      |  "maximumPaidInThisMonth" : 50,
+      |  "thisMonthEndDate" : "2018-03-31",
+      |  "bonusTerms" : [ {
+      |    "bonusEstimate" : 125,
+      |    "bonusPaid" : 0,
+      |    "endDate" : "2019-10-31",
+      |    "bonusPaidOnOrAfterDate" : "2019-11-01"
+      |  }, {
+      |    "bonusEstimate" : 0,
+      |    "bonusPaid" : 0,
+      |    "endDate" : "2021-10-31",
+      |    "bonusPaidOnOrAfterDate" : "2021-11-01"
+      |  } ]
+      |}""".stripMargin
+
   // invalid because required field isClosed is omitted
   protected val accountReturnedByHelpToSaveInvalidJsonString: String =
     """

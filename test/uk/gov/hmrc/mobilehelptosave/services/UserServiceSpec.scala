@@ -96,7 +96,7 @@ class UserServiceSpec
     "return state=Enrolled when the current user is enrolled in Help to Save, even if they are eligible to be invited" in {
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(true)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
@@ -111,7 +111,7 @@ class UserServiceSpec
 
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(true)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         repository
       )
@@ -127,7 +127,7 @@ class UserServiceSpec
       val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService)))
@@ -147,7 +147,7 @@ class UserServiceSpec
     "there is an error getting account details" should {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Left(ErrorInfo.General))
@@ -164,7 +164,7 @@ class UserServiceSpec
 
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Right(None))
@@ -188,7 +188,7 @@ class UserServiceSpec
       val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService))),
@@ -206,7 +206,7 @@ class UserServiceSpec
     "user is enrolled in Help to Save and no account-related feature flags are enabled" should {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = shouldNotBeCalledAccountService,
@@ -233,7 +233,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo
         )
@@ -251,7 +251,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           metrics,
           new FakeInvitationRepository
         )
@@ -268,7 +268,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           ShouldNotUpdateInvitationMetrics,
           stubRepo
         )
@@ -300,7 +300,7 @@ class UserServiceSpec
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           dailyInvitationCap = 3
@@ -323,7 +323,7 @@ class UserServiceSpec
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           dailyInvitationCap = 3
@@ -350,7 +350,7 @@ class UserServiceSpec
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           clock = clock,
@@ -375,7 +375,7 @@ class UserServiceSpec
         val mockRepo = mock[InvitationRepository]
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           FakeMobileHelpToSaveMetrics(),
           mockRepo,
           clock = clock,
@@ -416,7 +416,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           metrics,
           new FakeInvitationRepository
         )
@@ -437,7 +437,7 @@ class UserServiceSpec
       "if the user is not enrolled in Help to Save" in {
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
           ShouldNotUpdateInvitationMetrics,
           new FakeInvitationRepository
         )
@@ -454,7 +454,7 @@ class UserServiceSpec
       val error = ErrorInfo.General
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(false)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Left(error)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Left(error)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
@@ -465,7 +465,7 @@ class UserServiceSpec
     "return an error when the InvitationEligibilityService returns an error" in {
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Left(ErrorInfo.General)),
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
@@ -475,12 +475,12 @@ class UserServiceSpec
 
   }
 
-  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnectorEnrolmentStatus {
+  private def fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnectorEnrolmentStatus {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
       ec shouldBe passedEc
 
-      Future successful userIsEnrolledInHelpToSave
+      Future successful userCanBeEnrolledInHelpToSave
     }
   }
 
