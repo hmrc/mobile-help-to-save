@@ -31,7 +31,6 @@ import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, Mobile
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
-
 import scala.collection.GenTraversable
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
@@ -222,6 +221,28 @@ class UserServiceSpec
       }
     }
 
+    "user is enrolled in Help to Save, the flags are set, and the daily cap limit has been reached" should {
+      val accountReturnedByAccountService = testAccount
+
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService))),
+        balanceEnabled = true,
+        paidInThisMonthEnabled = true,
+        firstBonusEnabled = true,
+        dailyInvitationCap = 0
+      )
+
+      "not perform the eligibility check" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        user.account shouldBe Some(accountReturnedByAccountService)
+        user.state shouldBe UserState.Enrolled
+      }
+    }
+
     "user is eligible to be invited" should {
 
       val invitationEligibilityService = fakeInvitationEligibilityService(allTestNinos, eligible = Right(true))
@@ -317,8 +338,50 @@ class UserServiceSpec
         metrics.invitationCounter.getCount shouldBe 3
       }
 
+      "ensure that the eligibility check is not performed once the daily cap has been reached" in {
+
+        val metrics = FakeMobileHelpToSaveMetrics()
+        val eligibilityService = mock[InvitationEligibilityService]
+
+        (eligibilityService.userIsEligibleToBeInvited(_: Nino)( _: HeaderCarrier, _: ExecutionContext)).expects(nino1,*,*).returns(Future successful Right(true))
+        (eligibilityService.userIsEligibleToBeInvited(_: Nino)( _: HeaderCarrier, _: ExecutionContext)).expects(nino2,*,*).never()
+
+        val invitationRepo = new FakeInvitationRepository
+        val service = new UserServiceWithTestDefaults(
+          eligibilityService,
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          metrics,
+          invitationRepo,
+          dailyInvitationCap = 1
+        )
+
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.state shouldBe UserState.NotEnrolled
+
+        metrics.invitationCounter.getCount shouldBe 1
+      }
+
+      "ensure the eligibility check is never called if the cap is set to 0" in {
+
+        val metrics = FakeMobileHelpToSaveMetrics()
+
+        val invitationRepo = new FakeInvitationRepository
+        val service = new UserServiceWithTestDefaults(
+          shouldNotBeCalledInvitationEligibilityService,
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          metrics,
+          invitationRepo,
+          dailyInvitationCap = 0
+        )
+
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1))
+
+        metrics.invitationCounter.getCount shouldBe 0
+      }
+
       "continue to return Invited for already-invited users even when the cap has been reached"  in {
         val metrics = FakeMobileHelpToSaveMetrics()
+
 
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
