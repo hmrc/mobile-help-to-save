@@ -128,16 +128,14 @@ class UserService @Inject()(
 
   private def userDetails(nino: Nino, state: Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
     if (state == Enrolled && anyAccountFeatureEnabled) {
-      val accountFEO: Future[Either[ErrorInfo, Option[Account]]] = accountService.account(nino)
-      accountFEO.map { accountEO =>
-        val (accountO, accountErrorO) = accountEO match {
-          case Right(None) =>
-            logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
-            (None, Some(ErrorInfo.General))
-          case Right(aO) => (aO, None)
-          case Left(accountError) => (None, Some(accountError))
-        }
-        UserDetails(state = state, account = accountO, accountError = accountErrorO)
+      accountService.account(nino).map {
+        case Right(None) =>
+          logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+          UserDetails(state = state, account = None, accountError = Some(ErrorInfo.General))
+        case Right(accountOption) =>
+          UserDetails(state = state, account = accountOption, accountError = None)
+        case Left(accountError) =>
+          UserDetails(state = state, account = None, accountError = Some(accountError))
       }
     } else {
       successful(UserDetails(state = state, account = None, accountError = None))
