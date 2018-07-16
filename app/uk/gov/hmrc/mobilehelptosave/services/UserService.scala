@@ -109,9 +109,9 @@ class UserService @Inject()(
     }
 
     step(isAlreadyEnrolled) {
-      step(isUserEligibleToBeInvited(nino)) {
-        step(isUserInvited(internalAuthId)) {
-          step(isWithinDailyInviteLimit) {
+      step(isUserInvited(internalAuthId)) {
+        step(isWithinDailyInviteLimit) {
+          step(isUserEligibleToBeInvited(nino)) {
             inviteUser(nino, internalAuthId)
           }
         }

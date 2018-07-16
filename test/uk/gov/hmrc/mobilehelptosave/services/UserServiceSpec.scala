@@ -31,7 +31,6 @@ import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, Mobile
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
-
 import scala.collection.GenTraversable
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
@@ -96,7 +95,7 @@ class UserServiceSpec
     "return state=Enrolled when the current user is enrolled in Help to Save, even if they are eligible to be invited" in {
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(true)),
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
@@ -111,7 +110,7 @@ class UserServiceSpec
 
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(true)),
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         repository
       )
@@ -127,7 +126,7 @@ class UserServiceSpec
       val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService)))
@@ -147,7 +146,7 @@ class UserServiceSpec
     "there is an error getting account details" should {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Left(ErrorInfo.General))
@@ -164,7 +163,7 @@ class UserServiceSpec
 
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Right(None))
@@ -188,7 +187,7 @@ class UserServiceSpec
       val accountReturnedByAccountService = testAccount
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService))),
@@ -206,7 +205,7 @@ class UserServiceSpec
     "user is enrolled in Help to Save and no account-related feature flags are enabled" should {
       val service = new UserServiceWithTestDefaults(
         shouldNotBeCalledInvitationEligibilityService,
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository,
         accountService = shouldNotBeCalledAccountService,
@@ -222,6 +221,28 @@ class UserServiceSpec
       }
     }
 
+    "user is enrolled in Help to Save, the flags are set, and the daily cap limit has been reached" should {
+      val accountReturnedByAccountService = testAccount
+
+      val service = new UserServiceWithTestDefaults(
+        shouldNotBeCalledInvitationEligibilityService,
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true)),
+        ShouldNotUpdateInvitationMetrics,
+        new FakeInvitationRepository,
+        accountService = fakeAccountService(nino, Right(Some(accountReturnedByAccountService))),
+        balanceEnabled = true,
+        paidInThisMonthEnabled = true,
+        firstBonusEnabled = true,
+        dailyInvitationCap = 0
+      )
+
+      "not perform the eligibility check" in {
+        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        user.account shouldBe Some(accountReturnedByAccountService)
+        user.state shouldBe UserState.Enrolled
+      }
+    }
+
     "user is eligible to be invited" should {
 
       val invitationEligibilityService = fakeInvitationEligibilityService(allTestNinos, eligible = Right(true))
@@ -233,7 +254,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo
         )
@@ -251,7 +272,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           new FakeInvitationRepository
         )
@@ -268,7 +289,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           ShouldNotUpdateInvitationMetrics,
           stubRepo
         )
@@ -300,7 +321,7 @@ class UserServiceSpec
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           dailyInvitationCap = 3
@@ -317,13 +338,55 @@ class UserServiceSpec
         metrics.invitationCounter.getCount shouldBe 3
       }
 
-      "continue to return Invited for already-invited users even when the cap has been reached"  in {
+      "ensure that the eligibility check is not performed once the daily cap has been reached" in {
+
+        val metrics = FakeMobileHelpToSaveMetrics()
+        val eligibilityService = mock[InvitationEligibilityService]
+
+        (eligibilityService.userIsEligibleToBeInvited(_: Nino)( _: HeaderCarrier, _: ExecutionContext)).expects(nino1,*,*).returns(Future successful Right(true))
+        (eligibilityService.userIsEligibleToBeInvited(_: Nino)( _: HeaderCarrier, _: ExecutionContext)).expects(nino2,*,*).never()
+
+        val invitationRepo = new FakeInvitationRepository
+        val service = new UserServiceWithTestDefaults(
+          eligibilityService,
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          metrics,
+          invitationRepo,
+          dailyInvitationCap = 1
+        )
+
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1)).right.value.state shouldBe UserState.InvitedFirstTime
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-2"), nino2)).right.value.state shouldBe UserState.NotEnrolled
+
+        metrics.invitationCounter.getCount shouldBe 1
+      }
+
+      "ensure the eligibility check is never called if the cap is set to 0" in {
+
         val metrics = FakeMobileHelpToSaveMetrics()
 
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
+          shouldNotBeCalledInvitationEligibilityService,
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
+          metrics,
+          invitationRepo,
+          dailyInvitationCap = 0
+        )
+
+        await(service.userDetails(InternalAuthId("test-internal-auth-id-1"), nino1))
+
+        metrics.invitationCounter.getCount shouldBe 0
+      }
+
+      "continue to return Invited for already-invited users even when the cap has been reached"  in {
+        val metrics = FakeMobileHelpToSaveMetrics()
+
+
+        val invitationRepo = new FakeInvitationRepository
+        val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           dailyInvitationCap = 3
@@ -350,7 +413,7 @@ class UserServiceSpec
         val invitationRepo = new FakeInvitationRepository
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           invitationRepo,
           clock = clock,
@@ -375,7 +438,7 @@ class UserServiceSpec
         val mockRepo = mock[InvitationRepository]
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           FakeMobileHelpToSaveMetrics(),
           mockRepo,
           clock = clock,
@@ -416,7 +479,7 @@ class UserServiceSpec
 
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           metrics,
           new FakeInvitationRepository
         )
@@ -437,7 +500,7 @@ class UserServiceSpec
       "if the user is not enrolled in Help to Save" in {
         val service = new UserServiceWithTestDefaults(
           invitationEligibilityService,
-          fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+          fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
           ShouldNotUpdateInvitationMetrics,
           new FakeInvitationRepository
         )
@@ -454,7 +517,7 @@ class UserServiceSpec
       val error = ErrorInfo.General
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Right(false)),
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Left(error)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Left(error)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
@@ -465,7 +528,7 @@ class UserServiceSpec
     "return an error when the InvitationEligibilityService returns an error" in {
       val service = new UserServiceWithTestDefaults(
         fakeInvitationEligibilityService(nino, eligible = Left(ErrorInfo.General)),
-        fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave = Right(false)),
+        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false)),
         ShouldNotUpdateInvitationMetrics,
         new FakeInvitationRepository
       )
@@ -475,12 +538,12 @@ class UserServiceSpec
 
   }
 
-  private def fakeHelpToSaveConnector(userCanBeEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnectorEnrolmentStatus {
+  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnectorEnrolmentStatus {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
       ec shouldBe passedEc
 
-      Future successful userCanBeEnrolledInHelpToSave
+      Future successful userIsEnrolledInHelpToSave
     }
   }
 
