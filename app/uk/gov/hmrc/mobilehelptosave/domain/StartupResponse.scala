@@ -40,7 +40,7 @@ case class Shuttering (
 )
 
 case object Shuttering {
-  implicit val writes: Writes[Shuttering] = Json.writes[Shuttering]
+  implicit val format: OFormat[Shuttering] = Json.format[Shuttering]
 }
 
 object StartupResponse {

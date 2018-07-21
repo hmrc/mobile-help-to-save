@@ -16,11 +16,76 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.time.LocalDate
 
+import org.joda.time.LocalDate
 import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transactions}
 
 trait TransactionTestData {
+
+  protected val transactionsReturnedBySandboxAsString: String =
+    """{
+      |  "transactions" : [ {
+      |    "operation" : "credit",
+      |    "amount" : 20,
+      |    "transactionDate" : "2018-06-23",
+      |    "accountingDate" : "2018-06-23",
+      |    "balanceAfter" : 200
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 18.2,
+      |    "transactionDate" : "2018-06-23",
+      |    "accountingDate" : "2018-06-23",
+      |    "balanceAfter" : 180
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 10.4,
+      |    "transactionDate" : "2018-05-23",
+      |    "accountingDate" : "2018-05-23",
+      |    "balanceAfter" : 161.8
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 35,
+      |    "transactionDate" : "2018-04-23",
+      |    "accountingDate" : "2018-04-23",
+      |    "balanceAfter" : 151.4
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 15,
+      |    "transactionDate" : "2018-04-23",
+      |    "accountingDate" : "2018-04-23",
+      |    "balanceAfter" : 116.4
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 6,
+      |    "transactionDate" : "2018-03-23",
+      |    "accountingDate" : "2018-03-23",
+      |    "balanceAfter" : 101.4
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 20.4,
+      |    "transactionDate" : "2018-02-23",
+      |    "accountingDate" : "2018-02-23",
+      |    "balanceAfter" : 95.4
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 10,
+      |    "transactionDate" : "2018-02-23",
+      |    "accountingDate" : "2018-02-23",
+      |    "balanceAfter" : 75
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 25,
+      |    "transactionDate" : "2018-01-23",
+      |    "accountingDate" : "2018-01-23",
+      |    "balanceAfter" : 65
+      |  }, {
+      |    "operation" : "credit",
+      |    "amount" : 40,
+      |    "transactionDate" : "2017-12-23",
+      |    "accountingDate" : "2017-12-23",
+      |    "balanceAfter" : 40
+      |  } ]
+      |}""".stripMargin
 
   protected val transactionsReturnedByHelpToSaveJsonString: String =
     """
