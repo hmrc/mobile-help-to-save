@@ -19,18 +19,36 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent, Result, Results}
 import uk.gov.hmrc.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveApi
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, ErrorInfo, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, Shuttering}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
 import scala.concurrent.Future._
 import scala.util.{Failure, Success, Try}
-import scala.util.matching.Regex
+
+trait ControllerChecks extends Results {
+
+  private final val WebServerIsDown = new Status(521)
+
+  def withShuttering(shuttering: Shuttering)(fn: => Future[Result]): Future[Result] = {
+    if (shuttering.shuttered) successful(WebServerIsDown(Json.toJson(shuttering))) else fn
+  }
+
+  def withValidNino(nino: String)(fn: Nino => Future[Result]): Future[Result] = {
+    HmrcNinoDefinition.regex.findFirstIn(nino) map (n => Right(Try(Nino(n)))) getOrElse {
+      Left(s""""$nino" does not match NINO validation regex""")
+    } match {
+      case Right(Success(parsedNino)) => fn(parsedNino)
+      case Right(Failure(exception)) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", exception.getMessage))))
+      case Left(validationError) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError))))
+    }
+  }
+}
 
 @Singleton
 class HelpToSaveController @Inject()
@@ -39,26 +57,9 @@ class HelpToSaveController @Inject()
   helpToSaveApi: HelpToSaveApi,
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig
-) extends BaseController {
+) extends BaseController with ControllerChecks  {
 
-  // CTO's HMRC-wide NINO regex
-  private final val hmrcNinoRegex: Regex = "^((?!(BG|GB|KN|NK|NT|TN|ZZ)|(D|F|I|Q|U|V)[A-Z]|[A-Z](D|F|I|O|Q|U|V))[A-Z]{2})[0-9]{6}[A-D]?$".r
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
-  private final val WebServerIsDown = new Status(521)
-
-  private def withShuttering(isShuttered: Boolean)(fn: => Future[Result])(implicit request: RequestWithIds[AnyContent]): Future[Result] = {
-    if (!isShuttered) fn else successful(WebServerIsDown(Json.toJson(config.shuttering)))
-  }
-
-  private def withValidNino(nino: String)(fn: Nino => Future[Result])(implicit request: RequestWithIds[AnyContent]): Future[Result] = {
-    hmrcNinoRegex.findFirstIn(nino) map (n => Right(Try(Nino(n)))) getOrElse {
-      Left(s""""$nino" does not match NINO validation regex""")
-    } match {
-      case Right(Success(parsedNino)) => fn(parsedNino)
-      case Right(Failure(exception)) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", exception.getMessage))))
-      case Left(validationError) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError))))
-    }
-  }
 
   private def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[AnyContent]): Future[Result] = {
     if (nino == request.nino) fn(nino) else {
@@ -68,7 +69,7 @@ class HelpToSaveController @Inject()
   }
 
   def getTransactions(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    withShuttering(config.shuttering.shuttered) {
+    withShuttering(config.shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
           helpToSaveApi.getTransactions(verifiedUserNino).map {
@@ -82,7 +83,7 @@ class HelpToSaveController @Inject()
   }
 
   def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    withShuttering(config.shuttering.shuttered) {
+    withShuttering(config.shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
           helpToSaveApi.getAccount(verifiedUserNino).map {

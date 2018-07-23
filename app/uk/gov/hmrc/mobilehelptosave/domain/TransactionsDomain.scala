@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import java.time.LocalDate
-
 import cats.Eq
+import org.joda.time.LocalDate
 import play.api.libs.json._
 
 sealed trait Operation {

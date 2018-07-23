@@ -31,6 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.metrics.{FakeMobileHelpToSaveMetrics, Mobile
 import uk.gov.hmrc.mobilehelptosave.repos.{FakeInvitationRepository, InvitationRepository}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
+
 import scala.collection.GenTraversable
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}

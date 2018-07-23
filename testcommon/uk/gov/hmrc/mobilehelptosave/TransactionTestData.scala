@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.time.LocalDate
 
+import org.joda.time.LocalDate
 import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transactions}
 
 trait TransactionTestData {
