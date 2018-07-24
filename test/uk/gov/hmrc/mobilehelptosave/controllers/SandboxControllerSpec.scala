@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.joda.time.{DateTime, DateTimeZone}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import play.api.libs.json.{JsLookupResult, JsValue}
+import play.api.libs.json.{JsArray, JsLookupResult, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
@@ -65,6 +65,7 @@ class SandboxControllerSpec
     def transactionDate(transactionIndex: Int): String = ((json \ "transactions") (transactionIndex) \ "transactionDate").as[String]
     def accountingDate(transactionIndex: Int): String = ((json \ "transactions") (transactionIndex) \ "accountingDate").as[String]
     def balanceAfter(transactionIndex: Int): BigDecimal = ((json \ "transactions") (transactionIndex) \ "balanceAfter").as[BigDecimal]
+    def transactionCount(): Int = (json \ "transactions").as[JsArray].value.length
   }
 
   "Sandbox getTransactions" should {
@@ -75,65 +76,84 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      json operation 0 shouldBe "credit"
-      json amount 0 shouldBe BigDecimal(20)
-      json transactionDate 0 shouldBe "2018-08-29"
-      json accountingDate 0 shouldBe "2018-08-29"
-      json balanceAfter 0 shouldBe BigDecimal(200)
+      json transactionCount() shouldBe 11
 
-      json operation 1 shouldBe "credit"
-      json amount 1 shouldBe BigDecimal(18.2)
-      json transactionDate 1 shouldBe "2018-08-29"
-      json accountingDate 1 shouldBe "2018-08-29"
-      json balanceAfter 1 shouldBe BigDecimal(180)
+      var atIndex = 0
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(20.5)
+      json transactionDate atIndex shouldBe "2018-09-29"
+      json accountingDate atIndex shouldBe "2018-09-29"
+      json balanceAfter atIndex shouldBe BigDecimal(220.5)
 
-      json operation 2 shouldBe "credit"
-      json amount 2 shouldBe BigDecimal(10.4)
-      json transactionDate 2 shouldBe "2018-07-29"
-      json accountingDate 2 shouldBe "2018-07-29"
-      json balanceAfter 2 shouldBe BigDecimal(161.8)
+      atIndex = 1
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(20)
+      json transactionDate atIndex shouldBe "2018-08-29"
+      json accountingDate atIndex shouldBe "2018-08-29"
+      json balanceAfter atIndex shouldBe BigDecimal(200)
 
-      json operation 3 shouldBe "credit"
-      json amount 3 shouldBe BigDecimal(35)
-      json transactionDate 3 shouldBe "2018-06-29"
-      json accountingDate 3 shouldBe "2018-06-29"
-      json balanceAfter 3 shouldBe BigDecimal(151.4)
+      atIndex = 2
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(18.2)
+      json transactionDate atIndex shouldBe "2018-08-29"
+      json accountingDate atIndex shouldBe "2018-08-29"
+      json balanceAfter atIndex shouldBe BigDecimal(180)
 
-      json operation 4 shouldBe "credit"
-      json amount 4 shouldBe BigDecimal(15)
-      json transactionDate 4 shouldBe "2018-06-29"
-      json accountingDate 4 shouldBe "2018-06-29"
-      json balanceAfter 4 shouldBe BigDecimal(116.4)
+      atIndex = 3
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(10.4)
+      json transactionDate atIndex shouldBe "2018-07-29"
+      json accountingDate atIndex shouldBe "2018-07-29"
+      json balanceAfter atIndex shouldBe BigDecimal(161.8)
 
-      json operation 5 shouldBe "credit"
-      json amount 5 shouldBe BigDecimal(6)
-      json transactionDate 5 shouldBe "2018-05-29"
-      json accountingDate 5 shouldBe "2018-05-29"
-      json balanceAfter 5 shouldBe BigDecimal(101.4)
+      atIndex = 4
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(35)
+      json transactionDate atIndex shouldBe "2018-06-29"
+      json accountingDate atIndex shouldBe "2018-06-29"
+      json balanceAfter atIndex shouldBe BigDecimal(151.4)
 
-      json operation 6 shouldBe "credit"
-      json amount 6 shouldBe BigDecimal(20.4)
-      json transactionDate 6 shouldBe "2018-04-29"
-      json accountingDate 6 shouldBe "2018-04-29"
-      json balanceAfter 6 shouldBe BigDecimal(95.4)
+      atIndex = 5
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(15)
+      json transactionDate atIndex shouldBe "2018-06-29"
+      json accountingDate atIndex shouldBe "2018-06-29"
+      json balanceAfter atIndex shouldBe BigDecimal(116.4)
 
-      json operation 7 shouldBe "credit"
-      json amount 7 shouldBe BigDecimal(10)
-      json transactionDate 7 shouldBe "2018-04-29"
-      json accountingDate 7 shouldBe "2018-04-29"
-      json balanceAfter 7 shouldBe BigDecimal(75)
+      atIndex = 6
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(6)
+      json transactionDate atIndex shouldBe "2018-05-29"
+      json accountingDate atIndex shouldBe "2018-05-29"
+      json balanceAfter atIndex shouldBe BigDecimal(101.4)
 
-      json operation 8 shouldBe "credit"
-      json amount 8 shouldBe BigDecimal(25)
-      json transactionDate 8 shouldBe "2018-03-29"
-      json accountingDate 8 shouldBe "2018-03-29"
-      json balanceAfter 8 shouldBe BigDecimal(65)
+      atIndex = 7
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(20.4)
+      json transactionDate atIndex shouldBe "2018-04-29"
+      json accountingDate atIndex shouldBe "2018-04-29"
+      json balanceAfter atIndex shouldBe BigDecimal(95.4)
 
-      json operation 9 shouldBe "credit"
-      json amount 9 shouldBe BigDecimal(40)
-      json transactionDate 9 shouldBe "2018-02-28"
-      json accountingDate 9 shouldBe "2018-02-28"
-      json balanceAfter 9 shouldBe BigDecimal(40)
+      atIndex = 8
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(10)
+      json transactionDate atIndex shouldBe "2018-04-29"
+      json accountingDate atIndex shouldBe "2018-04-29"
+      json balanceAfter atIndex shouldBe BigDecimal(75)
+
+      atIndex = 9
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2018-03-29"
+      json accountingDate atIndex shouldBe "2018-03-29"
+      json balanceAfter atIndex shouldBe BigDecimal(65)
+
+      atIndex = 10
+      json operation atIndex shouldBe "credit"
+      json amount atIndex shouldBe BigDecimal(40)
+      json transactionDate atIndex shouldBe "2018-02-28"
+      json accountingDate atIndex shouldBe "2018-02-28"
+      json balanceAfter atIndex shouldBe BigDecimal(40)
     }
 
     "return a shuttered response when the service is shuttered" in {
