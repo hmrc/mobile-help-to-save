@@ -57,6 +57,7 @@ case class SandboxData @Inject() (clock: Clock) {
 
   val transactions = Transactions({
     Seq(
+      (0, 20.50, 220.50),
       (1, 20.00, 200.00),
       (1, 18.20, 180.00),
       (2, 10.40, 161.80),
