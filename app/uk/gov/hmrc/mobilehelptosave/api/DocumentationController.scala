@@ -38,6 +38,6 @@ class DocumentationController @Inject() (
   private lazy val apiAccess = ApiAccess(config.apiAccessType, config.apiWhiteListApplicationIds)
 
   override def definition(): Action[AnyContent] = Action {
-    Ok(txt.definition(apiAccess)).withHeaders("Content-Type" -> "application/json")
+    Ok(txt.definition(apiAccess)).as(JSON)
   }
 }
