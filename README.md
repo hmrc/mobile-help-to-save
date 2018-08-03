@@ -17,16 +17,15 @@ Response format:
   "shuttering": {
       "shuttered": false
   },
-  // Feature toggle for Help to Save app functionality:
-  "enabled": true,
   // Fine grained feature toggles
   "balanceEnabled": true,
   "paidInThisMonthEnabled": true,
   "firstBonusEnabled": true,
   "shareInvitationEnabled": true,
   "savingRemindersEnabled": true,
-  // whether the transaction feature is enabled - this exists in case we release the apps before our transactions API is approved for production
+  // whether the transaction feature is enabled
   "transactionsEnabled": true,
+  "supportFormEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme",
   // URL of invitation call to action
@@ -86,7 +85,7 @@ If there is a problem obtaining the user-specific data then the `user` object wi
   "shuttering": {
       "shuttered": false
   },
-  "enabled": true,
+  "balanceEnabled": true,
   // etc... other feature flags omitted for brevity
   "userError": { "code": "GENERAL" }
   // no "user" object
@@ -98,7 +97,7 @@ If there is a problem obtaining the account data then the `user.account` object 
   "shuttering": {
       "shuttered": false
   },
-  "enabled": true,
+  "balanceEnabled": true,
   // etc... other feature flags omitted for brevity
   "user": {
     "state": "Enrolled"
@@ -121,15 +120,14 @@ When the Help to Save section of the app is shuttered then `shuttering.shuttered
     "title": "Service Unavailable",
     "message": "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
   },
-  // Feature toggle for Help to Save app functionality:
-  "enabled": true,
   // Fine grained feature toggles
   "balanceEnabled": true,
   "paidInThisMonthEnabled": true,
   "firstBonusEnabled": true,
   "shareInvitationEnabled": true,
   "savingRemindersEnabled": true,
-  "transactionsEnabled": true
+  "transactionsEnabled": true,
+  "supportFormEnabled": true
 }
 ```
 

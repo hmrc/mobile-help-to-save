@@ -30,7 +30,8 @@ case class StartupResponse(
   firstBonusEnabled: Boolean,
   shareInvitationEnabled: Boolean,
   savingRemindersEnabled: Boolean,
-  transactionsEnabled: Boolean
+  transactionsEnabled: Boolean,
+  supportFormEnabled: Boolean
 )
 
 case class Shuttering (
