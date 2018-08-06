@@ -47,7 +47,8 @@ class StartupController @Inject() (
           firstBonusEnabled = config.firstBonusEnabled,
           shareInvitationEnabled = config.shareInvitationEnabled,
           savingRemindersEnabled = config.savingRemindersEnabled,
-          transactionsEnabled = config.transactionsEnabled
+          transactionsEnabled = config.transactionsEnabled,
+          supportFormEnabled = config.supportFormEnabled
         )
       }
       responseF.map(response => Ok(Json.toJson(response)))
@@ -67,7 +68,8 @@ class StartupController @Inject() (
           firstBonusEnabled = config.firstBonusEnabled,
           shareInvitationEnabled = config.shareInvitationEnabled,
           savingRemindersEnabled = config.savingRemindersEnabled,
-          transactionsEnabled = config.transactionsEnabled
+          transactionsEnabled = config.transactionsEnabled,
+          supportFormEnabled = config.supportFormEnabled
         )
 
       Ok(Json.toJson(response))

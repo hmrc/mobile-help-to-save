@@ -121,44 +121,79 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "shareInvitationEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "savingRemindersEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "transactionsEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "supportFormEnabled" ).validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
     }
 
 
-    "allow feature flag and URL settings to be overridden in configuration" in withTestServerAndMongoCleanup(
-      appBuilder
-        .configure(
-          "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
-          "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
-          "helpToSave.accessAccountUrl" -> "/access-account",
-          "helpToSave.balanceEnabled" -> "true",
-          "helpToSave.paidInThisMonthEnabled" -> "true",
-          "helpToSave.firstBonusEnabled" -> "true",
-          "helpToSave.shareInvitationEnabled" -> "true",
-          "helpToSave.savingRemindersEnabled" -> "true",
-          "helpToSave.transactionsEnabled" -> "true"
-        )
-        .configure(InvitationConfig.NoFilters: _*)
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+    "allow feature flag and URL settings to be overridden in configuration" in {
+      withTestServerAndMongoCleanup(
+        appBuilder
+          .configure(
+            "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
+            "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
+            "helpToSave.accessAccountUrl" -> "/access-account",
+            "helpToSave.balanceEnabled" -> "true",
+            "helpToSave.paidInThisMonthEnabled" -> "false",
+            "helpToSave.firstBonusEnabled" -> "true",
+            "helpToSave.shareInvitationEnabled" -> "false",
+            "helpToSave.savingRemindersEnabled" -> "true",
+            "helpToSave.transactionsEnabled" -> "false",
+            "helpToSave.supportFormEnabled" -> "true"
+          )
+          .configure(InvitationConfig.NoFilters: _*)
+          .build()) { (app: Application, portNumber: PortNumber) =>
+        implicit val implicitPortNumber: PortNumber = portNumber
+        implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
+        AuthStub.userIsLoggedIn(internalAuthId, nino)
+        HelpToSaveStub.currentUserIsNotEnrolled()
 
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "balanceEnabled").as[Boolean] shouldBe true
-      (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe true
-      (response.json \ "firstBonusEnabled").as[Boolean] shouldBe true
-      (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
-      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
-      (response.json \ "transactionsEnabled").as[Boolean] shouldBe true
-      (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
-      (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
-      (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
+        val response = await(wsUrl("/mobile-help-to-save/startup").get())
+        response.status shouldBe 200
+        (response.json \ "balanceEnabled").as[Boolean] shouldBe true
+        (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe false
+        (response.json \ "firstBonusEnabled").as[Boolean] shouldBe true
+        (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe false
+        (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
+        (response.json \ "transactionsEnabled").as[Boolean] shouldBe false
+        (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
+        (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
+        (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
+        (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
+      }
+
+      withTestServerAndMongoCleanup(
+        appBuilder
+          .configure(
+            "helpToSave.balanceEnabled" -> "false",
+            "helpToSave.paidInThisMonthEnabled" -> "true",
+            "helpToSave.firstBonusEnabled" -> "false",
+            "helpToSave.shareInvitationEnabled" -> "true",
+            "helpToSave.savingRemindersEnabled" -> "false",
+            "helpToSave.transactionsEnabled" -> "true",
+            "helpToSave.supportFormEnabled" -> "false"
+          )
+          .configure(InvitationConfig.NoFilters: _*)
+          .build()) { (app: Application, portNumber: PortNumber) =>
+        implicit val implicitPortNumber: PortNumber = portNumber
+        implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
+
+        AuthStub.userIsLoggedIn(internalAuthId, nino)
+        HelpToSaveStub.currentUserIsNotEnrolled()
+
+        val response = await(wsUrl("/mobile-help-to-save/startup").get())
+        response.status shouldBe 200
+        (response.json \ "balanceEnabled").as[Boolean] shouldBe false
+        (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe true
+        (response.json \ "firstBonusEnabled").as[Boolean] shouldBe false
+        (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
+        (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe false
+        (response.json \ "transactionsEnabled").as[Boolean] shouldBe true
+        (response.json \ "supportFormEnabled").as[Boolean] shouldBe false
+      }
     }
 
   }
