@@ -63,6 +63,9 @@ Response format:
       // The end date of the month that the "this month" figures refer to.
       // Clients should use this date instead of calculating it themselves to protect against clock skew & race conditions.
       "thisMonthEndDate": "2018-02-28",
+      "accountHolderName": "Testforename Testsurname",
+      // Email may be absent (it isn't a required field in the NS&I API we source it from)
+      "accountHolderEmail": "test@example.com",
       "bonusTerms": [
         {
           // The amount calculated that the user will receive, two years after they have started the account

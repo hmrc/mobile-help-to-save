@@ -75,6 +75,9 @@ class StartupISpec extends WordSpec with Matchers
       // BST.
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
+      (response.json \ "user" \ "account" \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
+      (response.json \ "user" \ "account" \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
+
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))

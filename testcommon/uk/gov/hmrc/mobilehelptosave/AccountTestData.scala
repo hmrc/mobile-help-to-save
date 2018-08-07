@@ -36,6 +36,9 @@ trait AccountTestData {
       |  "canPayInThisMonth": 22.12,
       |  "maximumPaidInThisMonth": 50,
       |  "thisMonthEndDate": "2018-04-30",
+      |  "accountHolderForename": "Testfore",
+      |  "accountHolderSurname": "Testsur",
+      |  "accountHolderEmail": "testemail@example.com",
       |  "bonusTerms": [
       |    {
       |      "bonusEstimate": 90.99,
@@ -64,6 +67,9 @@ trait AccountTestData {
     canPayInThisMonth = BigDecimal("22.12"),
     maximumPaidInThisMonth = 50,
     thisMonthEndDate = new LocalDate(2018, 4, 30),
+    accountHolderForename = "Testfore",
+    accountHolderSurname = "Testsur",
+    accountHolderEmail = Some("testemail@example.com"),
     bonusTerms = Seq(
       BonusTerm(
         bonusEstimate = BigDecimal("90.99"),
@@ -93,6 +99,8 @@ trait AccountTestData {
     canPayInThisMonth = BigDecimal("22.12"),
     maximumPaidInThisMonth = 50,
     thisMonthEndDate = new LocalDate(2018, 4, 30),
+    accountHolderName = "Testfore Testsur",
+    accountHolderEmail = Some("testemail@example.com"),
     bonusTerms = Seq(
       BonusTerm(
         bonusEstimate = BigDecimal("90.99"),
@@ -125,6 +133,9 @@ trait AccountTestData {
       |  "canPayInThisMonth": 50,
       |  "maximumPaidInThisMonth": 50,
       |  "thisMonthEndDate": "2018-04-30",
+      |  "accountHolderForename": "Testfore",
+      |  "accountHolderSurname": "Testsur",
+      |  "accountHolderEmail": "testemail@example.com",
       |  "bonusTerms": [
       |    {
       |      "bonusEstimate": 7.50,
@@ -157,6 +168,9 @@ trait AccountTestData {
       |  "canPayInThisMonth" : 0,
       |  "maximumPaidInThisMonth" : 50,
       |  "thisMonthEndDate" : "2018-03-31",
+      |  "accountHolderForename": "Testfore",
+      |  "accountHolderSurname": "Testsur",
+      |  "accountHolderEmail": "testemail@example.com",
       |  "bonusTerms" : [ {
       |    "bonusEstimate" : 125,
       |    "bonusPaid" : 0,
@@ -184,6 +198,9 @@ trait AccountTestData {
       |  "canPayInThisMonth": 22.12,
       |  "maximumPaidInThisMonth": 50,
       |  "thisMonthEndDate": "2018-04-30",
+      |  "accountHolderForename": "Testfore",
+      |  "accountHolderSurname": "Testsur",
+      |  "accountHolderEmail": "testemail@example.com",
       |  "bonusTerms": [
       |    {
       |      "bonusEstimate": 125,

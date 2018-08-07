@@ -55,6 +55,9 @@ case class Account(
   maximumPaidInThisMonth: BigDecimal,
   thisMonthEndDate: LocalDate,
 
+  accountHolderName: String,
+  accountHolderEmail: Option[String],
+
   bonusTerms: Seq[BonusTerm],
 
   closureDate: Option[LocalDate] = None,
@@ -74,6 +77,8 @@ object Account {
     canPayInThisMonth = h.canPayInThisMonth,
     maximumPaidInThisMonth = h.maximumPaidInThisMonth,
     thisMonthEndDate = h.thisMonthEndDate,
+    accountHolderName = h.accountHolderForename + " " + h.accountHolderSurname,
+    accountHolderEmail = h.accountHolderEmail,
     bonusTerms = h.bonusTerms,
     closureDate = h.closureDate,
     closingBalance = h.closingBalance

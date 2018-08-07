@@ -24,7 +24,7 @@ import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json.{JsValue, Json, OFormat, Reads}
+import play.api.libs.json.{JsValue, Json, OFormat}
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
@@ -117,6 +117,10 @@ case class HelpToSaveAccount(
   canPayInThisMonth: BigDecimal,
   maximumPaidInThisMonth: BigDecimal,
   thisMonthEndDate: LocalDate,
+
+  accountHolderForename: String,
+  accountHolderSurname: String,
+  accountHolderEmail: Option[String],
 
   bonusTerms: Seq[BonusTerm],
 

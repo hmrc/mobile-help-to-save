@@ -21,7 +21,7 @@ import java.net.{ConnectException, URL}
 import io.lemonlabs.uri._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
@@ -84,6 +84,16 @@ class HelpToSaveConnectorSpec
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
       await(connector.getAccount(nino)) shouldBe Right(Some(helpToSaveAccount))
+    }
+
+    "return a Right (with Account) when the help-to-save service returns a 2xx response with optional fields omitted" in {
+
+      val accountReturnedByHelpToSaveJson = Json.parse(accountReturnedByHelpToSaveJsonString).as[JsObject] - "accountHolderEmail"
+      val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, Some(accountReturnedByHelpToSaveJson)))
+
+      val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
+
+      await(connector.getAccount(nino)) shouldBe Right(Some(helpToSaveAccount.copy(accountHolderEmail = None)))
     }
 
     "return Right(None) when the help-to-save service returns a 404 response" in {
