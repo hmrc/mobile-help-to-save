@@ -37,7 +37,6 @@ case class MobileHelpToSaveConfig @Inject()(
     with DocumentationControllerConfig
     with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
-    with HelpToSaveProxyConnectorConfig
     with NinoWithoutWtcMongoRepositoryConfig
     with StartupControllerConfig
     with TaxCreditsBrokerConnectorConfig
@@ -49,7 +48,6 @@ case class MobileHelpToSaveConfig @Inject()(
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
-  override val helpToSaveProxyBaseUrl: URL = configBaseUrl("help-to-save-proxy")
   override val taxCreditsBrokerBaseUrl: URL = configBaseUrl("tax-credits-broker")
 
   override val shuttering: Shuttering = Shuttering(
@@ -102,11 +100,6 @@ trait DocumentationControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveConnectorConfig {
   def helpToSaveBaseUrl: URL
-}
-
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait HelpToSaveProxyConnectorConfig {
-  def helpToSaveProxyBaseUrl: URL
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])

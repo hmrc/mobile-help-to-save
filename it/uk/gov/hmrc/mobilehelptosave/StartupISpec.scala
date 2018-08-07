@@ -31,7 +31,6 @@ class StartupISpec extends WordSpec with Matchers
 
   override implicit lazy val app: Application = appBuilder
     .configure(
-      "helpToSave.getAccountFrom" -> "help-to-save",
       InvitationConfig.Enabled,
       "helpToSave.invitationFilters.workingTaxCredits" -> "false",
       "helpToSave.balanceEnabled" -> true,

@@ -75,22 +75,29 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         .withStatus(Status.NOT_FOUND)))
   }
 
+  private def getAccountUrlPathPattern(nino: Nino) = {
+    urlPathEqualTo(s"/help-to-save/$nino/account")
+  }
+
+  def accountShouldNotHaveBeenCalled(nino: Nino): Unit =
+    verify(0, getRequestedFor(getAccountUrlPathPattern(nino)))
+
   def accountExists(nino: Nino): Unit =
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+    stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(accountReturnedByHelpToSaveJsonString)))
 
   def closedAccountExists(nino: Nino): Unit =
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+    stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(closedAccountReturnedByHelpToSaveJsonString)))
 
   def blockedAccountExists(nino: Nino): Unit =
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+    stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
@@ -98,14 +105,14 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
 
   def accountReturnsInvalidJson(nino: Nino): Unit =
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+    stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(accountReturnedByHelpToSaveInvalidJsonString)))
 
   def accountReturnsBadlyFormedJson(nino: Nino): Unit =
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+    stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
@@ -114,7 +121,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         )))
 
   def accountReturnsInternalServerError(nino: Nino): Unit =
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+    stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(500)))
