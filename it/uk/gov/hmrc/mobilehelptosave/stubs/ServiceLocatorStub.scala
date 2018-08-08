@@ -23,17 +23,22 @@ import uk.gov.hmrc.api.domain.Registration
 
 object ServiceLocatorStub {
 
+  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String): Unit =
+    verify(1, registrationPattern(serviceName, serviceUrl))
+
+  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String): Unit =
+    verify(0, registrationPattern(serviceName, serviceUrl))
+
+  def registrationSucceeds(): Unit =
+    stubFor(post(urlPathEqualTo("/registration"))
+      .willReturn(aResponse()
+        .withStatus(204)))
+
   private def regPayloadStringFor(serviceName: String, serviceUrl: String): String =
     Json.toJson(Registration(serviceName, serviceUrl, Some(Map("third-party-api" -> "true")))).toString
 
-  private val registrationPattern: RequestPatternBuilder = postRequestedFor(urlPathEqualTo("/registration"))
+  private def registrationPattern(serviceName: String, serviceUrl: String): RequestPatternBuilder = postRequestedFor(urlPathEqualTo("/registration"))
     .withHeader("content-type", equalTo("application/json"))
-    .withRequestBody(equalTo(regPayloadStringFor("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")))
-
-  def registerShouldHaveBeenCalled(): Unit =
-    verify(1, registrationPattern)
-
-  def registerShouldNotHaveBeenCalled(): Unit =
-    verify(0, registrationPattern)
+    .withRequestBody(equalTo(regPayloadStringFor(serviceName, serviceUrl)))
 
 }

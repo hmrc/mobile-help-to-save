@@ -39,11 +39,13 @@ class ServiceLocatorRegistrationISpec
 
   "microservice" should {
     "register itself with the api platform automatically at start up" in {
-      ServiceLocatorStub.registerShouldNotHaveBeenCalled()
+      ServiceLocatorStub.registrationSucceeds()
+
+      ServiceLocatorStub.registerShouldNotHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
 
       running(app) {
         eventually(Timeout(Span(1000 * 20, Millis))) {
-          ServiceLocatorStub.registerShouldHaveBeenCalled()
+          ServiceLocatorStub.registerShouldHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
         }
       }
     }
