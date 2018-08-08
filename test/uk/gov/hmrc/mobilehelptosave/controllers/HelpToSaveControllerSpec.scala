@@ -32,6 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+//noinspection TypeAnnotation
 class HelpToSaveControllerSpec
   extends WordSpec
     with Matchers
