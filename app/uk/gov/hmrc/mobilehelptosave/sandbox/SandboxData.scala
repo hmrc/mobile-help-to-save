@@ -46,6 +46,9 @@ case class SandboxData @Inject() (clock: Clock) {
       canPayInThisMonth = BigDecimal("29.50"),
       maximumPaidInThisMonth = BigDecimal("50.00"),
       thisMonthEndDate = endOfMonth,
+      accountHolderForename = "Testfore",
+      accountHolderSurname = "Testsur",
+      accountHolderEmail = Some("testemail@example.com"),
       bonusTerms = List(
         BonusTerm(BigDecimal("110.25"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
         BonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))

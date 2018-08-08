@@ -62,6 +62,8 @@ class UserServiceSpec
     BigDecimal("543.12"),
     0, 0, 0,
     thisMonthEndDate = new LocalDate(2020, 12, 31),
+    accountHolderName = "",
+    accountHolderEmail = None,
     bonusTerms = Seq.empty)
 
 

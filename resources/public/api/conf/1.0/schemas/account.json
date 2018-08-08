@@ -81,6 +81,20 @@
         "2018-03-31"
       ]
     },
+    "accountHolderName": {
+      "type": "string",
+      "description": "The account holder's name",
+      "examples": [
+        "John Test"
+      ]
+    },
+    "accountHolderEmail": {
+      "type": "string",
+      "description": "The account holder's email address",
+      "examples": [
+        "test@example.com"
+      ]
+    },
     "bonusTerms": {
       "type": "array",
       "description": "The bonus terms applicable for the account",
@@ -157,6 +171,7 @@
     "canPayInThisMonth",
     "maximumPaidInThisMonth",
     "thisMonthEndDate",
+    "accountHolderName",
     "bonusTerms"
   ]
 }

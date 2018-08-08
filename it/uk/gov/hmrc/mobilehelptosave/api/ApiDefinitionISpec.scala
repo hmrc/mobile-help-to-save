@@ -20,13 +20,12 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.mobilehelptosave.NumberVerification
-import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class ApiDefinitionISpec
-  extends WordSpec with Matchers with Eventually
-    with WireMockSupport with MongoTestCollectionsDropAfterAll
-  with OneServerPerSuiteWsClient with NumberVerification {
+  extends WordSpec with Matchers with Eventually with FutureAwaits with DefaultAwaitTimeout
+    with WireMockSupport with OneServerPerSuiteWsClient {
 
   override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
       "microservice.services.service-locator.host" -> wireMockHost,

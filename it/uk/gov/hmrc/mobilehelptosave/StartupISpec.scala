@@ -31,7 +31,6 @@ class StartupISpec extends WordSpec with Matchers
 
   override implicit lazy val app: Application = appBuilder
     .configure(
-      "helpToSave.getAccountFrom" -> "help-to-save",
       InvitationConfig.Enabled,
       "helpToSave.invitationFilters.workingTaxCredits" -> "false",
       "helpToSave.balanceEnabled" -> true,
@@ -75,6 +74,9 @@ class StartupISpec extends WordSpec with Matchers
       // service still returns the date supplied by NS&I unmodified during
       // BST.
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+
+      (response.json \ "user" \ "account" \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
+      (response.json \ "user" \ "account" \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
 
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))

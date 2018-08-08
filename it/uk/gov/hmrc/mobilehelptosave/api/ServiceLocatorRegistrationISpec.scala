@@ -16,29 +16,19 @@
 
 package uk.gov.hmrc.mobilehelptosave.api
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.{FakeRequest, PlayRunners}
+import play.api.test.PlayRunners
 import uk.gov.hmrc.mobilehelptosave.stubs.ServiceLocatorStub
 import uk.gov.hmrc.mobilehelptosave.support.WireMockSupport
 
 class ServiceLocatorRegistrationISpec
   extends WordSpec with Matchers with Eventually
     with WireMockSupport with PlayRunners {
-
-  trait Setup {
-    val documentationController: DocumentationController = app.injector.instanceOf[DocumentationController]
-    val request = FakeRequest()
-
-    implicit val system: ActorSystem = ActorSystem()
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-  }
 
   lazy val app: Application = appBuilder.build()
 
@@ -49,11 +39,13 @@ class ServiceLocatorRegistrationISpec
 
   "microservice" should {
     "register itself with the api platform automatically at start up" in {
-      ServiceLocatorStub.registerShouldNotHaveBeenCalled()
+      ServiceLocatorStub.registrationSucceeds()
+
+      ServiceLocatorStub.registerShouldNotHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
 
       running(app) {
         eventually(Timeout(Span(1000 * 20, Millis))) {
-          ServiceLocatorStub.registerShouldHaveBeenCalled()
+          ServiceLocatorStub.registerShouldHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
         }
       }
     }

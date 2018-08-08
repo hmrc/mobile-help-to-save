@@ -26,7 +26,7 @@ import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveProxyStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{JsonMatchers, MongoTestCollections, WireMockSupport, WithTestServer}
 
 /**
@@ -57,7 +57,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveProxyStub.nsiAccountExists(nino)
+      HelpToSaveStub.accountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
 
@@ -71,7 +71,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
       AuthStub.authoriseShouldNotHaveBeenCalled()
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
-      HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
+      HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
 
     "not call Get Account API when feature flags that require account information are all disabled" in withTestServerAndMongoCleanup(
@@ -91,7 +91,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveProxyStub.nsiAccountExists(nino)
+      HelpToSaveStub.accountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
 
@@ -100,7 +100,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "user" \ "state").as[String] shouldBe "Enrolled"
       (response.json \ "user").as[JsObject].keys should not contain "account"
 
-      HelpToSaveProxyStub.nsiAccountShouldNotHaveBeenCalled()
+      HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
 
     "include feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
