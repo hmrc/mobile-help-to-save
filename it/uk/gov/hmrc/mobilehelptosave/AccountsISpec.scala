@@ -59,8 +59,8 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
-      (response.json \ "accountHolderName") shouldBe "Testfore Testsur"
-      (response.json \ "accountHolderEmail") shouldBe "testemail@example.com"
+      (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
+      (response.json \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
