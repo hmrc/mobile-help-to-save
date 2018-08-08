@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.config
+package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
 
@@ -22,7 +22,6 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.mobilehelptosave.config.{Base64, EnabledInvitationFilters}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.config.ServicesConfig
 

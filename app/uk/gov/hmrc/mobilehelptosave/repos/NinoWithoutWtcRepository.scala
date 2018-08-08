@@ -23,8 +23,8 @@ import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
-import uk.gov.hmrc.config.NinoWithoutWtcMongoRepositoryConfig
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.config.NinoWithoutWtcMongoRepositoryConfig
 import uk.gov.hmrc.mobilehelptosave.domain.NinoWithoutWtc
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats._

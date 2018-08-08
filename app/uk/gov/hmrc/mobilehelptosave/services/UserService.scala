@@ -22,9 +22,9 @@ import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTimeZone
 import play.api.LoggerLike
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.config.UserServiceConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain.UserState.{Value, apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, UserState, _}
