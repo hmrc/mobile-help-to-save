@@ -33,6 +33,7 @@ class ServiceLocatorRegistrationISpec
   lazy val app: Application = appBuilder.build()
 
   override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
+    "microservice.services.service-locator.enabled" -> true,
     "microservice.services.service-locator.host" -> wireMockHost,
     "microservice.services.service-locator.port" -> wireMockPort
   )
@@ -51,4 +52,3 @@ class ServiceLocatorRegistrationISpec
     }
   }
 }
-

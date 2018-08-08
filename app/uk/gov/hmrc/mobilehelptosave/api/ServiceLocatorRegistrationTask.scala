@@ -22,14 +22,21 @@ import akka.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.api.connector.ServiceLocatorConnector
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.ServiceLocatorRegistrationTaskConfig
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ServiceLocatorRegistrationTask @Inject()(actorSystem: ActorSystem, connector: ServiceLocatorConnector)(implicit executionContext: ExecutionContext) {
-  actorSystem.scheduler.scheduleOnce(delay = FiniteDuration(10, SECONDS)) {
-    register
+class ServiceLocatorRegistrationTask @Inject()(
+  actorSystem: ActorSystem,
+  connector: ServiceLocatorConnector,
+  config: ServiceLocatorRegistrationTaskConfig
+)(implicit executionContext: ExecutionContext) {
+  if (config.serviceLocatorEnabled) {
+    actorSystem.scheduler.scheduleOnce(delay = FiniteDuration(10, SECONDS)) {
+      register
+    }
   }
 
   def register: Future[Boolean] = {

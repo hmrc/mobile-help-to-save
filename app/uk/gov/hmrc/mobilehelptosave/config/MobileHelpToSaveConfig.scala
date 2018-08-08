@@ -36,10 +36,11 @@ case class MobileHelpToSaveConfig @Inject()(
     with DocumentationControllerConfig
     with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
+    with HelpToSaveControllerConfig
     with NinoWithoutWtcMongoRepositoryConfig
+    with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig
     with TaxCreditsBrokerConnectorConfig
-    with HelpToSaveControllerConfig
     with UserServiceConfig {
 
   override protected lazy val mode: Mode = environment.mode
@@ -48,6 +49,8 @@ case class MobileHelpToSaveConfig @Inject()(
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
   override val taxCreditsBrokerBaseUrl: URL = configBaseUrl("tax-credits-broker")
+
+  override val serviceLocatorEnabled: Boolean = configBoolean("microservice.services.service-locator.enabled")
 
   override val shuttering: Shuttering = Shuttering(
     shuttered = configBoolean("helpToSave.shuttering.shuttered"),
@@ -104,6 +107,11 @@ trait HelpToSaveConnectorConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait NinoWithoutWtcMongoRepositoryConfig {
   def taxCreditsCacheExpireAfterSeconds: Long
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait ServiceLocatorRegistrationTaskConfig {
+  def serviceLocatorEnabled: Boolean
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
