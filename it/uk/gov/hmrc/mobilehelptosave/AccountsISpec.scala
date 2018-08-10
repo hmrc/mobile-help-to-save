@@ -75,6 +75,41 @@ class AccountsISpec extends WordSpec with Matchers
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
     }
 
+    "respond with 200 and accountHolderEmail omitted when user have not enter their email" in {
+      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithNoEmail(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      response.status shouldBe 200
+
+      (response.json \ "number").as[String] shouldBe "1000000000001"
+      (response.json \ "openedYearMonth").as[String] shouldBe "2018-01"
+      (response.json \ "isClosed").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
+      shouldBeBigDecimal(response.json \ "balance", BigDecimal("123.45"))
+      shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal("27.88"))
+      shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
+      shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
+      (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+
+      (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
+      (response.json \ "accountHolderEmail").asOpt[String] shouldBe None
+
+      val firstBonusTermJson = (response.json \ "bonusTerms") (0)
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
+      (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-12-31"
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
+
+      val secondBonusTermJson = (response.json \ "bonusTerms") (1)
+      shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
+      shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
+      (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+    }
+
     "respond with 404 and account not found" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsNotEnrolled()

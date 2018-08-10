@@ -89,6 +89,13 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         .withStatus(200)
         .withBody(accountReturnedByHelpToSaveJsonString)))
 
+  def accountExistsWithNoEmail(nino: Nino): Unit =
+    stubFor(get(getAccountUrlPathPattern(nino))
+      .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+      .willReturn(aResponse()
+        .withStatus(200)
+        .withBody(accountWithNoEmailReturnedByHelpToSaveJsonString)))
+
   def closedAccountExists(nino: Nino): Unit =
     stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
