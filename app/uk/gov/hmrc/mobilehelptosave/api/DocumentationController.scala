@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.HttpErrorHandler
 import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.config.DocumentationControllerConfig
+import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.views.txt
 
 case class ApiAccess(`type`: String, whitelistedApplicationIds: Seq[String])

@@ -21,9 +21,9 @@ import org.scalatest.{Assertion, Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveApi}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
@@ -32,6 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.{ExecutionContext, Future}
 
+//noinspection TypeAnnotation
 class HelpToSaveControllerSpec
   extends WordSpec
     with Matchers

@@ -20,8 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Result, Results}
-import uk.gov.hmrc.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveApi
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, Shuttering}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController

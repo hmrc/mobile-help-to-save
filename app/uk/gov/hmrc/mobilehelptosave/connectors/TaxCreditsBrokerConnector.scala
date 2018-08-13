@@ -23,9 +23,9 @@ import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.LoggerLike
 import play.api.libs.json._
-import uk.gov.hmrc.config.TaxCreditsBrokerConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.config.TaxCreditsBrokerConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegments
 

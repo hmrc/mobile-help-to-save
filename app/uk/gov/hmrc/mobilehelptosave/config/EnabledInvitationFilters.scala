@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.config
 
 import com.google.inject.ImplementedBy
-import uk.gov.hmrc.config.MobileHelpToSaveConfig
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait EnabledInvitationFilters {

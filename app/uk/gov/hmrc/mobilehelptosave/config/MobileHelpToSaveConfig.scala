@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.config
+package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
 
@@ -22,7 +22,6 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.mobilehelptosave.config.{Base64, EnabledInvitationFilters}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -37,10 +36,11 @@ case class MobileHelpToSaveConfig @Inject()(
     with DocumentationControllerConfig
     with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
+    with HelpToSaveControllerConfig
     with NinoWithoutWtcMongoRepositoryConfig
+    with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig
     with TaxCreditsBrokerConnectorConfig
-    with HelpToSaveControllerConfig
     with UserServiceConfig {
 
   override protected lazy val mode: Mode = environment.mode
@@ -49,6 +49,8 @@ case class MobileHelpToSaveConfig @Inject()(
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
   override val taxCreditsBrokerBaseUrl: URL = configBaseUrl("tax-credits-broker")
+
+  override val serviceLocatorEnabled: Boolean = configBoolean("microservice.services.service-locator.enabled")
 
   override val shuttering: Shuttering = Shuttering(
     shuttered = configBoolean("helpToSave.shuttering.shuttered"),
@@ -105,6 +107,11 @@ trait HelpToSaveConnectorConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait NinoWithoutWtcMongoRepositoryConfig {
   def taxCreditsCacheExpireAfterSeconds: Long
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait ServiceLocatorRegistrationTaskConfig {
+  def serviceLocatorEnabled: Boolean
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])

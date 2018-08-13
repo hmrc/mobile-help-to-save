@@ -20,7 +20,7 @@ import org.scalatest.{Matchers, WordSpec}
 import play.api.http.LazyHttpErrorHandler
 import play.api.mvc.Result
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.config.DocumentationControllerConfig
+import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 
 class DocumentationControllerSpec
   extends WordSpec with Matchers

@@ -21,9 +21,9 @@ import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.JsObject
 import play.api.test.Helpers.{contentAsJson, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.config.StartupControllerConfig
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 

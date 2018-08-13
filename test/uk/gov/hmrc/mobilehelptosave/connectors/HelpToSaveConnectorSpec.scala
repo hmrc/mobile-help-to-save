@@ -22,9 +22,9 @@ import io.lemonlabs.uri._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
