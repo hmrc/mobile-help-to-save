@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest._
 import play.api.Application
+import play.api.libs.json.JsObject
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
@@ -75,7 +76,7 @@ class AccountsISpec extends WordSpec with Matchers
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
     }
 
-    "respond with 200 and accountHolderEmail omitted when user have not enter their email" in {
+    "respond with 200 and accountHolderEmail omitted when no email address are return from help to save" in {
       AuthStub.userIsLoggedIn(internalAuthId, nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
@@ -95,7 +96,7 @@ class AccountsISpec extends WordSpec with Matchers
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
 
       (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
-      (response.json \ "accountHolderEmail").asOpt[String] shouldBe None
+      response.json.as[JsObject].keys should not contain "accountHolderEmail"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
