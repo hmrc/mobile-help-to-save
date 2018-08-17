@@ -10,6 +10,8 @@
   "canPayInThisMonth": 0,
   "maximumPaidInThisMonth": 50,
   "thisMonthEndDate": "2018-03-31",
+  "accountHolderName": "Testforename Testsurname",
+  "accountHolderEmail": "test@example.com",
   "bonusTerms": [
     {
       "bonusEstimate": 100,
