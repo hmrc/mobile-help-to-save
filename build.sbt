@@ -2,13 +2,7 @@ import TestPhases.oneForkedJvmPerTest
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
-name := "mobile-help-to-save"
-
-lazy val root = (project in file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
-  .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
-  .settings(addCommandAlias("testAll", ";reload;test;it:test"))
+val appName = "mobile-help-to-save"
 
 lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
@@ -22,32 +16,40 @@ lazy val scoverageSettings = {
   )
 }
 
-scoverageSettings
-scalaSettings
-publishingSettings
-unmanagedResourceDirectories in Compile += baseDirectory.value / "resources"
-defaultSettings()
-
-PlayKeys.playDefaultPort := 8248
-
-// from https://github.com/typelevel/cats/blob/master/README.md
-scalacOptions += "-Ypartial-unification"
-
-AppDependencies.appDependencies
-evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
-
-unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon"
-
-Keys.fork in IntegrationTest := false
-unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(
-  base / "it",
-  base / "testcommon"
-)).value
-addTestReportOption(IntegrationTest, "int-test-reports")
-testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value)
-parallelExecution in IntegrationTest := false
-
-resolvers ++= Seq(
-  Resolver.bintrayRepo("hmrc", "releases"),
-  Resolver.jcenterRepo
-)
+lazy val microservice = Project(appName, file("."))
+  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .settings(scoverageSettings: _*)
+  .settings(scalaSettings: _*)
+  .settings(publishingSettings: _*)
+  .settings(defaultSettings(): _*)
+  .settings(AppDependencies.appDependencies: _*)
+  .settings(
+    unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
+    PlayKeys.playDefaultPort := 8248,
+    // from https://github.com/typelevel/cats/blob/master/README.md
+    scalacOptions += "-Ypartial-unification",
+    addCommandAlias("testAll", ";reload;test;it:test")
+  )
+  .settings(evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false))
+  .settings(unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon"
+  )
+  .configs(IntegrationTest)
+  .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(
+      unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(
+      base / "it",
+      base / "testcommon"
+    )).value: _*
+  )
+  .settings(
+    Keys.fork in IntegrationTest := false,
+    addTestReportOption(IntegrationTest, "int-test-reports"),
+    testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
+    parallelExecution in IntegrationTest := false
+  )
+  .settings(
+    resolvers ++= Seq(
+      Resolver.bintrayRepo("hmrc", "releases"),
+      Resolver.jcenterRepo
+    )
+  )
