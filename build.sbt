@@ -17,13 +17,14 @@ lazy val scoverageSettings = {
 }
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
   .settings(scoverageSettings: _*)
   .settings(scalaSettings: _*)
   .settings(publishingSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(AppDependencies.appDependencies: _*)
   .settings(
+    majorVersion := 0,
     unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
     // from https://github.com/typelevel/cats/blob/master/README.md
