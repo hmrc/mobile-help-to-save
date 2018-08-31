@@ -54,6 +54,7 @@ case class Account(
   canPayInThisMonth: BigDecimal,
   maximumPaidInThisMonth: BigDecimal,
   thisMonthEndDate: LocalDate,
+  nextPaymentMonthStartDate: Option[LocalDate],
 
   accountHolderName: String,
   accountHolderEmail: Option[String],
@@ -77,10 +78,19 @@ object Account {
     canPayInThisMonth = h.canPayInThisMonth,
     maximumPaidInThisMonth = h.maximumPaidInThisMonth,
     thisMonthEndDate = h.thisMonthEndDate,
+    nextPaymentMonthStartDate = nextPaymentMonthStartDate(h),
     accountHolderName = h.accountHolderForename + " " + h.accountHolderSurname,
     accountHolderEmail = h.accountHolderEmail,
     bonusTerms = h.bonusTerms,
     closureDate = h.closureDate,
     closingBalance = h.closingBalance
   )
+
+  private def nextPaymentMonthStartDate(h: HelpToSaveAccount) = {
+    if (h.thisMonthEndDate.isBefore(h.bonusTerms.last.endDate)) {
+      Some(h.thisMonthEndDate.plusDays(1))
+    } else {
+      None
+    }
+  }
 }

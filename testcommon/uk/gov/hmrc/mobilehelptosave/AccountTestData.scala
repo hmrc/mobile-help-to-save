@@ -132,6 +132,7 @@ trait AccountTestData {
     canPayInThisMonth = BigDecimal("22.12"),
     maximumPaidInThisMonth = 50,
     thisMonthEndDate = new LocalDate(2018, 4, 30),
+    nextPaymentMonthStartDate = Some(new LocalDate(2018, 5, 1)),
     accountHolderName = "Testfore Testsur",
     accountHolderEmail = Some("testemail@example.com"),
     bonusTerms = Seq(
