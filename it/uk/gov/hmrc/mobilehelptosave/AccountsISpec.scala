@@ -59,6 +59,7 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+      (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
       (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
       (response.json \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
@@ -94,6 +95,7 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+      (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
       (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
       response.json.as[JsObject].keys should not contain "accountHolderEmail"
@@ -168,6 +170,7 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(50))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+      (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("7.50"))
@@ -203,6 +206,7 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(0))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
       (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-03-31"
+      (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-04-01"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal(125.0))

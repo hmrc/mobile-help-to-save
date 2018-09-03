@@ -63,6 +63,10 @@ Response format:
       // The end date of the month that the "this month" figures refer to.
       // Clients should use this date instead of calculating it themselves to protect against clock skew & race conditions.
       "thisMonthEndDate": "2018-02-28",
+      // Start of the next paying-in month of this Help to Save account.
+      // Absent if it won't be possible to pay into this account next month 
+      // (because the final bonus term will have ended).
+      "nextPaymentMonthStartDate": "2018-03-01",
       "accountHolderName": "Testforename Testsurname",
       // Email may be absent (it isn't a required field in the NS&I API we source it from)
       "accountHolderEmail": "test@example.com",

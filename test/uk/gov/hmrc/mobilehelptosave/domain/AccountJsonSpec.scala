@@ -38,6 +38,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     BigDecimal("543.12"),
     0, 0, 0,
     thisMonthEndDate = new LocalDate(2020, 12, 31),
+    nextPaymentMonthStartDate = Some(new LocalDate(2021, 1, 1)),
     accountHolderName = "Testfore Testsur",
     accountHolderEmail = Some("testemail@example.com"),
     bonusTerms = Seq(

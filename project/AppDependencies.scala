@@ -5,7 +5,6 @@ import sbt.{ModuleID, _}
 
 object AppDependencies {
 
-
   def appDependencies: Seq[Setting[_]] = Seq(
     libraryDependencies ++= compile ++ test ++ integrationTest,
     resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"

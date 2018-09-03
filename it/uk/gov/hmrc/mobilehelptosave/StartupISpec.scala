@@ -74,6 +74,7 @@ class StartupISpec extends WordSpec with Matchers
       // service still returns the date supplied by NS&I unmodified during
       // BST.
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+      (response.json \ "user" \ "account" \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
       (response.json \ "user" \ "account" \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
       (response.json \ "user" \ "account" \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
@@ -113,6 +114,7 @@ class StartupISpec extends WordSpec with Matchers
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "canPayInThisMonth", 50)
       shouldBeBigDecimal(response.json \ "user" \ "account" \ "maximumPaidInThisMonth", 50)
       (response.json \ "user" \ "account" \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
+      (response.json \ "user" \ "account" \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
       val firstBonusTermJson = (response.json \ "user" \ "account" \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("7.50"))

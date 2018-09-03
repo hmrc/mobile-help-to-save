@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout
-  with AccountTestData{
+  with AccountTestData {
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
