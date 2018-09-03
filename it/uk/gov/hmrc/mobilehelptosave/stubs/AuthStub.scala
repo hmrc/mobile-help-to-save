@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave.stubs
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 
 object AuthStub {
 
@@ -28,19 +27,18 @@ object AuthStub {
     """
       |{
       | "authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}, {"confidenceLevel" : 200}],
-      | "retrieve": ["internalId", "nino"]
+      | "retrieve": ["nino"]
       |}""".stripMargin
   }
 
 
-  def userIsLoggedIn(internalId: InternalAuthId, nino: Nino): Unit =
+  def userIsLoggedIn(nino: Nino): Unit =
     stubFor(post(urlPathEqualTo("/auth/authorise"))
       .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(
           Json.obj(
-            "internalId" -> internalId.value,
             "nino" -> nino.value
           ).toString
         )))

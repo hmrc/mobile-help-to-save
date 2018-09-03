@@ -23,7 +23,6 @@ import play.api.libs.json.JsObject
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
@@ -38,13 +37,12 @@ class AccountsISpec extends WordSpec with Matchers
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
-  private val internalAuthId = new InternalAuthId("test-internal-auth-id")
 
   "GET /savings-account/{nino}" should {
 
     "respond with 200 and the users account data" in {
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
@@ -80,7 +78,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 200 and accountHolderEmail omitted when no email address are return from help to save" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
 
@@ -116,7 +114,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 404 and account not found" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
@@ -128,7 +126,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 500 with general error message body when get account fails" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInternalServerError(nino)
 
@@ -140,7 +138,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 500 with general error message body when get account returns JSON that doesn't conform to the schema" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInvalidJson(nino)
 
@@ -152,7 +150,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "include account closure fields when account is closed" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.closedAccountExists(nino)
 
@@ -188,7 +186,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "include account blocked fields when account is enrolled but blocked" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.blockedAccountExists(nino)
 

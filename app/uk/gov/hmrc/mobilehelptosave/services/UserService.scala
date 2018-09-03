@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain.UserState.{Value, apply => _, _}
-import uk.gov.hmrc.mobilehelptosave.domain.{InternalAuthId, _}
+import uk.gov.hmrc.mobilehelptosave.domain._
 
 import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,7 +38,7 @@ class UserService @Inject()(
                              config: UserServiceConfig
                            ) {
 
-  def userDetails(internalAuthId: InternalAuthId, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {
+  def userDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {
     EitherT(helpToSaveConnector.enrolmentStatus())
       .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)
       .flatMap(state => EitherT.right[ErrorInfo](userDetails(nino, state)))

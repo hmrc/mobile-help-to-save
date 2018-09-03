@@ -26,11 +26,9 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals, ~}
-import uk.gov.hmrc.auth.core.syntax.retrieved._
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -44,38 +42,23 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with OneInstancePe
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   "AuthorisedWithIds" should {
-    "include the internal auth ID and NINO in the request" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Some("some-internal-auth-id"), Some(testNino.value))
+    "include the NINO in the request" in {
+      val authConnectorStub = authConnectorStubThatWillReturn(Some(testNino.value))
 
       val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
 
-      var capturedInternalAuthId: Option[InternalAuthId] = None
       var capturedNino: Option[Nino] = None
       val action = authorised { request =>
-        capturedInternalAuthId = Some(request.internalAuthId)
         capturedNino = Some(request.nino)
         Ok
       }
 
       await(action(FakeRequest())) shouldBe Ok
-      capturedInternalAuthId shouldBe Some(InternalAuthId("some-internal-auth-id"))
       capturedNino shouldBe Some(testNino)
     }
 
-    "return 500 when no internal auth ID can be retrieved" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(None, Some(testNino.value))
-
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
-
-      val action = authorised { _ =>
-        Ok
-      }
-
-      status(action(FakeRequest())) shouldBe INTERNAL_SERVER_ERROR
-    }
-
     "return 403 when no NINO can be retrieved" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Some("some-internal-auth-id"), None)
+      val authConnectorStub = authConnectorStubThatWillReturn(None)
 
       val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
 
@@ -127,14 +110,14 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with OneInstancePe
   }
 
 
-  private def authConnectorStubThatWillReturn(internalAuthId: Option[String], nino: Option[String]): AuthConnector =
-    authConnectorStubThatWillReturn(Future successful (internalAuthId and nino))
+  private def authConnectorStubThatWillReturn(nino: Option[String]): AuthConnector =
+    authConnectorStubThatWillReturn(Future successful nino)
 
-  private def authConnectorStubThatWillReturn(futureIds: Future[Option[String] ~ Option[String]]): AuthConnector = {
+  private def authConnectorStubThatWillReturn(futureNino: Future[Option[String]]): AuthConnector = {
     val authConnectorStub = stub[AuthConnector]
-    (authConnectorStub.authorise[Option[String] ~ Option[String]](_: Predicate, _: Retrieval[Option[String] ~ Option[String]])(_: HeaderCarrier, _: ExecutionContext))
-      .when(AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200, internalId and nino, *, *)
-      .returns(futureIds)
+    (authConnectorStub.authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
+      .when(AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200, nino, *, *)
+      .returns(futureNino)
     authConnectorStub
   }
 

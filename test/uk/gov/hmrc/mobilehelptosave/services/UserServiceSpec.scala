@@ -37,8 +37,6 @@ class UserServiceSpec
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
-  private val internalAuthId = InternalAuthId("test-internal-auth-id")
-
   private val generator = new Generator(0)
   private val nino = generator.nextNino
 
@@ -79,7 +77,7 @@ class UserServiceSpec
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true))
       )
 
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+      val user: UserDetails = await(service.userDetails(nino)).right.value
       user.state shouldBe UserState.Enrolled
     }
 
@@ -88,7 +86,7 @@ class UserServiceSpec
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false))
       )
 
-      val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+      val user: UserDetails = await(service.userDetails(nino)).right.value
       user.state shouldBe UserState.NotEnrolled
     }
   }
@@ -103,12 +101,12 @@ class UserServiceSpec
       )
 
       "return state=Enrolled" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.state shouldBe UserState.Enrolled
       }
 
       "include account information" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
     }
@@ -120,7 +118,7 @@ class UserServiceSpec
       )
 
       "include accountError" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.account shouldBe None
         user.accountError shouldBe Some(ErrorInfo.General)
       }
@@ -134,12 +132,12 @@ class UserServiceSpec
       )
 
       "return state=Enrolled" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.state shouldBe UserState.Enrolled
       }
 
       "include accountError and log a warning" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.account shouldBe None
         user.accountError shouldBe Some(ErrorInfo.General)
         (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
@@ -158,7 +156,7 @@ class UserServiceSpec
       )
 
       "include account information" in {
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.account shouldBe Some(accountReturnedByAccountService)
       }
     }
@@ -174,7 +172,7 @@ class UserServiceSpec
 
       "not call accountService" in {
         // lack of call to accountService is checked by use of shouldNotBeCalledAccountService when constructing UserService
-        val user: UserDetails = await(service.userDetails(internalAuthId, nino)).right.value
+        val user: UserDetails = await(service.userDetails(nino)).right.value
         user.account shouldBe None
       }
     }
@@ -188,7 +186,7 @@ class UserServiceSpec
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Left(error))
       )
 
-      await(service.userDetails(internalAuthId, nino)) shouldBe Left(error)
+      await(service.userDetails(nino)) shouldBe Left(error)
     }
   }
 

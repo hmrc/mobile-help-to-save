@@ -25,7 +25,6 @@ import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{JsonMatchers, MongoTestCollections, WireMockSupport, WithTestServer}
 
@@ -36,7 +35,6 @@ import uk.gov.hmrc.mobilehelptosave.support.{JsonMatchers, MongoTestCollections,
 class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with FutureAwaits with DefaultAwaitTimeout
   with WsScalaTestClient with WireMockSupport with MongoTestCollections with WithTestServer {
 
-  private val internalAuthId = InternalAuthId("test-internal-auth-id")
   private val generator = new Generator(0)
   private val nino = generator.nextNino
   private val base64Encoder = Base64.getEncoder
@@ -54,7 +52,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
@@ -87,7 +85,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
@@ -107,7 +105,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -144,7 +142,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-        AuthStub.userIsLoggedIn(internalAuthId, nino)
+        AuthStub.userIsLoggedIn(nino)
         HelpToSaveStub.currentUserIsNotEnrolled()
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -176,7 +174,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-        AuthStub.userIsLoggedIn(internalAuthId, nino)
+        AuthStub.userIsLoggedIn(nino)
         HelpToSaveStub.currentUserIsNotEnrolled()
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())

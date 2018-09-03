@@ -21,7 +21,6 @@ import play.api.Application
 import play.api.libs.json.JsUndefined
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -40,12 +39,11 @@ class StartupISpec extends WordSpec with Matchers
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
-  private val internalAuthId = new InternalAuthId("test-internal-auth-id")
 
   "GET /mobile-help-to-save/startup" should {
 
     "return enabled=true for backwards compatibility until we do NGC-3244" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -54,7 +52,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "include user.state and user.account" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
@@ -93,7 +91,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "include account closure fields when account is closed" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.closedAccountExists(nino)
 
@@ -130,7 +128,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit user state if call to help-to-save fails" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -143,7 +141,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit account details but still include user state if call to get account fails" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInternalServerError(nino)
 
@@ -155,7 +153,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit account details but still include user state if get account returns JSON that doesn't conform to the schema" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInvalidJson(nino)
 
@@ -167,7 +165,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit account details but still include user state if get account returns badly formed JSON" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsBadlyFormedJson(nino)
 
@@ -192,6 +190,7 @@ class StartupISpec extends WordSpec with Matchers
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
+    //TODO
     "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
       AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())

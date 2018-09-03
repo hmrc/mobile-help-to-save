@@ -50,7 +50,6 @@ class HelpToSaveControllerSpec
   private val generator = new Generator(0)
   private val nino = generator.nextNino
   private val otherNino = generator.nextNino
-  private val internalAuthId = InternalAuthId("some-internal-auth-id")
 
   private val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
@@ -81,7 +80,7 @@ class HelpToSaveControllerSpec
 
   private trait AuthorisedTestScenario {
     val helpToSaveConnector: HelpToSaveApi = mock[HelpToSaveApi]
-    val controller: HelpToSaveController = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config)
+    val controller: HelpToSaveController = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(nino), config)
   }
 
   private trait HelpToSaveStubbing {
@@ -172,7 +171,7 @@ class HelpToSaveControllerSpec
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
         val helpToSaveConnector = mock[HelpToSaveApi]
-        val controller = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config.copy(shuttering = trueShuttering))
+        val controller = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering))
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 521
@@ -258,7 +257,7 @@ class HelpToSaveControllerSpec
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
         val helpToSaveConnector = mock[HelpToSaveApi]
-        val controller = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(internalAuthId, nino), config.copy(shuttering = trueShuttering))
+        val controller = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 521

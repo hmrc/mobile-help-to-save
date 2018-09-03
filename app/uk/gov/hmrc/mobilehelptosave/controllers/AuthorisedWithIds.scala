@@ -22,16 +22,15 @@ import play.api.LoggerLike
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.{Retrievals, ~}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.Future
 
-class RequestWithIds[+A](val internalAuthId: InternalAuthId, val nino: Nino, request: Request[A]) extends WrappedRequest[A](request)
+class RequestWithIds[+A](val nino: Nino, request: Request[A]) extends WrappedRequest[A](request)
 
 @ImplementedBy(classOf[AuthorisedWithIdsImpl])
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
@@ -45,19 +44,12 @@ class AuthorisedWithIdsImpl @Inject() (
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
     val predicates = AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200
-    val retrievals = Retrievals.internalId and Retrievals.nino
+    val retrievals = Retrievals.nino
 
     authConnector.authorise(predicates, retrievals).map {
-      case Some(internalAuthId) ~ Some(nino) =>
-        Right(new RequestWithIds(InternalAuthId(internalAuthId), Nino(nino), request))
-      case None ~ _ =>
-        // <confluence>/display/PE/Retrievals+Reference#RetrievalsReference-internalId states
-        // "always defined for Government Gateway and Verify auth providers"
-        // and we have specified AuthProviders(GovernmentGateway, Verify) so internalId
-        // should always be defined.
-        logger.warn("Internal auth id not found")
-        Left(InternalServerError("Internal id not found"))
-      case _ ~ None =>
+      case Some(nino) =>
+        Right(new RequestWithIds(Nino(nino), request))
+      case None =>
         logger.warn("NINO not found")
         Left(Forbidden("NINO not found"))
     }.recover {
