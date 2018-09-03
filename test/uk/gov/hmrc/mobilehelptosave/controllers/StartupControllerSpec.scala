@@ -65,10 +65,11 @@ class StartupControllerSpec
   private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
 
   "startup" should {
+    //TODO is internalAuthId needed?
     "pass internalAuthId and NINO obtained from auth into userService" in {
       (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
+        .returning(Future successful Right(testUserDetails))
 
       val controller = new StartupController(
         mockUserService,
@@ -98,7 +99,7 @@ class StartupControllerSpec
       "include URLs and user in response" in {
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
+          .returning(Future successful Right(testUserDetails))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -113,7 +114,7 @@ class StartupControllerSpec
       "include shuttering information in response with shuttered = false" in {
         (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
           .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
+          .returning(Future successful Right(testUserDetails))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200

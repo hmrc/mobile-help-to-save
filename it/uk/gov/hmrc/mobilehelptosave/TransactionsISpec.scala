@@ -24,6 +24,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
@@ -31,7 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, O
 
 class TransactionsISpec extends WordSpec with Matchers
   with SchemaMatchers with TransactionTestData
-  with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
+  with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport with MongoTestCollectionsDropAfterAll
   with OneServerPerSuiteWsClient {
 
@@ -39,6 +40,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
+  private val internalAuthId = new InternalAuthId("test-internal-auth-id")
 
   "GET /savings-account/{nino}/transactions" should {
 

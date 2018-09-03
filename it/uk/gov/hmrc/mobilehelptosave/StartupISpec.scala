@@ -21,18 +21,17 @@ import play.api.Application
 import play.api.libs.json.JsUndefined
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
+  with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport with MongoTestCollectionsDropAfterAll
   with OneServerPerSuiteWsClient with NumberVerification  {
 
   override implicit lazy val app: Application = appBuilder
     .configure(
-      InvitationConfig.Enabled,
-      "helpToSave.invitationFilters.workingTaxCredits" -> "false",
       "helpToSave.balanceEnabled" -> true,
       "helpToSave.paidInThisMonthEnabled" -> true,
       "helpToSave.firstBonusEnabled" -> true
@@ -41,6 +40,7 @@ class StartupISpec extends WordSpec with Matchers
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
+  private val internalAuthId = new InternalAuthId("test-internal-auth-id")
 
   "GET /mobile-help-to-save/startup" should {
 
@@ -127,26 +127,6 @@ class StartupISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-02-28"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
-    }
-
-    "integrate with the metrics returned by /admin/metrics" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
-
-      def invitationCountMetric(): Integer = {
-        val metricsResponse = await(wsUrl("/admin/metrics").get())
-        (metricsResponse.json \ "counters" \ "invitation" \ "count").as[Int]
-      }
-
-      val invitationCountBefore = invitationCountMetric()
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
-
-      val invitationCountAfter = invitationCountMetric()
-
-      (invitationCountAfter - invitationCountBefore) shouldBe 1
     }
 
     "omit user state if call to help-to-save fails" in {

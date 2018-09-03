@@ -50,7 +50,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           "helpToSave.shuttering.message" -> base64Encode("HTS is currently not available"),
           "helpToSave.savingRemindersEnabled" -> true
         )
-        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -84,7 +83,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           "helpToSave.paidInThisMonthEnabled" -> false,
           "helpToSave.firstBonusEnabled" -> false
         )
-        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -105,7 +103,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
     "include feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
       appBuilder
-        .configure(InvitationConfig.NoFilters: _*)
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -143,7 +140,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
             "helpToSave.transactionsEnabled" -> "false",
             "helpToSave.supportFormEnabled" -> "true"
           )
-          .configure(InvitationConfig.NoFilters: _*)
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -176,7 +172,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
             "helpToSave.transactionsEnabled" -> "true",
             "helpToSave.supportFormEnabled" -> "false"
           )
-          .configure(InvitationConfig.NoFilters: _*)
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
