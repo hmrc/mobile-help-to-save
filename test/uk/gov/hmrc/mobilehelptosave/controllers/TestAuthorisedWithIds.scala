@@ -18,13 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.mvc.{Request, Result, Results}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.InternalAuthId
 
 import scala.concurrent.Future
 
-class AlwaysAuthorisedWithIds(id: InternalAuthId, nino: Nino) extends AuthorisedWithIds {
+class AlwaysAuthorisedWithIds(nino: Nino) extends AuthorisedWithIds {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-    Future successful Right(new RequestWithIds(id, nino, request))
+    Future successful Right(new RequestWithIds(nino, request))
 }
 
 object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {

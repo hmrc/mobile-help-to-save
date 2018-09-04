@@ -31,7 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, O
 
 class TransactionsISpec extends WordSpec with Matchers
   with SchemaMatchers with TransactionTestData
-  with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
+  with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport with MongoTestCollectionsDropAfterAll
   with OneServerPerSuiteWsClient {
 
@@ -44,7 +44,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
     "respond with 200 and the users transactions" in {
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsExistForUser(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
@@ -55,7 +55,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
     "respond with 200 and an empty transactions list when there are no transactions for the NINO" in {
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
@@ -66,7 +66,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
     "respond with 200 and users debit transaction more than 50 pounds" in {
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
@@ -77,7 +77,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
     "respond with 200 and multiple transactions within same month and same day" in {
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
@@ -87,7 +87,7 @@ class TransactionsISpec extends WordSpec with Matchers
     }
 
     "respond with a 404 if the user's NINO isn't found" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userDoesNotHaveAnHtsAccount(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
@@ -113,14 +113,6 @@ class TransactionsISpec extends WordSpec with Matchers
       response.status shouldBe 403
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
-    }
-
-    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
-      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
-      response.status shouldBe 403
-      checkTransactionsResponseInvariants(response)
-      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
   }
 

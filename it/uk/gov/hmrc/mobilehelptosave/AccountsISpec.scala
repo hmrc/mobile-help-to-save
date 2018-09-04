@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, O
 
 class AccountsISpec extends WordSpec with Matchers
   with SchemaMatchers with TransactionTestData
-  with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
+  with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport with MongoTestCollectionsDropAfterAll
   with OneServerPerSuiteWsClient with NumberVerification {
 
@@ -42,7 +42,7 @@ class AccountsISpec extends WordSpec with Matchers
 
     "respond with 200 and the users account data" in {
 
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
@@ -78,7 +78,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 200 and accountHolderEmail omitted when no email address are return from help to save" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
 
@@ -114,7 +114,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 404 and account not found" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
@@ -126,7 +126,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 500 with general error message body when get account fails" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInternalServerError(nino)
 
@@ -138,7 +138,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "respond with 500 with general error message body when get account returns JSON that doesn't conform to the schema" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInvalidJson(nino)
 
@@ -150,7 +150,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "include account closure fields when account is closed" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.closedAccountExists(nino)
 
@@ -186,7 +186,7 @@ class AccountsISpec extends WordSpec with Matchers
     }
 
     "include account blocked fields when account is enrolled but blocked" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.blockedAccountExists(nino)
 
@@ -233,13 +233,6 @@ class AccountsISpec extends WordSpec with Matchers
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
-    }
-
-    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
-      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
-      response.status shouldBe 403
-      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
   }
 }

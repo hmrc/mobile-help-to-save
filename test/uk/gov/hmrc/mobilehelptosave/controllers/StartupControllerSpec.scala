@@ -41,7 +41,6 @@ class StartupControllerSpec
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
-  private val internalAuthId = InternalAuthId("some-internal-auth-id")
 
   private val mockUserService = mock[UserService]
 
@@ -65,14 +64,14 @@ class StartupControllerSpec
   private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
 
   "startup" should {
-    "pass internalAuthId and NINO obtained from auth into userService" in {
-      (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(internalAuthId, nino, *, *)
-        .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
+    "pass NINO obtained from auth into userService" in {
+      (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(nino, *, *)
+        .returning(Future successful Right(testUserDetails))
 
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        new AlwaysAuthorisedWithIds(nino),
         config)
 
       status(controller.startup(FakeRequest())) shouldBe 200
@@ -92,13 +91,13 @@ class StartupControllerSpec
     "helpToSaveEnabled = true and helpToSaveShuttered = false" should {
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        new AlwaysAuthorisedWithIds(nino),
         config)
 
       "include URLs and user in response" in {
-        (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
+        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(nino, *, *)
+          .returning(Future successful Right(testUserDetails))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -111,9 +110,9 @@ class StartupControllerSpec
       }
 
       "include shuttering information in response with shuttered = false" in {
-        (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(internalAuthId, nino, *, *)
-          .returning(Future successful Right(testUserDetails.copy(state = UserState.Invited)))
+        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(nino, *, *)
+          .returning(Future successful Right(testUserDetails))
 
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
@@ -125,15 +124,15 @@ class StartupControllerSpec
     "there is an error getting user details" should {
       val controller = new StartupController(
         mockUserService,
-        new AlwaysAuthorisedWithIds(internalAuthId, nino),
+        new AlwaysAuthorisedWithIds(nino),
         config)
 
       "include userError and non-user fields such as URLs response" in {
         val generator = new Generator(0)
         val nino = generator.nextNino
 
-        (mockUserService.userDetails(_: InternalAuthId, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(internalAuthId, nino, *, *)
+        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(nino, *, *)
           .returning(Future successful Left(ErrorInfo.General))
 
         val resultF = controller.startup(FakeRequest())

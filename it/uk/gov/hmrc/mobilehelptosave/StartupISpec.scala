@@ -25,14 +25,12 @@ import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout with InvitationCleanup
+  with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport with MongoTestCollectionsDropAfterAll
   with OneServerPerSuiteWsClient with NumberVerification  {
 
   override implicit lazy val app: Application = appBuilder
     .configure(
-      InvitationConfig.Enabled,
-      "helpToSave.invitationFilters.workingTaxCredits" -> "false",
       "helpToSave.balanceEnabled" -> true,
       "helpToSave.paidInThisMonthEnabled" -> true,
       "helpToSave.firstBonusEnabled" -> true
@@ -45,7 +43,7 @@ class StartupISpec extends WordSpec with Matchers
   "GET /mobile-help-to-save/startup" should {
 
     "return enabled=true for backwards compatibility until we do NGC-3244" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -54,7 +52,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "include user.state and user.account" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
@@ -93,7 +91,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "include account closure fields when account is closed" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.closedAccountExists(nino)
 
@@ -129,28 +127,8 @@ class StartupISpec extends WordSpec with Matchers
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
     }
 
-    "integrate with the metrics returned by /admin/metrics" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
-
-      def invitationCountMetric(): Integer = {
-        val metricsResponse = await(wsUrl("/admin/metrics").get())
-        (metricsResponse.json \ "counters" \ "invitation" \ "count").as[Int]
-      }
-
-      val invitationCountBefore = invitationCountMetric()
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "user" \ "state").asOpt[String] shouldBe Some("InvitedFirstTime")
-
-      val invitationCountAfter = invitationCountMetric()
-
-      (invitationCountAfter - invitationCountBefore) shouldBe 1
-    }
-
     "omit user state if call to help-to-save fails" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
@@ -163,7 +141,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit account details but still include user state if call to get account fails" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInternalServerError(nino)
 
@@ -175,7 +153,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit account details but still include user state if get account returns JSON that doesn't conform to the schema" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInvalidJson(nino)
 
@@ -187,7 +165,7 @@ class StartupISpec extends WordSpec with Matchers
     }
 
     "omit account details but still include user state if get account returns badly formed JSON" in {
-      AuthStub.userIsLoggedIn(internalAuthId, nino)
+      AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsBadlyFormedJson(nino)
 
@@ -210,13 +188,6 @@ class StartupISpec extends WordSpec with Matchers
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
-    }
-
-    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
-      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 403
-      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
     }
   }
 }

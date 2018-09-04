@@ -34,7 +34,7 @@ class StartupController @Inject() (
 
   val startup: Action[AnyContent] = if (!config.shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>
-      val responseF = userService.userDetails(request.internalAuthId, request.nino).map { userOrError =>
+      val responseF = userService.userDetails(request.nino).map { userOrError =>
         StartupResponse(
           shuttering = config.shuttering,
           infoUrl = Some(config.helpToSaveInfoUrl),

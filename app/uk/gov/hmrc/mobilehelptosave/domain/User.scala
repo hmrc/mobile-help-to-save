@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import play.api.libs.json.{Json, Writes}
 
 object UserState extends Enumeration {
-  val NotEnrolled, InvitedFirstTime, Invited, Enrolled = Value
+  val NotEnrolled, Enrolled = Value
 }
 
 case class UserDetails(

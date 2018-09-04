@@ -34,13 +34,11 @@ case class MobileHelpToSaveConfig @Inject()(
 )
   extends ServicesConfig
     with DocumentationControllerConfig
-    with EnabledInvitationFilters
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
     with NinoWithoutWtcMongoRepositoryConfig
     with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig
-    with TaxCreditsBrokerConnectorConfig
     with UserServiceConfig {
 
   override protected lazy val mode: Mode = environment.mode
@@ -48,7 +46,6 @@ case class MobileHelpToSaveConfig @Inject()(
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
-  override val taxCreditsBrokerBaseUrl: URL = configBaseUrl("tax-credits-broker")
 
   override val serviceLocatorEnabled: Boolean = configBoolean("microservice.services.service-locator.enabled")
 
@@ -68,10 +65,7 @@ case class MobileHelpToSaveConfig @Inject()(
   override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
-  override val dailyInvitationCap: Int = configInt("helpToSave.dailyInvitationCap")
   override val taxCreditsCacheExpireAfterSeconds: Long = configLong("helpToSave.taxCreditsCache.expireAfterSeconds")
-
-  override val workingTaxCreditsInvitationFilter: Boolean = configBoolean("helpToSave.invitationFilters.workingTaxCredits")
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType: String = accessConfig.getString("type")
@@ -80,8 +74,6 @@ case class MobileHelpToSaveConfig @Inject()(
   protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
-
-  private def configInt(path: String): Int = configuration.underlying.getInt(path)
 
   private def configLong(path: String): Long = configuration.underlying.getLong(path)
 
@@ -130,18 +122,12 @@ trait StartupControllerConfig {
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait TaxCreditsBrokerConnectorConfig {
-  def taxCreditsBrokerBaseUrl: URL
-}
-
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait UserServiceConfig {
-  def dailyInvitationCap: Int
   def balanceEnabled: Boolean
   def paidInThisMonthEnabled: Boolean
   def firstBonusEnabled: Boolean
