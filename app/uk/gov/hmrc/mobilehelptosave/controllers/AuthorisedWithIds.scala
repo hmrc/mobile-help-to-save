@@ -20,7 +20,6 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.Retrievals
 import uk.gov.hmrc.domain.Nino
@@ -43,7 +42,7 @@ class AuthorisedWithIdsImpl @Inject() (
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
-    val predicates = AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200
+    val predicates = ConfidenceLevel.L200
     val retrievals = Retrievals.nino
 
     authConnector.authorise(predicates, retrievals).map {

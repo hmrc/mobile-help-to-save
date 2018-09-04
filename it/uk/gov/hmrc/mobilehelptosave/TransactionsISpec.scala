@@ -114,14 +114,6 @@ class TransactionsISpec extends WordSpec with Matchers
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
-
-    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
-      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
-      response.status shouldBe 403
-      checkTransactionsResponseInvariants(response)
-      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
-    }
   }
 
   private def checkTransactionsResponseInvariants(response: WSResponse): Unit = {

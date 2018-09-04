@@ -23,7 +23,6 @@ import org.scalatest.OneInstancePerTest
 import play.api.http.Status._
 import play.api.mvc.Results
 import play.api.test.FakeRequest
-import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, Verify}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
@@ -116,7 +115,7 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with OneInstancePe
   private def authConnectorStubThatWillReturn(futureNino: Future[Option[String]]): AuthConnector = {
     val authConnectorStub = stub[AuthConnector]
     (authConnectorStub.authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
-      .when(AuthProviders(GovernmentGateway, Verify) and ConfidenceLevel.L200, nino, *, *)
+      .when(ConfidenceLevel.L200, nino, *, *)
       .returns(futureNino)
     authConnectorStub
   }

@@ -189,13 +189,5 @@ class StartupISpec extends WordSpec with Matchers
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
-
-    //TODO
-    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
-      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 403
-      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
-    }
   }
 }

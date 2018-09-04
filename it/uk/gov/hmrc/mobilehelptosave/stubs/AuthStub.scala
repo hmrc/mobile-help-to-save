@@ -26,7 +26,7 @@ object AuthStub {
   private val authoriseRequestBody: String = {
     """
       |{
-      | "authorise": [{"authProviders": ["GovernmentGateway", "Verify"]}, {"confidenceLevel" : 200}],
+      | "authorise": [{"confidenceLevel": 200}],
       | "retrieve": ["nino"]
       |}""".stripMargin
   }
@@ -57,14 +57,6 @@ object AuthStub {
       .willReturn(aResponse()
         .withStatus(401)
           .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
-      ))
-
-  def userIsLoggedInButNotWithGovernmentGatewayOrVerify(): Unit =
-    stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(authoriseRequestBody))
-      .willReturn(aResponse()
-        .withStatus(401)
-          .withHeader("WWW-Authenticate", """MDTP detail="UnsupportedAuthProvider"""")
       ))
 
   def authoriseShouldNotHaveBeenCalled(): Unit =

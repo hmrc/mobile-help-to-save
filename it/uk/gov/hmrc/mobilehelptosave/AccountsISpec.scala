@@ -234,12 +234,5 @@ class AccountsISpec extends WordSpec with Matchers
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
-
-    "return 403 when the user is logged in with an auth provider that does not provide an internalId" in {
-      AuthStub.userIsLoggedInButNotWithGovernmentGatewayOrVerify()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
-      response.status shouldBe 403
-      response.body shouldBe "Authorisation failure [UnsupportedAuthProvider]"
-    }
   }
 }
