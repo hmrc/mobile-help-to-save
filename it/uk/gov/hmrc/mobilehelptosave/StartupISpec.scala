@@ -22,11 +22,11 @@ import play.api.libs.json.JsUndefined
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{MongoTestCollectionsDropAfterAll, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout
-  with WireMockSupport with MongoTestCollectionsDropAfterAll
+  with WireMockSupport
   with OneServerPerSuiteWsClient with NumberVerification  {
 
   override implicit lazy val app: Application = appBuilder
