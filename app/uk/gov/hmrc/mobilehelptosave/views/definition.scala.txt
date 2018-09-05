@@ -7,8 +7,7 @@
     {
       "key": "read:native-apps-api-orchestration",
       "name": "Native Apps API Orchestration",
-      "description": "Access APIs that are provided specifically for use by the HMRC mobile apps",
-      "confidenceLevel": 200
+      "description": "Access APIs that are provided specifically for use by the HMRC mobile apps"
     }
   ],
   "api": {
