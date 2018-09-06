@@ -26,21 +26,21 @@ import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{JsonMatchers, MongoTestCollections, WireMockSupport, WithTestServer}
+import uk.gov.hmrc.mobilehelptosave.support.{JsonMatchers, WireMockSupport, WithTestServer}
 
 /**
   * Tests that the startup endpoint uses configuration values correctly
   * (e.g. changes its response when configuration is changed).
   */
 class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with FutureAwaits with DefaultAwaitTimeout
-  with WsScalaTestClient with WireMockSupport with MongoTestCollections with WithTestServer {
+  with WsScalaTestClient with WireMockSupport with WithTestServer {
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
   private val base64Encoder = Base64.getEncoder
 
   "GET /mobile-help-to-save/startup" should {
-    "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServerAndMongoCleanup(
+    "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServer(
       appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
@@ -71,7 +71,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
 
-    "not call Get Account API when feature flags that require account information are all disabled" in withTestServerAndMongoCleanup(
+    "not call Get Account API when feature flags that require account information are all disabled" in withTestServer(
       appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> false,
@@ -99,7 +99,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
 
-    "include feature flag and URL settings when their configuration is not overridden" in withTestServerAndMongoCleanup(
+    "include feature flag and URL settings when their configuration is not overridden" in withTestServer(
       appBuilder
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
@@ -124,7 +124,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
 
     "allow feature flag and URL settings to be overridden in configuration" in {
-      withTestServerAndMongoCleanup(
+      withTestServer(
         appBuilder
           .configure(
             "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
@@ -159,7 +159,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
       }
 
-      withTestServerAndMongoCleanup(
+      withTestServer(
         appBuilder
           .configure(
             "helpToSave.balanceEnabled" -> "false",
@@ -194,13 +194,4 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
   private def base64Encode(s: String): String = {
     base64Encoder.encodeToString(s.getBytes("UTF-8"))
   }
-
-  private def withTestServerAndMongoCleanup[R](app: Application)(testCode: (Application, PortNumber) => R): R =
-    withTestServer(app) { (app: Application, portNumber: PortNumber) =>
-      try {
-        testCode(app, portNumber)
-      } finally {
-        await(dropTestCollections(db(app)))
-      }
-    }
 }

@@ -36,7 +36,6 @@ case class MobileHelpToSaveConfig @Inject()(
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
-    with NinoWithoutWtcMongoRepositoryConfig
     with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig
     with UserServiceConfig {
@@ -65,7 +64,6 @@ case class MobileHelpToSaveConfig @Inject()(
   override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
-  override val taxCreditsCacheExpireAfterSeconds: Long = configLong("helpToSave.taxCreditsCache.expireAfterSeconds")
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType: String = accessConfig.getString("type")
@@ -94,11 +92,6 @@ trait DocumentationControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveConnectorConfig {
   def helpToSaveBaseUrl: URL
-}
-
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait NinoWithoutWtcMongoRepositoryConfig {
-  def taxCreditsCacheExpireAfterSeconds: Long
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
