@@ -12,8 +12,8 @@ object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "1.7.0" withSources(),
-    "uk.gov.hmrc" %% "domain" % "5.1.0",
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "3.7.0" withSources(),
+    "uk.gov.hmrc" %% "domain" % "5.2.0",
     "org.typelevel" %% "cats-core" % "1.1.0",
     "io.lemonlabs" %% "scala-uri" % "1.1.1",
     "uk.gov.hmrc" %% "play-hmrc-api" % "3.0.0"
@@ -23,12 +23,12 @@ object AppDependencies {
     "org.scalamock" %% "scalamock" % "4.0.0" % "test"
   )
 
-  val integrationTest: Seq[ModuleID] = testCommon("it") ++ Seq(
+  val integrationTest: Seq[ModuleID] = testCommon("it") ++ Seq (
     "com.github.tomakehurst" % "wiremock" % "2.13.0" % "it"
   )
 
   def testCommon(scope: String) = Seq(
-    "uk.gov.hmrc" %% "hmrctest" % "3.0.0" % scope,
+    "uk.gov.hmrc" %% "hmrctest" % "3.1.0" % scope,
     "org.scalatest" %% "scalatest" % "3.0.4" % scope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
@@ -38,5 +38,4 @@ object AppDependencies {
     // which results in a NoSuchMethodError when running StartupISpec
     "org.eclipse.jetty.websocket" % "websocket-client" % "9.2.22.v20170606" % scope
   )
-
 }
