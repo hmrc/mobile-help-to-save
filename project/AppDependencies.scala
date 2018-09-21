@@ -12,7 +12,7 @@ object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "3.6.0" withSources(),
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "3.7.0" withSources(),
     "uk.gov.hmrc" %% "domain" % "5.2.0",
     "org.typelevel" %% "cats-core" % "1.1.0",
     "io.lemonlabs" %% "scala-uri" % "1.1.1",
