@@ -117,7 +117,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "savingRemindersEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "transactionsEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "supportFormEnabled" ).validate[Boolean] should beJsSuccess
-      (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/government/publications/help-to-save-what-it-is-and-who-its-for/the-help-to-save-scheme"
+      (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/get-help-savings-low-income"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
     }
