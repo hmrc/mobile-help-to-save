@@ -16,17 +16,20 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+
+import cats.data.EitherT
+import cats.instances.future._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Result, Results}
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveApi
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, ErrorInfo, Shuttering}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
-
 import scala.concurrent.Future
 import scala.concurrent.Future._
 import scala.util.{Failure, Success, Try}
@@ -86,13 +89,31 @@ class HelpToSaveController @Inject()
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
-          helpToSaveApi.getAccount(verifiedUserNino).map {
-            case Right(Some(helpToSaveAccount)) => Ok(Json.toJson(Account(helpToSaveAccount)))
-            case Right(None) => AccountNotFound
-            case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
-          }
+          getAccount(verifiedUserNino)
         }
       }
     }
+  }
+
+  // This logic doesn't belong in a controller, it belongs in AccountService.
+  // At the moment moving it would require many changes to code & tests that are going to be removed soon so would be wasted effort.
+  // When the account details are removed from startup this logic should be moved into AccountService.
+  private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
+
+    val getAccountIfEnrolled = (enrolled: Boolean) => {
+      if(enrolled) EitherT(helpToSaveApi.getAccount(nino)).map(_.map(Account.apply))
+      else  EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
+    }
+
+    EitherT(helpToSaveApi.enrolmentStatus())
+      .flatMap(getAccountIfEnrolled)
+      .value
+      .map {
+        case Right(Some(account)) => Ok(Json.toJson(account))
+        case Right(None) =>
+          logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+          AccountNotFound
+        case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
+      }
   }
 }

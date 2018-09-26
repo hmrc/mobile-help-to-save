@@ -83,16 +83,27 @@ class HelpToSaveControllerSpec
     val controller: HelpToSaveController = new HelpToSaveController(logger, helpToSaveConnector, new AlwaysAuthorisedWithIds(nino), config)
   }
 
-  private trait HelpToSaveStubbing {
+  private trait HelpToSaveMocking {
     scenario: AuthorisedTestScenario =>
 
-    def helpToSaveGetAccountStubReturns(stubbedResponse: Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]) = {
+    def helpToSaveEnrolmentReturns(stubbedResponse: Future[Either[ErrorInfo, Boolean]]) = {
+      (helpToSaveConnector.enrolmentStatus()(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *)
+        .returning(stubbedResponse)
+    }
+
+    def helpToSaveGetAccountReturns(stubbedResponse: Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]) = {
       (helpToSaveConnector.getAccount(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, *, *)
         .returning(stubbedResponse)
     }
 
-    def helpToSaveGetTransactionsStubReturns(stubbedResponse: Future[Either[ErrorInfo, Option[Transactions]]]) = {
+    def helpToSaveGetAccountShouldNeverBeCalled() =
+      (helpToSaveConnector.getAccount(_:Nino)(_:HeaderCarrier, _:ExecutionContext))
+        .expects(*, *, *)
+        .never()
+
+    def helpToSaveGetTransactionsReturns(stubbedResponse: Future[Either[ErrorInfo, Option[Transactions]]]) = {
       (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, *, *)
         .returning(stubbedResponse)
@@ -101,9 +112,10 @@ class HelpToSaveControllerSpec
 
   "getAccount" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with the users account information obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveStubbing {
+      "return 200 with the users account information obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetAccountStubReturns(Future successful Right(Some(helpToSaveAccount)))
+        helpToSaveEnrolmentReturns(Future successful Right(true))
+        helpToSaveGetAccountReturns(Future successful Right(Some(helpToSaveAccount)))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
@@ -112,10 +124,11 @@ class HelpToSaveControllerSpec
       }
     }
 
-    "no account is not found by HelpToSaveConnector for the NINO" should {
-      "return 404" in new AuthorisedTestScenario with HelpToSaveStubbing {
+    "the user is not enrolled" should {
+      "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetAccountStubReturns(Future successful Right(None))
+        helpToSaveEnrolmentReturns(Future successful Right(false))
+        helpToSaveGetAccountShouldNeverBeCalled()
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
@@ -125,10 +138,27 @@ class HelpToSaveControllerSpec
       }
     }
 
-    "HelpToSaveConnector returns an error" should {
-      "return 500" in new AuthorisedTestScenario with HelpToSaveStubbing {
+    "user is enrolled according to help-to-save but no account exists in NS&I" should {
+      "return 404 and log a warning" in  new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetAccountStubReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
+        helpToSaveEnrolmentReturns(Future successful Right(true))
+        helpToSaveGetAccountReturns(Future successful Right(None))
+
+        val resultF = controller.getAccount(nino.value)(FakeRequest())
+        status(resultF) shouldBe 404
+        val jsonBody = contentAsJson(resultF)
+        (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+        (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+
+        (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
+      }
+    }
+
+    "HelpToSaveConnector returns an error" should {
+      "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
+
+        helpToSaveEnrolmentReturns(Future successful Right(true))
+        helpToSaveGetAccountReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
@@ -187,9 +217,9 @@ class HelpToSaveControllerSpec
 
   "getTransactions" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveStubbing {
+      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsStubReturns(Future successful Right(Some(transactionsSortedInHelpToSaveOrder)))
+        helpToSaveGetTransactionsReturns(Future successful Right(Some(transactionsSortedInHelpToSaveOrder)))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 200
@@ -199,9 +229,9 @@ class HelpToSaveControllerSpec
     }
 
     "no account is not found by HelpToSaveConnector for the NINO" should {
-      "return 404" in new AuthorisedTestScenario with HelpToSaveStubbing {
+      "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsStubReturns(Future successful Right(None))
+        helpToSaveGetTransactionsReturns(Future successful Right(None))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
@@ -212,9 +242,9 @@ class HelpToSaveControllerSpec
     }
 
     "HelpToSaveConnector returns an error" should {
-      "return 500" in new AuthorisedTestScenario with HelpToSaveStubbing {
+      "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsStubReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
+        helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
