@@ -95,6 +95,9 @@ class HelpToSaveController @Inject()
     }
   }
 
+  // This logic doesn't belong in a controller, it belongs in AccountService.
+  // At the moment moving it would require many changes to code & tests that are going to be removed soon so would be wasted effort.
+  // When the account details are removed from startup this logic should be moved into AccountService.
   private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
 
     val getAccount = (b:Boolean) => {
