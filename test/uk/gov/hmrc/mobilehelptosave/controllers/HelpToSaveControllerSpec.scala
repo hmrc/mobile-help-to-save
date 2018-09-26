@@ -138,8 +138,8 @@ class HelpToSaveControllerSpec
       }
     }
 
-    "no account is not found by HelpToSaveConnector for the NINO" should {
-      "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
+    "user is enrolled according to help-to-save but no account exists in NS&I" should {
+      "return 404 and log a warning" in  new AuthorisedTestScenario with HelpToSaveMocking {
 
         helpToSaveEnrolmentReturns(Future successful Right(true))
         helpToSaveGetAccountReturns(Future successful Right(None))
@@ -149,6 +149,8 @@ class HelpToSaveControllerSpec
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
         (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+
+        (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
       }
     }
 

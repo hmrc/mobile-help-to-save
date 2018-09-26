@@ -100,17 +100,19 @@ class HelpToSaveController @Inject()
   // When the account details are removed from startup this logic should be moved into AccountService.
   private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
 
-    val getAccount = (b:Boolean) => {
-      if(b) EitherT(helpToSaveApi.getAccount(nino)).map(_.map(Account.apply))
+    val getAccountIfEnrolled = (enrolled: Boolean) => {
+      if(enrolled) EitherT(helpToSaveApi.getAccount(nino)).map(_.map(Account.apply))
       else  EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
     }
 
     EitherT(helpToSaveApi.enrolmentStatus())
-      .flatMap(getAccount)
+      .flatMap(getAccountIfEnrolled)
       .value
       .map {
         case Right(Some(account)) => Ok(Json.toJson(account))
-        case Right(None) => AccountNotFound
+        case Right(None) =>
+          logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+          AccountNotFound
         case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
       }
   }
