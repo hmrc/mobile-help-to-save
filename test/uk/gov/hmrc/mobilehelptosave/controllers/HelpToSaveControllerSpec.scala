@@ -86,11 +86,22 @@ class HelpToSaveControllerSpec
   private trait HelpToSaveStubbing {
     scenario: AuthorisedTestScenario =>
 
+    def helpToSaveEnrolmentStubReturns(stubbedResponse: Future[Either[ErrorInfo, Boolean]]) = {
+      (helpToSaveConnector.enrolmentStatus()(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *)
+        .returning(stubbedResponse)
+    }
+
     def helpToSaveGetAccountStubReturns(stubbedResponse: Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]) = {
       (helpToSaveConnector.getAccount(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, *, *)
         .returning(stubbedResponse)
     }
+
+    def helpToSaveGetAccountIsNeverCalled() =
+      (helpToSaveConnector.getAccount(_:Nino)(_:HeaderCarrier, _:ExecutionContext))
+        .expects(*, *, *)
+        .never()
 
     def helpToSaveGetTransactionsStubReturns(stubbedResponse: Future[Either[ErrorInfo, Option[Transactions]]]) = {
       (helpToSaveConnector.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
@@ -103,6 +114,7 @@ class HelpToSaveControllerSpec
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users account information obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveStubbing {
 
+        helpToSaveEnrolmentStubReturns(Future successful Right(true))
         helpToSaveGetAccountStubReturns(Future successful Right(Some(helpToSaveAccount)))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
@@ -112,9 +124,24 @@ class HelpToSaveControllerSpec
       }
     }
 
+    "the user is not enrolled" should {
+      "return 404" in new AuthorisedTestScenario with HelpToSaveStubbing {
+
+        helpToSaveEnrolmentStubReturns(Future successful Right(false))
+        helpToSaveGetAccountIsNeverCalled()
+
+        val resultF = controller.getAccount(nino.value)(FakeRequest())
+        status(resultF) shouldBe 404
+        val jsonBody = contentAsJson(resultF)
+        (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+        (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+      }
+    }
+
     "no account is not found by HelpToSaveConnector for the NINO" should {
       "return 404" in new AuthorisedTestScenario with HelpToSaveStubbing {
 
+        helpToSaveEnrolmentStubReturns(Future successful Right(true))
         helpToSaveGetAccountStubReturns(Future successful Right(None))
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
@@ -128,6 +155,7 @@ class HelpToSaveControllerSpec
     "HelpToSaveConnector returns an error" should {
       "return 500" in new AuthorisedTestScenario with HelpToSaveStubbing {
 
+        helpToSaveEnrolmentStubReturns(Future successful Right(true))
         helpToSaveGetAccountStubReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
