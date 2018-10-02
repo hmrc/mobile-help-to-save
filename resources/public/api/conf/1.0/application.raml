@@ -90,7 +90,13 @@ traits:
         body:
           application/json:
             type: !include schemas/account.json
-            example: !include examples/account.json
+            example: !include examples/account.json200:
+      404:
+        body:
+          application/json:
+            type: types.errorResponse
+            example: !include examples/accountNotFound.json
+
   /transactions:
     is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
     get:

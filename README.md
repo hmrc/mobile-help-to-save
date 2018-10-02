@@ -15,7 +15,9 @@ Response format:
 ```
 {
   "shuttering": {
-      "shuttered": false
+      "shuttered": false,
+      "title": "We are shuttered",
+      ""message": "Please try again tomorrow"
   },
   // Fine grained feature toggles
   "balanceEnabled": true,
@@ -89,9 +91,6 @@ Response format:
 #### Errors
 If there is a problem obtaining the user-specific data then the `user` object will be replaced with a `userError` object. Other fields (feature flags and shuttering) will be unaffected and still returned:
 ```
-  "shuttering": {
-      "shuttered": false
-  },
   "balanceEnabled": true,
   // etc... other feature flags omitted for brevity
   "userError": { "code": "GENERAL" }
@@ -101,9 +100,6 @@ If there is a problem obtaining the user-specific data then the `user` object wi
 
 If there is a problem obtaining the account data then the `user.account` object will be replaced with a `user.accountError` object. Other fields will be unaffected and still returned:
 ```
-  "shuttering": {
-      "shuttered": false
-  },
   "balanceEnabled": true,
   // etc... other feature flags omitted for brevity
   "user": {
