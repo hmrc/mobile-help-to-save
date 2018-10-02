@@ -48,7 +48,7 @@ Response format:
         // "withdrawing": false,
         // "receivingBonus": false
       },
-      "number":"1000000000001",
+      "number": "1000000000001",
       "openedYearMonth": "2018-01",
       "isClosed": true,
       "closureDate": "2018-02-16",
@@ -77,10 +77,19 @@ Response format:
           "bonusPaid": 0,
           "endDate": "2019-12-31",
           // The date from which the first bonus will be paid, ISO-8601 date
-          "bonusPaidOnOrAfterDate": "2020-01-01"
+          "bonusPaidOnOrAfterDate": "2020-01-01",
+          // The highest balance that the account has reached in this term
+          // may still change for a few days after the term ends because some
+          // payments are deemed to be added after NS&I become aware of them,
+          // see <confluence>/display/H2S/HtS+Payment+Processing+Schedule
+          "highestBalance": 37.5
         }
         // there may optionally be another bonusTerm object here for the second bonus
       ]
+      //TODO decide how to represent first bonus term.
+      // Options include "isCurrent": true inside the appropriate entry in the "bonusTerms" array, or a separate field (advantage: it's impossible for multiple terms to claim to be the current one - but what is easiest for the apps to parse?). 
+      "currentBonusTerm": "first",
+      "currentBonusTerm": 0
     }
   }
 }
