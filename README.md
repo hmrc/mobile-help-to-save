@@ -78,17 +78,17 @@ Response format:
           "endDate": "2019-12-31",
           // The date from which the first bonus will be paid, ISO-8601 date
           "bonusPaidOnOrAfterDate": "2020-01-01",
-          // The highest balance that the account has reached in this term
-          // may still change for a few days after the term ends because some
-          // payments are deemed to be added after NS&I become aware of them,
-          // see <confluence>/display/H2S/HtS+Payment+Processing+Schedule
-          "highestBalance": 37.5
+          // More than $balanceMustBeMoreThanForBonus must be saved to earn a bonus in this term.
+          // Always zero for first term - only included there for consistency.
+          // For the second term this may be inaccurate for the first few days after the second term starts.
+          // This is because some payments are deemed to be added after NS&I become aware of them,
+          // see <confluence>/display/H2S/HtS+Payment+Processing+Schedule,
+          // so the first bonus amount is not known immediately the first term ends 
+          "balanceMustBeMoreThanForBonus": 0
         }
         // there may optionally be another bonusTerm object here for the second bonus
       ]
-      //TODO decide how to represent first bonus term.
-      // Options include "isCurrent": true inside the appropriate entry in the "bonusTerms" array, or a separate field (advantage: it's impossible for multiple terms to claim to be the current one - but what is easiest for the apps to parse?). 
-      "currentBonusTerm": "first",
+      // What bonus term is the account currently in (zero-based index into the `bonusTerms` array)
       "currentBonusTerm": 0
     }
   }
