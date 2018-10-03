@@ -88,8 +88,8 @@ Response format:
         }
         // there may optionally be another bonusTerm object here for the second bonus
       ]
-      // What bonus term is the account currently in (zero-based index into the `bonusTerms` array)
-      "currentBonusTerm": 0
+      // What bonus term is the account currently in: "first", "second" or "afterFinalTerm"
+      "currentBonusTerm": "first"
     }
   }
 }
