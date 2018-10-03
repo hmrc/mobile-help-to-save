@@ -50,7 +50,7 @@ Response format:
         // "withdrawing": false,
         // "receivingBonus": false
       },
-      "number":"1000000000001",
+      "number": "1000000000001",
       "openedYearMonth": "2018-01",
       "isClosed": true,
       "closureDate": "2018-02-16",
@@ -79,10 +79,19 @@ Response format:
           "bonusPaid": 0,
           "endDate": "2019-12-31",
           // The date from which the first bonus will be paid, ISO-8601 date
-          "bonusPaidOnOrAfterDate": "2020-01-01"
+          "bonusPaidOnOrAfterDate": "2020-01-01",
+          // balanceMustBeMoreThanForBonus is the savings amount that needs to be exceeded (in this term) to earn a bonus
+          // Always zero for first term - only included there for consistency.
+          // For the second term this may be inaccurate for the first few days after the second term starts.
+          // This is because some payments are deemed to be added after NS&I become aware of them,
+          // see <confluence>/display/H2S/HtS+Payment+Processing+Schedule,
+          // so the first bonus amount is not known immediately the first term ends 
+          "balanceMustBeMoreThanForBonus": 0
         }
         // there may optionally be another bonusTerm object here for the second bonus
       ]
+      // What bonus term is the account currently in: "first", "second" or "afterFinalTerm"
+      "currentBonusTerm": "first"
     }
   }
 }
