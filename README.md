@@ -78,7 +78,7 @@ Response format:
           "endDate": "2019-12-31",
           // The date from which the first bonus will be paid, ISO-8601 date
           "bonusPaidOnOrAfterDate": "2020-01-01",
-          // More than $balanceMustBeMoreThanForBonus must be saved to earn a bonus in this term.
+          // balanceMustBeMoreThanForBonus is the savings amount that needs to be exceeded (in this term) to earn a bonus
           // Always zero for first term - only included there for consistency.
           // For the second term this may be inaccurate for the first few days after the second term starts.
           // This is because some payments are deemed to be added after NS&I become aware of them,
