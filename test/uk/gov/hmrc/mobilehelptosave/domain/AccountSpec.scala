@@ -23,25 +23,29 @@ import uk.gov.hmrc.mobilehelptosave.AccountTestData
 class AccountSpec extends WordSpec with Matchers
   with AccountTestData {
 
+  private val accountOpenedInJan2018 = helpToSaveAccount.copy(
+    openedYearMonth = new YearMonth(2018, 1),
+    bonusTerms = Seq(
+      BonusTerm(
+        bonusEstimate = BigDecimal("90.99"),
+        bonusPaid = BigDecimal("90.99"),
+        endDate = new LocalDate(2019, 12, 31),
+        bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
+      ),
+      BonusTerm(
+        bonusEstimate = 12,
+        bonusPaid = 0,
+        endDate = new LocalDate(2021, 12, 31),
+        bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
+      )
+    )
+  )
+
   "apply" should {
+
     "include nextPaymentMonthStartDate when next month will start before the end of the the last bonus term" in {
-      val penultimateMonthHelpToSaveAccount = helpToSaveAccount.copy(
-        openedYearMonth = new YearMonth(2018, 1),
-        thisMonthEndDate = new LocalDate(2021, 11, 30),
-        bonusTerms = Seq(
-          BonusTerm(
-            bonusEstimate = BigDecimal("90.99"),
-            bonusPaid = BigDecimal("90.99"),
-            endDate = new LocalDate(2019, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
-          ),
-          BonusTerm(
-            bonusEstimate = 12,
-            bonusPaid = 0,
-            endDate = new LocalDate(2021, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
-          )
-        )
+      val penultimateMonthHelpToSaveAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2021, 11, 30)
       )
 
       val account = Account(penultimateMonthHelpToSaveAccount)
@@ -49,27 +53,57 @@ class AccountSpec extends WordSpec with Matchers
     }
 
     "omit nextPaymentMonthStartDate when payments will not be possible next month because it will be after the last bonus term" in {
-      val lastMonthHelpToSaveAccount = helpToSaveAccount.copy(
-        openedYearMonth = new YearMonth(2018, 1),
-        thisMonthEndDate = new LocalDate(2021, 12, 31),
-        bonusTerms = Seq(
-          BonusTerm(
-            bonusEstimate = BigDecimal("90.99"),
-            bonusPaid = BigDecimal("90.99"),
-            endDate = new LocalDate(2019, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
-          ),
-          BonusTerm(
-            bonusEstimate = 12,
-            bonusPaid = 0,
-            endDate = new LocalDate(2021, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
-          )
-        )
+      val lastMonthHelpToSaveAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2021, 12, 31)
       )
 
       val account = Account(lastMonthHelpToSaveAccount)
       account.nextPaymentMonthStartDate shouldBe None
+    }
+
+    "return currentBonusTerm = *first* when current month is first month of *first* term" in {
+      val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2018, 1, 31)
+      )
+
+      val account = Account(firstMonthOfFirstTermHtSAccount)
+      account.currentBonusTerm shouldBe CurrentBonusTerm.First
+    }
+
+    "return currentBonusTerm = *first* when current month is last month of *first* term" in {
+      val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2019, 12, 31)
+      )
+
+      val account = Account(firstMonthOfFirstTermHtSAccount)
+      account.currentBonusTerm shouldBe CurrentBonusTerm.First
+    }
+
+    "return currentBonusTerm = *second* when current month is first month of *second* term" in {
+      val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2020, 1, 31)
+      )
+
+      val account = Account(firstMonthOfFirstTermHtSAccount)
+      account.currentBonusTerm shouldBe CurrentBonusTerm.Second
+    }
+
+    "return currentBonusTerm = *second* when current month is last month of *second* term" in {
+      val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2021, 12, 31)
+      )
+
+      val account = Account(firstMonthOfFirstTermHtSAccount)
+      account.currentBonusTerm shouldBe CurrentBonusTerm.Second
+    }
+
+    "return currentBonusTerm = *afterFinalTerm* when current month is after end of second term" in {
+      val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
+        thisMonthEndDate = new LocalDate(2022, 1, 31)
+      )
+
+      val account = Account(firstMonthOfFirstTermHtSAccount)
+      account.currentBonusTerm shouldBe CurrentBonusTerm.AfterFinalTerm
     }
   }
 }

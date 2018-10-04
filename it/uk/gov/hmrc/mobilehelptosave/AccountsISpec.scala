@@ -75,6 +75,8 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+
+      (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
 
     "respond with 200 and accountHolderEmail omitted when no email address are return from help to save" in {
@@ -111,6 +113,8 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+
+      (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
 
     "respond with 404 and account not found" in {
@@ -183,6 +187,8 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-02-28"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
+
+      (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
 
     "include account blocked fields when account is enrolled but blocked" in {
@@ -219,6 +225,8 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-10-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2021-11-01"
+
+      (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
 
     "return 401 when the user is not logged in" in {

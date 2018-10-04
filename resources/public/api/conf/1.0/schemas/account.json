@@ -170,6 +170,15 @@
       "examples": [
         "2018-03-31"
       ]
+    },
+    "currentBonusTerm": {
+      "type": "string",
+      "description": "What bonus term is the account currently in",
+      "examples": [
+        "First",
+        "Second",
+        "AfterFinalTerm"
+      ]
     }
   },
   "required": [
@@ -182,6 +191,7 @@
     "maximumPaidInThisMonth",
     "thisMonthEndDate",
     "accountHolderName",
-    "bonusTerms"
+    "bonusTerms",
+    "currentBonusTerm"
   ]
 }

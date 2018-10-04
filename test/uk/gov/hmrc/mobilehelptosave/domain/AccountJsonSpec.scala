@@ -44,7 +44,9 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     bonusTerms = Seq(
       BonusTerm(bonusEstimate = BigDecimal("200.12"), bonusPaid = BigDecimal("200.12"), endDate = new LocalDate(2020, 4, 30), bonusPaidOnOrAfterDate = new LocalDate(2020, 5, 1)),
       BonusTerm(bonusEstimate = BigDecimal("71.44"), bonusPaid = 0, endDate = new LocalDate(2022, 4, 30), bonusPaidOnOrAfterDate = new LocalDate(2022, 5, 1))
-    ))
+    ),
+    currentBonusTerm = CurrentBonusTerm.First
+  )
 
   "Account JSON" when {
     "account is in happy path state" should {
@@ -77,4 +79,11 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     }
   }
 
+  "Account JSON" should {
+    "format currentBonusTerm as documented in the README" in {
+      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.First)) \ "currentBonusTerm").as[String] shouldBe "First"
+      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.Second)) \ "currentBonusTerm").as[String] shouldBe "Second"
+      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.AfterFinalTerm)) \ "currentBonusTerm").as[String] shouldBe "AfterFinalTerm"
+    }
+  }
 }

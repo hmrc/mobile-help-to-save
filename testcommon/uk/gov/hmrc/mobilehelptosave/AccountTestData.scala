@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.joda.time.{LocalDate, YearMonth}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveAccount
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm, CurrentBonusTerm}
 
 trait AccountTestData {
 
@@ -149,6 +149,7 @@ trait AccountTestData {
         bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
       )
     ),
+    currentBonusTerm = CurrentBonusTerm.First,
     closureDate = None,
     closingBalance = None
   )
