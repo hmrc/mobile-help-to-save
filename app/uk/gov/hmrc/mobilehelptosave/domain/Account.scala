@@ -40,6 +40,14 @@ object Blocking {
   implicit val format: OFormat[Blocking] = Json.format[Blocking]
 }
 
+object CurrentBonusTerm extends Enumeration {
+  val First, Second, AfterFinalTerm = Value
+
+  implicit val reads: Reads[Value] = Reads.enumNameReads(CurrentBonusTerm)
+  implicit val writes: Writes[Value] = Writes.enumNameWrites
+
+}
+
 case class Account(
   number: String,
   openedYearMonth: YearMonth,
@@ -60,6 +68,7 @@ case class Account(
   accountHolderEmail: Option[String],
 
   bonusTerms: Seq[BonusTerm],
+  currentBonusTerm: CurrentBonusTerm.Value,
 
   closureDate: Option[LocalDate] = None,
   closingBalance: Option[BigDecimal] = None
@@ -82,6 +91,7 @@ object Account {
     accountHolderName = h.accountHolderForename + " " + h.accountHolderSurname,
     accountHolderEmail = h.accountHolderEmail,
     bonusTerms = h.bonusTerms,
+    currentBonusTerm = currentBonusTerm(h),
     closureDate = h.closureDate,
     closingBalance = h.closingBalance
   )
@@ -93,4 +103,13 @@ object Account {
       None
     }
   }
+
+  private def currentBonusTerm(h: HelpToSaveAccount) =
+    if (h.thisMonthEndDate.isAfter(h.bonusTerms(1).endDate)) {
+      CurrentBonusTerm.AfterFinalTerm
+    } else if (h.thisMonthEndDate.isAfter(h.bonusTerms.head.endDate)) {
+      CurrentBonusTerm.Second
+    } else {
+      CurrentBonusTerm.First
+    }
 }

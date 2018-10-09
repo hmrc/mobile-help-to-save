@@ -51,7 +51,8 @@ class UserServiceSpec
     nextPaymentMonthStartDate = None,
     accountHolderName = "",
     accountHolderEmail = None,
-    bonusTerms = Seq.empty)
+    bonusTerms = Seq.empty,
+    currentBonusTerm = CurrentBonusTerm.Second)
 
 
   private class UserServiceWithTestDefaults(

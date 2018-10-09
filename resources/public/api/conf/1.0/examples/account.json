@@ -26,5 +26,6 @@
       "endDate": "2021-10-31",
       "bonusPaidOnOrAfterDate": "2021-11-01"
     }
-  ]
+  ],
+  "currentBonusTerm": "First"
 }
