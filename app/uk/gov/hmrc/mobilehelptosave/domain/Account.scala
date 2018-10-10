@@ -18,14 +18,15 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.libs.json._
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveAccount
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
 
 case class BonusTerm(
   bonusEstimate: BigDecimal,
   bonusPaid: BigDecimal,
   endDate: LocalDate,
-  bonusPaidOnOrAfterDate: LocalDate
+  bonusPaidOnOrAfterDate: LocalDate,
+  balanceMustBeMoreThanForBonus: BigDecimal
 )
 
 object BonusTerm {
@@ -90,7 +91,7 @@ object Account {
     nextPaymentMonthStartDate = nextPaymentMonthStartDate(h),
     accountHolderName = h.accountHolderForename + " " + h.accountHolderSurname,
     accountHolderEmail = h.accountHolderEmail,
-    bonusTerms = h.bonusTerms,
+    bonusTerms = bonusTerms(h),
     currentBonusTerm = currentBonusTerm(h),
     closureDate = h.closureDate,
     closingBalance = h.closingBalance
@@ -112,4 +113,23 @@ object Account {
     } else {
       CurrentBonusTerm.First
     }
+
+  private def bonusTerms(h: HelpToSaveAccount): Seq[BonusTerm] = {
+
+    def bonusTerm(htsTerm: HelpToSaveBonusTerm, balanceMustBeMoreThanForBonus: BigDecimal) = BonusTerm(
+      bonusEstimate = htsTerm.bonusEstimate,
+      bonusPaid = htsTerm.bonusPaid,
+      endDate = htsTerm.endDate,
+      bonusPaidOnOrAfterDate = htsTerm.bonusPaidOnOrAfterDate,
+      balanceMustBeMoreThanForBonus = balanceMustBeMoreThanForBonus
+    )
+
+    //TODO this will calculate an incorrect balanceMustBeMoreThanForBonus for the 3rd term
+
+    h.bonusTerms.foldLeft(Vector.empty[BonusTerm]){ (acc, htsTerm) =>
+      val balanceMustBeMoreThanForBonus: BigDecimal = acc.lastOption.fold(BigDecimal(0))(prevHtsTerm => prevHtsTerm.bonusEstimate * 2)
+
+      acc :+ bonusTerm(htsTerm, balanceMustBeMoreThanForBonus)
+    }
+  }
 }

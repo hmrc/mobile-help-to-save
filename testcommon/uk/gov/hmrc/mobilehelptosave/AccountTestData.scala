@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import org.joda.time.{LocalDate, YearMonth}
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveAccount
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm, CurrentBonusTerm}
 
 trait AccountTestData {
@@ -104,13 +104,13 @@ trait AccountTestData {
     accountHolderSurname = "Testsur",
     accountHolderEmail = Some("testemail@example.com"),
     bonusTerms = Seq(
-      BonusTerm(
+      HelpToSaveBonusTerm(
         bonusEstimate = BigDecimal("90.99"),
         bonusPaid = BigDecimal("90.99"),
         endDate = new LocalDate(2019, 12, 31),
         bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
       ),
-      BonusTerm(
+      HelpToSaveBonusTerm(
         bonusEstimate = 12,
         bonusPaid = 0,
         endDate = new LocalDate(2021, 12, 31),
@@ -140,13 +140,15 @@ trait AccountTestData {
         bonusEstimate = BigDecimal("90.99"),
         bonusPaid = BigDecimal("90.99"),
         endDate = new LocalDate(2019, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
+        bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1),
+        balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
         bonusEstimate = 12,
         bonusPaid = 0,
         endDate = new LocalDate(2021, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
+        bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1),
+        balanceMustBeMoreThanForBonus = BigDecimal("181.98")
       )
     ),
     currentBonusTerm = CurrentBonusTerm.First,

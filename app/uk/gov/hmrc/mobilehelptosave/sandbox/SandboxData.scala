@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.sandbox
 
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveAccount
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.Clock
 
@@ -50,8 +50,8 @@ case class SandboxData @Inject() (clock: Clock) {
       accountHolderSurname = "Testsur",
       accountHolderEmail = Some("testemail@example.com"),
       bonusTerms = List(
-        BonusTerm(BigDecimal("110.25"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
-        BonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
+        HelpToSaveBonusTerm(BigDecimal("110.25"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
+        HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
       ),
       closureDate = None,
       closingBalance = None

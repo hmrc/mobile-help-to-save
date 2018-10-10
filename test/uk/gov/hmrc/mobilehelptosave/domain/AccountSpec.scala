@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import org.joda.time.{LocalDate, YearMonth}
 import org.scalatest.{Matchers, WordSpec}
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveBonusTerm
 
 class AccountSpec extends WordSpec with Matchers
   with AccountTestData {
@@ -26,13 +27,13 @@ class AccountSpec extends WordSpec with Matchers
   private val accountOpenedInJan2018 = helpToSaveAccount.copy(
     openedYearMonth = new YearMonth(2018, 1),
     bonusTerms = Seq(
-      BonusTerm(
+      HelpToSaveBonusTerm(
         bonusEstimate = BigDecimal("90.99"),
         bonusPaid = BigDecimal("90.99"),
         endDate = new LocalDate(2019, 12, 31),
         bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
       ),
-      BonusTerm(
+      HelpToSaveBonusTerm(
         bonusEstimate = 12,
         bonusPaid = 0,
         endDate = new LocalDate(2021, 12, 31),
@@ -104,6 +105,17 @@ class AccountSpec extends WordSpec with Matchers
 
       val account = Account(firstMonthOfFirstTermHtSAccount)
       account.currentBonusTerm shouldBe CurrentBonusTerm.AfterFinalTerm
+    }
+
+    // balanceMustBeMoreThanForBonus is always 0 for the first term, we only include it for consistency with the second term
+    "return balanceMustBeMoreThanForBonus = 0 for the first bonus term" in {
+      val account = Account(accountOpenedInJan2018)
+      account.bonusTerms.head.balanceMustBeMoreThanForBonus shouldBe 0
+    }
+
+    "calculate the second bonus term's balanceMustBeMoreThanForBonus from the first term's bonusEstimate" in {
+      val account = Account(accountOpenedInJan2018)
+      account.bonusTerms(1).balanceMustBeMoreThanForBonus shouldBe BigDecimal("181.98")
     }
   }
 }
