@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.instances.future._
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorGetAccount
@@ -36,12 +37,13 @@ trait AccountService {
 
 @Singleton
 class HelpToSaveAccountService @Inject() (
+  logger: LoggerLike,
   helpToSaveConnector: HelpToSaveConnectorGetAccount
 ) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
     EitherT(helpToSaveConnector.getAccount(nino))
-      .map{maybeHtsAccount => maybeHtsAccount.map(Account.apply)}
+      .map{maybeHtsAccount => maybeHtsAccount.map(Account(_, logger))}
       .value
 
 }

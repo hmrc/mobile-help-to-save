@@ -19,13 +19,18 @@ package uk.gov.hmrc.mobilehelptosave.sandbox
 
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
+import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.Clock
 
 
 @Singleton
-case class SandboxData @Inject() (clock: Clock) {
+case class SandboxData @Inject()
+(
+  logger: LoggerLike,
+  clock: Clock
+) {
 
   private def today: LocalDate = clock.now().toLocalDate
   private def openedDate: LocalDate = today.minusMonths(7)
@@ -36,26 +41,28 @@ case class SandboxData @Inject() (clock: Clock) {
   private def endOfSecondTerm: LocalDate = startOfSecondTerm.plusYears(2).minusDays(1)
 
   val account: Account = {
-    Account(HelpToSaveAccount(
-      accountNumber = "1100000112057",
-      openedYearMonth = new YearMonth(openedDate.getYear, openedDate.getMonthOfYear),
-      isClosed = false,
-      blocked = Blocking(false),
-      balance = BigDecimal("220.50"),
-      paidInThisMonth = BigDecimal("20.50"),
-      canPayInThisMonth = BigDecimal("29.50"),
-      maximumPaidInThisMonth = BigDecimal("50.00"),
-      thisMonthEndDate = endOfMonth,
-      accountHolderForename = "Testfore",
-      accountHolderSurname = "Testsur",
-      accountHolderEmail = Some("testemail@example.com"),
-      bonusTerms = List(
-        HelpToSaveBonusTerm(BigDecimal("110.25"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
-        HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
+    Account(
+      HelpToSaveAccount(
+        accountNumber = "1100000112057",
+        openedYearMonth = new YearMonth(openedDate.getYear, openedDate.getMonthOfYear),
+        isClosed = false,
+        blocked = Blocking(false),
+        balance = BigDecimal("220.50"),
+        paidInThisMonth = BigDecimal("20.50"),
+        canPayInThisMonth = BigDecimal("29.50"),
+        maximumPaidInThisMonth = BigDecimal("50.00"),
+        thisMonthEndDate = endOfMonth,
+        accountHolderForename = "Testfore",
+        accountHolderSurname = "Testsur",
+        accountHolderEmail = Some("testemail@example.com"),
+        bonusTerms = List(
+          HelpToSaveBonusTerm(BigDecimal("110.25"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
+          HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
+        ),
+        closureDate = None,
+        closingBalance = None
       ),
-      closureDate = None,
-      closingBalance = None
-    ))
+      logger)
   }
 
   val transactions = Transactions({

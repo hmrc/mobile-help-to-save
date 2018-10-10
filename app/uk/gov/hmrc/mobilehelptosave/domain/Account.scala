@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 
 import org.joda.time.{LocalDate, YearMonth}
+import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
@@ -78,7 +79,7 @@ case class Account(
 object Account {
   implicit val format: OFormat[Account] = Json.format[Account]
 
-  def apply(h: HelpToSaveAccount): Account = Account(
+  def apply(h: HelpToSaveAccount, logger: LoggerLike): Account = Account(
     number = h.accountNumber,
     openedYearMonth = h.openedYearMonth,
     isClosed = h.isClosed,
@@ -91,7 +92,7 @@ object Account {
     nextPaymentMonthStartDate = nextPaymentMonthStartDate(h),
     accountHolderName = h.accountHolderForename + " " + h.accountHolderSurname,
     accountHolderEmail = h.accountHolderEmail,
-    bonusTerms = bonusTerms(h),
+    bonusTerms = bonusTerms(h, logger),
     currentBonusTerm = currentBonusTerm(h),
     closureDate = h.closureDate,
     closingBalance = h.closingBalance
@@ -114,7 +115,7 @@ object Account {
       CurrentBonusTerm.First
     }
 
-  private def bonusTerms(h: HelpToSaveAccount): Seq[BonusTerm] = {
+  private def bonusTerms(h: HelpToSaveAccount, logger: LoggerLike): Seq[BonusTerm] = {
 
     def bonusTerm(htsTerm: HelpToSaveBonusTerm, balanceMustBeMoreThanForBonus: BigDecimal) = BonusTerm(
       bonusEstimate = htsTerm.bonusEstimate,
@@ -124,9 +125,11 @@ object Account {
       balanceMustBeMoreThanForBonus = balanceMustBeMoreThanForBonus
     )
 
-    //TODO this will calculate an incorrect balanceMustBeMoreThanForBonus for the 3rd term
+    if (h.bonusTerms.size > 2) {
+      logger.warn(s"Account contained ${h.bonusTerms.size} bonus terms, which is more than the expected 2 - discarding all but the first 2 terms")
+    }
 
-    h.bonusTerms.foldLeft(Vector.empty[BonusTerm]){ (acc, htsTerm) =>
+    h.bonusTerms.take(2).foldLeft(Vector.empty[BonusTerm]){ (acc, htsTerm) =>
       val balanceMustBeMoreThanForBonus: BigDecimal = acc.lastOption.fold(BigDecimal(0))(prevHtsTerm => prevHtsTerm.bonusEstimate * 2)
 
       acc :+ bonusTerm(htsTerm, balanceMustBeMoreThanForBonus)
