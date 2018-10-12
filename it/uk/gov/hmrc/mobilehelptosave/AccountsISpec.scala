@@ -69,12 +69,14 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
       (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-12-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
+      (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
       val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+      (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
@@ -107,12 +109,14 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
       (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-12-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
+      (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
       val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+      (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
@@ -181,12 +185,14 @@ class AccountsISpec extends WordSpec with Matchers
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
       (firstBonusTermJson \ "endDate").as[String] shouldBe "2020-02-29"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-03-01"
+      (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
       val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-02-28"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
+      (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("15.00")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
@@ -215,16 +221,18 @@ class AccountsISpec extends WordSpec with Matchers
       (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-04-01"
 
       val firstBonusTermJson = (response.json \ "bonusTerms") (0)
-      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal(125.0))
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal(125))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
       (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-10-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2019-11-01"
+      (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
       val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-10-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2021-11-01"
+      (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("250.00")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }

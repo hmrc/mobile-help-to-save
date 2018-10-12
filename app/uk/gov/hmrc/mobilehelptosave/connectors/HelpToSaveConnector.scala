@@ -24,7 +24,7 @@ import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json.{JsValue, Json, OFormat}
+import play.api.libs.json.{JsValue, Json, Reads}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
@@ -102,6 +102,19 @@ class HelpToSaveConnectorImpl @Inject() (
     config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
 }
 
+
+/** Bonus term in help-to-save microservice's domain */
+case class HelpToSaveBonusTerm(
+  bonusEstimate: BigDecimal,
+  bonusPaid: BigDecimal,
+  endDate: LocalDate,
+  bonusPaidOnOrAfterDate: LocalDate
+)
+
+object HelpToSaveBonusTerm {
+  implicit val reads: Reads[HelpToSaveBonusTerm] = Json.reads[HelpToSaveBonusTerm]
+}
+
 /** Account in help-to-save microservice's domain */
 case class HelpToSaveAccount(
   accountNumber: String,
@@ -122,12 +135,12 @@ case class HelpToSaveAccount(
   accountHolderSurname: String,
   accountHolderEmail: Option[String],
 
-  bonusTerms: Seq[BonusTerm],
+  bonusTerms: Seq[HelpToSaveBonusTerm],
 
   closureDate: Option[LocalDate],
   closingBalance: Option[BigDecimal]
 )
 
 object HelpToSaveAccount {
-  implicit val format: OFormat[HelpToSaveAccount] = Json.format[HelpToSaveAccount]
+  implicit val reads: Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
 }

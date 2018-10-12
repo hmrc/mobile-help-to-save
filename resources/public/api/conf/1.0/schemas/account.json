@@ -144,13 +144,21 @@
             "examples": [
               "2019-11-01"
             ]
+          },
+          "balanceMustBeMoreThanForBonus": {
+            "type": "number",
+            "description": "The savings amount that needs to be exceeded (in this term) to earn a bonus",
+            "examples": [
+              20.58
+            ]
           }
         },
         "required": [
           "bonusEstimate",
           "bonusPaid",
           "endDate",
-          "bonusPaidOnOrAfterDate"
+          "bonusPaidOnOrAfterDate",
+          "balanceMustBeMoreThanForBonus"
         ]
       }
     },

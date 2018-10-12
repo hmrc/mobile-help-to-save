@@ -56,8 +56,8 @@ class SandboxControllerSpec
   private val currentTime = new DateTime(2018, 9, 29, 12, 30, DateTimeZone.forID("Europe/London"))
   private val today = currentTime.toLocalDate
   private val fixedClock = new FixedFakeClock(currentTime)
-  private val controller: SandboxController = new SandboxController(logger, config, SandboxData(fixedClock))
-  private val shutteredController: SandboxController = new SandboxController(logger, config.copy(shuttering = shutteredShuttering), SandboxData(fixedClock))
+  private val controller: SandboxController = new SandboxController(logger, config, SandboxData(logger, fixedClock))
+  private val shutteredController: SandboxController = new SandboxController(logger, config.copy(shuttering = shutteredShuttering), SandboxData(logger, fixedClock))
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions") (transactionIndex) \ "operation").as[String]

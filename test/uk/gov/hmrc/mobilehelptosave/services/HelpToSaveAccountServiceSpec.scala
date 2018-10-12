@@ -16,20 +16,23 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveConnectorGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
+import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
 class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout
-  with AccountTestData {
+  with AccountTestData
+  with MockFactory with OneInstancePerTest with LoggerStub {
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
@@ -39,19 +42,19 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   "account" should {
     "convert the account from the help-to-save domain to the mobile-help-to-save domain" in {
       val connector = fakeHelpToSaveConnector(nino, Right(Some(helpToSaveAccount)))
-      val service = new HelpToSaveAccountService(connector)
+      val service = new HelpToSaveAccountService(logger, connector)
       await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount))
     }
 
     "return None when no account was found" in {
       val connector = fakeHelpToSaveConnector(nino, Right(None))
-      val service = new HelpToSaveAccountService(connector)
+      val service = new HelpToSaveAccountService(logger, connector)
       await(service.account(nino)) shouldBe Right(None)
     }
 
     "return errors returned by the connector" in {
       val connector = fakeHelpToSaveConnector(nino, Left(ErrorInfo.General))
-      val service = new HelpToSaveAccountService(connector)
+      val service = new HelpToSaveAccountService(logger, connector)
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
     }
   }

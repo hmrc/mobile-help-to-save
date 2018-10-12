@@ -101,7 +101,7 @@ class HelpToSaveController @Inject()
   private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
 
     val getAccountIfEnrolled = (enrolled: Boolean) => {
-      if(enrolled) EitherT(helpToSaveApi.getAccount(nino)).map(_.map(Account.apply))
+      if(enrolled) EitherT(helpToSaveApi.getAccount(nino)).map(_.map(Account(_, logger)))
       else  EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
     }
 
