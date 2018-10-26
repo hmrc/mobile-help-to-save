@@ -28,7 +28,7 @@ class StartupResponseJsonSpec extends WordSpec with Matchers {
         None, None, None, None, None,
         balanceEnabled = false, paidInThisMonthEnabled = false, firstBonusEnabled = false,
         shareInvitationEnabled = false, savingRemindersEnabled = false, transactionsEnabled = false,
-        supportFormEnabled = false
+        supportFormEnabled = false, inAppPaymentsEnabled = false
       )
       val json = Json.toJson(response)
       (json \ "enabled").as[Boolean] shouldBe true
