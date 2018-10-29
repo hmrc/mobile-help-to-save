@@ -117,6 +117,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "savingRemindersEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "transactionsEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "supportFormEnabled" ).validate[Boolean] should beJsSuccess
+      (response.json \ "inAppPaymentsEnabled" ).validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/get-help-savings-low-income"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
@@ -136,7 +137,8 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
             "helpToSave.shareInvitationEnabled" -> "false",
             "helpToSave.savingRemindersEnabled" -> "true",
             "helpToSave.transactionsEnabled" -> "false",
-            "helpToSave.supportFormEnabled" -> "true"
+            "helpToSave.supportFormEnabled" -> "true",
+            "helpToSave.inAppPaymentsEnabled" -> "false"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
@@ -154,6 +156,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
         (response.json \ "transactionsEnabled").as[Boolean] shouldBe false
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
+        (response.json \ "inAppPaymentsEnabled").as[Boolean] shouldBe false
         (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
         (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
         (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
@@ -168,7 +171,8 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
             "helpToSave.shareInvitationEnabled" -> "true",
             "helpToSave.savingRemindersEnabled" -> "false",
             "helpToSave.transactionsEnabled" -> "true",
-            "helpToSave.supportFormEnabled" -> "false"
+            "helpToSave.supportFormEnabled" -> "false",
+            "helpToSave.inAppPaymentsEnabled" -> "true"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
@@ -186,6 +190,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe false
         (response.json \ "transactionsEnabled").as[Boolean] shouldBe true
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe false
+        (response.json \ "inAppPaymentsEnabled").as[Boolean] shouldBe true
       }
     }
 
