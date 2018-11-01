@@ -28,7 +28,6 @@ Response format:
   // whether the transaction feature is enabled
   "transactionsEnabled": true,
   "supportFormEnabled": true,
-  "inAppPaymentsEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/get-help-savings-low-income",
   // URL of invitation call to action
