@@ -157,6 +157,18 @@ class AccountsISpec extends WordSpec with Matchers
       (response.json\ "code").as[String] shouldBe "GENERAL"
     }
 
+    "respond with 500 with general error message body when get account returns badly formed JSON" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountReturnsBadlyFormedJson(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      response.status shouldBe 500
+
+      (response.json\ "code").as[String] shouldBe "GENERAL"
+    }
+
     "include account closure fields when account is closed" in {
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()

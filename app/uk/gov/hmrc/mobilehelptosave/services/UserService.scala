@@ -22,45 +22,22 @@ import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
-import uk.gov.hmrc.mobilehelptosave.domain.UserState.{Value, apply => _, _}
+import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain._
 
-import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserService @Inject()(
                              logger: LoggerLike,
-                             helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus,
-                             accountService: AccountService,
-                             config: UserServiceConfig
+                             helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus
                            ) {
 
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {
     EitherT(helpToSaveConnector.enrolmentStatus())
       .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)
-      .flatMap(state => EitherT.right[ErrorInfo](userDetails(nino, state)))
+      .map(state => UserDetails(state = state))
       .value
   }
-
-  private def userDetails(nino: Nino, state: Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UserDetails] = {
-    if (state == Enrolled && anyAccountFeatureEnabled) {
-      accountService.account(nino).map {
-        case Right(None) =>
-          logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
-          UserDetails(state = state, account = None, accountError = Some(ErrorInfo.General))
-        case Right(accountOption) =>
-          UserDetails(state = state, account = accountOption, accountError = None)
-        case Left(accountError) =>
-          UserDetails(state = state, account = None, accountError = Some(accountError))
-      }
-    } else {
-      successful(UserDetails(state = state, account = None, accountError = None))
-    }
-  }
-
-  private def anyAccountFeatureEnabled: Boolean =
-    config.balanceEnabled || config.paidInThisMonthEnabled || config.firstBonusEnabled
 }
