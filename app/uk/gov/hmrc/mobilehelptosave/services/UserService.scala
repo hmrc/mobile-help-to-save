@@ -22,7 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain._
 
@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UserService @Inject()(
                              logger: LoggerLike,
-                             helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus
+                             helpToSaveConnector: HelpToSaveEnrolmentStatus
                            ) {
 
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {

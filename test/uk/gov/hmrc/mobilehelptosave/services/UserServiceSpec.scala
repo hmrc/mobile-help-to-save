@@ -20,7 +20,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.{EitherValues, OneInstancePerTest}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorEnrolmentStatus
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.play.test.UnitSpec
@@ -40,7 +40,7 @@ class UserServiceSpec
 
 
   private class UserServiceWithTestDefaults(
-    helpToSaveConnector: HelpToSaveConnectorEnrolmentStatus
+    helpToSaveConnector: HelpToSaveEnrolmentStatus
   ) extends UserService(
     logger,
     helpToSaveConnector
@@ -75,7 +75,7 @@ class UserServiceSpec
     }
   }
 
-  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveConnectorEnrolmentStatus {
+  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveEnrolmentStatus {
     override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
       ec shouldBe passedEc

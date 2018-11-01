@@ -121,7 +121,7 @@ class AccountsISpec extends WordSpec with Matchers
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
 
-    "respond with 404 and account not found" in {
+    "respond with 404 and account not found when user is not enrolled" in {
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
@@ -131,6 +131,8 @@ class AccountsISpec extends WordSpec with Matchers
 
       (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+
+      HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
 
     "respond with 500 with general error message body when get account fails" in {
