@@ -52,7 +52,7 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2021, 11, 30)
       )
 
-      val account = Account(penultimateMonthHelpToSaveAccount, logger)
+      val account = Account(penultimateMonthHelpToSaveAccount, inAppPaymentsEnabled = false, logger)
       account.nextPaymentMonthStartDate shouldBe Some(new LocalDate(2021, 12, 1))
     }
 
@@ -61,7 +61,7 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2021, 12, 31)
       )
 
-      val account = Account(lastMonthHelpToSaveAccount, logger)
+      val account = Account(lastMonthHelpToSaveAccount, inAppPaymentsEnabled = false, logger)
       account.nextPaymentMonthStartDate shouldBe None
     }
 
@@ -70,7 +70,7 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2018, 1, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, logger)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger)
       account.currentBonusTerm shouldBe CurrentBonusTerm.First
     }
 
@@ -79,7 +79,7 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2019, 12, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, logger)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger)
       account.currentBonusTerm shouldBe CurrentBonusTerm.First
     }
 
@@ -88,7 +88,7 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2020, 1, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, logger)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger)
       account.currentBonusTerm shouldBe CurrentBonusTerm.Second
     }
 
@@ -97,7 +97,7 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2021, 12, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, logger)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger)
       account.currentBonusTerm shouldBe CurrentBonusTerm.Second
     }
 
@@ -106,18 +106,18 @@ class AccountSpec extends WordSpec with Matchers
         thisMonthEndDate = new LocalDate(2022, 1, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, logger)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger)
       account.currentBonusTerm shouldBe CurrentBonusTerm.AfterFinalTerm
     }
 
     // balanceMustBeMoreThanForBonus is always 0 for the first term, we only include it for consistency with the second term
     "return balanceMustBeMoreThanForBonus = 0 for the first bonus term" in {
-      val account = Account(accountOpenedInJan2018, logger)
+      val account = Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, logger)
       account.bonusTerms.head.balanceMustBeMoreThanForBonus shouldBe 0
     }
 
     "calculate the second bonus term's balanceMustBeMoreThanForBonus from the first term's bonusEstimate" in {
-      val account = Account(accountOpenedInJan2018, logger)
+      val account = Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, logger)
       account.bonusTerms(1).balanceMustBeMoreThanForBonus shouldBe BigDecimal("181.98")
     }
 
@@ -147,7 +147,7 @@ class AccountSpec extends WordSpec with Matchers
         )
       )
 
-      val account = Account(accountWith3Terms, logger)
+      val account = Account(accountWith3Terms, inAppPaymentsEnabled = false, logger)
       account.bonusTerms.size shouldBe 2
       // check that the first 2 terms were retained
       account.bonusTerms.head.endDate shouldBe new LocalDate(2019, 12, 31)

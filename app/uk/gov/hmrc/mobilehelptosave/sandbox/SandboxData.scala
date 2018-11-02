@@ -20,6 +20,7 @@ package uk.gov.hmrc.mobilehelptosave.sandbox
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
+import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.Clock
@@ -29,7 +30,8 @@ import uk.gov.hmrc.mobilehelptosave.services.Clock
 case class SandboxData @Inject()
 (
   logger: LoggerLike,
-  clock: Clock
+  clock: Clock,
+  config: SandboxDataConfig
 ) {
 
   private def today: LocalDate = clock.now().toLocalDate
@@ -62,6 +64,7 @@ case class SandboxData @Inject()
         closureDate = None,
         closingBalance = None
       ),
+      inAppPaymentsEnabled = config.inAppPaymentsEnabled,
       logger)
   }
 

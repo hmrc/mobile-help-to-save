@@ -29,5 +29,6 @@
       "balanceMustBeMoreThanForBonus": 200
     }
   ],
-  "currentBonusTerm": "First"
+  "currentBonusTerm": "First",
+  "inAppPaymentsEnabled": false
 }

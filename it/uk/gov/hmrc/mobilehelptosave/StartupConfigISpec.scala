@@ -124,6 +124,9 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
 
     "allow feature flag and URL settings to be overridden in configuration" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsNotEnrolled()
+
       withTestServer(
         appBuilder
           .configure(
@@ -141,9 +144,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-        AuthStub.userIsLoggedIn(nino)
-        HelpToSaveStub.currentUserIsNotEnrolled()
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
         response.status shouldBe 200
@@ -173,9 +173,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-        AuthStub.userIsLoggedIn(nino)
-        HelpToSaveStub.currentUserIsNotEnrolled()
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
         response.status shouldBe 200

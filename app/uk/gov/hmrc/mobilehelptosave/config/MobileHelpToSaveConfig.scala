@@ -37,6 +37,7 @@ case class MobileHelpToSaveConfig @Inject()(
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
+    with SandboxDataConfig
     with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig {
 
@@ -86,6 +87,11 @@ case class MobileHelpToSaveConfig @Inject()(
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait AccountServiceConfig {
+  def inAppPaymentsEnabled: Boolean
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait SandboxDataConfig {
   def inAppPaymentsEnabled: Boolean
 }
 
