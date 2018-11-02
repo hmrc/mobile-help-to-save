@@ -33,9 +33,11 @@ case class MobileHelpToSaveConfig @Inject()(
   configuration: Configuration
 )
   extends ServicesConfig
+    with AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
+    with SandboxDataConfig
     with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig {
 
@@ -84,6 +86,16 @@ case class MobileHelpToSaveConfig @Inject()(
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait AccountServiceConfig {
+  def inAppPaymentsEnabled: Boolean
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait SandboxDataConfig {
+  def inAppPaymentsEnabled: Boolean
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait DocumentationControllerConfig {
   def apiAccessType: String
   def apiWhiteListApplicationIds: Seq[String]
@@ -109,7 +121,6 @@ trait StartupControllerConfig {
   def savingRemindersEnabled: Boolean
   def transactionsEnabled: Boolean
   def supportFormEnabled: Boolean
-  def inAppPaymentsEnabled: Boolean
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
   def helpToSaveAccessAccountUrl: String

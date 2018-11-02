@@ -23,6 +23,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
 
@@ -39,7 +40,8 @@ trait AccountService {
 class HelpToSaveAccountService @Inject() (
   logger: LoggerLike,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
-  helpToSaveGetAccount: HelpToSaveGetAccount
+  helpToSaveGetAccount: HelpToSaveGetAccount,
+  config: AccountServiceConfig
 ) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
@@ -47,7 +49,7 @@ class HelpToSaveAccountService @Inject() (
       case true =>
         EitherT(helpToSaveGetAccount.getAccount(nino)).map {
           case Some(helpToSaveAccount) =>
-            Some(Account(helpToSaveAccount, logger))
+            Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger))
           case None =>
             logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
             None

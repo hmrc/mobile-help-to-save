@@ -25,6 +25,7 @@ import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
@@ -54,10 +55,9 @@ class SandboxControllerSpec
   private val shutteredShuttering = Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
   private val config = TestHelpToSaveControllerConfig(shuttering)
   private val currentTime = new DateTime(2018, 9, 29, 12, 30, DateTimeZone.forID("Europe/London"))
-  private val today = currentTime.toLocalDate
   private val fixedClock = new FixedFakeClock(currentTime)
-  private val controller: SandboxController = new SandboxController(logger, config, SandboxData(logger, fixedClock))
-  private val shutteredController: SandboxController = new SandboxController(logger, config.copy(shuttering = shutteredShuttering), SandboxData(logger, fixedClock))
+  private val controller: SandboxController = new SandboxController(logger, config, SandboxData(logger, fixedClock, TestSandboxDataConfig))
+  private val shutteredController: SandboxController = new SandboxController(logger, config.copy(shuttering = shutteredShuttering), SandboxData(logger, fixedClock, TestSandboxDataConfig))
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions") (transactionIndex) \ "operation").as[String]
@@ -193,6 +193,8 @@ class SandboxControllerSpec
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-01-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-02-01"
+
+      (json \ "inAppPaymentsEnabled").as[Boolean] shouldBe false
     }
 
     "return a shuttered response when the service is shuttered" in {
@@ -202,4 +204,8 @@ class SandboxControllerSpec
       contentAsJson(response).as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
     }
   }
+}
+
+object TestSandboxDataConfig extends SandboxDataConfig {
+  override val inAppPaymentsEnabled: Boolean = false
 }
