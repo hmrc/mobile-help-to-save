@@ -135,6 +135,8 @@ class HelpToSaveControllerSpec
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
         (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+
+        (slf4jLoggerStub.warn(_: String)) verify * never()
       }
     }
 

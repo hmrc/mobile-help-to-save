@@ -30,6 +30,7 @@ import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveApi
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, ErrorInfo, Shuttering}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+
 import scala.concurrent.Future
 import scala.concurrent.Future._
 import scala.util.{Failure, Success, Try}
@@ -100,18 +101,23 @@ class HelpToSaveController @Inject()
   // When the account details are removed from startup this logic should be moved into AccountService.
   private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
 
-    val getAccountIfEnrolled = (enrolled: Boolean) => {
-      if(enrolled) EitherT(helpToSaveApi.getAccount(nino)).map(_.map(Account(_, logger)))
-      else  EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
-    }
-
     EitherT(helpToSaveApi.enrolmentStatus())
-      .flatMap(getAccountIfEnrolled)
+      .flatMap {
+        case true =>
+          EitherT(helpToSaveApi.getAccount(nino)).map {
+            case Some(helpToSaveAccount) =>
+              Some(Account(helpToSaveAccount, logger))
+            case None =>
+              logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+              None
+          }
+        case false =>
+          EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
+      }
       .value
       .map {
         case Right(Some(account)) => Ok(Json.toJson(account))
         case Right(None) =>
-          logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
           AccountNotFound
         case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
       }
