@@ -25,12 +25,6 @@ case class StartupResponse(
   accessAccountUrl: Option[String],
   user: Option[UserDetails],
   userError: Option[ErrorInfo],
-  balanceEnabled: Boolean,
-  paidInThisMonthEnabled: Boolean,
-  firstBonusEnabled: Boolean,
-  shareInvitationEnabled: Boolean,
-  savingRemindersEnabled: Boolean,
-  transactionsEnabled: Boolean,
   supportFormEnabled: Boolean
 )
 
@@ -46,5 +40,4 @@ case object Shuttering {
 
 object StartupResponse {
   implicit val enabledWrites: Writes[StartupResponse] = Json.writes[StartupResponse]
-    .transform((_: JsObject) + ("enabled" -> JsBoolean(true)))
 }

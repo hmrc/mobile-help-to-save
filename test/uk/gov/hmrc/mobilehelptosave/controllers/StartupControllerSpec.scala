@@ -49,12 +49,6 @@ class StartupControllerSpec
 
   private val config = TestStartupControllerConfig(
     falseShuttering,
-    balanceEnabled = false,
-    paidInThisMonthEnabled = false,
-    firstBonusEnabled = false,
-    shareInvitationEnabled = false,
-    savingRemindersEnabled = false,
-    transactionsEnabled = false,
     supportFormEnabled = false,
     helpToSaveInfoUrl = "/info",
     helpToSaveInvitationUrl = "/invitation",
@@ -151,7 +145,7 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        config.copy(shuttering = trueShuttering, paidInThisMonthEnabled = true))
+        config.copy(shuttering = trueShuttering))
 
       "omit URLs and user from response, and not call UserService or AuthorisedWithIds" in {
         val resultF = controller.startup(FakeRequest())
@@ -177,13 +171,6 @@ class StartupControllerSpec
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "enabled").as[Boolean] shouldBe true
-        (jsonBody \ "balanceEnabled").as[Boolean] shouldBe false
-        (jsonBody \ "paidInThisMonthEnabled").as[Boolean] shouldBe true
-        (jsonBody \ "firstBonusEnabled").as[Boolean] shouldBe false
-        (jsonBody \ "shareInvitationEnabled").as[Boolean] shouldBe false
-        (jsonBody \ "savingRemindersEnabled").as[Boolean] shouldBe false
-        (jsonBody \ "transactionsEnabled").as[Boolean] shouldBe false
         (jsonBody \ "supportFormEnabled").as[Boolean] shouldBe false
       }
     }
@@ -193,8 +180,7 @@ class StartupControllerSpec
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
         config.copy(
-          shuttering = Shuttering(shuttered = true, "something", "some message"),
-          paidInThisMonthEnabled = true
+          shuttering = Shuttering(shuttered = true, "something", "some message")
         ))
 
       "include the passed in shuttering info in response" in {
@@ -212,12 +198,6 @@ class StartupControllerSpec
 case class TestStartupControllerConfig(
   shuttering: Shuttering,
 
-  balanceEnabled: Boolean,
-  paidInThisMonthEnabled: Boolean,
-  firstBonusEnabled: Boolean,
-  shareInvitationEnabled: Boolean,
-  savingRemindersEnabled: Boolean,
-  transactionsEnabled: Boolean,
   supportFormEnabled: Boolean,
   helpToSaveInfoUrl: String,
   helpToSaveInvitationUrl: String,

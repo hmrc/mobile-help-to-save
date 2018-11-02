@@ -42,12 +42,6 @@ class StartupController @Inject() (
           accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
           user = userOrError.right.toOption,
           userError = userOrError.left.toOption,
-          balanceEnabled = config.balanceEnabled,
-          paidInThisMonthEnabled = config.paidInThisMonthEnabled,
-          firstBonusEnabled = config.firstBonusEnabled,
-          shareInvitationEnabled = config.shareInvitationEnabled,
-          savingRemindersEnabled = config.savingRemindersEnabled,
-          transactionsEnabled = config.transactionsEnabled,
           supportFormEnabled = config.supportFormEnabled
         )
       }
@@ -63,12 +57,6 @@ class StartupController @Inject() (
           accessAccountUrl = None,
           user = None,
           userError = None,
-          balanceEnabled = config.balanceEnabled,
-          paidInThisMonthEnabled = config.paidInThisMonthEnabled,
-          firstBonusEnabled = config.firstBonusEnabled,
-          shareInvitationEnabled = config.shareInvitationEnabled,
-          savingRemindersEnabled = config.savingRemindersEnabled,
-          transactionsEnabled = config.transactionsEnabled,
           supportFormEnabled = config.supportFormEnabled
         )
 

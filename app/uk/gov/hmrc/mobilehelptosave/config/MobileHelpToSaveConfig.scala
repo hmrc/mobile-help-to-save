@@ -55,12 +55,6 @@ case class MobileHelpToSaveConfig @Inject()(
     message = configBase64String("helpToSave.shuttering.message")
   )
 
-  override val balanceEnabled: Boolean = configBoolean("helpToSave.balanceEnabled")
-  override val paidInThisMonthEnabled: Boolean = configBoolean("helpToSave.paidInThisMonthEnabled")
-  override val firstBonusEnabled: Boolean = configBoolean("helpToSave.firstBonusEnabled")
-  override val shareInvitationEnabled: Boolean = configBoolean("helpToSave.shareInvitationEnabled")
-  override val savingRemindersEnabled: Boolean = configBoolean("helpToSave.savingRemindersEnabled")
-  override val transactionsEnabled: Boolean = configBoolean("helpToSave.transactionsEnabled")
   override val supportFormEnabled: Boolean = configBoolean("helpToSave.supportFormEnabled")
   override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
@@ -74,8 +68,6 @@ case class MobileHelpToSaveConfig @Inject()(
   protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
 
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
-
-  private def configLong(path: String): Long = configuration.underlying.getLong(path)
 
   private def configString(path: String): String = configuration.underlying.getString(path)
 
@@ -114,12 +106,6 @@ trait ServiceLocatorRegistrationTaskConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait StartupControllerConfig {
   def shuttering: Shuttering
-  def balanceEnabled: Boolean
-  def paidInThisMonthEnabled: Boolean
-  def firstBonusEnabled: Boolean
-  def shareInvitationEnabled: Boolean
-  def savingRemindersEnabled: Boolean
-  def transactionsEnabled: Boolean
   def supportFormEnabled: Boolean
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String

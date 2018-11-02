@@ -29,26 +29,12 @@ class StartupISpec extends WordSpec with Matchers
   with OneServerPerSuiteWsClient with NumberVerification  {
 
   override implicit lazy val app: Application = appBuilder
-    .configure(
-      "helpToSave.balanceEnabled" -> true,
-      "helpToSave.paidInThisMonthEnabled" -> true,
-      "helpToSave.firstBonusEnabled" -> true
-    )
     .build()
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
 
   "GET /mobile-help-to-save/startup" should {
-
-    "return enabled=true for backwards compatibility until we do NGC-3244" in {
-      AuthStub.userIsLoggedIn(nino)
-      HelpToSaveStub.currentUserIsNotEnrolled()
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "enabled").as[Boolean] shouldBe true
-    }
 
     "include user.state" in {
       AuthStub.userIsLoggedIn(nino)
