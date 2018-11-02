@@ -37,8 +37,7 @@ case class MobileHelpToSaveConfig @Inject()(
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
     with ServiceLocatorRegistrationTaskConfig
-    with StartupControllerConfig
-    with UserServiceConfig {
+    with StartupControllerConfig {
 
   override protected lazy val mode: Mode = environment.mode
   override protected def runModeConfiguration: Configuration = configuration
@@ -119,11 +118,4 @@ trait StartupControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
-}
-
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait UserServiceConfig {
-  def balanceEnabled: Boolean
-  def paidInThisMonthEnabled: Boolean
-  def firstBonusEnabled: Boolean
 }

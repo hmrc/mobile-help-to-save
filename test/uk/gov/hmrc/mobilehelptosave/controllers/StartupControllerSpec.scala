@@ -62,7 +62,7 @@ class StartupControllerSpec
     helpToSaveAccessAccountUrl = "/accessAccount"
   )
 
-  private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
+  private val testUserDetails = UserDetails(UserState.NotEnrolled)
 
   "startup" should {
     "pass NINO obtained from auth into userService" in {
