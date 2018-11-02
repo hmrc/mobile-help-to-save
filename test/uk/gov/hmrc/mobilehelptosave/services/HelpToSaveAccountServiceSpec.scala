@@ -61,6 +61,8 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
       val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, ShouldNotBeCalledGetAccount, testConfig)
       await(service.account(nino)) shouldBe Right(None)
+
+      (slf4jLoggerStub.warn(_: String)) verify * never()
     }
 
     "return None and log a warning when user is enrolled according to help-to-save but no account exists in NS&I" in {
