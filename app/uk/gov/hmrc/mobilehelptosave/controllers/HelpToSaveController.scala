@@ -17,8 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 
-import cats.data.EitherT
-import cats.instances.future._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -26,8 +24,9 @@ import play.api.mvc.{Action, AnyContent, Result, Results}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveApi
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorBody, ErrorInfo, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
@@ -58,7 +57,8 @@ trait ControllerChecks extends Results {
 class HelpToSaveController @Inject()
 (
   logger: LoggerLike,
-  helpToSaveApi: HelpToSaveApi,
+  accountService: AccountService,
+  helpToSaveGetTransactions: HelpToSaveGetTransactions,
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig
 ) extends BaseController with ControllerChecks  {
@@ -76,7 +76,7 @@ class HelpToSaveController @Inject()
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
-          helpToSaveApi.getTransactions(verifiedUserNino).map {
+          helpToSaveGetTransactions.getTransactions(verifiedUserNino).map {
             case Right(Some(transactions)) => Ok(Json.toJson(transactions.reverse))
             case Right(None) => AccountNotFound
             case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
@@ -96,29 +96,10 @@ class HelpToSaveController @Inject()
     }
   }
 
-  // This logic doesn't belong in a controller, it belongs in AccountService.
-  // At the moment moving it would require many changes to code & tests that are going to be removed soon so would be wasted effort.
-  // When the account details are removed from startup this logic should be moved into AccountService.
   private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
-
-    EitherT(helpToSaveApi.enrolmentStatus())
-      .flatMap {
-        case true =>
-          EitherT(helpToSaveApi.getAccount(nino)).map {
-            case Some(helpToSaveAccount) =>
-              Some(Account(helpToSaveAccount, logger))
-            case None =>
-              logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
-              None
-          }
-        case false =>
-          EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
-      }
-      .value
-      .map {
+    accountService.account(nino).map {
         case Right(Some(account)) => Ok(Json.toJson(account))
-        case Right(None) =>
-          AccountNotFound
+        case Right(None) => AccountNotFound
         case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
       }
   }

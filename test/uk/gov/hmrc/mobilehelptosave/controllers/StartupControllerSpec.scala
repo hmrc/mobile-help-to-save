@@ -56,13 +56,12 @@ class StartupControllerSpec
     savingRemindersEnabled = false,
     transactionsEnabled = false,
     supportFormEnabled = false,
-    inAppPaymentsEnabled = true,
     helpToSaveInfoUrl = "/info",
     helpToSaveInvitationUrl = "/invitation",
     helpToSaveAccessAccountUrl = "/accessAccount"
   )
 
-  private val testUserDetails = UserDetails(UserState.NotEnrolled, None, None)
+  private val testUserDetails = UserDetails(UserState.NotEnrolled)
 
   "startup" should {
     "pass NINO obtained from auth into userService" in {
@@ -186,7 +185,6 @@ class StartupControllerSpec
         (jsonBody \ "savingRemindersEnabled").as[Boolean] shouldBe false
         (jsonBody \ "transactionsEnabled").as[Boolean] shouldBe false
         (jsonBody \ "supportFormEnabled").as[Boolean] shouldBe false
-        (jsonBody \ "inAppPaymentsEnabled").as[Boolean] shouldBe true
       }
     }
 
@@ -221,7 +219,6 @@ case class TestStartupControllerConfig(
   savingRemindersEnabled: Boolean,
   transactionsEnabled: Boolean,
   supportFormEnabled: Boolean,
-  inAppPaymentsEnabled: Boolean,
   helpToSaveInfoUrl: String,
   helpToSaveInvitationUrl: String,
   helpToSaveAccessAccountUrl: String

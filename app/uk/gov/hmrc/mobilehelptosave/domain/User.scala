@@ -23,9 +23,7 @@ object UserState extends Enumeration {
 }
 
 case class UserDetails(
-  state: UserState.Value,
-  account: Option[Account],
-  accountError: Option[ErrorInfo]
+  state: UserState.Value
 )
 
 object UserDetails {

@@ -22,7 +22,8 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveConnectorGetAccount}
+import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -36,30 +37,70 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
+  private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   "account" should {
     "convert the account from the help-to-save domain to the mobile-help-to-save domain" in {
-      val connector = fakeHelpToSaveConnector(nino, Right(Some(helpToSaveAccount)))
-      val service = new HelpToSaveAccountService(logger, connector)
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig)
       await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount))
     }
 
-    "return None when no account was found" in {
-      val connector = fakeHelpToSaveConnector(nino, Right(None))
-      val service = new HelpToSaveAccountService(logger, connector)
-      await(service.account(nino)) shouldBe Right(None)
+    "allow inAppPaymentsEnabled to be overridden with configuration" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig.copy(inAppPaymentsEnabled = true))
+      await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(inAppPaymentsEnabled = true)))
     }
 
-    "return errors returned by the connector" in {
-      val connector = fakeHelpToSaveConnector(nino, Left(ErrorInfo.General))
-      val service = new HelpToSaveAccountService(logger, connector)
+    // this is to avoid unnecessary load on NS&I, see NGC-3799
+    "return None without attempting to get account from help-to-save when the user is not enrolled" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, ShouldNotBeCalledGetAccount, testConfig)
+      await(service.account(nino)) shouldBe Right(None)
+
+      (slf4jLoggerStub.warn(_: String)) verify * never()
+    }
+
+    "return None and log a warning when user is enrolled according to help-to-save but no account exists in NS&I" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(None))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig)
+      await(service.account(nino)) shouldBe Right(None)
+
+      (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
+    }
+
+    "return errors returned by connector.enrolmentStatus" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Left(ErrorInfo.General))
+      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig)
+      await(service.account(nino)) shouldBe Left(ErrorInfo.General)
+    }
+
+    "return errors returned by connector.getAccount" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Left(ErrorInfo.General))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig)
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
     }
   }
 
-  private def fakeHelpToSaveConnector(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveConnectorGetAccount = new HelpToSaveConnectorGetAccount {
+  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus = new HelpToSaveEnrolmentStatus {
+
+    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+      nino shouldBe expectedNino
+      hc shouldBe passedHc
+      ec shouldBe passedEc
+
+      Future successful enrolledOrError
+    }
+  }
+
+  private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount = new HelpToSaveGetAccount {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
@@ -68,4 +109,13 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
       Future successful accountOrError
     }
   }
+
+  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
+
+    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+      Future failed new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation")
+    }
+  }
 }
+
+case class TestAccountServiceConfig(inAppPaymentsEnabled: Boolean) extends AccountServiceConfig

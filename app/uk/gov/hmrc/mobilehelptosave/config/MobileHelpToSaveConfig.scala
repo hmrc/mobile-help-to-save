@@ -33,12 +33,13 @@ case class MobileHelpToSaveConfig @Inject()(
   configuration: Configuration
 )
   extends ServicesConfig
+    with AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
+    with SandboxDataConfig
     with ServiceLocatorRegistrationTaskConfig
-    with StartupControllerConfig
-    with UserServiceConfig {
+    with StartupControllerConfig {
 
   override protected lazy val mode: Mode = environment.mode
   override protected def runModeConfiguration: Configuration = configuration
@@ -85,6 +86,16 @@ case class MobileHelpToSaveConfig @Inject()(
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait AccountServiceConfig {
+  def inAppPaymentsEnabled: Boolean
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
+trait SandboxDataConfig {
+  def inAppPaymentsEnabled: Boolean
+}
+
+@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait DocumentationControllerConfig {
   def apiAccessType: String
   def apiWhiteListApplicationIds: Seq[String]
@@ -110,7 +121,6 @@ trait StartupControllerConfig {
   def savingRemindersEnabled: Boolean
   def transactionsEnabled: Boolean
   def supportFormEnabled: Boolean
-  def inAppPaymentsEnabled: Boolean
   def helpToSaveInfoUrl: String
   def helpToSaveInvitationUrl: String
   def helpToSaveAccessAccountUrl: String
@@ -119,11 +129,4 @@ trait StartupControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
-}
-
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
-trait UserServiceConfig {
-  def balanceEnabled: Boolean
-  def paidInThisMonthEnabled: Boolean
-  def firstBonusEnabled: Boolean
 }

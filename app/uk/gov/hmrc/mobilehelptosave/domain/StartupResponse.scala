@@ -31,8 +31,7 @@ case class StartupResponse(
   shareInvitationEnabled: Boolean,
   savingRemindersEnabled: Boolean,
   transactionsEnabled: Boolean,
-  supportFormEnabled: Boolean,
-  inAppPaymentsEnabled: Boolean
+  supportFormEnabled: Boolean
 )
 
 case class Shuttering (

@@ -153,7 +153,8 @@ trait AccountTestData {
     ),
     currentBonusTerm = CurrentBonusTerm.First,
     closureDate = None,
-    closingBalance = None
+    closingBalance = None,
+    inAppPaymentsEnabled = false
   )
 
   protected val closedAccountReturnedByHelpToSaveJsonString: String =

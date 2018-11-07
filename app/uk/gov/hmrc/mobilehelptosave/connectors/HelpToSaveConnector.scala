@@ -38,29 +38,28 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveConnectorEnrolmentStatus {
+trait HelpToSaveEnrolmentStatus {
   def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
 }
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveConnectorGetAccount {
+trait HelpToSaveGetAccount {
   def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]
 }
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveConnectorGetTransactions {
+trait HelpToSaveGetTransactions {
   def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]]
 }
-
-@ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveApi extends  HelpToSaveConnectorGetTransactions with HelpToSaveConnectorGetAccount with HelpToSaveConnectorEnrolmentStatus
 
 @Singleton
 class HelpToSaveConnectorImpl @Inject() (
   logger: LoggerLike,
   config: HelpToSaveConnectorConfig,
   http: CoreGet)
-  extends HelpToSaveApi {
+  extends HelpToSaveGetTransactions
+    with HelpToSaveGetAccount
+    with HelpToSaveEnrolmentStatus {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>

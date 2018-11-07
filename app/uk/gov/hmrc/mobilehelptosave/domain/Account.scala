@@ -73,13 +73,15 @@ case class Account(
   currentBonusTerm: CurrentBonusTerm.Value,
 
   closureDate: Option[LocalDate] = None,
-  closingBalance: Option[BigDecimal] = None
+  closingBalance: Option[BigDecimal] = None,
+
+  inAppPaymentsEnabled: Boolean
 )
 
 object Account {
   implicit val format: OFormat[Account] = Json.format[Account]
 
-  def apply(h: HelpToSaveAccount, logger: LoggerLike): Account = Account(
+  def apply(h: HelpToSaveAccount, inAppPaymentsEnabled: Boolean, logger: LoggerLike): Account = Account(
     number = h.accountNumber,
     openedYearMonth = h.openedYearMonth,
     isClosed = h.isClosed,
@@ -95,7 +97,8 @@ object Account {
     bonusTerms = bonusTerms(h, logger),
     currentBonusTerm = currentBonusTerm(h),
     closureDate = h.closureDate,
-    closingBalance = h.closingBalance
+    closingBalance = h.closingBalance,
+    inAppPaymentsEnabled = inAppPaymentsEnabled
   )
 
   private def nextPaymentMonthStartDate(h: HelpToSaveAccount) = {

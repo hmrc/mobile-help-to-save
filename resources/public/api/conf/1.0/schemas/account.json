@@ -187,6 +187,10 @@
         "Second",
         "AfterFinalTerm"
       ]
+    },
+    "inAppPaymentsEnabled": {
+      "type": "boolean",
+      "description": "Are in-app payments enabled for this account?"
     }
   },
   "required": [
@@ -200,6 +204,7 @@
     "thisMonthEndDate",
     "accountHolderName",
     "bonusTerms",
-    "currentBonusTerm"
+    "currentBonusTerm",
+    "inAppPaymentsEnabled"
   ]
 }
