@@ -19,21 +19,24 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.OneInstancePerTest
+import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.http.Status._
-import play.api.mvc.Results
-import play.api.test.FakeRequest
+import play.api.mvc.{Result, Results}
+import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.Helpers.{contentAsString, status}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with OneInstancePerTest with LoggerStub with Retrievals with Results {
+class AuthorisedWithIdsSpec
+  extends WordSpec with Matchers
+    with FutureAwaits with DefaultAwaitTimeout
+    with MockFactory with OneInstancePerTest with LoggerStub with Retrievals with Results {
 
   private val generator = new Generator(0)
   private val testNino = generator.nextNino
@@ -101,9 +104,9 @@ class AuthorisedWithIdsSpec extends UnitSpec with MockFactory with OneInstancePe
         Ok
       }
 
-      val result = await(action(FakeRequest()))
-      status(result) shouldBe FORBIDDEN
-      bodyOf(result) shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+      val resultF = action(FakeRequest())
+      status(resultF) shouldBe FORBIDDEN
+      contentAsString(resultF) shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
       (slf4jLoggerStub.warn(_: String)) verify "Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381."
     }
   }

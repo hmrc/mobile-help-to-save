@@ -16,61 +16,62 @@
 
 package uk.gov.hmrc.mobilehelptosave.stubs
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 object HelpToSaveStub extends AccountTestData with TransactionTestData {
-  def currentUserIsEnrolled(): Unit = enrolmentStatusIs(true)
-  def currentUserIsNotEnrolled(): Unit = enrolmentStatusIs(false)
+  def currentUserIsEnrolled()(implicit wireMockServer: WireMockServer): Unit = enrolmentStatusIs(true)
+  def currentUserIsNotEnrolled()(implicit wireMockServer: WireMockServer): Unit = enrolmentStatusIs(false)
 
-  def enrolmentStatusShouldNotHaveBeenCalled(): Unit =
-    verify(0, getRequestedFor(urlPathEqualTo("/help-to-save/enrolment-status")))
+  def enrolmentStatusShouldNotHaveBeenCalled()(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.verify(0, getRequestedFor(urlPathEqualTo("/help-to-save/enrolment-status")))
 
-  def enrolmentStatusReturnsInternalServerError(): Unit =
-    stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
+  def enrolmentStatusReturnsInternalServerError()(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
       .willReturn(aResponse()
         .withStatus(Status.INTERNAL_SERVER_ERROR)))
 
-  private def enrolmentStatusIs(status: Boolean): Unit =
-    stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
+  private def enrolmentStatusIs(status: Boolean)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(urlPathEqualTo("/help-to-save/enrolment-status"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
         .withBody(
           s"""{"enrolled":$status}"""
         )))
 
-  def transactionsExistForUser(nino: Nino): Unit = {
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+  def transactionsExistForUser(nino: Nino)(implicit wireMockServer: WireMockServer): Unit = {
+    wireMockServer.stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
         .withBody(transactionsReturnedByHelpToSaveJsonString)))
   }
 
-  def zeroTransactionsExistForUser(nino: Nino): Unit = {
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+  def zeroTransactionsExistForUser(nino: Nino)(implicit wireMockServer: WireMockServer): Unit = {
+    wireMockServer.stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
         .withBody(zeroTransactionsReturnedByHelpToSaveJsonString)))
   }
 
-  def transactionsWithOver50PoundDebit(nino: Nino): Unit = {
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+  def transactionsWithOver50PoundDebit(nino: Nino)(implicit wireMockServer: WireMockServer): Unit = {
+    wireMockServer.stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
         .withBody(transactionsWithOver50PoundDebitReturnedByHelpToSaveJsonString)))
   }
 
-  def multipleTransactionsWithinSameMonthAndDay(nino: Nino): Unit = {
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+  def multipleTransactionsWithinSameMonthAndDay(nino: Nino)(implicit wireMockServer: WireMockServer): Unit = {
+    wireMockServer.stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.OK)
         .withBody(multipleTransactionsWithinSameMonthAndDayReturnedByHelpToSaveJsonString)))
   }
 
-  def userDoesNotHaveAnHtsAccount(nino: Nino): Unit = {
-    stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+  def userDoesNotHaveAnHtsAccount(nino: Nino)(implicit wireMockServer: WireMockServer): Unit = {
+    wireMockServer.stubFor(get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
       .willReturn(aResponse()
         .withStatus(Status.NOT_FOUND)))
   }
@@ -79,47 +80,47 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
     urlPathEqualTo(s"/help-to-save/$nino/account")
   }
 
-  def accountShouldNotHaveBeenCalled(nino: Nino): Unit =
-    verify(0, getRequestedFor(getAccountUrlPathPattern(nino)))
+  def accountShouldNotHaveBeenCalled(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.verify(0, getRequestedFor(getAccountUrlPathPattern(nino)))
 
-  def accountExists(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def accountExists(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(accountReturnedByHelpToSaveJsonString)))
 
-  def accountExistsWithNoEmail(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def accountExistsWithNoEmail(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(accountWithNoEmailReturnedByHelpToSaveJsonString)))
 
-  def closedAccountExists(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def closedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(closedAccountReturnedByHelpToSaveJsonString)))
 
-  def blockedAccountExists(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def blockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(enrolledButBlockedReturnedByHelpToSaveJsonString)))
 
 
-  def accountReturnsInvalidJson(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def accountReturnsInvalidJson(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
         .withBody(accountReturnedByHelpToSaveInvalidJsonString)))
 
-  def accountReturnsBadlyFormedJson(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def accountReturnsBadlyFormedJson(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(200)
@@ -127,8 +128,8 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
           """not JSON""".stripMargin
         )))
 
-  def accountReturnsInternalServerError(nino: Nino): Unit =
-    stubFor(get(getAccountUrlPathPattern(nino))
+  def accountReturnsInternalServerError(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(get(getAccountUrlPathPattern(nino))
       .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
       .willReturn(aResponse()
         .withStatus(500)))

@@ -17,19 +17,20 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{EitherValues, OneInstancePerTest}
+import org.scalatest.{EitherValues, Matchers, OneInstancePerTest, WordSpec}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
 class UserServiceSpec
-  extends UnitSpec
+  extends WordSpec with Matchers
+    with FutureAwaits with DefaultAwaitTimeout
     with MockFactory with OneInstancePerTest with LoggerStub
     with EitherValues {
 
@@ -83,7 +84,4 @@ class UserServiceSpec
       Future successful userIsEnrolledInHelpToSave
     }
   }
-
-  // disable implicit
-  override def liftFuture[A](v: A): Future[A] = super.liftFuture(v)
 }
