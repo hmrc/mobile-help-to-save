@@ -19,32 +19,28 @@ package uk.gov.hmrc.mobilehelptosave.support
 import java.net.URL
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.play.it.Port
 
 case class WireMockBaseUrl(value: URL)
 
 trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with AppBuilder {
   me: Suite =>
 
-  val wireMockPort: Int = Port.randomAvailable
+  lazy val wireMockPort: Int = wireMockServer.port
   val wireMockHost = "localhost"
-  val wireMockBaseUrlAsString = s"http://$wireMockHost:$wireMockPort"
-  val wireMockBaseUrl = new URL(wireMockBaseUrlAsString)
-  protected implicit val implicitWireMockBaseUrl: WireMockBaseUrl = WireMockBaseUrl(wireMockBaseUrl)
+  lazy val wireMockBaseUrlAsString = s"http://$wireMockHost:$wireMockPort"
+  lazy val wireMockBaseUrl = new URL(wireMockBaseUrlAsString)
+  protected implicit lazy val implicitWireMockBaseUrl: WireMockBaseUrl = WireMockBaseUrl(wireMockBaseUrl)
 
   protected def basicWireMockConfig(): WireMockConfiguration = wireMockConfig()
 
-  private val wireMockServer = new WireMockServer(basicWireMockConfig().port(wireMockPort))
-
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    WireMock.configureFor(wireMockHost, wireMockPort)
-    wireMockServer.start()
+  protected implicit lazy val wireMockServer: WireMockServer = {
+    val server = new WireMockServer(basicWireMockConfig().dynamicPort())
+    server.start()
+    server
   }
 
   override protected def afterAll(): Unit = {
@@ -54,7 +50,7 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with App
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    WireMock.reset()
+    wireMockServer.resetAll()
   }
 
   override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(

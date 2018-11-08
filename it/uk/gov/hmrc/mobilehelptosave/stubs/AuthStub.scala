@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.stubs
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
@@ -32,8 +33,8 @@ object AuthStub {
   }
 
 
-  def userIsLoggedIn(nino: Nino): Unit =
-    stubFor(post(urlPathEqualTo("/auth/authorise"))
+  def userIsLoggedIn(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(post(urlPathEqualTo("/auth/authorise"))
       .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(200)
@@ -43,22 +44,22 @@ object AuthStub {
           ).toString
         )))
 
-  def userIsLoggedInWithInsufficientConfidenceLevel(): Unit =
-    stubFor(post(urlPathEqualTo("/auth/authorise"))
+  def userIsLoggedInWithInsufficientConfidenceLevel()(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(post(urlPathEqualTo("/auth/authorise"))
       .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(401)
         .withHeader("WWW-Authenticate", """MDTP detail="InsufficientConfidenceLevel"""")
       ))
 
-  def userIsNotLoggedIn(): Unit =
-    stubFor(post(urlPathEqualTo("/auth/authorise"))
+  def userIsNotLoggedIn()(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(post(urlPathEqualTo("/auth/authorise"))
       .withRequestBody(equalToJson(authoriseRequestBody))
       .willReturn(aResponse()
         .withStatus(401)
-          .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
+        .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
       ))
 
-  def authoriseShouldNotHaveBeenCalled(): Unit =
-    verify(0, postRequestedFor(urlPathEqualTo("/auth/authorise")))
+  def authoriseShouldNotHaveBeenCalled()(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.verify(0, postRequestedFor(urlPathEqualTo("/auth/authorise")))
 }

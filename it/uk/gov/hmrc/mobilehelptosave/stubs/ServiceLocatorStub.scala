@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.stubs
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import play.api.libs.json.Json
@@ -23,14 +24,14 @@ import uk.gov.hmrc.api.domain.Registration
 
 object ServiceLocatorStub {
 
-  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String): Unit =
-    verify(1, registrationPattern(serviceName, serviceUrl))
+  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.verify(1, registrationPattern(serviceName, serviceUrl))
 
-  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String): Unit =
-    verify(0, registrationPattern(serviceName, serviceUrl))
+  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String)(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.verify(0, registrationPattern(serviceName, serviceUrl))
 
-  def registrationSucceeds(): Unit =
-    stubFor(post(urlPathEqualTo("/registration"))
+  def registrationSucceeds()(implicit wireMockServer: WireMockServer): Unit =
+    wireMockServer.stubFor(post(urlPathEqualTo("/registration"))
       .willReturn(aResponse()
         .withStatus(204)))
 

@@ -20,22 +20,23 @@ import java.net.{ConnectException, URL}
 
 import io.lemonlabs.uri._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.OneInstancePerTest
+import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future._
 
 class HelpToSaveConnectorSpec
-  extends UnitSpec
+  extends WordSpec with Matchers
+    with FutureAwaits with DefaultAwaitTimeout
     with MockFactory with OneInstancePerTest with LoggerStub with ThrowableWithMessageContaining
     with AccountTestData with TransactionTestData {
 
@@ -65,8 +66,10 @@ class HelpToSaveConnectorSpec
   }
 
   private def httpGet(path: String, response: Future[HttpResponse]) = FakeHttpGet(s"$baseUrl/help-to-save/$path", response)
+  private def httpGet(path: String, response: HttpResponse) = FakeHttpGet(s"$baseUrl/help-to-save/$path", response)
 
   private def httpGet(predicate: String => Boolean, response: Future[HttpResponse]) = FakeHttpGet(predicate, response)
+  private def httpGet(predicate: String => Boolean, response: HttpResponse) = FakeHttpGet(predicate, response)
 
 
   private val config: HelpToSaveConnectorConfig = new HelpToSaveConnectorConfig {
