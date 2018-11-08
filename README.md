@@ -20,13 +20,6 @@ Response format:
       ""message": "Please try again tomorrow"
   },
   // Fine grained feature toggles
-  "balanceEnabled": true,
-  "paidInThisMonthEnabled": true,
-  "firstBonusEnabled": true,
-  "shareInvitationEnabled": true,
-  "savingRemindersEnabled": true,
-  // whether the transaction feature is enabled
-  "transactionsEnabled": true,
   "supportFormEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/get-help-savings-low-income",
@@ -100,7 +93,7 @@ Response format:
 #### Errors
 If there is a problem obtaining the user-specific data then the `user` object will be replaced with a `userError` object. Other fields (feature flags and shuttering) will be unaffected and still returned:
 ```
-  "balanceEnabled": true,
+  "supportFormEnabled": true,
   // etc... shuttering and other feature flags omitted for brevity
   "userError": { "code": "GENERAL" }
   // no "user" object
@@ -109,7 +102,7 @@ If there is a problem obtaining the user-specific data then the `user` object wi
 
 If there is a problem obtaining the account data then the `user.account` object will be replaced with a `user.accountError` object. Other fields will be unaffected and still returned:
 ```
-  "balanceEnabled": true,
+  "supportFormEnabled": true,
   // etc... shuttering and other feature flags omitted for brevity
   "user": {
     "state": "Enrolled"
@@ -133,12 +126,6 @@ When the Help to Save section of the app is shuttered then `shuttering.shuttered
     "message": "You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017."
   },
   // Fine grained feature toggles
-  "balanceEnabled": true,
-  "paidInThisMonthEnabled": true,
-  "firstBonusEnabled": true,
-  "shareInvitationEnabled": true,
-  "savingRemindersEnabled": true,
-  "transactionsEnabled": true,
   "supportFormEnabled": true
 }
 ```

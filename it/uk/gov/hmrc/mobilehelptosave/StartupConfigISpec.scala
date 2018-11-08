@@ -46,7 +46,7 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           "helpToSave.shuttering.shuttered" -> true,
           "helpToSave.shuttering.title" -> base64Encode("Shuttered"),
           "helpToSave.shuttering.message" -> base64Encode("HTS is currently not available"),
-          "helpToSave.savingRemindersEnabled" -> true
+          "helpToSave.supportFormEnabled" -> true
         )
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
@@ -54,7 +54,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
 
@@ -62,41 +61,11 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
       (response.json \ "shuttering" \ "title").as[String] shouldBe "Shuttered"
       (response.json \ "shuttering" \ "message").as[String] shouldBe "HTS is currently not available"
-      (response.json \ "enabled").as[Boolean] shouldBe true
-      (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
+      (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
       response.json.as[JsObject].keys should not contain "user"
 
       AuthStub.authoriseShouldNotHaveBeenCalled()
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
-      HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
-    }
-
-    "not call Get Account API when feature flags that require account information are all disabled" in withTestServer(
-      appBuilder
-        .configure(
-          "helpToSave.shuttering.shuttered" -> false,
-          "helpToSave.shareInvitationEnabled" -> true,
-          "helpToSave.savingRemindersEnabled" -> true,
-          "helpToSave.balanceEnabled" -> false,
-          "helpToSave.paidInThisMonthEnabled" -> false,
-          "helpToSave.firstBonusEnabled" -> false
-        )
-        .build()) { (app: Application, portNumber: PortNumber) =>
-      implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = app.injector.instanceOf[WSClient]
-
-      AuthStub.userIsLoggedIn(nino)
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
-
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
-
-      response.status shouldBe 200
-      (response.json \ "enabled").as[Boolean] shouldBe true
-      (response.json \ "user" \ "state").as[String] shouldBe "Enrolled"
-      (response.json \ "user").as[JsObject].keys should not contain "account"
-
-      HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
 
     "include feature flag and URL settings when their configuration is not overridden" in withTestServer(
@@ -110,12 +79,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 200
-      (response.json \ "balanceEnabled").validate[Boolean] should beJsSuccess
-      (response.json \ "paidInThisMonthEnabled").validate[Boolean] should beJsSuccess
-      (response.json \ "firstBonusEnabled").validate[Boolean] should beJsSuccess
-      (response.json \ "shareInvitationEnabled").validate[Boolean] should beJsSuccess
-      (response.json \ "savingRemindersEnabled").validate[Boolean] should beJsSuccess
-      (response.json \ "transactionsEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "supportFormEnabled" ).validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/get-help-savings-low-income"
       (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
@@ -133,12 +96,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
             "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
             "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
             "helpToSave.accessAccountUrl" -> "/access-account",
-            "helpToSave.balanceEnabled" -> "true",
-            "helpToSave.paidInThisMonthEnabled" -> "false",
-            "helpToSave.firstBonusEnabled" -> "true",
-            "helpToSave.shareInvitationEnabled" -> "false",
-            "helpToSave.savingRemindersEnabled" -> "true",
-            "helpToSave.transactionsEnabled" -> "false",
             "helpToSave.supportFormEnabled" -> "true"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
@@ -147,12 +104,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
         response.status shouldBe 200
-        (response.json \ "balanceEnabled").as[Boolean] shouldBe true
-        (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe false
-        (response.json \ "firstBonusEnabled").as[Boolean] shouldBe true
-        (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe false
-        (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe true
-        (response.json \ "transactionsEnabled").as[Boolean] shouldBe false
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
         (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
         (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
@@ -162,12 +113,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       withTestServer(
         appBuilder
           .configure(
-            "helpToSave.balanceEnabled" -> "false",
-            "helpToSave.paidInThisMonthEnabled" -> "true",
-            "helpToSave.firstBonusEnabled" -> "false",
-            "helpToSave.shareInvitationEnabled" -> "true",
-            "helpToSave.savingRemindersEnabled" -> "false",
-            "helpToSave.transactionsEnabled" -> "true",
             "helpToSave.supportFormEnabled" -> "false"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
@@ -176,12 +121,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
         response.status shouldBe 200
-        (response.json \ "balanceEnabled").as[Boolean] shouldBe false
-        (response.json \ "paidInThisMonthEnabled").as[Boolean] shouldBe true
-        (response.json \ "firstBonusEnabled").as[Boolean] shouldBe false
-        (response.json \ "shareInvitationEnabled").as[Boolean] shouldBe true
-        (response.json \ "savingRemindersEnabled").as[Boolean] shouldBe false
-        (response.json \ "transactionsEnabled").as[Boolean] shouldBe true
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe false
       }
     }
