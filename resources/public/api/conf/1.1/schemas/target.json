@@ -18,10 +18,10 @@
         0,
         15.50
       ]
-    },
-    "message": {
-      "type":"string",
-      "description": "A representative message that can be displayed to the user"
     }
-  }
+  },
+  "required": [
+    "targetAmount",
+    "paidInThisMonth"
+  ]
 }

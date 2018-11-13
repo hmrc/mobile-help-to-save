@@ -113,11 +113,11 @@ traits:
 
   /targets/current-target:
      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
-     get:
-       displayName: Get current savings target
-       description: Retrieve the details of the user's current savings target (if set)
-       (annotations.scope): "read:native-apps-api-orchestration"
-       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+     put:
+       displayName: Set a new savings target
+       description: Set a new savings target
+       (annotations.scope): "write:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
        responses:
          200:
            body:

@@ -31,5 +31,10 @@
   ],
   "currentBonusTerm": "First",
   "inAppPaymentsEnabled": false,
-  "savingsTargetsEnabled": true
+  "savingsTargetEnabled": true,
+  "savingsTarget": {
+    "hasTarget": false,
+    "targetAmount":0,
+    "paidInThisMonth": 0
+  }
 }
