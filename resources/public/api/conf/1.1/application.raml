@@ -112,15 +112,15 @@ traits:
               example: !include examples/transactions.json
 
   /targets/current-target:
-    is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
+     is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
      get:
-        displayName: Get current savings target
-        description: Retrieve the details of the user's current savings target (if set)
-        (annotations.scope): "read:native-apps-api-orchestration"
-          securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
-          responses:
-            200:
-              body:
-                application/json:
-                  type: !include schemas/target.json
-                  example: !include examples/target.json
+       displayName: Get current savings target
+       description: Retrieve the details of the user's current savings target (if set)
+       (annotations.scope): "read:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+       responses:
+         200:
+           body:
+             application/json:
+               type: !include schemas/target.json
+               example: !include examples/target.json
