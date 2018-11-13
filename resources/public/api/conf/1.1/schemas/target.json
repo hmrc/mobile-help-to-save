@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "description": "The Help To Save account details",
+  "properties": {
+    "targetAmount": {
+      "type": "number",
+      "description": "The target amount that the user wants to save each month",
+      "examples": [
+        21.50,
+        45
+      ]
+    },
+    "paidInThisMonth": {
+      "type": "number",
+      "description": "The amount the user has already saved this month",
+      "examples": [
+        0,
+        15.50
+      ]
+    },
+    "message": {
+      "type":"string",
+      "description": "A representative message that can be displayed to the user"
+    }
+  }
+}
