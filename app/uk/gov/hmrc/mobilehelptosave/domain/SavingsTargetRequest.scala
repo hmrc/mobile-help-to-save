@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.joda.time.DateTime
-import uk.gov.hmrc.domain.Nino
+import play.api.libs.json.{Json, OFormat}
 
-case class Targets(nino: Nino, currentTarget: Option[Target], previousTargets: Seq[Target])
+case class SavingsTargetRequest(targetAmount: Double)
 
-class Target(amount: Double, createdAt: DateTime)
+object SavingsTargetRequest {
+  implicit val formats: OFormat[SavingsTargetRequest] = Json.format
+}
