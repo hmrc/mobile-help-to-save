@@ -114,13 +114,13 @@ traits:
   /targets/current-target:
      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
      put:
+       body:
+         application/json:
+           type: !include schemas/target.json
+           example: !include examples/target.json
        displayName: Set a new savings target
        description: Set a new savings target
        (annotations.scope): "write:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
        responses:
-         200:
-           body:
-             application/json:
-               type: !include schemas/target.json
-               example: !include examples/target.json
+         204:

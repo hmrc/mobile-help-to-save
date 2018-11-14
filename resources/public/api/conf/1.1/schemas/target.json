@@ -5,23 +5,14 @@
   "properties": {
     "targetAmount": {
       "type": "number",
-      "description": "The target amount that the user wants to save each month",
+      "description": "The target amount that the user wants to save each month. This must be a number between 1 and the monthly savings limit (currently £50)",
       "examples": [
         21.50,
         45
       ]
-    },
-    "paidInThisMonth": {
-      "type": "number",
-      "description": "The amount the user has already saved this month",
-      "examples": [
-        0,
-        15.50
-      ]
     }
   },
   "required": [
-    "targetAmount",
-    "paidInThisMonth"
+    "targetAmount"
   ]
 }

@@ -194,20 +194,18 @@
     },
     "savingsTargetEnabled": {
       "type": "boolean",
-      "description": "Is savings target enabled for this account?"
+      "description": "Is the savings target feature enabled for this account?"
     },
     "savingsTarget": {
       "type": "object",
       "properties": {
-        "hasTarget": {
-          "type": "boolean",
-          "description": "Has the user already set a savings target?"
-        },
         "targetAmount": {
           "type": "number",
-          "description": "The saving target set by the user"
+          "description": "The savings target set by the user"
         }
-      }
+      },
+      "description": "This element will be present if there is a target set, otherwise it will be omitted.",
+      "required": ["targetAmount"]
     }
   },
   "required": [
@@ -223,7 +221,6 @@
     "bonusTerms",
     "currentBonusTerm",
     "inAppPaymentsEnabled",
-    "savingsTargetEnabled",
-    "savingsTarget"
+    "savingsTargetEnabled"
   ]
 }

@@ -33,8 +33,6 @@
   "inAppPaymentsEnabled": false,
   "savingsTargetEnabled": true,
   "savingsTarget": {
-    "hasTarget": false,
-    "targetAmount":0,
-    "paidInThisMonth": 0
+    "targetAmount":21.50
   }
 }
