@@ -1,0 +1,38 @@
+{
+  "number": "1000000000001",
+  "isClosed": false,
+  "blocked": {
+    "unspecified": false
+  },
+  "balance": 200,
+  "openedYearMonth": "2018-01",
+  "paidInThisMonth": 50,
+  "canPayInThisMonth": 0,
+  "maximumPaidInThisMonth": 50,
+  "thisMonthEndDate": "2018-03-31",
+  "nextPaymentMonthStartDate": "2018-04-01",
+  "accountHolderName": "Testforename Testsurname",
+  "accountHolderEmail": "test@example.com",
+  "bonusTerms": [
+    {
+      "bonusEstimate": 100,
+      "bonusPaid": 0,
+      "endDate": "2019-10-31",
+      "bonusPaidOnOrAfterDate": "2019-11-01",
+      "balanceMustBeMoreThanForBonus": 0
+    },
+    {
+      "bonusEstimate": 0,
+      "bonusPaid": 0,
+      "endDate": "2021-10-31",
+      "bonusPaidOnOrAfterDate": "2021-11-01",
+      "balanceMustBeMoreThanForBonus": 200
+    }
+  ],
+  "currentBonusTerm": "First",
+  "inAppPaymentsEnabled": false,
+  "savingsTargetEnabled": true,
+  "savingsTarget": {
+    "targetAmount":21.50
+  }
+}
