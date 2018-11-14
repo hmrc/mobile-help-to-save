@@ -21,9 +21,9 @@ import akka.stream.ActorMaterializer
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.http.Status._
-import play.api.mvc.{Result, Results}
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.mvc.Results
 import play.api.test.Helpers.{contentAsString, status}
+import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
@@ -38,9 +38,9 @@ class AuthorisedWithIdsSpec
     with FutureAwaits with DefaultAwaitTimeout
     with MockFactory with OneInstancePerTest with LoggerStub with Retrievals with Results {
 
-  private val generator = new Generator(0)
-  private val testNino = generator.nextNino
-  implicit val system: ActorSystem = ActorSystem()
+  private  val generator                       = new Generator(0)
+  private  val testNino                        = generator.nextNino
+  implicit val system      : ActorSystem       = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   "AuthorisedWithIds" should {

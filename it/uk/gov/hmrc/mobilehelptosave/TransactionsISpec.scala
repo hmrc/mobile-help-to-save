@@ -17,7 +17,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Assertion, Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
@@ -116,9 +116,9 @@ class TransactionsISpec extends WordSpec with Matchers
     }
   }
 
-  private def checkTransactionsResponseInvariants(response: WSResponse): Unit = {
+  private def checkTransactionsResponseInvariants(response: WSResponse): Assertion = {
     if (response.status == Status.OK) {
       response.json should validateAgainstSchema(strictRamlTransactionsSchema)
-    }
+    } else succeed
   }
 }

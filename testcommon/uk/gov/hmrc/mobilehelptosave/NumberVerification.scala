@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Assertion, Suite}
-import play.api.libs.json.JsLookupResult
+import org.scalatest.Assertion
 import org.scalatest.Matchers._
+import play.api.libs.json.JsLookupResult
 
 trait NumberVerification {
 

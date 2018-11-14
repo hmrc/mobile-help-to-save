@@ -35,6 +35,14 @@ lazy val microservice = Project(appName, file("."))
       "-language:postfixOps",
       "-feature",
       "-Ypartial-unification",
+      "-Ywarn-dead-code",                 
+      "-Ywarn-value-discard",
+      "-Ywarn-inaccessible",             
+      "-Ywarn-infer-any",            
+      "-Ywarn-nullary-override",       
+      "-Ywarn-nullary-unit",            
+      "-Ywarn-numeric-widen",             
+      "-Ywarn-unused-import",            
       "-Xlint"
     ),
     addCommandAlias("testAll", ";reload;test;it:test")

@@ -24,18 +24,15 @@ import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json.{Format, JsValue, Json, Reads}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
-import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
 import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegment
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.postfixOps
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
 trait HelpToSaveEnrolmentStatus {
@@ -53,10 +50,11 @@ trait HelpToSaveGetTransactions {
 }
 
 @Singleton
-class HelpToSaveConnectorImpl @Inject() (
+class HelpToSaveConnectorImpl @Inject()(
   logger: LoggerLike,
   config: HelpToSaveConnectorConfig,
-  http: CoreGet)
+  http: CoreGet
+)
   extends HelpToSaveGetTransactions
     with HelpToSaveGetAccount
     with HelpToSaveEnrolmentStatus {
@@ -74,7 +72,7 @@ class HelpToSaveConnectorImpl @Inject() (
 
   override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]] = {
     val string = transactionsUrl(nino).toString
-    http.GET[Transactions](string) map(transactions => Right(Some(transactions))) recover (mapNotFoundToNone orElse handleTransactionsHttpErrors)
+    http.GET[Transactions](string) map (transactions => Right(Some(transactions))) recover (mapNotFoundToNone orElse handleTransactionsHttpErrors)
   }
 
   private val mapNotFoundToNone: PartialFunction[Throwable, Either[ErrorInfo, Option[Nothing]]] = {
@@ -89,8 +87,8 @@ class HelpToSaveConnectorImpl @Inject() (
   }
 
   private val handleEnrolmentStatusHttpErrors = handleHttpAndJsonErrors("enrolment status")
-  private val handleAccountHttpErrors = handleHttpAndJsonErrors("account")
-  private val handleTransactionsHttpErrors = handleHttpAndJsonErrors("transaction information")
+  private val handleAccountHttpErrors         = handleHttpAndJsonErrors("account")
+  private val handleTransactionsHttpErrors    = handleHttpAndJsonErrors("transaction information")
 
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
 
@@ -141,5 +139,6 @@ case class HelpToSaveAccount(
 )
 
 object HelpToSaveAccount {
-  implicit val reads: Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
+  implicit val jodaFormat: Format[YearMonth]        = uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
+  implicit val reads     : Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
 }
