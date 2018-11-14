@@ -118,8 +118,15 @@ traits:
          application/json:
            type: !include schemas/target.json
            example: !include examples/target.json
-       displayName: Set a new savings target
-       description: Set a new savings target
+       displayName: Set a savings target for the user
+       description: Set a savings target for the user. This will replace any existing savings target.
+       (annotations.scope): "write:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
+       responses:
+         204:
+     delete:
+       displayName: Remove the users' current savings target
+       description: Remove the users' current savings target
        (annotations.scope): "write:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
        responses:
