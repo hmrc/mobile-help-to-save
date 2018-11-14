@@ -22,6 +22,7 @@ import java.time.LocalDateTime
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
+import play.api.libs.json.Json._
 import play.api.mvc.{Action, AnyContent, Result, Results}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -113,9 +114,12 @@ class HelpToSaveController @Inject()
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { validNino =>
           withMatchingNinos(validNino) { verifiedUserNino =>
-            savingsTargetRepo
-              .put(SavingsTarget(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
-              .map(_ => NoContent)
+            if (request.body.targetAmount < 1.0 || request.body.targetAmount > config.monthlySavingsLimit)
+              Future.successful(UnprocessableEntity(obj("error" -> s"target amount should be in range 1 to ${config.monthlySavingsLimit}")))
+            else
+              savingsTargetRepo
+                .put(SavingsTarget(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
+                .map(_ => NoContent)
           }
         }
       }

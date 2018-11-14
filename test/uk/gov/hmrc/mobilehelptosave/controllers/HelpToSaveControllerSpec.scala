@@ -56,7 +56,8 @@ class HelpToSaveControllerSpec
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
 
-  private val config = TestHelpToSaveControllerConfig(falseShuttering)
+  private val monthlySavingsLimit = 50.0
+  private val config              = TestHelpToSaveControllerConfig(falseShuttering, monthlySavingsLimit)
 
   private def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService = mock[AccountService]
@@ -290,7 +291,7 @@ class HelpToSaveControllerSpec
   "putSavingsTarget" when {
     "logged in user's NINO matches NINO in URL" should {
       "return put the target value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
-        val amount = 21.50
+        val amount  = 21.50
         val request = FakeRequest().withBody(SavingsTargetRequest(amount))
 
         putSavingsTargetExpects(nino.value, amount)
@@ -298,9 +299,31 @@ class HelpToSaveControllerSpec
 
         status(resultF) shouldBe 204
       }
+
+      "targetAmount is greater than monthly savings limit" should {
+        "respond with a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
+          val amount  = monthlySavingsLimit + 1
+          val request = FakeRequest().withBody(SavingsTargetRequest(amount))
+
+          val resultF = controller.putSavingsTarget(nino.value)(request)
+
+          status(resultF) shouldBe 422
+        }
+      }
+
+      "targetAmount is less than 1" should {
+        "respond with a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
+          val amount  = 0.9999
+          val request = FakeRequest().withBody(SavingsTargetRequest(amount))
+
+          val resultF = controller.putSavingsTarget(nino.value)(request)
+
+          status(resultF) shouldBe 422
+        }
+      }
     }
   }
 }
 
-private case class TestHelpToSaveControllerConfig(shuttering: Shuttering)
+private case class TestHelpToSaveControllerConfig(shuttering: Shuttering, monthlySavingsLimit: Double)
   extends HelpToSaveControllerConfig
