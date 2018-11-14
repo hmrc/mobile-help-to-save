@@ -28,7 +28,15 @@ lazy val microservice = Project(appName, file("."))
     unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
     // from https://github.com/typelevel/cats/blob/master/README.md
-    scalacOptions += "-Ypartial-unification",
+    scalacOptions ++= Seq(
+      "-deprecation",
+      "-encoding", "UTF-8",
+      "-language:higherKinds",
+      "-language:postfixOps",
+      "-feature",
+      "-Ypartial-unification",
+      "-Xlint"
+    ),
     addCommandAlias("testAll", ";reload;test;it:test")
   )
   .settings(evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false))

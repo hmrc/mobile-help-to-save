@@ -17,6 +17,8 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 
+import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -25,7 +27,8 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, SavingsTargetRequest, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTarget, SavingsTargetRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -47,8 +50,8 @@ trait ControllerChecks extends Results {
       Left(s""""$nino" does not match NINO validation regex""")
     } match {
       case Right(Success(parsedNino)) => fn(parsedNino)
-      case Right(Failure(exception)) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", exception.getMessage))))
-      case Left(validationError) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError))))
+      case Right(Failure(exception))  => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", exception.getMessage))))
+      case Left(validationError)      => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError))))
     }
   }
 }
@@ -60,12 +63,13 @@ class HelpToSaveController @Inject()
   accountService: AccountService,
   helpToSaveGetTransactions: HelpToSaveGetTransactions,
   authorisedWithIds: AuthorisedWithIds,
-  config: HelpToSaveControllerConfig
-) extends BaseController with ControllerChecks  {
+  config: HelpToSaveControllerConfig,
+  savingsTargetRepo: SavingsTargetRepo
+) extends BaseController with ControllerChecks {
 
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
 
-  private def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[AnyContent]): Future[Result] = {
+  private def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] = {
     if (nino == request.nino) fn(nino) else {
       logger.warn(s"Attempt by ${request.nino} to access ${nino.value}'s data")
       successful(Forbidden)
@@ -78,8 +82,8 @@ class HelpToSaveController @Inject()
         withMatchingNinos(validNino) { verifiedUserNino =>
           helpToSaveGetTransactions.getTransactions(verifiedUserNino).map {
             case Right(Some(transactions)) => Ok(Json.toJson(transactions.reverse))
-            case Right(None) => AccountNotFound
-            case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
+            case Right(None)               => AccountNotFound
+            case Left(errorInfo)           => InternalServerError(Json.toJson(errorInfo))
           }
         }
       }
@@ -98,9 +102,22 @@ class HelpToSaveController @Inject()
 
   private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
     accountService.account(nino).map {
-        case Right(Some(account)) => Ok(Json.toJson(account))
-        case Right(None) => AccountNotFound
-        case Left(errorInfo) => InternalServerError(Json.toJson(errorInfo))
-      }
+      case Right(Some(account)) => Ok(Json.toJson(account))
+      case Right(None)          => AccountNotFound
+      case Left(errorInfo)      => InternalServerError(Json.toJson(errorInfo))
+    }
   }
+
+  def putSavingsTarget(ninoString: String): Action[SavingsTargetRequest] =
+    authorisedWithIds.async(parse.json[SavingsTargetRequest]) { implicit request: RequestWithIds[SavingsTargetRequest] =>
+      withShuttering(config.shuttering) {
+        withValidNino(ninoString) { validNino =>
+          withMatchingNinos(validNino) { verifiedUserNino =>
+            savingsTargetRepo
+              .put(SavingsTarget(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
+              .map(_ => NoContent)
+          }
+        }
+      }
+    }
 }

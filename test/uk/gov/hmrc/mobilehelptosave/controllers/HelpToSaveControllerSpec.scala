@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTarget, SavingsTargetRepo}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -49,10 +50,10 @@ class HelpToSaveControllerSpec
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
   private val otherNino = generator.nextNino
 
-  private val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
+  private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
 
   private val config = TestHelpToSaveControllerConfig(falseShuttering)
@@ -60,8 +61,9 @@ class HelpToSaveControllerSpec
   private def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+    val savingsTargetRepo = mock[SavingsTargetRepo]
 
-    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config)
+    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsTargetRepo)
     authorisedActionForNino(controller)
   }
 
@@ -82,9 +84,10 @@ class HelpToSaveControllerSpec
   }
 
   private trait AuthorisedTestScenario {
-    val accountService = mock[AccountService]
-    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-    val controller: HelpToSaveController = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config)
+    val accountService                   = mock[AccountService]
+    val helpToSaveGetTransactions        = mock[HelpToSaveGetTransactions]
+    val savingsTargetRepo                = mock[SavingsTargetRepo]
+    val controller: HelpToSaveController = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config, savingsTargetRepo)
   }
 
   private trait HelpToSaveMocking {
@@ -100,6 +103,12 @@ class HelpToSaveControllerSpec
       (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, *, *)
         .returning(stubbedResponse)
+    }
+
+    def putSavingsTargetExpects(nino: String, amount: Double) = {
+      (savingsTargetRepo.put(_: SavingsTarget))
+        .expects(where { st: SavingsTarget => st.nino == nino && st.targetAmount == amount })
+        .returning(Future.successful(()))
     }
   }
 
@@ -178,7 +187,8 @@ class HelpToSaveControllerSpec
       """return 521 "shuttered": true""" in {
         val accountService = mock[AccountService]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering))
+        val savingsTargetRepo = mock[SavingsTargetRepo]
+        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 521
@@ -189,7 +199,6 @@ class HelpToSaveControllerSpec
       }
     }
   }
-
 
 
   "getTransactions" when {
@@ -265,7 +274,8 @@ class HelpToSaveControllerSpec
       """return 521 "shuttered": true""" in {
         val accountService = mock[AccountService]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering))
+        val savingsTargetRepo = mock[SavingsTargetRepo]
+        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo)
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 521
@@ -273,6 +283,20 @@ class HelpToSaveControllerSpec
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
         (jsonBody \ "title").as[String] shouldBe "Shuttered"
         (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
+      }
+    }
+  }
+
+  "putSavingsTarget" when {
+    "logged in user's NINO matches NINO in URL" should {
+      "return put the target value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
+        val amount = 21.50
+        val request = FakeRequest().withBody(SavingsTargetRequest(amount))
+
+        putSavingsTargetExpects(nino.value, amount)
+        val resultF = controller.putSavingsTarget(nino.value)(request)
+
+        status(resultF) shouldBe 204
       }
     }
   }

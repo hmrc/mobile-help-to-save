@@ -21,6 +21,7 @@ import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilehelptosave.api.ServiceLocatorRegistrationTask
+import uk.gov.hmrc.mobilehelptosave.repository.{MongoSavingsTargetRepo, SavingsTargetRepo}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule {
