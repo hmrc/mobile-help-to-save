@@ -119,11 +119,17 @@ traits:
            type: !include schemas/target.json
            example: !include examples/target.json
        displayName: Set a savings target for the user
-       description: Set a savings target for the user. This will replace any existing savings target.
+       description: Set a savings target for the user. The target must be a value between £1 and the montly savings limit (currently £50)
        (annotations.scope): "write:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
        responses:
          204:
+         422:
+           body:
+             properties:
+               error:
+             example:
+               error: target amount should be in range 1 to 50
      delete:
        displayName: Remove the users' current savings target
        description: Remove the users' current savings target
