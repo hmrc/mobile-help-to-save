@@ -17,11 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import com.google.inject.ImplementedBy
+import uk.gov.hmrc.domain.Nino
 
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[MongoSavingsTargetRepo])
 trait SavingsTargetRepo {
-  def put(savingsTarget: SavingsTarget): Future[Unit]
-  def get(nino: String): Future[Option[SavingsTarget]]
+  def put(savingsTarget: SavingsTargetMongoModel): Future[Unit]
+  def get(nino: Nino): Future[Option[SavingsTargetMongoModel]]
 }

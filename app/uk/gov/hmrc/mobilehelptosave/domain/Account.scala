@@ -20,7 +20,7 @@ import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
+
 
 case class BonusTerm(
   bonusEstimate: BigDecimal,
@@ -45,7 +45,7 @@ object Blocking {
 object CurrentBonusTerm extends Enumeration {
   val First, Second, AfterFinalTerm = Value
 
-  implicit val reads: Reads[Value] = Reads.enumNameReads(CurrentBonusTerm)
+  implicit val reads : Reads[Value]  = Reads.enumNameReads(CurrentBonusTerm)
   implicit val writes: Writes[Value] = Writes.enumNameWrites
 
 }
@@ -75,11 +75,18 @@ case class Account(
   closureDate: Option[LocalDate] = None,
   closingBalance: Option[BigDecimal] = None,
 
-  inAppPaymentsEnabled: Boolean
+  inAppPaymentsEnabled: Boolean,
+
+  // A bit odd, this one. All the fields above come back from NS&I when we call their
+  // account endpoint. The savings target is something we're currently holding in mongo
+  // and our account endpoint will pull that data (if present for the nino) and fold it
+  // into this structure.
+  savingsTarget: Option[SavingsTarget] = None
 )
 
 object Account {
-  implicit val format: OFormat[Account] = Json.format[Account]
+  implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
+  implicit val format         : OFormat[Account]  = Json.format[Account]
 
   def apply(h: HelpToSaveAccount, inAppPaymentsEnabled: Boolean, logger: LoggerLike): Account = Account(
     number = h.accountNumber,
@@ -132,7 +139,7 @@ object Account {
       logger.warn(s"Account contained ${h.bonusTerms.size} bonus terms, which is more than the expected 2 - discarding all but the first 2 terms")
     }
 
-    h.bonusTerms.take(2).foldLeft(Vector.empty[BonusTerm]){ (acc, htsTerm) =>
+    h.bonusTerms.take(2).foldLeft(Vector.empty[BonusTerm]) { (acc, htsTerm) =>
       val balanceMustBeMoreThanForBonus: BigDecimal = acc.lastOption.fold(BigDecimal(0))(prevHtsTerm => prevHtsTerm.bonusEstimate * 2)
 
       acc :+ bonusTerm(htsTerm, balanceMustBeMoreThanForBonus)

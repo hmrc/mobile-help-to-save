@@ -19,6 +19,8 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.LocalDateTime
 
+import cats.data.EitherT
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -28,14 +30,14 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, SavingsTargetRequest, Shuttering}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTarget, SavingsTargetRepo}
+import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTargetMongoModel, SavingsTargetRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
 import scala.concurrent.Future._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 trait ControllerChecks extends Results {
@@ -95,22 +97,41 @@ class HelpToSaveController @Inject()
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
-          getAccount(verifiedUserNino)
+          retrieveAccountDetails(verifiedUserNino)
         }
       }
     }
   }
 
-  private def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
-    accountService.account(nino).map {
-      case Right(Some(account)) => Ok(Json.toJson(account))
-      case Right(None)          => AccountNotFound
-      case Left(errorInfo)      => InternalServerError(Json.toJson(errorInfo))
-    }
+  private def retrieveAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
+    for {
+      target <- EitherT.liftF(getSavingsTarget(nino))
+      account <- EitherT(accountService.account(nino))
+    } yield (target, account)
+  }.value.map {
+    case Right((target, Some(account))) => Ok(Json.toJson(account.copy(savingsTarget = target.map(t => SavingsTarget(t.targetAmount)))))
+    case Right((_, None))               => AccountNotFound
+    case Left(errorInfo)                => InternalServerError(Json.toJson(errorInfo))
   }
 
-  def putSavingsTarget(ninoString: String): Action[SavingsTargetRequest] =
-    authorisedWithIds.async(parse.json[SavingsTargetRequest]) { implicit request: RequestWithIds[SavingsTargetRequest] =>
+  /**
+    * If there is an error talking to mongo then this function will recover the `Future` to a `Success(None)` on
+    * the basis that we don't want to stop the user seeing their other account details just because something
+    * went wrong trying to look up their target. Other options are to convert the failure to an `ErrorInfo` and
+    * return a `Future[Either[ErrorInfo, Option[SavingsTargetMongoModel]]]`, which would let the api call fail with
+    * a meaningful error, or to expand the type returned to the api caller to give the client enough information
+    * to tell the user something useful (e.g. "We can't display your target at the moment, but here's the rest of
+    * your account details").
+    */
+  private def getSavingsTarget(nino: Nino)(implicit ec: ExecutionContext): Future[Option[SavingsTargetMongoModel]] =
+    savingsTargetRepo.get(nino).recover {
+      case t =>
+        logger.warn("call to mongo to retrieve savings target failed", t)
+        None
+    }
+
+  def putSavingsTarget(ninoString: String): Action[SavingsTarget] =
+    authorisedWithIds.async(parse.json[SavingsTarget]) { implicit request: RequestWithIds[SavingsTarget] =>
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { validNino =>
           withMatchingNinos(validNino) { verifiedUserNino =>
@@ -118,7 +139,7 @@ class HelpToSaveController @Inject()
               Future.successful(UnprocessableEntity(obj("error" -> s"target amount should be in range 1 to ${config.monthlySavingsLimit}")))
             else
               savingsTargetRepo
-                .put(SavingsTarget(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
+                .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
                 .map(_ => NoContent)
           }
         }
