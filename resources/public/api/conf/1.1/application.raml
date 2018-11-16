@@ -120,8 +120,8 @@ traits:
            example: !include examples/target.json
        displayName: Set a savings target for the user
        description: Set a savings target for the user. This will replace any existing savings target.
-       (annotations.scope): "write:native-apps-api-orchestration"
-       securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
+       (annotations.scope): "read:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
        responses:
          204:
          422:
@@ -133,7 +133,7 @@ traits:
      delete:
        displayName: Remove the users' current savings target
        description: Remove the users' current savings target
-       (annotations.scope): "write:native-apps-api-orchestration"
-       securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
+       (annotations.scope): "read:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
        responses:
          204:
