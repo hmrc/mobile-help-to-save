@@ -124,6 +124,12 @@ traits:
        securedBy: [ sec.oauth_2_0: { scopes: [ "write:native-apps-api-orchestration" ] } ]
        responses:
          204:
+         422:
+           body:
+             properties:
+               error:
+             example:
+               error: target amount should be in range 1 to 50
      delete:
        displayName: Remove the users' current savings target
        description: Remove the users' current savings target

@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave
+package uk.gov.hmrc.mobilehelptosave.repository
 
-import org.scalatest.Assertion
-import org.scalatest.Matchers._
-import play.api.libs.json.JsLookupResult
+import com.google.inject.ImplementedBy
+import uk.gov.hmrc.domain.Nino
 
-trait NumberVerification {
+import scala.concurrent.Future
 
-  def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
-    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
-    jsLookupResult.as[BigDecimal] shouldBe expectedValue
-  }
+@ImplementedBy(classOf[MongoSavingsTargetRepo])
+trait SavingsTargetRepo {
+  def put(savingsTarget: SavingsTargetMongoModel): Future[Unit]
+  def get(nino: Nino): Future[Option[SavingsTargetMongoModel]]
 }

@@ -21,6 +21,7 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
+import uk.gov.hmrc.mobilehelptosave.domain.SavingsTarget
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -28,17 +29,18 @@ import scala.concurrent.Future
 
 @Singleton
 class SandboxController @Inject()(
-   logger: LoggerLike,
-   config: HelpToSaveControllerConfig,
-   sandboxData: SandboxData
- ) extends BaseController with ControllerChecks {
+  logger: LoggerLike,
+  config: HelpToSaveControllerConfig,
+  sandboxData: SandboxData
+) extends BaseController with ControllerChecks {
 
   def getTransactions(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { _ =>
-        Future successful Ok(Json.toJson(
-          sandboxData.transactions
-        ))
+        Future successful Ok(
+          Json.toJson(
+            sandboxData.transactions
+          ))
       }
     }
   }
@@ -50,4 +52,13 @@ class SandboxController @Inject()(
       }
     }
   }
+
+  def putSavingsTarget(ninoString: String): Action[SavingsTarget] =
+    Action.async(parse.json[SavingsTarget]) { implicit request =>
+      withShuttering(config.shuttering) {
+        withValidNino(ninoString) { _ =>
+          Future.successful(NoContent)
+        }
+      }
+    }
 }

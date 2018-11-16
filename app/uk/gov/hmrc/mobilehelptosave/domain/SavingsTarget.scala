@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave
+package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.scalatest.Assertion
-import org.scalatest.Matchers._
-import play.api.libs.json.JsLookupResult
+import play.api.libs.json.{Json, OFormat}
 
-trait NumberVerification {
+case class SavingsTarget(targetAmount: Double)
 
-  def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
-    // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
-    jsLookupResult.as[BigDecimal] shouldBe expectedValue
-  }
+object SavingsTarget {
+  implicit val formats: OFormat[SavingsTarget] = Json.format
 }

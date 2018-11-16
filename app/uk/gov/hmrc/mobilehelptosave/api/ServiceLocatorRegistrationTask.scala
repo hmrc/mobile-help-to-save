@@ -36,6 +36,7 @@ class ServiceLocatorRegistrationTask @Inject()(
   if (config.serviceLocatorEnabled) {
     actorSystem.scheduler.scheduleOnce(delay = FiniteDuration(10, SECONDS)) {
       register
+      ()
     }
   }
 
