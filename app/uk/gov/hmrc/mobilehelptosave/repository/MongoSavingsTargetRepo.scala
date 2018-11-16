@@ -18,9 +18,11 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
 
+import cats.instances.future._
+import cats.syntax.functor._
 import javax.inject.{Inject, Provider}
 import play.api.libs.json.Json._
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OWrites, Reads}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.domain.Nino
@@ -32,14 +34,15 @@ import scala.concurrent.{ExecutionContext, Future}
 case class SavingsTargetMongoModel(nino: String, targetAmount: Double, createdAt: LocalDateTime)
 
 object SavingsTargetMongoModel {
-  val mongoFormats: Format[SavingsTargetMongoModel] = ReactiveMongoFormats.mongoEntity(
-    {
-      implicit val oidFormat: Format[BSONObjectID] = ReactiveMongoFormats.objectIdFormats
-      Format(Json.reads[SavingsTargetMongoModel], Json.writes[SavingsTargetMongoModel])
-    })
+  implicit val oidFormat: Format[BSONObjectID]             = ReactiveMongoFormats.objectIdFormats
+  implicit val reads    : Reads[SavingsTargetMongoModel]   = Json.reads[SavingsTargetMongoModel]
+  implicit val writes   : OWrites[SavingsTargetMongoModel] = Json.writes[SavingsTargetMongoModel]
+
+  val mongoFormats: Format[SavingsTargetMongoModel] =
+    ReactiveMongoFormats.mongoEntity(Format(reads, writes))
 }
 
-class MongoSavingsTargetRepo @Inject() (
+class MongoSavingsTargetRepo @Inject()(
   val reactiveMongo: Provider[ReactiveMongoComponent]
 )
   (implicit ec: ExecutionContext)
@@ -47,8 +50,11 @@ class MongoSavingsTargetRepo @Inject() (
     with SavingsTargetRepo {
 
   override def put(savingsTarget: SavingsTargetMongoModel): Future[Unit] =
-    insert(savingsTarget).map(_ => ())
+    insert(savingsTarget).void
 
   override def get(nino: Nino): Future[Option[SavingsTargetMongoModel]] =
     find("nino" -> nino.value).map(_.headOption)
+
+  override def delete(nino: Nino): Future[Unit] =
+    remove("nino" -> nino.value).void
 }

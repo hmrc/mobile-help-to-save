@@ -12,7 +12,7 @@
     {
       "key": "write:native-apps-api-orchestration",
       "name": "Native Apps API Orchestration",
-      "description": "Access APIs that are provided specifically for use by the HMRC mobile apps to write user data"
+      "description": "Access APIs that are provided specifically for use by the HMRC mobile apps to write data related to users"
     }
   ],
   "api": {
