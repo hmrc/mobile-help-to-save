@@ -97,15 +97,15 @@ class HelpToSaveController @Inject()
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
-          retrieveAccountDetails(verifiedUserNino)
+          fetchAccountDetails(verifiedUserNino)
         }
       }
     }
   }
 
-  private def retrieveAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
+  private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
     for {
-      target <- EitherT.liftF(getSavingsTarget(nino))
+      target <- EitherT.liftF(fetchSavingsTarget(nino))
       account <- EitherT(accountService.account(nino))
     } yield (target, account)
   }.value.map {
@@ -123,7 +123,7 @@ class HelpToSaveController @Inject()
     * to tell the user something useful (e.g. "We can't display your target at the moment, but here's the rest of
     * your account details").
     */
-  private def getSavingsTarget(nino: Nino)(implicit ec: ExecutionContext): Future[Option[SavingsTargetMongoModel]] =
+  private def fetchSavingsTarget(nino: Nino)(implicit ec: ExecutionContext): Future[Option[SavingsTargetMongoModel]] =
     savingsTargetRepo.get(nino).recover {
       case t =>
         logger.warn("call to mongo to retrieve savings target failed", t)
@@ -141,6 +141,17 @@ class HelpToSaveController @Inject()
               savingsTargetRepo
                 .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
                 .map(_ => NoContent)
+          }
+        }
+      }
+    }
+
+  def deleteSavingsTarget(ninoString: String): Action[AnyContent] =
+    authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+      withShuttering(config.shuttering) {
+        withValidNino(ninoString) { validNino =>
+          withMatchingNinos(validNino) { verifiedUserNino =>
+            savingsTargetRepo.delete(verifiedUserNino).map(_ => NoContent)
           }
         }
       }
