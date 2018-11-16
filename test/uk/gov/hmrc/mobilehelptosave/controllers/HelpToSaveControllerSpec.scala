@@ -119,6 +119,12 @@ class HelpToSaveControllerSpec
         .expects(where { st: SavingsTargetMongoModel => st.nino == nino && st.targetAmount == amount })
         .returning(Future.successful(()))
     }
+
+    def deleteSavingsTargetExpects(expectedNino: Nino) = {
+      (savingsTargetRepo.delete(_: Nino))
+        .expects(where { suppliedNino: Nino => suppliedNino == expectedNino })
+        .returning(Future.successful(()))
+    }
   }
 
   "getAccount" when {
@@ -344,6 +350,17 @@ class HelpToSaveControllerSpec
 
           status(resultF) shouldBe 422
         }
+      }
+    }
+  }
+
+  "deleteSavingsTarget" when {
+    "logged in user's NINO matches NINO in URL" should {
+      "delete the target value from the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
+        deleteSavingsTargetExpects(nino)
+
+        val resultF = controller.deleteSavingsTarget(nino.value)(FakeRequest())
+        status(resultF) shouldBe 204
       }
     }
   }

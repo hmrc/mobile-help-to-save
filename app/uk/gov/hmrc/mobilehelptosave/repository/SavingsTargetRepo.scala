@@ -25,4 +25,5 @@ import scala.concurrent.Future
 trait SavingsTargetRepo {
   def put(savingsTarget: SavingsTargetMongoModel): Future[Unit]
   def get(nino: Nino): Future[Option[SavingsTargetMongoModel]]
+  def delete(nino: Nino): Future[Unit]
 }

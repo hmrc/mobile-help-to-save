@@ -29,10 +29,10 @@ import scala.concurrent.Future
 
 @Singleton
 class SandboxController @Inject()(
-  logger: LoggerLike,
+  val logger: LoggerLike,
   config: HelpToSaveControllerConfig,
   sandboxData: SandboxData
-) extends BaseController with ControllerChecks {
+) extends BaseController with ControllerChecks with HelpToSaveActions {
 
   def getTransactions(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
     withShuttering(config.shuttering) {
@@ -55,6 +55,15 @@ class SandboxController @Inject()(
 
   def putSavingsTarget(ninoString: String): Action[SavingsTarget] =
     Action.async(parse.json[SavingsTarget]) { implicit request =>
+      withShuttering(config.shuttering) {
+        withValidNino(ninoString) { _ =>
+          Future.successful(NoContent)
+        }
+      }
+    }
+
+  def deleteSavingsTarget(ninoString: String): Action[AnyContent] =
+    Action.async { implicit request =>
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { _ =>
           Future.successful(NoContent)
