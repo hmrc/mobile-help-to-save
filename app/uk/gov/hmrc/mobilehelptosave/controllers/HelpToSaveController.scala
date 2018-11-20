@@ -108,6 +108,9 @@ class HelpToSaveController @Inject()
         else
           savingsTargetRepo
             .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
+            .recover {
+              case t => logger.error("error writing savings target to mongo", t)
+            }
             .map(_ => NoContent)
       }
     }
