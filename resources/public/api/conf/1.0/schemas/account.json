@@ -191,6 +191,10 @@
     "inAppPaymentsEnabled": {
       "type": "boolean",
       "description": "Are in-app payments enabled for this account?"
+    },
+    "savingsTargetEnabled": {
+      "type": "boolean",
+      "description": "Are savings targets enabled for this account?"
     }
   },
   "required": [
@@ -205,6 +209,7 @@
     "accountHolderName",
     "bonusTerms",
     "currentBonusTerm",
-    "inAppPaymentsEnabled"
+    "inAppPaymentsEnabled",
+    "savingsTargetEnabled"
   ]
 }

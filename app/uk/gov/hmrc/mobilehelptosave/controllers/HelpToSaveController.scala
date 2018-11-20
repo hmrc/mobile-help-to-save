@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTargetMongoModel, SavingsTargetRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{FeatureFlagsMongoModel, FeatureFlagsRepo, SavingsTargetMongoModel, SavingsTargetRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
@@ -53,7 +53,8 @@ class HelpToSaveController @Inject()
   helpToSaveGetTransactions: HelpToSaveGetTransactions,
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig,
-  savingsTargetRepo: SavingsTargetRepo
+  savingsTargetRepo: SavingsTargetRepo,
+  featureFlagsRepo: FeatureFlagsRepo
 ) extends BaseController with ControllerChecks with HelpToSaveActions {
 
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
@@ -76,16 +77,21 @@ class HelpToSaveController @Inject()
   private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
     // these can run in parallel so don't inline them
     val fetchTarget = fetchSavingsTarget(nino)
+    val fetchFlags = fetchFeatureFlags(nino)
     val fetchAccount = accountService.account(nino)
 
     for {
       target <- EitherT.liftF(fetchTarget)
+      flags <- EitherT.liftF(fetchFlags)
       account <- EitherT(fetchAccount)
-    } yield (target, account)
+    } yield (target, flags, account)
   }.value.map {
-    case Right((target, Some(account))) => Ok(Json.toJson(account.copy(savingsTarget = target.map(t => SavingsTarget(t.targetAmount)))))
-    case Right((_, None))               => AccountNotFound
-    case Left(errorInfo)                => InternalServerError(Json.toJson(errorInfo))
+    case Right((target, flags, Some(account))) =>
+      val savingsTarget = target.map(t => SavingsTarget(t.targetAmount))
+      val enabled = flags.exists(_.savingsTargetsEnabled)
+      Ok(Json.toJson(account.copy(savingsTarget = savingsTarget, savingsTargetEnabled = enabled)))
+    case Right((_, _, None))                   => AccountNotFound
+    case Left(errorInfo)                       => InternalServerError(Json.toJson(errorInfo))
   }
 
   /**
@@ -99,6 +105,13 @@ class HelpToSaveController @Inject()
     */
   private def fetchSavingsTarget(nino: Nino)(implicit ec: ExecutionContext): Future[Option[SavingsTargetMongoModel]] =
     savingsTargetRepo.get(nino).recover {
+      case t =>
+        logger.warn("call to mongo to retrieve savings target failed", t)
+        None
+    }
+
+  private def fetchFeatureFlags(nino: Nino)(implicit ec: ExecutionContext): Future[Option[FeatureFlagsMongoModel]] =
+    featureFlagsRepo.get(nino).recover {
       case t =>
         logger.warn("call to mongo to retrieve savings target failed", t)
         None

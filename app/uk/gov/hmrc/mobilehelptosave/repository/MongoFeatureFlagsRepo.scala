@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.LocalDateTime
-
 import cats.instances.future._
 import cats.syntax.functor._
 import javax.inject.{Inject, Provider}
@@ -31,31 +29,31 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SavingsTargetMongoModel(nino: String, targetAmount: Double, createdAt: LocalDateTime)
+case class FeatureFlagsMongoModel(nino: String, savingsTargetsEnabled: Boolean)
 
-object SavingsTargetMongoModel {
-  implicit val reads : Reads[SavingsTargetMongoModel]   = Json.reads[SavingsTargetMongoModel]
-  implicit val writes: OWrites[SavingsTargetMongoModel] = Json.writes[SavingsTargetMongoModel]
+object FeatureFlagsMongoModel {
+  implicit val reads : Reads[FeatureFlagsMongoModel]   = Json.reads[FeatureFlagsMongoModel]
+  implicit val writes: OWrites[FeatureFlagsMongoModel] = Json.writes[FeatureFlagsMongoModel]
 
-  implicit val mongoFormats: Format[SavingsTargetMongoModel] =
+  implicit val mongoFormats: Format[FeatureFlagsMongoModel] =
     Format(reads, writes)
 }
 
-class MongoSavingsTargetRepo @Inject()(
+class MongoFeatureFlagsRepo @Inject()(
   val reactiveMongo: Provider[ReactiveMongoComponent]
 )
-  (implicit ec: ExecutionContext, mongoFormats: Format[SavingsTargetMongoModel])
-  extends ReactiveRepository[SavingsTargetMongoModel, BSONObjectID]("savingsTargets", reactiveMongo.get().mongoConnector.db, mongoFormats)
-    with SavingsTargetRepo {
+  (implicit ec: ExecutionContext, mongoFormats: Format[FeatureFlagsMongoModel])
+  extends ReactiveRepository[FeatureFlagsMongoModel, BSONObjectID]("featureFlags", reactiveMongo.get().mongoConnector.db, mongoFormats)
+    with FeatureFlagsRepo {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq("nino" -> IndexType.Text), name = Some("ninoIdx"), unique = true, sparse = true)
   )
 
-  override def put(savingsTarget: SavingsTargetMongoModel): Future[Unit] =
-    insert(savingsTarget).void
+  override def put(flags: FeatureFlagsMongoModel): Future[Unit] =
+    insert(flags).void
 
-  override def get(nino: Nino): Future[Option[SavingsTargetMongoModel]] =
+  override def get(nino: Nino): Future[Option[FeatureFlagsMongoModel]] =
     find("nino" -> nino.value).map(_.headOption)
 
   override def delete(nino: Nino): Future[Unit] =

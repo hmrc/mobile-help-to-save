@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTargetMongoModel, SavingsTargetRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{FeatureFlagsMongoModel, FeatureFlagsRepo, SavingsTargetMongoModel, SavingsTargetRepo}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -59,14 +59,15 @@ class HelpToSaveControllerSpec
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
 
-  private val config              = TestHelpToSaveControllerConfig(falseShuttering)
+  private val config = TestHelpToSaveControllerConfig(falseShuttering)
 
   private def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
     val savingsTargetRepo = mock[SavingsTargetRepo]
+    val featureFlagsRepo = mock[FeatureFlagsRepo]
 
-    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsTargetRepo)
+    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsTargetRepo, featureFlagsRepo)
     authorisedActionForNino(controller)
   }
 
@@ -90,7 +91,8 @@ class HelpToSaveControllerSpec
     val accountService                   = mock[AccountService]
     val helpToSaveGetTransactions        = mock[HelpToSaveGetTransactions]
     val savingsTargetRepo                = mock[SavingsTargetRepo]
-    val controller: HelpToSaveController = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config, savingsTargetRepo)
+    val featureFlagsRepo                 = mock[FeatureFlagsRepo]
+    val controller: HelpToSaveController = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config, savingsTargetRepo, featureFlagsRepo)
   }
 
   private trait HelpToSaveMocking {
@@ -102,10 +104,15 @@ class HelpToSaveControllerSpec
         .returning(Future.successful(stubbedResponse))
     }
 
-    def savingsTargetReturns(stubbedResponse: Option[SavingsTargetMongoModel]) =
+    def savingsTargetReturns(nino: Nino, stubbedResponse: Option[SavingsTargetMongoModel]) =
       (savingsTargetRepo.get(_: Nino))
         .expects(nino)
         .returning(Future.successful(stubbedResponse))
+
+    def featureFlagReturns(nino: Nino, stubResponse: Option[FeatureFlagsMongoModel]) =
+      (featureFlagsRepo.get(_: Nino))
+        .expects(nino)
+        .returning(Future.successful(stubResponse))
 
     def helpToSaveGetTransactionsReturns(stubbedResponse: Future[Either[ErrorInfo, Option[Transactions]]]) = {
       (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
@@ -131,7 +138,9 @@ class HelpToSaveControllerSpec
       "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        savingsTargetReturns(None)
+
+        featureFlagReturns(nino, None)
+        savingsTargetReturns(nino, None)
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
@@ -143,8 +152,9 @@ class HelpToSaveControllerSpec
     "there is a savings target associate with the NINO" should {
       "return the savings target in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
+        featureFlagReturns(nino, None)
         val savingsTarget = 21.5
-        savingsTargetReturns(Some(SavingsTargetMongoModel(nino.value, 21.5, LocalDateTime.now())))
+        savingsTargetReturns(nino, Some(SavingsTargetMongoModel(nino.value, 21.5, LocalDateTime.now())))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
@@ -157,7 +167,8 @@ class HelpToSaveControllerSpec
       "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Right(None))
-        savingsTargetReturns(None)
+        featureFlagReturns(nino, None)
+        savingsTargetReturns(nino, None)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
@@ -173,7 +184,8 @@ class HelpToSaveControllerSpec
       "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Left(ErrorInfo("TEST_ERROR_CODE")))
-        savingsTargetReturns(None)
+        featureFlagReturns(nino, None)
+        savingsTargetReturns(nino, None)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
@@ -218,7 +230,8 @@ class HelpToSaveControllerSpec
         val accountService = mock[AccountService]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
         val savingsTargetRepo = mock[SavingsTargetRepo]
-        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo)
+        val featureFlagsRepo = mock[FeatureFlagsRepo]
+        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo, featureFlagsRepo)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 521
@@ -228,91 +241,134 @@ class HelpToSaveControllerSpec
         (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
       }
     }
-  }
 
+    "the savingsTargetEnabled flag is held in the repo and is true" should {
+      "return true in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-  "getTransactions" when {
-    "logged in user's NINO matches NINO in URL" should {
-      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
+        featureFlagReturns(nino, Some(FeatureFlagsMongoModel(nino.value, savingsTargetsEnabled = true)))
+        savingsTargetReturns(nino, None)
 
-        helpToSaveGetTransactionsReturns(Future successful Right(Some(transactionsSortedInHelpToSaveOrder)))
-
-        val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 200
-        val jsonBody = contentAsJson(resultF)
-        jsonBody shouldBe Json.toJson(transactionsSortedInMobileHelpToSaveOrder)
+        val accountData = controller.getAccount(nino.value)(FakeRequest())
+        status(accountData) shouldBe OK
+        val jsonBody = contentAsJson(accountData)
+        (jsonBody \ "savingsTargetEnabled").as[Boolean] shouldBe true
       }
     }
 
-    "no account is not found by HelpToSaveConnector for the NINO" should {
-      "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
+    "the savingsTargetEnabled flag is held in the repo and is false" should {
+      "return false in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        helpToSaveGetTransactionsReturns(Future successful Right(None))
+        featureFlagReturns(nino, Some(FeatureFlagsMongoModel(nino.value, savingsTargetsEnabled = false)))
+        savingsTargetReturns(nino, None)
 
-        val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 404
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
-        (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+        val accountData = controller.getAccount(nino.value)(FakeRequest())
+        status(accountData) shouldBe OK
+        val jsonBody = contentAsJson(accountData)
+        (jsonBody \ "savingsTargetEnabled").as[Boolean] shouldBe false
       }
     }
 
-    "HelpToSaveConnector returns an error" should {
-      "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
+    "the savingsTargetEnabled flag is not held in the repo " should {
+      "return false in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 500
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "TEST_ERROR_CODE"
+        featureFlagReturns(nino, None)
+        savingsTargetReturns(nino, None)
+
+        val accountData = controller.getAccount(nino.value)(FakeRequest())
+        status(accountData) shouldBe OK
+        val jsonBody = contentAsJson(accountData)
+        (jsonBody \ "savingsTargetEnabled").as[Boolean] shouldBe false
       }
     }
 
-    "the NINO in the URL does not match the logged in user's NINO" should {
-      "return 403" in new AuthorisedTestScenario {
+    "getTransactions" when {
+      "logged in user's NINO matches NINO in URL" should {
+        "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        val resultF = controller.getTransactions(otherNino.value)(FakeRequest())
-        status(resultF) shouldBe 403
-        (slf4jLoggerStub.warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s data"
+          helpToSaveGetTransactionsReturns(Future successful Right(Some(transactionsSortedInHelpToSaveOrder)))
+
+          val resultF = controller.getTransactions(nino.value)(FakeRequest())
+          status(resultF) shouldBe 200
+          val jsonBody = contentAsJson(resultF)
+          jsonBody shouldBe Json.toJson(transactionsSortedInMobileHelpToSaveOrder)
+        }
       }
-    }
 
-    "the NINO is not in the correct format" should {
-      "return 400 NINO_INVALID" in new AuthorisedTestScenario {
+      "no account is not found by HelpToSaveConnector for the NINO" should {
+        "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        val resultF = controller.getTransactions("invalidNino")(FakeRequest())
-        status(resultF) shouldBe 400
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
-        (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
+          helpToSaveGetTransactionsReturns(Future successful Right(None))
+
+          val resultF = controller.getTransactions(nino.value)(FakeRequest())
+          status(resultF) shouldBe 404
+          val jsonBody = contentAsJson(resultF)
+          (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+          (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+        }
       }
-    }
 
-    "the NINO in the URL contains spaces" should {
-      "return 400 NINO_INVALID" in new AuthorisedTestScenario {
+      "HelpToSaveConnector returns an error" should {
+        "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        val resultF = controller.getTransactions("AA 00 00 03 D")(FakeRequest())
-        status(resultF) shouldBe 400
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
-        (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
+          helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
+
+          val resultF = controller.getTransactions(nino.value)(FakeRequest())
+          status(resultF) shouldBe 500
+          val jsonBody = contentAsJson(resultF)
+          (jsonBody \ "code").as[String] shouldBe "TEST_ERROR_CODE"
+        }
       }
-    }
 
-    "helpToSaveShuttered = true" should {
-      """return 521 "shuttered": true""" in {
-        val accountService = mock[AccountService]
-        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-        val savingsTargetRepo = mock[SavingsTargetRepo]
-        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo)
+      "the NINO in the URL does not match the logged in user's NINO" should {
+        "return 403" in new AuthorisedTestScenario {
 
-        val resultF = controller.getTransactions(nino.value)(FakeRequest())
-        status(resultF) shouldBe 521
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "title").as[String] shouldBe "Shuttered"
-        (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
+          val resultF = controller.getTransactions(otherNino.value)(FakeRequest())
+          status(resultF) shouldBe 403
+          (slf4jLoggerStub.warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s data"
+        }
+      }
+
+      "the NINO is not in the correct format" should {
+        "return 400 NINO_INVALID" in new AuthorisedTestScenario {
+
+          val resultF = controller.getTransactions("invalidNino")(FakeRequest())
+          status(resultF) shouldBe 400
+          val jsonBody = contentAsJson(resultF)
+          (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
+          (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
+        }
+      }
+
+      "the NINO in the URL contains spaces" should {
+        "return 400 NINO_INVALID" in new AuthorisedTestScenario {
+
+          val resultF = controller.getTransactions("AA 00 00 03 D")(FakeRequest())
+          status(resultF) shouldBe 400
+          val jsonBody = contentAsJson(resultF)
+          (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
+          (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
+        }
+      }
+
+      "helpToSaveShuttered = true" should {
+        """return 521 "shuttered": true""" in {
+          val accountService = mock[AccountService]
+          val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+          val savingsTargetRepo = mock[SavingsTargetRepo]
+          val featureFlagsRepo = mock[FeatureFlagsRepo]
+          val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo, featureFlagsRepo)
+
+          val resultF = controller.getTransactions(nino.value)(FakeRequest())
+          status(resultF) shouldBe 521
+          val jsonBody = contentAsJson(resultF)
+          (jsonBody \ "shuttered").as[Boolean] shouldBe true
+          (jsonBody \ "title").as[String] shouldBe "Shuttered"
+          (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
+        }
       }
     }
   }
