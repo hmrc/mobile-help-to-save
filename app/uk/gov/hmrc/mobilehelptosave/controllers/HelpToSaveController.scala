@@ -74,9 +74,13 @@ class HelpToSaveController @Inject()
   }
 
   private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
+    // these can run in parallel so don't inline them
+    val fetchTarget = fetchSavingsTarget(nino)
+    val fetchAccount = accountService.account(nino)
+
     for {
-      target <- EitherT.liftF(fetchSavingsTarget(nino))
-      account <- EitherT(accountService.account(nino))
+      target <- EitherT.liftF(fetchTarget)
+      account <- EitherT(fetchAccount)
     } yield (target, account)
   }.value.map {
     case Right((target, Some(account))) => Ok(Json.toJson(account.copy(savingsTarget = target.map(t => SavingsTarget(t.targetAmount)))))
