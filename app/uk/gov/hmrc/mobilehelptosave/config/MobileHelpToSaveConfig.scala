@@ -61,8 +61,6 @@ case class MobileHelpToSaveConfig @Inject()(
   override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
 
-  override val monthlySavingsLimit: Double = configDouble("helpToSave.monthlySavingLimit")
-
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType: String = accessConfig.getString("type")
   override val apiWhiteListApplicationIds: Seq[String] = accessConfig.getStringList("white-list.applicationIds").asScala
@@ -118,5 +116,4 @@ trait StartupControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
-  def monthlySavingsLimit: Double
 }
