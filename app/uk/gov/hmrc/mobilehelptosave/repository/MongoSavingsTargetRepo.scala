@@ -40,7 +40,7 @@ object SavingsTargetMongoModel {
   implicit val writes   : OWrites[SavingsTargetMongoModel] = Json.writes[SavingsTargetMongoModel]
 
   val mongoFormats: Format[SavingsTargetMongoModel] =
-    ReactiveMongoFormats.mongoEntity(Format(reads, writes))
+    Format(reads, writes)
 }
 
 class MongoSavingsTargetRepo @Inject()(
@@ -51,7 +51,7 @@ class MongoSavingsTargetRepo @Inject()(
     with SavingsTargetRepo {
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("nino" -> IndexType.Hashed), name = Some("ninoIdx"), unique = true, sparse = true)
+    Index(Seq("nino" -> IndexType.Text), name = Some("ninoIdx"), unique = true, sparse = true)
   )
 
   override def put(savingsTarget: SavingsTargetMongoModel): Future[Unit] =

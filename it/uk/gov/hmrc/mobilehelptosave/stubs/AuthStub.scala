@@ -34,31 +34,37 @@ object AuthStub {
 
 
   def userIsLoggedIn(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
-    wireMockServer.stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(authoriseRequestBody))
-      .willReturn(aResponse()
-        .withStatus(200)
-        .withBody(
-          Json.obj(
-            "nino" -> nino.value
-          ).toString
-        )))
+    wireMockServer.stubFor(
+      post(urlPathEqualTo("/auth/authorise"))
+        .withRequestBody(equalToJson(authoriseRequestBody))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(
+              Json.obj(
+                "nino" -> nino.value
+              ).toString
+            )))
 
   def userIsLoggedInWithInsufficientConfidenceLevel()(implicit wireMockServer: WireMockServer): Unit =
-    wireMockServer.stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(authoriseRequestBody))
-      .willReturn(aResponse()
-        .withStatus(401)
-        .withHeader("WWW-Authenticate", """MDTP detail="InsufficientConfidenceLevel"""")
-      ))
+    wireMockServer.stubFor(
+      post(urlPathEqualTo("/auth/authorise"))
+        .withRequestBody(equalToJson(authoriseRequestBody))
+        .willReturn(
+          aResponse()
+            .withStatus(401)
+            .withHeader("WWW-Authenticate", """MDTP detail="InsufficientConfidenceLevel"""")
+        ))
 
   def userIsNotLoggedIn()(implicit wireMockServer: WireMockServer): Unit =
-    wireMockServer.stubFor(post(urlPathEqualTo("/auth/authorise"))
-      .withRequestBody(equalToJson(authoriseRequestBody))
-      .willReturn(aResponse()
-        .withStatus(401)
-        .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
-      ))
+    wireMockServer.stubFor(
+      post(urlPathEqualTo("/auth/authorise"))
+        .withRequestBody(equalToJson(authoriseRequestBody))
+        .willReturn(
+          aResponse()
+            .withStatus(401)
+            .withHeader("WWW-Authenticate", """MDTP detail="MissingBearerToken"""")
+        ))
 
   def authoriseShouldNotHaveBeenCalled()(implicit wireMockServer: WireMockServer): Unit =
     wireMockServer.verify(0, postRequestedFor(urlPathEqualTo("/auth/authorise")))
