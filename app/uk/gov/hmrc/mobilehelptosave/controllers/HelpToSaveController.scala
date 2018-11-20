@@ -108,24 +108,29 @@ class HelpToSaveController @Inject()
     authorisedWithIds.async(parse.json[SavingsTarget]) { implicit request: RequestWithIds[SavingsTarget] =>
       verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
         accountService.account(verifiedUserNino).flatMap {
-          case Right(None) => Future.successful(AccountNotFound)
+          case Right(None) =>
+            Future.successful(AccountNotFound)
 
           case Right(Some(acc)) =>
-            val maxTarget = acc.maximumPaidInThisMonth
-            if (request.body.targetAmount < 1.0 || request.body.targetAmount > maxTarget)
-              Future.successful(UnprocessableEntity(obj("error" -> s"target amount should be in range 1 to $maxTarget")))
-            else
-              savingsTargetRepo
-                .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
-                .recover {
-                  case t => logger.error("error writing savings target to mongo", t)
-                }
-                .map(_ => NoContent)
+            updateSavingsTarget(verifiedUserNino, acc.maximumPaidInThisMonth)
 
-          case Left(errorInfo) => Future.successful(InternalServerError(Json.toJson(errorInfo)))
+          case Left(errorInfo) =>
+            Future.successful(InternalServerError(Json.toJson(errorInfo)))
         }
       }
     }
+
+  private def updateSavingsTarget(verifiedUserNino: Nino, maxTarget: BigDecimal)(implicit request: RequestWithIds[SavingsTarget]): Future[Result] = {
+    if (request.body.targetAmount < 1.0 || request.body.targetAmount > maxTarget)
+      Future.successful(UnprocessableEntity(obj("error" -> s"target amount should be in range 1 to $maxTarget")))
+    else
+      savingsTargetRepo
+        .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
+        .recover {
+          case t => logger.error("error writing savings target to mongo", t)
+        }
+        .map(_ => NoContent)
+  }
 
   def deleteSavingsTarget(ninoString: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
