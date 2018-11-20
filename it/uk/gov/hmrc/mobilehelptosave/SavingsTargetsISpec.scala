@@ -25,7 +25,7 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.SavingsTarget
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.stubs.AuthStub
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class SavingsTargetsISpec
@@ -49,12 +49,25 @@ class SavingsTargetsISpec
     val validTargetJson = Json.toJson(SavingsTarget(20))
 
     "respond with 204" in {
-
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithNoEmail(nino)
       AuthStub.userIsLoggedIn(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
 
       response.status shouldBe 204
+    }
+
+    "respond with 404 and account not found when user is not enrolled" in {
+      HelpToSaveStub.currentUserIsNotEnrolled()
+      AuthStub.userIsLoggedIn(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
+
+      (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+
+      response.status shouldBe 404
     }
 
     "return 401 when the user is not logged in" in {

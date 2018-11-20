@@ -74,9 +74,13 @@ class HelpToSaveController @Inject()
   }
 
   private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
+    // these can run in parallel so don't inline them
+    val fetchTarget = fetchSavingsTarget(nino)
+    val fetchAccount = accountService.account(nino)
+
     for {
-      target <- EitherT.liftF(fetchSavingsTarget(nino))
-      account <- EitherT(accountService.account(nino))
+      target <- EitherT.liftF(fetchTarget)
+      account <- EitherT(fetchAccount)
     } yield (target, account)
   }.value.map {
     case Right((target, Some(account))) => Ok(Json.toJson(account.copy(savingsTarget = target.map(t => SavingsTarget(t.targetAmount)))))
@@ -103,17 +107,30 @@ class HelpToSaveController @Inject()
   def putSavingsTarget(ninoString: String): Action[SavingsTarget] =
     authorisedWithIds.async(parse.json[SavingsTarget]) { implicit request: RequestWithIds[SavingsTarget] =>
       verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
-        if (request.body.targetAmount < 1.0 || request.body.targetAmount > config.monthlySavingsLimit)
-          Future.successful(UnprocessableEntity(obj("error" -> s"target amount should be in range 1 to ${config.monthlySavingsLimit}")))
-        else
-          savingsTargetRepo
-            .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
-            .recover {
-              case t => logger.error("error writing savings target to mongo", t)
-            }
-            .map(_ => NoContent)
+        accountService.account(verifiedUserNino).flatMap {
+          case Right(None) =>
+            Future.successful(AccountNotFound)
+
+          case Right(Some(acc)) =>
+            updateSavingsTarget(verifiedUserNino, acc.maximumPaidInThisMonth)
+
+          case Left(errorInfo) =>
+            Future.successful(InternalServerError(Json.toJson(errorInfo)))
+        }
       }
     }
+
+  private def updateSavingsTarget(verifiedUserNino: Nino, maxTarget: BigDecimal)(implicit request: RequestWithIds[SavingsTarget]): Future[Result] = {
+    if (request.body.targetAmount < 1.0 || request.body.targetAmount > maxTarget)
+      Future.successful(UnprocessableEntity(obj("error" -> s"target amount should be in range 1 to $maxTarget")))
+    else
+      savingsTargetRepo
+        .put(SavingsTargetMongoModel(verifiedUserNino.nino, request.body.targetAmount, LocalDateTime.now))
+        .recover {
+          case t => logger.error("error writing savings target to mongo", t)
+        }
+        .map(_ => NoContent)
+  }
 
   def deleteSavingsTarget(ninoString: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
