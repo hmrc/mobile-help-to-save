@@ -24,6 +24,7 @@ import javax.inject.{Inject, Provider}
 import play.api.libs.json.Json._
 import play.api.libs.json.{Format, Json, OWrites, Reads}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -48,6 +49,10 @@ class MongoSavingsTargetRepo @Inject()(
   (implicit ec: ExecutionContext)
   extends ReactiveRepository[SavingsTargetMongoModel, BSONObjectID]("savingsTargets", reactiveMongo.get().mongoConnector.db, SavingsTargetMongoModel.mongoFormats)
     with SavingsTargetRepo {
+
+  override def indexes: Seq[Index] = Seq(
+    Index(Seq("nino" -> IndexType.Hashed), name = Some("ninoIdx"), unique = true, sparse = true)
+  )
 
   override def put(savingsTarget: SavingsTargetMongoModel): Future[Unit] =
     insert(savingsTarget).void

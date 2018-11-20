@@ -10,7 +10,7 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
   )
 
-  private val reactiveMongoVersion = "6.2.0"
+  private val reactiveMongoVersion = "7.3.0-play-25"
   private val microserviceAsyncVersion = "2.2.0"
 
   val compile = Seq(
@@ -20,7 +20,7 @@ object AppDependencies {
     "org.typelevel" %% "cats-core" % "1.1.0",
     "io.lemonlabs" %% "scala-uri" % "1.1.1",
     "uk.gov.hmrc" %% "play-hmrc-api" % "3.0.0",
-    "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion,
+    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion,
     "uk.gov.hmrc" %% "microservice-async" % microserviceAsyncVersion
   )
 
