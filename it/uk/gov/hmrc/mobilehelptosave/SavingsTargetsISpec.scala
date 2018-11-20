@@ -25,7 +25,7 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.SavingsTarget
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.stubs.AuthStub
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class SavingsTargetsISpec
@@ -50,6 +50,8 @@ class SavingsTargetsISpec
 
     "respond with 204" in {
 
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithNoEmail(nino)
       AuthStub.userIsLoggedIn(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
