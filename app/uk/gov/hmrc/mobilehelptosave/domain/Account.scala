@@ -77,8 +77,10 @@ case class Account(
 
   inAppPaymentsEnabled: Boolean,
 
-  // The fields below here are populated from mongo repositories
+  // This field is populated from the application config
   savingsTargetEnabled:Boolean = false,
+
+  // This field is populated from the mongo repository
   savingsTarget: Option[SavingsTarget] = None
 )
 
