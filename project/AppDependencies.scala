@@ -10,7 +10,7 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
   )
 
-  private val reactiveMongoVersion = "7.3.0-play-25"
+  private val reactiveMongoVersion = "7.4.0-play-25"
   private val microserviceAsyncVersion = "2.2.0"
 
   val compile = Seq(
