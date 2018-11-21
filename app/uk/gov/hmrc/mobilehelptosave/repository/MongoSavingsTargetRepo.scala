@@ -18,18 +18,11 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
 
-import cats.instances.future._
-import cats.syntax.functor._
 import javax.inject.{Inject, Provider}
-import play.api.libs.json.Json._
 import play.api.libs.json.{Format, Json, OWrites, Reads}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 case class SavingsTargetMongoModel(nino: String, targetAmount: Double, createdAt: LocalDateTime)
 
@@ -42,22 +35,8 @@ object SavingsTargetMongoModel {
 }
 
 class MongoSavingsTargetRepo @Inject()(
-  val reactiveMongo: Provider[ReactiveMongoComponent]
+  override val reactiveMongo: Provider[ReactiveMongoComponent]
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsTargetMongoModel])
-  extends ReactiveRepository[SavingsTargetMongoModel, BSONObjectID]("savingsTargets", reactiveMongo.get().mongoConnector.db, mongoFormats)
-    with SavingsTargetRepo {
-
-  override def indexes: Seq[Index] = Seq(
-    Index(Seq("nino" -> IndexType.Text), name = Some("ninoIdx"), unique = true, sparse = true)
-  )
-
-  override def put(savingsTarget: SavingsTargetMongoModel): Future[Unit] =
-    insert(savingsTarget).void
-
-  override def get(nino: Nino): Future[Option[SavingsTargetMongoModel]] =
-    find("nino" -> nino.value).map(_.headOption)
-
-  override def delete(nino: Nino): Future[Unit] =
-    remove("nino" -> nino.value).void
-}
+  extends NinoIndexedMongoRepo[SavingsTargetMongoModel]("savingsTargets", reactiveMongo)
+    with SavingsTargetRepo

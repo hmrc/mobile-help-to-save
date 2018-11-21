@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave.config
 
-import com.google.inject.AbstractModule
+import com.google.inject.{AbstractModule, TypeLiteral}
+import play.api.libs.json.Format
 import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilehelptosave.api.ServiceLocatorRegistrationTask
+import uk.gov.hmrc.mobilehelptosave.repository.{FeatureFlagsMongoModel, SavingsTargetMongoModel}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule {
@@ -29,6 +31,9 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bind(classOf[CoreGet]).to(classOf[DefaultHttpClient])
     bind(classOf[CorePost]).to(classOf[DefaultHttpClient])
     bind(classOf[LoggerLike]).toInstance(Logger)
+
+    bind(new TypeLiteral[Format[FeatureFlagsMongoModel]]{}).toInstance(FeatureFlagsMongoModel.mongoFormats)
+    bind(new TypeLiteral[Format[SavingsTargetMongoModel]]{}).toInstance(SavingsTargetMongoModel.mongoFormats)
 
     bind(classOf[DocumentationController]).toInstance(DocumentationController)
     bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()
