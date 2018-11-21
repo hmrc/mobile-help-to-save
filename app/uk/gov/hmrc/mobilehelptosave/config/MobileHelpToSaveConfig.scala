@@ -55,14 +55,16 @@ case class MobileHelpToSaveConfig @Inject()(
     message = configBase64String("helpToSave.shuttering.message")
   )
 
-  override val supportFormEnabled: Boolean = configBoolean("helpToSave.supportFormEnabled")
-  override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
-  override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
-  override val helpToSaveInvitationUrl: String = configString("helpToSave.invitationUrl")
-  override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
+  override def savingsTargetsEnabled: Boolean = configBoolean("helpToSave.savingsTargetsEnabled")
 
-  private val accessConfig = configuration.underlying.getConfig("api.access")
-  override val apiAccessType: String = accessConfig.getString("type")
+  override val supportFormEnabled        : Boolean = configBoolean("helpToSave.supportFormEnabled")
+  override val inAppPaymentsEnabled      : Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
+  override val helpToSaveInfoUrl         : String  = configString("helpToSave.infoUrl")
+  override val helpToSaveInvitationUrl   : String  = configString("helpToSave.invitationUrl")
+  override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
+
+  private  val accessConfig                            = configuration.underlying.getConfig("api.access")
+  override val apiAccessType             : String      = accessConfig.getString("type")
   override val apiWhiteListApplicationIds: Seq[String] = accessConfig.getStringList("white-list.applicationIds").asScala
 
   protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
@@ -116,4 +118,5 @@ trait StartupControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
+  def savingsTargetsEnabled: Boolean
 }
