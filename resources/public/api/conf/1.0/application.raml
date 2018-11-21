@@ -111,3 +111,29 @@ traits:
               type: !include schemas/transactions.json
               example: !include examples/transactions.json
 
+  /targets/current-target:
+     is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
+     put:
+       body:
+         application/json:
+           type: !include schemas/target.json
+           example: !include examples/target.json
+       displayName: Set a savings target for the user
+       description: Set a savings target for the user. This will replace any existing savings target.
+       (annotations.scope): "read:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+       responses:
+         204:
+         422:
+           body:
+             properties:
+               error:
+             example:
+               error: target amount should be in range 1 to 50
+     delete:
+       displayName: Remove the users' current savings target
+       description: Remove the users' current savings target
+       (annotations.scope): "read:native-apps-api-orchestration"
+       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+       responses:
+         204:
