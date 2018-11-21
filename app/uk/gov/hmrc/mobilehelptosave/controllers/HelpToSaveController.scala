@@ -19,8 +19,8 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.LocalDateTime
 
-import cats.data.EitherT
-import cats.implicits._
+import cats.syntax.apply._
+import cats.instances.future._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -75,23 +75,19 @@ class HelpToSaveController @Inject()
   }
 
   private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
-    // these can run in parallel so don't inline them
-    val fetchTarget = fetchSavingsTarget(nino)
-    val fetchFlags = fetchFeatureFlags(nino)
-    val fetchAccount = accountService.account(nino)
+    (
+      fetchSavingsTarget(nino),
+      fetchFeatureFlags(nino),
+      accountService.account(nino)
+    ).mapN {
+      case (target, flags, Right(Some(account))) =>
+        val savingsTarget = target.map(t => SavingsTarget(t.targetAmount))
+        val enabled = flags.exists(_.savingsTargetsEnabled)
+        Ok(Json.toJson(account.copy(savingsTarget = savingsTarget, savingsTargetEnabled = enabled)))
 
-    for {
-      target <- EitherT.liftF(fetchTarget)
-      flags <- EitherT.liftF(fetchFlags)
-      account <- EitherT(fetchAccount)
-    } yield (target, flags, account)
-  }.value.map {
-    case Right((target, flags, Some(account))) =>
-      val savingsTarget = target.map(t => SavingsTarget(t.targetAmount))
-      val enabled = flags.exists(_.savingsTargetsEnabled)
-      Ok(Json.toJson(account.copy(savingsTarget = savingsTarget, savingsTargetEnabled = enabled)))
-    case Right((_, _, None))                   => AccountNotFound
-    case Left(errorInfo)                       => InternalServerError(Json.toJson(errorInfo))
+      case (_, _, Right(None))     => AccountNotFound
+      case (_, _, Left(errorInfo)) => InternalServerError(Json.toJson(errorInfo))
+    }
   }
 
   /**
