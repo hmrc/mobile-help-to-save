@@ -77,10 +77,10 @@ case class Account(
 
   inAppPaymentsEnabled: Boolean,
 
-  // A bit odd, this one. All the fields above come back from NS&I when we call their
-  // account endpoint. The savings target is something we're currently holding in mongo
-  // and our account endpoint will pull that data (if present for the nino) and fold it
-  // into this structure.
+  // This field is populated from the application config
+  savingsGoalsEnabled: Boolean = false,
+
+  // This field is populated from the mongo repository
   savingsTarget: Option[SavingsTarget] = None
 )
 

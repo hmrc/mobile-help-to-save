@@ -26,6 +26,7 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
+import uk.gov.hmrc.mobilehelptosave.controllers.helpToSave.TestHelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
@@ -53,7 +54,7 @@ class SandboxControllerSpec
   private val nino = generator.nextNino
   private val shuttering = Shuttering(shuttered = false, "", "")
   private val shutteredShuttering = Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
-  private val config = TestHelpToSaveControllerConfig(shuttering)
+  private val config = TestHelpToSaveControllerConfig(shuttering, savingsGoalsEnabled = false)
   private val currentTime = new DateTime(2018, 9, 29, 12, 30, DateTimeZone.forID("Europe/London"))
   private val fixedClock = new FixedFakeClock(currentTime)
   private val controller: SandboxController = new SandboxController(logger, config, SandboxData(logger, fixedClock, TestSandboxDataConfig))
