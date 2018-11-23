@@ -31,7 +31,7 @@
   ],
   "currentBonusTerm": "First",
   "inAppPaymentsEnabled": false,
-  "savingsTargetEnabled": true,
+  "savingsGoalsEnabled": false
   "savingsTarget": {
     "targetAmount":21.50
   }
