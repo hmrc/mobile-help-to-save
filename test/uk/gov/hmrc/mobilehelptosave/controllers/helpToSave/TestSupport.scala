@@ -30,7 +30,7 @@ import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class TestHelpToSaveControllerConfig(shuttering: Shuttering, savingsTargetsEnabled: Boolean)
+case class TestHelpToSaveControllerConfig(shuttering: Shuttering, savingsGoalsEnabled: Boolean)
   extends HelpToSaveControllerConfig
 
 //noinspection TypeAnnotation
@@ -45,7 +45,7 @@ trait TestSupport {
   val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   val falseShuttering = Shuttering(shuttered = false, "", "")
 
-  val config = TestHelpToSaveControllerConfig(falseShuttering, savingsTargetsEnabled = false)
+  val config = TestHelpToSaveControllerConfig(falseShuttering, savingsGoalsEnabled = false)
 
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService = mock[AccountService]

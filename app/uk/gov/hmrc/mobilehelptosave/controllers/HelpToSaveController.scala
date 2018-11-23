@@ -80,7 +80,7 @@ class HelpToSaveController @Inject()
     ).mapN {
       case (target, Right(Some(account))) =>
         val savingsTarget = target.map(t => SavingsTarget(t.targetAmount))
-        Ok(Json.toJson(account.copy(savingsTarget = savingsTarget, savingsTargetEnabled = config.savingsTargetsEnabled)))
+        Ok(Json.toJson(account.copy(savingsTarget = savingsTarget, savingsGoalsEnabled = config.savingsGoalsEnabled)))
 
       case (_, Right(None))     => AccountNotFound
       case (_, Left(errorInfo)) => InternalServerError(Json.toJson(errorInfo))

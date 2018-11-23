@@ -159,7 +159,7 @@ class GetAccountSpec
       }
     }
 
-    "the savingsTargetEnabled flag configured as true" should {
+    "the savingsGoalsEnabled flag configured as true" should {
       "return true in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
@@ -169,7 +169,7 @@ class GetAccountSpec
             accountService,
             helpToSaveGetTransactions,
             new AlwaysAuthorisedWithIds(nino),
-            config.copy(savingsTargetsEnabled = true),
+            config.copy(savingsGoalsEnabled = true),
             savingsTargetRepo)
 
         savingsTargetReturns(nino, None)
@@ -177,11 +177,11 @@ class GetAccountSpec
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
-        (jsonBody \ "savingsTargetEnabled").as[Boolean] shouldBe true
+        (jsonBody \ "savingsGoalsEnabled").as[Boolean] shouldBe true
       }
     }
 
-    "the savingsTargetEnabled flag is configured as false" should {
+    "the savingsGoalsEnabled flag is configured as false" should {
       "return false in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
@@ -190,7 +190,7 @@ class GetAccountSpec
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
-        (jsonBody \ "savingsTargetEnabled").as[Boolean] shouldBe false
+        (jsonBody \ "savingsGoalsEnabled").as[Boolean] shouldBe false
       }
     }
   }

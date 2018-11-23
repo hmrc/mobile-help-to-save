@@ -55,7 +55,7 @@ case class MobileHelpToSaveConfig @Inject()(
     message = configBase64String("helpToSave.shuttering.message")
   )
 
-  override def savingsTargetsEnabled: Boolean = configBoolean("helpToSave.savingsTargetsEnabled")
+  override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
 
   override val supportFormEnabled        : Boolean = configBoolean("helpToSave.supportFormEnabled")
   override val inAppPaymentsEnabled      : Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
@@ -118,5 +118,5 @@ trait StartupControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
-  def savingsTargetsEnabled: Boolean
+  def savingsGoalsEnabled: Boolean
 }
