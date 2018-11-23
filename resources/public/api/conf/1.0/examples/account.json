@@ -30,5 +30,6 @@
     }
   ],
   "currentBonusTerm": "First",
-  "inAppPaymentsEnabled": false
+  "inAppPaymentsEnabled": false,
+  "savingsGoalsEnabled": false
 }
