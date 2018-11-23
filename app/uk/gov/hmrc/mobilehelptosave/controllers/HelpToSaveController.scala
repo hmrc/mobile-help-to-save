@@ -74,6 +74,9 @@ class HelpToSaveController @Inject()
   }
 
   private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
+    // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
+    // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
+    // in parallel.
     (
       fetchSavingsGoal(nino),
       accountService.account(nino)
