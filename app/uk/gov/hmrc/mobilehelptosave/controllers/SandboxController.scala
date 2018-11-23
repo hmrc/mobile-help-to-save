@@ -21,7 +21,7 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsTarget
+import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -53,8 +53,8 @@ class SandboxController @Inject()(
     }
   }
 
-  def putSavingsTarget(ninoString: String): Action[SavingsTarget] =
-    Action.async(parse.json[SavingsTarget]) { implicit request =>
+  def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
+    Action.async(parse.json[SavingsGoal]) { implicit request =>
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { _ =>
           Future.successful(NoContent)
@@ -62,7 +62,7 @@ class SandboxController @Inject()(
       }
     }
 
-  def deleteSavingsTarget(ninoString: String): Action[AnyContent] =
+  def deleteSavingsGoal(ninoString: String): Action[AnyContent] =
     Action.async { implicit request =>
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { _ =>

@@ -24,19 +24,19 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 
 import scala.concurrent.ExecutionContext
 
-case class SavingsTargetMongoModel(nino: String, targetAmount: Double, createdAt: LocalDateTime)
+case class SavingsGoalMongoModel(nino: String, amount: Double, createdAt: LocalDateTime)
 
-object SavingsTargetMongoModel {
-  implicit val reads : Reads[SavingsTargetMongoModel]   = Json.reads[SavingsTargetMongoModel]
-  implicit val writes: OWrites[SavingsTargetMongoModel] = Json.writes[SavingsTargetMongoModel]
+object SavingsGoalMongoModel {
+  implicit val reads : Reads[SavingsGoalMongoModel]   = Json.reads[SavingsGoalMongoModel]
+  implicit val writes: OWrites[SavingsGoalMongoModel] = Json.writes[SavingsGoalMongoModel]
 
-  implicit val mongoFormats: Format[SavingsTargetMongoModel] =
+  implicit val mongoFormats: Format[SavingsGoalMongoModel] =
     Format(reads, writes)
 }
 
-class MongoSavingsTargetRepo @Inject()(
+class MongoSavingsGoalRepo @Inject()(
   override val reactiveMongo: Provider[ReactiveMongoComponent]
 )
-  (implicit ec: ExecutionContext, mongoFormats: Format[SavingsTargetMongoModel])
-  extends NinoIndexedMongoRepo[SavingsTargetMongoModel]("savingsTargets", reactiveMongo)
-    with SavingsTargetRepo
+  (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalMongoModel])
+  extends NinoIndexedMongoRepo[SavingsGoalMongoModel]("savingsGoals", reactiveMongo)
+    with SavingsGoalRepo

@@ -18,8 +18,8 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Json, OFormat}
 
-case class SavingsTarget(targetAmount: Double)
+case class SavingsGoal(goalAmount: Double)
 
-object SavingsTarget {
-  implicit val formats: OFormat[SavingsTarget] = Json.format
+object SavingsGoal {
+  implicit val formats: OFormat[SavingsGoal] = Json.format
 }

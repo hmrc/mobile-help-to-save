@@ -25,8 +25,8 @@ import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, SavingsTarget}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTargetMongoModel, SavingsTargetRepo}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -61,7 +61,7 @@ class GetAccountSpec
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        savingsTargetReturns(nino, None)
+        savingsGoalReturns(nino, None)
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
@@ -70,16 +70,16 @@ class GetAccountSpec
       }
     }
 
-    "there is a savings target associate with the NINO" should {
-      "return the savings target in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
+    "there is a savings goal associated with the NINO" should {
+      "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        val savingsTarget = 21.5
-        savingsTargetReturns(nino, Some(SavingsTargetMongoModel(nino.value, 21.5, LocalDateTime.now())))
+        val savingsGoal = 21.5
+        savingsGoalReturns(nino, Some(SavingsGoalMongoModel(nino.value, savingsGoal, LocalDateTime.now())))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).validate[Account]
-        account.asOpt.value.savingsTarget.value shouldBe SavingsTarget(savingsTarget)
+        account.asOpt.value.savingsGoal.value shouldBe SavingsGoal(savingsGoal)
       }
     }
 
@@ -87,7 +87,7 @@ class GetAccountSpec
       "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Right(None))
-        savingsTargetReturns(nino, None)
+        savingsGoalReturns(nino, None)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
@@ -103,7 +103,7 @@ class GetAccountSpec
       "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Left(ErrorInfo("TEST_ERROR_CODE")))
-        savingsTargetReturns(nino, None)
+        savingsGoalReturns(nino, None)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
@@ -147,8 +147,8 @@ class GetAccountSpec
       """return 521 "shuttered": true""" in {
         val accountService = mock[AccountService]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-        val savingsTargetRepo = mock[SavingsTargetRepo]
-        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsTargetRepo)
+        val savingsGoalRepo = mock[SavingsGoalRepo]
+        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsGoalRepo)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 521
@@ -170,9 +170,9 @@ class GetAccountSpec
             helpToSaveGetTransactions,
             new AlwaysAuthorisedWithIds(nino),
             config.copy(savingsGoalsEnabled = true),
-            savingsTargetRepo)
+            savingsGoalRepo)
 
-        savingsTargetReturns(nino, None)
+        savingsGoalReturns(nino, None)
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
@@ -185,7 +185,7 @@ class GetAccountSpec
       "return false in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        savingsTargetReturns(nino, None)
+        savingsGoalReturns(nino, None)
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK

@@ -1,7 +1,8 @@
 # microservice specific routes
 
-GET        /savings-account/:nino/transactions                  uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino:String)
+GET           /savings-account/:nino/transactions              uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino:String)
 
-GET        /savings-account/:nino                               uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino:String)
+GET           /savings-account/:nino                           uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino:String)
 
-PUT        /savings-account/:nino/targets/current-target        uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsTarget(nino:String)
+PUT           /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino:String)
+DELETE        /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino:String)
