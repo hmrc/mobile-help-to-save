@@ -195,6 +195,15 @@
     "savingsGoalsEnabled": {
       "type": "boolean",
       "description": "Are savings goals enabled for the application?"
+    },
+    "savingsGoal": {
+      "type": "object",
+      "properties": {
+        "goalAmount": {
+          "type": "number",
+          "description": "The amount the user would like to save each month."
+        }
+      }
     }
   },
   "required": [

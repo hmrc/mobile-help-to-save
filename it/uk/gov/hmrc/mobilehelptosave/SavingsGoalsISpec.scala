@@ -23,12 +23,12 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsTarget
+import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
-class SavingsTargetsISpec
+class SavingsGoalsISpec
   extends WordSpec
     with Matchers
     with SchemaMatchers
@@ -44,16 +44,16 @@ class SavingsTargetsISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  "PUT /savings-account/{nino}/targets/current-target" should {
+  "PUT /savings-account/{nino}/goals/current-goal" should {
 
-    val validTargetJson = Json.toJson(SavingsTarget(20))
+    val validGoalJson = Json.toJson(SavingsGoal(20))
 
     "respond with 204" in {
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
       AuthStub.userIsLoggedIn(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
 
       response.status shouldBe 204
     }
@@ -62,7 +62,7 @@ class SavingsTargetsISpec
       HelpToSaveStub.currentUserIsNotEnrolled()
       AuthStub.userIsLoggedIn(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
 
       (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
@@ -72,14 +72,14 @@ class SavingsTargetsISpec
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
       response.status shouldBe 401
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/targets/current-target").put(validTargetJson))
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }

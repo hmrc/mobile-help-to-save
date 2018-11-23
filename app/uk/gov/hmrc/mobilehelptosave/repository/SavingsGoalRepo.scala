@@ -21,9 +21,9 @@ import uk.gov.hmrc.domain.Nino
 
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[MongoSavingsTargetRepo])
-trait SavingsTargetRepo {
-  def put(savingsTarget: SavingsTargetMongoModel): Future[Unit]
-  def get(nino: Nino): Future[Option[SavingsTargetMongoModel]]
+@ImplementedBy(classOf[MongoSavingsGoalRepo])
+trait SavingsGoalRepo {
+  def put(savingsGoal: SavingsGoalMongoModel): Future[Unit]
+  def get(nino: Nino): Future[Option[SavingsGoalMongoModel]]
   def delete(nino: Nino): Future[Unit]
 }

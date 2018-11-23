@@ -22,7 +22,7 @@ import play.api.{Configuration, Environment, Logger, LoggerLike}
 import uk.gov.hmrc.api.controllers.DocumentationController
 import uk.gov.hmrc.http.{CoreGet, CorePost}
 import uk.gov.hmrc.mobilehelptosave.api.ServiceLocatorRegistrationTask
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsTargetMongoModel
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalMongoModel
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 class GuiceModule(environment: Environment, configuration: Configuration) extends AbstractModule {
@@ -32,7 +32,7 @@ class GuiceModule(environment: Environment, configuration: Configuration) extend
     bind(classOf[CorePost]).to(classOf[DefaultHttpClient])
     bind(classOf[LoggerLike]).toInstance(Logger)
 
-    bind(new TypeLiteral[Format[SavingsTargetMongoModel]] {}).toInstance(SavingsTargetMongoModel.mongoFormats)
+    bind(new TypeLiteral[Format[SavingsGoalMongoModel]] {}).toInstance(SavingsGoalMongoModel.mongoFormats)
 
     bind(classOf[DocumentationController]).toInstance(DocumentationController)
     bind(classOf[ServiceLocatorRegistrationTask]).asEagerSingleton()

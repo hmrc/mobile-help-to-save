@@ -81,7 +81,7 @@ case class Account(
   savingsGoalsEnabled: Boolean = false,
 
   // This field is populated from the mongo repository
-  savingsTarget: Option[SavingsTarget] = None
+  savingsGoal: Option[SavingsGoal] = None
 )
 
 object Account {

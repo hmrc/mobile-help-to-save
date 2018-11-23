@@ -3,9 +3,9 @@
   "$schema": "http://json-schema.org/draft-06/schema#",
   "description": "The Help To Save account details",
   "properties": {
-    "targetAmount": {
+    "goalAmount": {
       "type": "number",
-      "description": "The target amount that the user wants to save each month. This must be a number between 1 and the monthly savings limit (currently £50)",
+      "description": "The amount that the user wants to save each month. This must be a number between 1 and the monthly savings limit (currently £50)",
       "examples": [
         21.50,
         45
@@ -13,6 +13,6 @@
     }
   },
   "required": [
-    "targetAmount"
+    "goalAmount"
   ]
 }

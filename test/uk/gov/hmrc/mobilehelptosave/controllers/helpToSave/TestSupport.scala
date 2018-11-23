@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, Shuttering, Transactions}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsTargetMongoModel, SavingsTargetRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -50,15 +50,15 @@ trait TestSupport {
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-    val savingsTargetRepo = mock[SavingsTargetRepo]
-    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsTargetRepo)
+    val savingsGoalRepo = mock[SavingsGoalRepo]
+    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsGoalRepo)
     authorisedActionForNino(controller)
   }
 
   trait AuthorisedTestScenario {
     val accountService            = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-    val savingsTargetRepo         = mock[SavingsTargetRepo]
+    val savingsGoalRepo           = mock[SavingsGoalRepo]
 
     val controller: HelpToSaveController =
       new HelpToSaveController(
@@ -67,7 +67,7 @@ trait TestSupport {
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
         config,
-        savingsTargetRepo)
+        savingsGoalRepo)
   }
 
   trait HelpToSaveMocking {
@@ -79,8 +79,8 @@ trait TestSupport {
         .returning(Future.successful(stubbedResponse))
     }
 
-    def savingsTargetReturns(nino: Nino, stubbedResponse: Option[SavingsTargetMongoModel]) =
-      (savingsTargetRepo.get(_: Nino))
+    def savingsGoalReturns(nino: Nino, stubbedResponse: Option[SavingsGoalMongoModel]) =
+      (savingsGoalRepo.get(_: Nino))
         .expects(nino)
         .returning(Future.successful(stubbedResponse))
 
@@ -90,14 +90,14 @@ trait TestSupport {
         .returning(stubbedResponse)
     }
 
-    def putSavingsTargetExpects(nino: String, amount: Double) = {
-      (savingsTargetRepo.put(_: SavingsTargetMongoModel))
-        .expects(where { st: SavingsTargetMongoModel => st.nino == nino && st.targetAmount == amount })
+    def putSavingsGoalExpects(nino: String, amount: Double) = {
+      (savingsGoalRepo.put(_: SavingsGoalMongoModel))
+        .expects(where { st: SavingsGoalMongoModel => st.nino == nino && st.amount == amount })
         .returning(Future.successful(()))
     }
 
-    def deleteSavingsTargetExpects(expectedNino: Nino) = {
-      (savingsTargetRepo.delete(_: Nino))
+    def deleteSavingsGoalExpects(expectedNino: Nino) = {
+      (savingsGoalRepo.delete(_: Nino))
         .expects(where { suppliedNino: Nino => suppliedNino == expectedNino })
         .returning(Future.successful(()))
     }
