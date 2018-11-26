@@ -34,7 +34,6 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -54,7 +53,7 @@ class HelpToSaveController @Inject()
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig,
   savingsGoalRepo: SavingsGoalRepo
-) extends BaseController with ControllerChecks with HelpToSaveActions {
+)(implicit ec: ExecutionContext) extends BaseController with ControllerChecks with HelpToSaveActions {
 
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
 

@@ -27,6 +27,7 @@ import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class StartupControllerSpec
@@ -40,11 +41,11 @@ class StartupControllerSpec
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
 
   private val mockUserService = mock[UserService]
 
-  private val trueShuttering = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
+  private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
 
   private val config = TestStartupControllerConfig(

@@ -28,6 +28,7 @@ import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 case class TestHelpToSaveControllerConfig(shuttering: Shuttering, savingsGoalsEnabled: Boolean)
