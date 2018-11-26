@@ -23,14 +23,15 @@ import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
+
+import scala.concurrent.ExecutionContext
 
 @Singleton()
-class StartupController @Inject() (
+class StartupController @Inject()(
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
   config: StartupControllerConfig
-) extends BaseController {
+)(implicit ec: ExecutionContext) extends BaseController {
 
   val startup: Action[AnyContent] = if (!config.shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>

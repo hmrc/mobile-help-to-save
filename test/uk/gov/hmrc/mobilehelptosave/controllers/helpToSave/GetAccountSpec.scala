@@ -32,6 +32,8 @@ import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 //noinspection TypeAnnotation
 class GetAccountSpec
   extends WordSpec

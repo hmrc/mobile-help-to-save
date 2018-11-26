@@ -25,9 +25,8 @@ import uk.gov.hmrc.auth.core.retrieve.Retrievals
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext.fromLoggingDetails
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class RequestWithIds[+A](val nino: Nino, request: Request[A]) extends WrappedRequest[A](request)
 
@@ -35,10 +34,10 @@ class RequestWithIds[+A](val nino: Nino, request: Request[A]) extends WrappedReq
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
 
 @Singleton
-class AuthorisedWithIdsImpl @Inject() (
+class AuthorisedWithIdsImpl @Inject()(
   logger: LoggerLike,
   authConnector: AuthConnector
-) extends AuthorisedWithIds with Results {
+)(implicit ec: ExecutionContext) extends AuthorisedWithIds with Results {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
@@ -48,15 +47,15 @@ class AuthorisedWithIdsImpl @Inject() (
     authConnector.authorise(predicates, retrievals).map {
       case Some(nino) =>
         Right(new RequestWithIds(Nino(nino), request))
-      case None =>
+      case None       =>
         logger.warn("NINO not found")
         Left(Forbidden("NINO not found"))
     }.recover {
-      case e: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
+      case e: NoActiveSession             => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
       case e: InsufficientConfidenceLevel =>
         logger.warn("Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
         Left(Forbidden(s"Authorisation failure [${e.reason}]"))
-      case e: AuthorisationException => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
+      case e: AuthorisationException      => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
     }
   }
 }
