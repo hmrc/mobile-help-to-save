@@ -60,7 +60,6 @@ case class MobileHelpToSaveConfig @Inject()(
   override val supportFormEnabled        : Boolean = configBoolean("helpToSave.supportFormEnabled")
   override val inAppPaymentsEnabled      : Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override val helpToSaveInfoUrl         : String  = configString("helpToSave.infoUrl")
-  override val helpToSaveInvitationUrl   : String  = configString("helpToSave.invitationUrl")
   override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
 
   private  val accessConfig                            = configuration.underlying.getConfig("api.access")
@@ -111,7 +110,6 @@ trait StartupControllerConfig {
   def shuttering: Shuttering
   def supportFormEnabled: Boolean
   def helpToSaveInfoUrl: String
-  def helpToSaveInvitationUrl: String
   def helpToSaveAccessAccountUrl: String
 }
 

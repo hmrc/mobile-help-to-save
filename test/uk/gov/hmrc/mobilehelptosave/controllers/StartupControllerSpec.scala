@@ -51,7 +51,6 @@ class StartupControllerSpec
     falseShuttering,
     supportFormEnabled = false,
     helpToSaveInfoUrl = "/info",
-    helpToSaveInvitationUrl = "/invitation",
     helpToSaveAccessAccountUrl = "/accessAccount"
   )
 
@@ -99,7 +98,6 @@ class StartupControllerSpec
         val jsonKeys = jsonBody.as[JsObject].keys
         jsonKeys should contain("user")
         (jsonBody \ "infoUrl").as[String] shouldBe "/info"
-        (jsonBody \ "invitationUrl").as[String] shouldBe "/invitation"
         (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
       }
 
@@ -136,7 +134,6 @@ class StartupControllerSpec
         jsonKeys should not contain "user"
         (jsonBody \ "userError" \ "code").as[String] shouldBe "GENERAL"
         (jsonBody \ "infoUrl").as[String] shouldBe "/info"
-        (jsonBody \ "invitationUrl").as[String] shouldBe "/invitation"
         (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
       }
     }
@@ -154,7 +151,6 @@ class StartupControllerSpec
         val jsonKeys = jsonBody.as[JsObject].keys
         jsonKeys should not contain "user"
         jsonKeys should not contain "infoUrl"
-        jsonKeys should not contain "invitationUrl"
         jsonKeys should not contain "accessAccountUrl"
       }
 
@@ -197,9 +193,7 @@ class StartupControllerSpec
 
 case class TestStartupControllerConfig(
   shuttering: Shuttering,
-
   supportFormEnabled: Boolean,
   helpToSaveInfoUrl: String,
-  helpToSaveInvitationUrl: String,
   helpToSaveAccessAccountUrl: String
 ) extends StartupControllerConfig
