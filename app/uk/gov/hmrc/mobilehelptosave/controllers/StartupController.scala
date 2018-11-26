@@ -38,7 +38,6 @@ class StartupController @Inject() (
         StartupResponse(
           shuttering = config.shuttering,
           infoUrl = Some(config.helpToSaveInfoUrl),
-          invitationUrl = Some(config.helpToSaveInvitationUrl),
           accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
           user = userOrError.right.toOption,
           userError = userOrError.left.toOption,
@@ -53,7 +52,6 @@ class StartupController @Inject() (
         StartupResponse(
           shuttering = config.shuttering,
           infoUrl = None,
-          invitationUrl = None,
           accessAccountUrl = None,
           user = None,
           userError = None,

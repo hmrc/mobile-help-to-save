@@ -81,7 +81,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       response.status shouldBe 200
       (response.json \ "supportFormEnabled" ).validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/get-help-savings-low-income"
-      (response.json \ "invitationUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save"
       (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
     }
 
@@ -94,7 +93,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         appBuilder
           .configure(
             "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
-            "helpToSave.invitationUrl" -> "http://www.example.com/test/help-to-save-invitation",
             "helpToSave.accessAccountUrl" -> "/access-account",
             "helpToSave.supportFormEnabled" -> "true"
           )
@@ -106,7 +104,6 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
         response.status shouldBe 200
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
         (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
-        (response.json \ "invitationUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-invitation"
         (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
       }
 

@@ -23,8 +23,6 @@ Response format:
   "supportFormEnabled": true,
   // URL of page containing information about the Help to Save scheme
   "infoUrl": "https://www.gov.uk/get-help-savings-low-income",
-  // URL of invitation call to action
-  "invitationUrl": "/mobile-help-to-save",
   // URL that will redirect enrolled users to the NS&I Help to Save account homepage
   "accessAccountUrl": "/mobile-help-to-save/access-account",
   // User-specific Help to Save data
