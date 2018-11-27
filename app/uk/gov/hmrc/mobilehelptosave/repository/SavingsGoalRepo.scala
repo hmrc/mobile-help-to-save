@@ -24,6 +24,7 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[MongoSavingsGoalRepo])
 trait SavingsGoalRepo {
   def put(savingsGoal: SavingsGoalMongoModel): Future[Unit]
+  def setGoal(nino: Nino, value: Double): Future[Unit]
   def get(nino: Nino): Future[Option[SavingsGoalMongoModel]]
   def delete(nino: Nino): Future[Unit]
 }

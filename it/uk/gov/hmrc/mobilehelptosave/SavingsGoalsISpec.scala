@@ -23,10 +23,12 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class SavingsGoalsISpec
   extends WordSpec
@@ -36,6 +38,7 @@ class SavingsGoalsISpec
     with FutureAwaits
     with DefaultAwaitTimeout
     with WireMockSupport
+    with OptionValues
     with OneServerPerSuiteWsClient
     with NumberVerification {
 
@@ -47,6 +50,8 @@ class SavingsGoalsISpec
   "PUT /savings-account/{nino}/goals/current-goal" should {
 
     val validGoalJson = Json.toJson(SavingsGoal(20))
+    val savingsGoal2 = SavingsGoal(30)
+    val validGoalJson2 = Json.toJson(savingsGoal2)
 
     "respond with 204" in {
       HelpToSaveStub.currentUserIsEnrolled()
@@ -58,14 +63,32 @@ class SavingsGoalsISpec
       response.status shouldBe 204
     }
 
+    "update the goal when called a second time" in {
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithNoEmail(nino)
+      AuthStub.userIsLoggedIn(nino)
+
+      val response: WSResponse = await {
+        for {
+          _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
+          _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson2)
+          resp <- wsUrl(s"/savings-account/$nino").get()
+        } yield resp
+      }
+
+      response.status shouldBe 200
+      val account = Json.parse(response.body).as[Account]
+      account.savingsGoal.value.goalAmount shouldBe savingsGoal2.goalAmount
+    }
+
     "respond with 404 and account not found when user is not enrolled" in {
       HelpToSaveStub.currentUserIsNotEnrolled()
       AuthStub.userIsLoggedIn(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
 
-      (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
-      (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+      (response.json \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (response.json \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
       response.status shouldBe 404
     }

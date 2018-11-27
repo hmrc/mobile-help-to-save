@@ -42,12 +42,12 @@ class SavingsGoalSpec
 {
   "putSavingsGoal" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return put the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "set the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
         val amount  = 21.50
         val request = FakeRequest().withBody(SavingsGoal(amount))
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        putSavingsGoalExpects(nino.value, amount)
+        setSavingsGoalExpects(nino.value, amount)
         val resultF = controller.putSavingsGoal(nino.value)(request)
 
         status(resultF) shouldBe 204

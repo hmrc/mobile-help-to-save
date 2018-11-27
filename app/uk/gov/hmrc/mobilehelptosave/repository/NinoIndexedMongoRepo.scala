@@ -41,8 +41,8 @@ class NinoIndexedMongoRepo[T](
     Index(Seq("nino" -> IndexType.Text), name = Some("ninoIdx"), unique = true, sparse = true)
   )
 
-  def put(flags: T): Future[Unit] =
-    insert(flags).void
+  def put(t: T): Future[Unit] =
+    insert(t).void
 
   def get(nino: Nino): Future[Option[T]] =
     find("nino" -> nino.value).map(_.headOption)

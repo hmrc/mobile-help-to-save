@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-
-import java.time.LocalDateTime
-
 import cats.instances.future._
 import cats.syntax.apply._
 import javax.inject.{Inject, Singleton}
@@ -126,7 +123,7 @@ class HelpToSaveController @Inject()
       Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
     else
       savingsGoalRepo
-        .put(SavingsGoalMongoModel(verifiedUserNino.nino, request.body.goalAmount, LocalDateTime.now))
+        .setGoal(verifiedUserNino, request.body.goalAmount)
         .recover {
           case t => logger.error("error writing savings goal to mongo", t)
         }
