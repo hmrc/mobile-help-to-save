@@ -91,9 +91,9 @@ trait TestSupport {
         .returning(stubbedResponse)
     }
 
-    def putSavingsGoalExpects(nino: String, amount: Double) = {
-      (savingsGoalRepo.put(_: SavingsGoalMongoModel))
-        .expects(where { st: SavingsGoalMongoModel => st.nino == nino && st.amount == amount })
+    def setSavingsGoalExpects(expectedNino: String, expectedAmount: Double) = {
+      (savingsGoalRepo.setGoal(_: Nino, _: Double))
+        .expects(where { (nino, amount) => nino.nino == expectedNino && amount == expectedAmount })
         .returning(Future.successful(()))
     }
 
