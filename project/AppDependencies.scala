@@ -10,18 +10,16 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
   )
 
-  private val reactiveMongoVersion = "7.4.0-play-25"
-  private val microserviceAsyncVersion = "2.2.0"
+  private val reactiveMongoVersion = "6.2.0"
 
-  val compile = Seq(
+  val compile: Seq[ModuleID] = Seq(
     ws,
     "uk.gov.hmrc" %% "bootstrap-play-25" % "4.0.0" withSources(),
     "uk.gov.hmrc" %% "domain" % "5.2.0",
     "org.typelevel" %% "cats-core" % "1.1.0",
     "io.lemonlabs" %% "scala-uri" % "1.1.1",
-    "uk.gov.hmrc" %% "play-hmrc-api" % "3.0.0",
-    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion,
-    "uk.gov.hmrc" %% "microservice-async" % microserviceAsyncVersion
+    "uk.gov.hmrc" %% "play-hmrc-api" % "3.3.0-play-25",
+    "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(
@@ -32,7 +30,7 @@ object AppDependencies {
     "com.github.tomakehurst" % "wiremock" % "2.19.0" % "it"
   )
 
-  def testCommon(scope: String) = Seq(
+  def testCommon(scope: String): Seq[ModuleID] = Seq(
     "org.scalatest" %% "scalatest" % "3.0.5" % scope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,

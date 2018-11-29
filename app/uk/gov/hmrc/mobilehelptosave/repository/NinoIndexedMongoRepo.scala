@@ -32,8 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * Want to store something in Mongo indexed against a NINO? Just create the model for the
   * data and subclass this handy helper.
   */
-class NinoIndexedMongoRepo[T](
-  collectionName:String,
+class NinoIndexedMongoRepo[T: Manifest](
+  collectionName: String,
   val reactiveMongo: Provider[ReactiveMongoComponent]
 )(implicit ec: ExecutionContext, mongoFormats: Format[T])
   extends ReactiveRepository[T, BSONObjectID](collectionName, reactiveMongo.get().mongoConnector.db, mongoFormats) {
