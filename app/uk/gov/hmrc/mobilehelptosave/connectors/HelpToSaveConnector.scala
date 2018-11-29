@@ -24,10 +24,11 @@ import io.lemonlabs.uri.dsl._
 import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json.{Format, JsValue, Json, Reads}
+import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
+import uk.gov.hmrc.mobilehelptosave.config.ScalaUriConfig.config
 import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegment
