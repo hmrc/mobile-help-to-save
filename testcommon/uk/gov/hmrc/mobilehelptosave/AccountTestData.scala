@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.joda.time.{LocalDate, YearMonth}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, Blocking, BonusTerm, CurrentBonusTerm}
+import uk.gov.hmrc.mobilehelptosave.domain._
 
 trait AccountTestData {
 
@@ -154,7 +154,9 @@ trait AccountTestData {
     currentBonusTerm = CurrentBonusTerm.First,
     closureDate = None,
     closingBalance = None,
-    inAppPaymentsEnabled = false
+    inAppPaymentsEnabled = false,
+    savingsGoalsEnabled = true,
+    savingsGoal = None
   )
 
   protected val closedAccountReturnedByHelpToSaveJsonString: String =
