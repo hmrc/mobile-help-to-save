@@ -16,19 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import cats.instances.future._
-import cats.syntax.apply._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.libs.json.Json._
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalRepo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -66,41 +63,15 @@ class HelpToSaveController @Inject()
     }
 
   def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    verifyingMatchingNino(config.shuttering, ninoString)(fetchAccountDetails)
-  }
-
-  private def fetchAccountDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Result] = {
-    // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
-    // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
-    // in parallel.
-    (
-      fetchSavingsGoal(nino),
-      accountService.account(nino)
-    ).mapN {
-      case (goal, Right(Some(account))) =>
-        val savingsGoal = goal.map(t => SavingsGoal(t.amount))
-        Ok(Json.toJson(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)))
-
-      case (_, Right(None))     => AccountNotFound
-      case (_, Left(errorInfo)) => InternalServerError(Json.toJson(errorInfo))
+    verifyingMatchingNino(config.shuttering, ninoString) { nino =>
+      accountService.account(nino).map {
+        case Left(errorInfo)      => InternalServerError(Json.toJson(errorInfo))
+        case Right(None)          => AccountNotFound
+        case Right(Some(account)) => Ok(Json.toJson(account.copy(savingsGoalsEnabled = config.savingsGoalsEnabled)))
+      }
     }
   }
 
-  /**
-    * If there is an error talking to mongo then this function will recover the `Future` to a `Success(None)` on
-    * the basis that we don't want to stop the user seeing their other account details just because something
-    * went wrong trying to look up their goal. Other options are to convert the failure to an `ErrorInfo` and
-    * return a `Future[Either[ErrorInfo, Option[SavingsGoalMongoModel]]]`, which would let the api call fail with
-    * a meaningful error, or to expand the type returned to the api caller to give the client enough information
-    * to tell the user something useful (e.g. "We can't display your goal at the moment, but here's the rest of
-    * your account details").
-    */
-  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Option[SavingsGoalMongoModel]] =
-    savingsGoalRepo.get(nino).recover {
-      case t =>
-        logger.warn("call to mongo to retrieve savings goal failed", t)
-        None
-    }
 
   def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>

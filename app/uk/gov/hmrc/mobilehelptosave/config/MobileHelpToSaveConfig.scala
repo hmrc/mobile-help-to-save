@@ -82,6 +82,7 @@ case class MobileHelpToSaveConfig @Inject()(
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait AccountServiceConfig {
   def inAppPaymentsEnabled: Boolean
+  def savingsGoalsEnabled: Boolean
 }
 
 @ImplementedBy(classOf[MobileHelpToSaveConfig])

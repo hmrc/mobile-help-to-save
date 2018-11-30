@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
-import java.time.LocalDateTime
-
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.libs.json.Json
@@ -25,8 +23,8 @@ import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalRepo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -63,25 +61,20 @@ class GetAccountSpec
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        savingsGoalReturns(nino, None)
-
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
-        jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount)
+        jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = config.savingsGoalsEnabled))
       }
     }
 
     "there is a savings goal associated with the NINO" should {
       "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        val savingsGoal = 21.5
-        savingsGoalReturns(nino, Some(SavingsGoalMongoModel(nino.value, savingsGoal, LocalDateTime.now())))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).validate[Account]
-        account.asOpt.value.savingsGoal.value shouldBe SavingsGoal(savingsGoal)
       }
     }
 
@@ -89,7 +82,6 @@ class GetAccountSpec
       "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Right(None))
-        savingsGoalReturns(nino, None)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
@@ -105,7 +97,6 @@ class GetAccountSpec
       "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         accountReturns(Left(ErrorInfo("TEST_ERROR_CODE")))
-        savingsGoalReturns(nino, None)
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
@@ -174,8 +165,6 @@ class GetAccountSpec
             config.copy(savingsGoalsEnabled = true),
             savingsGoalRepo)
 
-        savingsGoalReturns(nino, None)
-
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
@@ -186,8 +175,6 @@ class GetAccountSpec
     "the savingsGoalsEnabled flag is configured as false" should {
       "return false in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-
-        savingsGoalReturns(nino, None)
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
