@@ -19,34 +19,43 @@ package uk.gov.hmrc.mobilehelptosave.repository
 import cats.instances.future._
 import cats.syntax.functor._
 import javax.inject.Provider
-import play.api.libs.json.Format
+import play.api.libs.json.Json.obj
+import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Want to store something in Mongo indexed against a NINO? Just create the model for the
+  * Want to store something in Mongo indexed against a string value? Just create the model for the
   * data and subclass this handy helper.
   */
-class NinoIndexedMongoRepo[T: Manifest](
+class IndexedMongoRepo[I, V](
   collectionName: String,
+  indexName: String,
   val reactiveMongo: Provider[ReactiveMongoComponent]
-)(implicit ec: ExecutionContext, mongoFormats: Format[T])
-  extends ReactiveRepository[T, BSONObjectID](collectionName, reactiveMongo.get().mongoConnector.db, mongoFormats) {
+)(implicit ec: ExecutionContext, iFormat: Format[I], tFormat: Format[V])
+  extends ReactiveRepository[V, BSONObjectID](collectionName, reactiveMongo.get().mongoConnector.db, tFormat) {
   override def indexes: Seq[Index] = Seq(
-    Index(Seq("nino" -> IndexType.Text), name = Some("ninoIdx"), unique = true, sparse = true)
+    Index(Seq(indexName -> IndexType.Text), name = Some(s"${indexName}Idx"), unique = true, sparse = true)
   )
 
-  def put(t: T): Future[Unit] =
+  def set(indexValue: I, value: V): Future[Unit] = {
+    findAndUpdate(
+      obj(indexName -> indexValue),
+      obj("$set" -> Json.toJson(value)),
+      upsert = true
+    ).void
+  }
+
+  def put(t: V): Future[Unit] =
     insert(t).void
 
-  def get(nino: Nino): Future[Option[T]] =
-    find("nino" -> nino.value).map(_.headOption)
+  def get(indexValue: I): Future[Option[V]] =
+    find(indexName -> indexValue).map(_.headOption)
 
-  def delete(nino: Nino): Future[Unit] =
-    remove("nino" -> nino.value).void
+  def delete(indexValue: I): Future[Unit] =
+    remove(indexName -> indexValue).void
 }

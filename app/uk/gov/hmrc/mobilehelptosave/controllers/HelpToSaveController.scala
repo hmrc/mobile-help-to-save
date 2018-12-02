@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -25,7 +27,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalRepo
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -94,7 +96,7 @@ class HelpToSaveController @Inject()
       Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
     else
       savingsGoalRepo
-        .setGoal(verifiedUserNino, request.body.goalAmount)
+        .set(verifiedUserNino, SavingsGoalMongoModel(verifiedUserNino.nino, request.body.goalAmount, LocalDateTime.now))
         .recover {
           case t => logger.error("error writing savings goal to mongo", t)
         }
@@ -103,8 +105,8 @@ class HelpToSaveController @Inject()
 
   def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(config.shuttering, nino) {
-        savingsGoalRepo.delete(_).map(_ => NoContent)
+      verifyingMatchingNino(config.shuttering, nino) { nino =>
+        savingsGoalRepo.delete(nino).map(_ => NoContent)
       }
     }
 }

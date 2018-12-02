@@ -47,7 +47,7 @@ class SavingsGoalSpec
         val request = FakeRequest().withBody(SavingsGoal(amount))
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        setSavingsGoalExpects(nino.value, amount)
+        setSavingsGoalExpects(nino, amount)
         val resultF = controller.putSavingsGoal(nino.value)(request)
 
         status(resultF) shouldBe 204

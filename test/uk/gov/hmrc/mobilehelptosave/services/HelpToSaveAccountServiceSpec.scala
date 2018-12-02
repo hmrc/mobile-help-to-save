@@ -132,7 +132,7 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
       nino shouldBe expectedNino
       fUnit
     }
-    override def setGoal(nino: Nino, value: Double): Future[Unit] = {
+    override def set(nino: Nino, savingsGoalMongoModel: SavingsGoalMongoModel): Future[Unit] = {
       nino shouldBe expectedNino
       fUnit
     }
