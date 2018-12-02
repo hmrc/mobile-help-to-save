@@ -29,33 +29,46 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Want to store something in Mongo indexed against a string value? Just create the model for the
+  * Want to store something in Mongo uniquely indexed against a string value? Just create the model for the
   * data and subclass this handy helper.
+  *
+  * @param collectionName the name of the collection that is to be created and used in mongo for this repo
+  * @param indexFieldName the name of the field in documents within the collection that will be used as the index. The
+  *                       index itself will be named at `${indexFieldName}Idx`
+  * @tparam I the type of the index values for the repo
+  * @tparam V the type of the values stored in the repo
+  *
   */
 class IndexedMongoRepo[I, V](
   collectionName: String,
-  indexName: String,
+  indexFieldName: String,
   val reactiveMongo: Provider[ReactiveMongoComponent]
 )(implicit ec: ExecutionContext, iFormat: Format[I], tFormat: Format[V])
   extends ReactiveRepository[V, BSONObjectID](collectionName, reactiveMongo.get().mongoConnector.db, tFormat) {
+
   override def indexes: Seq[Index] = Seq(
-    Index(Seq(indexName -> IndexType.Text), name = Some(s"${indexName}Idx"), unique = true, sparse = true)
+    Index(Seq(indexFieldName -> IndexType.Text), name = Some(s"${indexFieldName}Idx"), unique = true, sparse = true)
   )
 
+  /**
+    * Insert or update a document with the values from `value`. The `indexValue` will be used to check if there is
+    * already a document stored against the index. If so, this function will update it, and if not a new document
+    * will be inserted.
+    *
+    * The document itself may or may not contain a field matching the index value. If it does have such a field then
+    * it's value should match the `indexValue` or bad things are likely to happen.
+    */
   def set(indexValue: I, value: V): Future[Unit] = {
     findAndUpdate(
-      obj(indexName -> indexValue),
+      obj(indexFieldName -> indexValue),
       obj("$set" -> Json.toJson(value)),
       upsert = true
     ).void
   }
 
-  def put(t: V): Future[Unit] =
-    insert(t).void
-
   def get(indexValue: I): Future[Option[V]] =
-    find(indexName -> indexValue).map(_.headOption)
+    find(indexFieldName -> indexValue).map(_.headOption)
 
   def delete(indexValue: I): Future[Unit] =
-    remove(indexName -> indexValue).void
+    remove(indexFieldName -> indexValue).void
 }

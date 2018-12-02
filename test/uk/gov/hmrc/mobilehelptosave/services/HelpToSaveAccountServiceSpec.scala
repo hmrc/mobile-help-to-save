@@ -128,10 +128,6 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   private val fUnit = Future.successful(())
 
   private def fakeSavingsGoalRepo(expectedNino: Nino, goalOrException: Either[Throwable, Option[SavingsGoalMongoModel]]): SavingsGoalRepo = new SavingsGoalRepo {
-    override def put(savingsGoal: SavingsGoalMongoModel): Future[Unit] = {
-      nino shouldBe expectedNino
-      fUnit
-    }
     override def set(nino: Nino, savingsGoalMongoModel: SavingsGoalMongoModel): Future[Unit] = {
       nino shouldBe expectedNino
       fUnit
