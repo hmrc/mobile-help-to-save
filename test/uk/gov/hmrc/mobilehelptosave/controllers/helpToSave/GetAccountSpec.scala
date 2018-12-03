@@ -64,7 +64,7 @@ class GetAccountSpec
         val accountData = controller.getAccount(nino.value)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
-        jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = config.savingsGoalsEnabled))
+        jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount)
       }
     }
 
@@ -149,37 +149,6 @@ class GetAccountSpec
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
         (jsonBody \ "title").as[String] shouldBe "Shuttered"
         (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
-      }
-    }
-
-    "the savingsGoalsEnabled flag configured as true" should {
-      "return true in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
-        accountReturns(Right(Some(mobileHelpToSaveAccount)))
-
-        override val controller =
-          new HelpToSaveController(
-            logger,
-            accountService,
-            helpToSaveGetTransactions,
-            new AlwaysAuthorisedWithIds(nino),
-            config.copy(savingsGoalsEnabled = true),
-            savingsGoalRepo)
-
-        val accountData = controller.getAccount(nino.value)(FakeRequest())
-        status(accountData) shouldBe OK
-        val jsonBody = contentAsJson(accountData)
-        (jsonBody \ "savingsGoalsEnabled").as[Boolean] shouldBe true
-      }
-    }
-
-    "the savingsGoalsEnabled flag is configured as false" should {
-      "return false in the Account" in new AuthorisedTestScenario with HelpToSaveMocking {
-        accountReturns(Right(Some(mobileHelpToSaveAccount)))
-
-        val accountData = controller.getAccount(nino.value)(FakeRequest())
-        status(accountData) shouldBe OK
-        val jsonBody = contentAsJson(accountData)
-        (jsonBody \ "savingsGoalsEnabled").as[Boolean] shouldBe false
       }
     }
   }

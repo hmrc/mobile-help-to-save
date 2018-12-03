@@ -49,28 +49,30 @@ class HelpToSaveAccountService @Inject()(
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
       case true =>
-        // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
-        // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
-        // in parallel.
-        EitherT {
-          (
-            fetchSavingsGoal(nino),
-            fetchNSAndIAccount(nino)
-          ).mapN {
-            case (Right(goal), Right(Some(account))) =>
-              val savingsGoal = goal.map(t => SavingsGoal(t.amount))
-              Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
-
-            case (_, Left(errorInfo)) => errorInfo.asLeft
-            case (Left(errorInfo), _) => errorInfo.asLeft
-
-            case (_, Right(None)) => None.asRight
-          }
-        }
+        EitherT(fetchAccountAndGoal(nino))
 
       case false =>
         EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
     }.value
+
+  private def fetchAccountAndGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] = {
+    // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
+    // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
+    // in parallel.
+    (
+      fetchSavingsGoal(nino),
+      fetchNSAndIAccount(nino)
+    ).mapN {
+      case (Right(goal), Right(Some(account))) =>
+        val savingsGoal = goal.map(t => SavingsGoal(t.amount))
+        Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
+
+      case (_, Left(errorInfo)) => errorInfo.asLeft
+      case (Left(errorInfo), _) => errorInfo.asLeft
+
+      case (_, Right(None)) => None.asRight
+    }
+  }
 
   private def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
     EitherT(helpToSaveGetAccount.getAccount(nino)).map {
