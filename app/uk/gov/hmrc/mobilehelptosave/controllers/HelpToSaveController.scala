@@ -96,7 +96,7 @@ class HelpToSaveController @Inject()
       Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
     else
       savingsGoalRepo
-        .set(verifiedUserNino, SavingsGoalMongoModel(verifiedUserNino.nino, request.body.goalAmount, LocalDateTime.now))
+        .setGoal(SavingsGoalMongoModel(verifiedUserNino, request.body.goalAmount, LocalDateTime.now))
         .recover {
           case t => logger.error("error writing savings goal to mongo", t)
         }

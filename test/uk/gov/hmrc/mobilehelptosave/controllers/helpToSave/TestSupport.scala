@@ -92,8 +92,8 @@ trait TestSupport {
     }
 
     def setSavingsGoalExpects(expectedNino: Nino, expectedAmount: Double) = {
-      (savingsGoalRepo.set(_: Nino, _: SavingsGoalMongoModel))
-        .expects(where { (nino, model) => nino == expectedNino && model.nino == expectedNino.nino && model.amount == expectedAmount })
+      (savingsGoalRepo.setGoal(_: SavingsGoalMongoModel))
+        .expects(where { model: SavingsGoalMongoModel => model.nino == expectedNino && model.amount == expectedAmount })
         .returning(Future.successful(()))
     }
 

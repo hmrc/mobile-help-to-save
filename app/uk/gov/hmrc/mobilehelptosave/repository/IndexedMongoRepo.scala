@@ -51,16 +51,19 @@ class IndexedMongoRepo[I, V](
   )
 
   /**
-    * Insert or update a document with the values from `value`. The `indexValue` will be used to check if there is
-    * already a document stored against the index. If so, this function will update it, and if not a new document
-    * will be inserted.
+    * Insert or update a document with the values from `value`. It is likely that subclasses would want to
+    * provide a more specific method to insert/update values and translate to this call so that end users
+    * don't need to provide the `indexOf` function on each call. E.g.
     *
-    * The document itself may or may not contain a field matching the index value. If it does have such a field then
-    * it's value should match the `indexValue` or bad things are likely to happen.
+    *   `def setFoo(f:Foo):Future[Unit] = set(f)(_.index)`
+    *
+    * @param value   the value to insert or update in the collection
+    * @param indexOf a function to extract the index value from the value being saved. If `V` contains the index
+    *                then this is probably just a function to extract that index value.
     */
-  def set(indexValue: I, value: V): Future[Unit] = {
+  def set(value: V)(indexOf: V => I): Future[Unit] = {
     findAndUpdate(
-      obj(indexFieldName -> indexValue),
+      obj(indexFieldName -> indexOf(value)),
       obj("$set" -> Json.toJson(value)),
       upsert = true
     ).void

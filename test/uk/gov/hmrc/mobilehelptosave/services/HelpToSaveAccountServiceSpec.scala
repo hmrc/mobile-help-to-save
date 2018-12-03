@@ -79,6 +79,25 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
       (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
     }
 
+    "not call either fetchSavingsGoal or fetchNSAndIAccount if the user isn't enrolled" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
+
+      val fakeGetAccount = new HelpToSaveGetAccount {
+        override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
+          fail("getAccount should not have been called")
+      }
+
+      val fakeGoalRepo = new SavingsGoalRepo {
+        override def setGoal(savingsGoal: SavingsGoalMongoModel): Future[Unit] = fail("setGoal should not have been called")
+        override def get(nino: Nino): Future[Option[SavingsGoalMongoModel]] = fail("get should not have been called")
+        override def delete(nino: Nino): Future[Unit] = fail("delete should not have been called")
+      }
+
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo)
+
+      await(service.account(nino)) shouldBe Right(None)
+    }
+
     "return errors returned by connector.enrolmentStatus" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Left(ErrorInfo.General))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
@@ -104,16 +123,16 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
     }
   }
 
-  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus = new HelpToSaveEnrolmentStatus {
+  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus =
+    new HelpToSaveEnrolmentStatus {
+      override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+        nino shouldBe expectedNino
+        hc shouldBe passedHc
+        ec shouldBe passedEc
 
-    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
-      nino shouldBe expectedNino
-      hc shouldBe passedHc
-      ec shouldBe passedEc
-
-      Future successful enrolledOrError
+        Future successful enrolledOrError
+      }
     }
-  }
 
   private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount = new HelpToSaveGetAccount {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
@@ -128,7 +147,7 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   private val fUnit = Future.successful(())
 
   private def fakeSavingsGoalRepo(expectedNino: Nino, goalOrException: Either[Throwable, Option[SavingsGoalMongoModel]]): SavingsGoalRepo = new SavingsGoalRepo {
-    override def set(nino: Nino, savingsGoalMongoModel: SavingsGoalMongoModel): Future[Unit] = {
+    override def setGoal(savingsGoalMongoModel: SavingsGoalMongoModel): Future[Unit] = {
       nino shouldBe expectedNino
       fUnit
     }

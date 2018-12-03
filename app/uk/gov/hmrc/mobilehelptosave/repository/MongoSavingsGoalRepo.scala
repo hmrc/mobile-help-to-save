@@ -23,9 +23,9 @@ import play.api.libs.json.{Format, Json, OWrites, Reads}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.domain.Nino
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-case class SavingsGoalMongoModel(nino: String, amount: Double, createdAt: LocalDateTime)
+case class SavingsGoalMongoModel(nino: Nino, amount: Double, createdAt: LocalDateTime)
 
 object SavingsGoalMongoModel {
   implicit val reads : Reads[SavingsGoalMongoModel]   = Json.reads[SavingsGoalMongoModel]
@@ -40,4 +40,7 @@ class MongoSavingsGoalRepo @Inject()(
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalMongoModel])
   extends IndexedMongoRepo[Nino, SavingsGoalMongoModel]("savingsGoals", "nino", reactiveMongo)
-    with SavingsGoalRepo
+    with SavingsGoalRepo {
+
+  override def setGoal(savingsGoal: SavingsGoalMongoModel): Future[Unit] = set(savingsGoal)(_.nino)
+}
