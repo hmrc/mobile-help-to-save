@@ -108,7 +108,7 @@ class HelpToSaveAccountServiceSpec
       }
 
       val fakeGoalRepo = new SavingsGoalRepo {
-        override def setGoal(savingsGoal: SavingsGoalMongoModel): Future[Unit] = fail("setGoal should not have been called")
+        override def setGoal(nino: Nino, amount: Double): Future[Unit] = fail("setGoal should not have been called")
         override def get(nino: Nino): Future[Option[SavingsGoalMongoModel]] = fail("get should not have been called")
         override def delete(nino: Nino): Future[Unit] = fail("delete should not have been called")
       }
@@ -167,7 +167,7 @@ class HelpToSaveAccountServiceSpec
   private val fUnit = Future.successful(())
 
   private def fakeSavingsGoalRepo(expectedNino: Nino, goalOrException: Either[Throwable, Option[SavingsGoalMongoModel]]): SavingsGoalRepo = new SavingsGoalRepo {
-    override def setGoal(savingsGoalMongoModel: SavingsGoalMongoModel): Future[Unit] = {
+    override def setGoal(nino: Nino, amount: Double): Future[Unit] = {
       nino shouldBe expectedNino
       fUnit
     }

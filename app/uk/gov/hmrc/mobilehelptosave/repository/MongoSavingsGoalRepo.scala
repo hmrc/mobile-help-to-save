@@ -42,5 +42,5 @@ class MongoSavingsGoalRepo @Inject()(
   extends IndexedMongoRepo[Nino, SavingsGoalMongoModel]("savingsGoals", "nino", reactiveMongo)
     with SavingsGoalRepo {
 
-  override def setGoal(savingsGoal: SavingsGoalMongoModel): Future[Unit] = set(savingsGoal)(_.nino)
+  override def setGoal(nino: Nino, amount: Double): Future[Unit] = set(SavingsGoalMongoModel(nino, amount, LocalDateTime.now))(_.nino)
 }

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import java.time.LocalDateTime
-
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -27,7 +25,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalRepo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -95,7 +93,7 @@ class HelpToSaveController @Inject()
       Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
     else
       savingsGoalRepo
-        .setGoal(SavingsGoalMongoModel(verifiedUserNino, request.body.goalAmount, LocalDateTime.now))
+        .setGoal(verifiedUserNino, request.body.goalAmount)
         .recover {
           case t => logger.error("error writing savings goal to mongo", t)
         }
