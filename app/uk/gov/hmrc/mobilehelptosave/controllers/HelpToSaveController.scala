@@ -102,8 +102,8 @@ class HelpToSaveController @Inject()
 
   def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(config.shuttering, nino) { nino =>
-        savingsGoalRepo.delete(nino).map(_ => NoContent)
+      verifyingMatchingNino(config.shuttering, nino) {
+        savingsGoalRepo.delete(_).map(_ => NoContent)
       }
     }
 }
