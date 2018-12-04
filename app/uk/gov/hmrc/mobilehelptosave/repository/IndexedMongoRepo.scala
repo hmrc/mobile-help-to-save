@@ -61,17 +61,10 @@ class IndexedMongoRepo[I, V: Manifest](
     *                then this is probably just a function to extract that index value.
     */
   def set(value: V)(indexOf: V => I)(implicit ec: ExecutionContext): Future[Unit] = {
-    val indexValue = Json.toJson(indexOf(value))
-    val lookup: BSONDocument = BSONDocument(indexFieldName -> indexValue)
-    val modifier: BSONDocument = BSONDocument("$set" -> Json.toJson(value))
-    atomicUpdate(lookup, modifier).void
-
-    //    findAndUpdate(
-    //      obj(indexFieldName -> indexOf(lookup)),
-    //      obj("$set" -> Json.toJson(lookup)),
-    //      upsert = true
-    //    ).void
-
+    atomicUpdate(
+      BSONDocument(indexFieldName -> Json.toJson(indexOf(value))),
+      BSONDocument("$set" -> Json.toJson(value))
+    ).void
   }
 
   override def isInsertion(newRecordId: BSONObjectID, oldRecord: V): Boolean = false
