@@ -10,7 +10,7 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
   )
 
-  private val reactiveMongoVersion = "6.1.0"
+  private val reactiveMongoVersion = "6.2.0"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
