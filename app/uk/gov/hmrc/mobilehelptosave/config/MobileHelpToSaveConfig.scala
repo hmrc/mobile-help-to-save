@@ -117,5 +117,4 @@ trait StartupControllerConfig {
 @ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
-  def savingsGoalsEnabled: Boolean
 }

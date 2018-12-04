@@ -32,6 +32,7 @@ object AppDependencies {
 
   def testCommon(scope: String): Seq[ModuleID] = Seq(
     "org.scalatest" %% "scalatest" % "3.0.5" % scope,
+    "org.scalacheck" %% "scalacheck" % "1.14.0" % scope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,
     "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,

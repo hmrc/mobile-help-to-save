@@ -67,11 +67,10 @@ class HelpToSaveController @Inject()
       accountService.account(nino).map {
         case Left(errorInfo)      => InternalServerError(Json.toJson(errorInfo))
         case Right(None)          => AccountNotFound
-        case Right(Some(account)) => Ok(Json.toJson(account.copy(savingsGoalsEnabled = config.savingsGoalsEnabled)))
+        case Right(Some(account)) => Ok(Json.toJson(account))
       }
     }
   }
-
 
   def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>

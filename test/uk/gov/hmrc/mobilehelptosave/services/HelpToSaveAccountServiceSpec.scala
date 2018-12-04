@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -31,10 +32,16 @@ import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
 import scala.concurrent.{ExecutionContext, Future}
 
-class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout
-  with AccountTestData
-  with MockFactory with OneInstancePerTest with LoggerStub {
+class HelpToSaveAccountServiceSpec
+  extends WordSpec
+    with Matchers
+    with GeneratorDrivenPropertyChecks
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with AccountTestData
+    with MockFactory
+    with OneInstancePerTest
+    with LoggerStub {
 
   private val generator  = new Generator(0)
   private val nino       = generator.nextNino
@@ -49,6 +56,19 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
       val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
       val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo)
       await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
+    }
+
+    "fold the value of the 'savingsGoalEnabled' config into the returned account" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
+
+      forAll { enabled: Boolean =>
+        val config = testConfig.copy(savingsGoalsEnabled = enabled)
+        val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, config, fakeGoalRepo)
+
+        await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = enabled)))
+      }
     }
 
     "allow inAppPaymentsEnabled to be overridden with configuration" in {
@@ -79,6 +99,25 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
       (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
     }
 
+    "not call either fetchSavingsGoal or fetchNSAndIAccount if the user isn't enrolled" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
+
+      val fakeGetAccount = new HelpToSaveGetAccount {
+        override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
+          fail("getAccount should not have been called")
+      }
+
+      val fakeGoalRepo = new SavingsGoalRepo {
+        override def setGoal(nino: Nino, amount: Double): Future[Unit] = fail("setGoal should not have been called")
+        override def get(nino: Nino): Future[Option[SavingsGoalMongoModel]] = fail("get should not have been called")
+        override def delete(nino: Nino): Future[Unit] = fail("delete should not have been called")
+      }
+
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo)
+
+      await(service.account(nino)) shouldBe Right(None)
+    }
+
     "return errors returned by connector.enrolmentStatus" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Left(ErrorInfo.General))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
@@ -104,16 +143,16 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
     }
   }
 
-  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus = new HelpToSaveEnrolmentStatus {
+  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus =
+    new HelpToSaveEnrolmentStatus {
+      override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+        nino shouldBe expectedNino
+        hc shouldBe passedHc
+        ec shouldBe passedEc
 
-    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
-      nino shouldBe expectedNino
-      hc shouldBe passedHc
-      ec shouldBe passedEc
-
-      Future successful enrolledOrError
+        Future successful enrolledOrError
+      }
     }
-  }
 
   private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount = new HelpToSaveGetAccount {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
@@ -128,11 +167,7 @@ class HelpToSaveAccountServiceSpec extends WordSpec with Matchers
   private val fUnit = Future.successful(())
 
   private def fakeSavingsGoalRepo(expectedNino: Nino, goalOrException: Either[Throwable, Option[SavingsGoalMongoModel]]): SavingsGoalRepo = new SavingsGoalRepo {
-    override def put(savingsGoal: SavingsGoalMongoModel): Future[Unit] = {
-      nino shouldBe expectedNino
-      fUnit
-    }
-    override def setGoal(nino: Nino, value: Double): Future[Unit] = {
+    override def setGoal(nino: Nino, amount: Double): Future[Unit] = {
       nino shouldBe expectedNino
       fUnit
     }

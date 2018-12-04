@@ -34,9 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[HelpToSaveAccountService])
 trait AccountService {
-
   def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]]
-
 }
 
 @Singleton
@@ -48,7 +46,16 @@ class HelpToSaveAccountService @Inject()(
   savingsGoalRepo: SavingsGoalRepo
 ) extends AccountService {
 
-  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] = {
+  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
+    EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
+      case true =>
+        EitherT(fetchAccountAndGoal(nino))
+
+      case false =>
+        EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
+    }.value
+
+  private def fetchAccountAndGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] = {
     // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
     // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
     // in parallel.
@@ -68,18 +75,12 @@ class HelpToSaveAccountService @Inject()(
   }
 
   private def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
-    EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
-      case true =>
-        EitherT(helpToSaveGetAccount.getAccount(nino)).map {
-          case Some(helpToSaveAccount) =>
-            Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger))
-          case None                    =>
-            logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
-            None
-        }
-
-      case false =>
-        EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
+    EitherT(helpToSaveGetAccount.getAccount(nino)).map {
+      case Some(helpToSaveAccount) =>
+        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger))
+      case None                    =>
+        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+        None
     }.value
 
 
