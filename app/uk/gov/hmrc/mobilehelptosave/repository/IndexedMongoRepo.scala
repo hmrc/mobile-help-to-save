@@ -18,13 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import cats.instances.future._
 import cats.syntax.functor._
-import javax.inject.Provider
-import play.api.libs.json.Json.obj
 import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.ReactiveRepository
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,12 +38,12 @@ import scala.concurrent.{ExecutionContext, Future}
   * @tparam V the type of the values stored in the repo
   *
   */
-class IndexedMongoRepo[I, V](
+class IndexedMongoRepo[I, V: Manifest](
   collectionName: String,
   indexFieldName: String,
-  val reactiveMongo: Provider[ReactiveMongoComponent]
+  mongo: ReactiveMongoComponent
 )(implicit ec: ExecutionContext, iFormat: Format[I], tFormat: Format[V])
-  extends ReactiveRepository[V, BSONObjectID](collectionName, reactiveMongo.get().mongoConnector.db, tFormat) {
+  extends ReactiveRepository[V, BSONObjectID](collectionName, mongo.mongoConnector.db, tFormat) with AtomicUpdate[V] {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(indexFieldName -> IndexType.Text), name = Some(s"${indexFieldName}Idx"), unique = true, sparse = true)
@@ -55,19 +54,27 @@ class IndexedMongoRepo[I, V](
     * provide a more specific method to insert/update values and translate to this call so that end users
     * don't need to provide the `indexOf` function on each call. E.g.
     *
-    *   `def setFoo(f:Foo):Future[Unit] = set(f)(_.index)`
+    * `def setFoo(f:Foo):Future[Unit] = set(f)(_.index)`
     *
     * @param value   the value to insert or update in the collection
     * @param indexOf a function to extract the index value from the value being saved. If `V` contains the index
     *                then this is probably just a function to extract that index value.
     */
-  def set(value: V)(indexOf: V => I): Future[Unit] = {
-    findAndUpdate(
-      obj(indexFieldName -> indexOf(value)),
-      obj("$set" -> Json.toJson(value)),
-      upsert = true
-    ).void
+  def set(value: V)(indexOf: V => I)(implicit ec: ExecutionContext): Future[Unit] = {
+    val indexValue = Json.toJson(indexOf(value))
+    val lookup: BSONDocument = BSONDocument(indexFieldName -> indexValue)
+    val modifier: BSONDocument = BSONDocument("$set" -> Json.toJson(value))
+    atomicUpdate(lookup, modifier).void
+
+    //    findAndUpdate(
+    //      obj(indexFieldName -> indexOf(lookup)),
+    //      obj("$set" -> Json.toJson(lookup)),
+    //      upsert = true
+    //    ).void
+
   }
+
+  override def isInsertion(newRecordId: BSONObjectID, oldRecord: V): Boolean = false
 
   def get(indexValue: I): Future[Option[V]] =
     find(indexFieldName -> indexValue).map(_.headOption)
