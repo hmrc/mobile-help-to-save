@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
 
-import javax.inject.{Inject, Provider}
+import javax.inject.Inject
 import play.api.libs.json.{Format, Json, OWrites, Reads}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.domain.Nino
@@ -36,10 +36,10 @@ object SavingsGoalMongoModel {
 }
 
 class MongoSavingsGoalRepo @Inject()(
-  override val reactiveMongo: Provider[ReactiveMongoComponent]
+  mongo: ReactiveMongoComponent
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalMongoModel])
-  extends IndexedMongoRepo[Nino, SavingsGoalMongoModel]("savingsGoals", "nino", reactiveMongo)
+  extends IndexedMongoRepo[Nino, SavingsGoalMongoModel]("savingsGoals", "nino", mongo)
     with SavingsGoalRepo {
 
   override def setGoal(nino: Nino, amount: Double): Future[Unit] = set(SavingsGoalMongoModel(nino, amount, LocalDateTime.now))(_.nino)
