@@ -40,7 +40,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class IndexedMongoRepo[I, V: Manifest](
   collectionName: String,
-  indexFieldName: String,
+  val indexFieldName: String,
   mongo: ReactiveMongoComponent
 )(implicit ec: ExecutionContext, iFormat: Format[I], tFormat: Format[V])
   extends ReactiveRepository[V, BSONObjectID](collectionName, mongo.mongoConnector.db, tFormat) with AtomicUpdate[V] {

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import cats.instances.future._
+import cats.syntax.apply._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -25,7 +27,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalRepo
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -46,7 +48,8 @@ class HelpToSaveController @Inject()
   helpToSaveGetTransactions: HelpToSaveGetTransactions,
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig,
-  savingsGoalRepo: SavingsGoalRepo
+  savingsGoalRepo: SavingsGoalRepo,
+  savingsGoalEventRepo: SavingsGoalEventRepo
 )(implicit ec: ExecutionContext) extends BaseController with ControllerChecks with HelpToSaveActions {
 
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
@@ -92,8 +95,9 @@ class HelpToSaveController @Inject()
     if (request.body.goalAmount < 1.0 || request.body.goalAmount > maxGoal)
       Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
     else
-      savingsGoalRepo
-        .setGoal(verifiedUserNino, request.body.goalAmount)
+      (savingsGoalRepo.setGoal(verifiedUserNino, request.body.goalAmount),
+        savingsGoalEventRepo.setGoal(verifiedUserNino, request.body.goalAmount)
+      ).mapN { (_, _) => () }
         .recover {
           case t => logger.error("error writing savings goal to mongo", t)
         }

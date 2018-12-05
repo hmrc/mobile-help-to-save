@@ -24,7 +24,7 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalRepo
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -130,7 +130,15 @@ class GetTransactionsSpec
         val accountService = mock[AccountService]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
         val savingsGoalRepo = mock[SavingsGoalRepo]
-        val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, new AlwaysAuthorisedWithIds(nino), config.copy(shuttering = trueShuttering), savingsGoalRepo)
+        val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
+        val controller = new HelpToSaveController(
+          logger,
+          accountService,
+          helpToSaveGetTransactions,
+          new AlwaysAuthorisedWithIds(nino),
+          config.copy(shuttering = trueShuttering),
+          savingsGoalRepo,
+          savingsGoalEventRepo)
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 521

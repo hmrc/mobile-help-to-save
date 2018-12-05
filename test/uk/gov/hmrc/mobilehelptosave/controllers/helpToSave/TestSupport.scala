@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, Shuttering, Transactions}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalMongoModel, SavingsGoalRepo}
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -52,7 +52,8 @@ trait TestSupport {
     val accountService = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
     val savingsGoalRepo = mock[SavingsGoalRepo]
-    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsGoalRepo)
+    val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
+    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsGoalRepo, savingsGoalEventRepo)
     authorisedActionForNino(controller)
   }
 
@@ -60,6 +61,7 @@ trait TestSupport {
     val accountService            = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
     val savingsGoalRepo           = mock[SavingsGoalRepo]
+    val savingsGoalEventRepo      = mock[SavingsGoalEventRepo]
 
     val controller: HelpToSaveController =
       new HelpToSaveController(
@@ -68,7 +70,8 @@ trait TestSupport {
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
         config,
-        savingsGoalRepo)
+        savingsGoalRepo,
+        savingsGoalEventRepo)
   }
 
   trait HelpToSaveMocking {
@@ -93,6 +96,10 @@ trait TestSupport {
 
     def setSavingsGoalExpects(expectedNino: Nino, expectedAmount: Double) = {
       (savingsGoalRepo.setGoal(_: Nino, _: Double))
+        .expects(where { (nino, amount) => nino == expectedNino && amount == expectedAmount })
+        .returning(Future.successful(()))
+
+      (savingsGoalEventRepo.setGoal(_: Nino, _: Double))
         .expects(where { (nino, amount) => nino == expectedNino && amount == expectedAmount })
         .returning(Future.successful(()))
     }

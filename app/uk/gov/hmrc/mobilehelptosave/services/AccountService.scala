@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalMongoModel, SavingsGoalRepo}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,7 +43,8 @@ class HelpToSaveAccountService @Inject()(
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
   helpToSaveGetAccount: HelpToSaveGetAccount,
   config: AccountServiceConfig,
-  savingsGoalRepo: SavingsGoalRepo
+  savingsGoalRepo: SavingsGoalRepo,
+  savingsGoalEventRepo: SavingsGoalEventRepo
 ) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
