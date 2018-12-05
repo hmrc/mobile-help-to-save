@@ -16,14 +16,18 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import com.google.inject.ImplementedBy
+import java.time.LocalDateTime
+
+import play.api.libs.json.{Format, Json, OWrites, Reads}
 import uk.gov.hmrc.domain.Nino
 
-import scala.concurrent.Future
+case class SavingsGoalRepoModel(nino: Nino, amount: Double, createdAt: LocalDateTime)
 
-@ImplementedBy(classOf[MongoSavingsGoalRepo])
-trait SavingsGoalRepo {
-  def setGoal(nino: Nino, amount:Double): Future[Unit]
-  def get(nino: Nino): Future[Option[SavingsGoalMongoModel]]
-  def delete(nino: Nino): Future[Unit]
+object SavingsGoalRepoModel {
+  implicit val reads : Reads[SavingsGoalRepoModel]   = Json.reads[SavingsGoalRepoModel]
+  implicit val writes: OWrites[SavingsGoalRepoModel] = Json.writes[SavingsGoalRepoModel]
+
+  implicit val format: Format[SavingsGoalRepoModel] =
+    Format(reads, writes)
 }
+

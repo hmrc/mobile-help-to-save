@@ -45,6 +45,7 @@ object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercas
 
 sealed trait SavingsGoalEvent {
   def nino: Nino
+  def date: LocalDateTime
 }
 case class SavingsGoalSetEvent(nino: Nino, amount: Double, date: LocalDateTime) extends SavingsGoalEvent
 case class SavingsGoalDeleteEvent(nino: Nino, date: LocalDateTime) extends SavingsGoalEvent
@@ -60,12 +61,17 @@ object SavingsGoalEvent {
       case ev: SavingsGoalSetEvent    => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
       case ev: SavingsGoalDeleteEvent => deleteEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Delete))
     }
+
     override def reads(json: JsValue): JsResult[SavingsGoalEvent] = {
       typeReads.reads(json) match {
-        case JsSuccess(SavingsGoalEventType.Set, _)    => setEventFormat.reads(json)
-        case JsSuccess(SavingsGoalEventType.Delete, _) => deleteEventFormat.reads(json)
-        case error: JsError                            => error
+        case JsSuccess(ev, _) => readEvent(ev, json)
+        case error: JsError   => error
       }
+    }
+
+    private def readEvent(ev: SavingsGoalEventType, json: JsValue): JsResult[SavingsGoalEvent] = ev match {
+      case SavingsGoalEventType.Set    => setEventFormat.reads(json)
+      case SavingsGoalEventType.Delete => deleteEventFormat.reads(json)
     }
   }
 }
@@ -77,11 +83,16 @@ trait SavingsGoalEventRepo {
   def getEvents(nino: Nino): Future[List[SavingsGoalEvent]]
 }
 
+case class SavingsGoalEventsModel(nino: Nino, events: List[SavingsGoalEvent])
+object SavingsGoalEventsModel {
+  implicit val format: OFormat[SavingsGoalEventsModel] = Json.format
+}
+
 class MongoSavingsGoalEventRepo @Inject()(
   mongo: ReactiveMongoComponent
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])
-  extends IndexedMongoRepo[Nino, List[SavingsGoalEvent]]("savingsGoalEvents", "nino", mongo)
+  extends IndexedMongoRepo[Nino, SavingsGoalEventsModel]("savingsGoalEvents", "nino", mongo)
     with SavingsGoalEventRepo {
 
   override def setGoal(nino: Nino, amount: Double): Future[Unit] =
@@ -99,7 +110,7 @@ class MongoSavingsGoalEventRepo @Inject()(
 
   override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
     get(nino).map {
-      case Some(events) => events
-      case None         => List()
+      case Some(eventModel) => eventModel.events
+      case None             => List()
     }
 }

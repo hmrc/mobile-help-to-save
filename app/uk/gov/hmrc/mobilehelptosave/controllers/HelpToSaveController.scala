@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import cats.instances.future._
-import cats.syntax.apply._
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
@@ -27,7 +25,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -48,7 +46,6 @@ class HelpToSaveController @Inject()
   helpToSaveGetTransactions: HelpToSaveGetTransactions,
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig,
-  savingsGoalRepo: SavingsGoalRepo,
   savingsGoalEventRepo: SavingsGoalEventRepo
 )(implicit ec: ExecutionContext) extends BaseController with ControllerChecks with HelpToSaveActions {
 
@@ -95,9 +92,7 @@ class HelpToSaveController @Inject()
     if (request.body.goalAmount < 1.0 || request.body.goalAmount > maxGoal)
       Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
     else
-      (savingsGoalRepo.setGoal(verifiedUserNino, request.body.goalAmount),
-        savingsGoalEventRepo.setGoal(verifiedUserNino, request.body.goalAmount)
-      ).mapN { (_, _) => () }
+      savingsGoalEventRepo.setGoal(verifiedUserNino, request.body.goalAmount)
         .recover {
           case t => logger.error("error writing savings goal to mongo", t)
         }
@@ -106,8 +101,8 @@ class HelpToSaveController @Inject()
 
   def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(config.shuttering, nino) {
-        savingsGoalRepo.delete(_).map(_ => NoContent)
+      verifyingMatchingNino(config.shuttering, nino) { verifiedNino =>
+        savingsGoalEventRepo.deleteGoal(verifiedNino).map(_ => NoContent)
       }
     }
 }

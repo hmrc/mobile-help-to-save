@@ -26,7 +26,7 @@ import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
@@ -53,21 +53,19 @@ class HelpToSaveAccountServiceSpec
     "convert the account from the help-to-save domain to the mobile-help-to-save domain" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
     }
 
     "fold the value of the 'savingsGoalEnabled' config into the returned account" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       forAll { enabled: Boolean =>
         val config = testConfig.copy(savingsGoalsEnabled = enabled)
-        val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, config, fakeGoalRepo, savingsGoalEventRepo)
+        val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, config, savingsGoalEventRepo)
 
         await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = enabled)))
       }
@@ -76,18 +74,16 @@ class HelpToSaveAccountServiceSpec
     "allow inAppPaymentsEnabled to be overridden with configuration" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig.copy(inAppPaymentsEnabled = true), fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig.copy(inAppPaymentsEnabled = true), savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(inAppPaymentsEnabled = true, savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
     }
 
     // this is to avoid unnecessary load on NS&I, see NGC-3799
     "return None without attempting to get account from help-to-save when the user is not enrolled" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, ShouldNotBeCalledGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, ShouldNotBeCalledGetAccount, testConfig, savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Right(None)
 
       (slf4jLoggerStub.warn(_: String)) verify * never()
@@ -96,9 +92,8 @@ class HelpToSaveAccountServiceSpec
     "return None and log a warning when user is enrolled according to help-to-save but no account exists in NS&I" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(None))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Right(None)
 
       (slf4jLoggerStub.warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
@@ -112,15 +107,9 @@ class HelpToSaveAccountServiceSpec
           fail("getAccount should not have been called")
       }
 
-      val fakeGoalRepo = new SavingsGoalRepo {
-        override def setGoal(nino: Nino, amount: Double): Future[Unit] = fail("setGoal should not have been called")
-        override def get(nino: Nino): Future[Option[SavingsGoalMongoModel]] = fail("get should not have been called")
-        override def delete(nino: Nino): Future[Unit] = fail("delete should not have been called")
-      }
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
 
       await(service.account(nino)) shouldBe Right(None)
     }
@@ -128,27 +117,24 @@ class HelpToSaveAccountServiceSpec
     "return errors returned by connector.enrolmentStatus" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Left(ErrorInfo.General))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
     }
 
     "return errors returned by connector.getAccount" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Left(ErrorInfo.General))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Right(None))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
     }
 
     "return errors if savingsGoalRepo.get throws exception" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
-      val fakeGoalRepo = fakeSavingsGoalRepo(nino, Left(new Exception("test exception")))
-      val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, fakeGoalRepo, savingsGoalEventRepo)
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Left(new Exception("test exception")))
+      val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
       await(service.account(nino)) shouldBe Left(ErrorInfo.General)
     }
   }
@@ -176,25 +162,26 @@ class HelpToSaveAccountServiceSpec
 
   private val fUnit = Future.successful(())
 
-  private def fakeSavingsGoalRepo(expectedNino: Nino, goalOrException: Either[Throwable, Option[SavingsGoalMongoModel]]): SavingsGoalRepo = new SavingsGoalRepo {
-    override def setGoal(nino: Nino, amount: Double): Future[Unit] = {
-      nino shouldBe expectedNino
-      fUnit
-    }
+  private def fakeSavingsGoalEventsRepo(expectedNino: Nino, goalsOrException: Either[Throwable, List[SavingsGoalEvent]]): SavingsGoalEventRepo =
+    new SavingsGoalEventRepo {
+      override def setGoal(nino: Nino, amount: Double): Future[Unit] = {
+        nino shouldBe expectedNino
+        fUnit
+      }
 
-    override def get(nino: Nino): Future[Option[SavingsGoalMongoModel]] = {
-      nino shouldBe expectedNino
-      goalOrException match {
-        case Left(t)     => Future.failed(t)
-        case Right(goal) => Future.successful(goal)
+      override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] = {
+        nino shouldBe expectedNino
+        goalsOrException match {
+          case Left(t)     => Future.failed(t)
+          case Right(goal) => Future.successful(goal)
+        }
+      }
+
+      override def deleteGoal(nino: Nino): Future[Unit] = {
+        nino shouldBe expectedNino
+        fUnit
       }
     }
-
-    override def delete(nino: Nino): Future[Unit] = {
-      nino shouldBe expectedNino
-      fUnit
-    }
-  }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
 
