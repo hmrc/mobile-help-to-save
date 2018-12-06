@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,6 +38,7 @@ class SavingsGoalsISpec
     with FutureAwaits
     with DefaultAwaitTimeout
     with WireMockSupport
+    with MongoSupport
     with OptionValues
     with OneServerPerSuiteWsClient
     with NumberVerification {
@@ -53,7 +54,7 @@ class SavingsGoalsISpec
     val savingsGoal2 = SavingsGoal(30)
     val validGoalJson2 = Json.toJson(savingsGoal2)
 
-    "respond with 204" in {
+    "respond with 204 when putting a goal" in {
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
       AuthStub.userIsLoggedIn(nino)
