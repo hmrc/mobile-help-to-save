@@ -14,6 +14,9 @@
                 "type": "string",
                 "const": "set"
               },
+              "nino": {
+                "type": "string"
+              },
               "amount": {
                 "type": "number"
               },
@@ -28,6 +31,9 @@
               "type": {
                 "type": "string",
                 "const": "delete"
+              },
+              "nino": {
+                "type": "string"
               },
               "date": {
                 "type": "string"
