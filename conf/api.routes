@@ -6,3 +6,5 @@ GET           /savings-account/:nino                           uk.gov.hmrc.mobil
 
 PUT           /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino:String)
 DELETE        /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino:String)
+
+GET           /savings-account/:nino/goals/events              uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getSavingsGoalsEvents(nino:String)

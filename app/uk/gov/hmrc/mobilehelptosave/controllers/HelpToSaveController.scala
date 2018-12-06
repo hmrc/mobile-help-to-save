@@ -105,4 +105,11 @@ class HelpToSaveController @Inject()
         savingsGoalEventRepo.deleteGoal(verifiedNino).map(_ => NoContent)
       }
     }
+
+  def getSavingsGoalsEvents(nino: String): Action[AnyContent] =
+    authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+      verifyingMatchingNino(config.shuttering, nino) { verifiedNino =>
+        savingsGoalEventRepo.getEvents(verifiedNino).map(events => Ok(Json.toJson(events)))
+      }
+    }
 }
