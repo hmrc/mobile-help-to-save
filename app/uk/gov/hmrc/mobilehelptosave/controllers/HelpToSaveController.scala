@@ -36,6 +36,7 @@ trait HelpToSaveActions {
   def getAccount(ninoString: String): Action[AnyContent]
   def putSavingsGoal(ninoString: String): Action[SavingsGoal]
   def deleteSavingsGoal(ninoString: String): Action[AnyContent]
+  def getSavingsGoalsEvents(nino: String): Action[AnyContent]
 }
 
 @Singleton
@@ -51,7 +52,7 @@ class HelpToSaveController @Inject()
 
   private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
 
-  def getTransactions(ninoString: String): Action[AnyContent] =
+  override def getTransactions(ninoString: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
       verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
         helpToSaveGetTransactions.getTransactions(verifiedUserNino).map {
@@ -62,7 +63,7 @@ class HelpToSaveController @Inject()
       }
     }
 
-  def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+  override def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     verifyingMatchingNino(config.shuttering, ninoString) { nino =>
       accountService.account(nino).map {
         case Left(errorInfo)      => InternalServerError(Json.toJson(errorInfo))
@@ -72,7 +73,7 @@ class HelpToSaveController @Inject()
     }
   }
 
-  def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
+  override def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
       verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
         accountService.account(verifiedUserNino).flatMap {
@@ -99,14 +100,14 @@ class HelpToSaveController @Inject()
         .map(_ => NoContent)
   }
 
-  def deleteSavingsGoal(nino: String): Action[AnyContent] =
+  override def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
       verifyingMatchingNino(config.shuttering, nino) { verifiedNino =>
         savingsGoalEventRepo.deleteGoal(verifiedNino).map(_ => NoContent)
       }
     }
 
-  def getSavingsGoalsEvents(nino: String): Action[AnyContent] =
+  override def getSavingsGoalsEvents(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
       verifyingMatchingNino(config.shuttering, nino) { verifiedNino =>
         savingsGoalEventRepo.getEvents(verifiedNino).map(events => Ok(Json.toJson(events)))

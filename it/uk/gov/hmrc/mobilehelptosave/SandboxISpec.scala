@@ -24,6 +24,7 @@ import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, Transactions}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventsModel
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -36,8 +37,8 @@ class SandboxISpec extends WordSpec with Matchers
   override implicit lazy val app: Application = appBuilder.build()
 
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
-  private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val generator            = new Generator(0)
+  private val nino                 = generator.nextNino
 
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {
@@ -52,6 +53,14 @@ class SandboxISpec extends WordSpec with Matchers
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").withHeaders(sandboxRoutingHeader).get())
       response.status shouldBe Status.OK
       response.json.validate[Account] shouldBe 'success
+    }
+  }
+
+  "GET /savings-account/{nino}/goals/events with sandbox header" should {
+    "Return OK response containing events JSON" in {
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/events").withHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe Status.OK
+      response.json.validate[SavingsGoalEventsModel] shouldBe 'success
     }
   }
 }
