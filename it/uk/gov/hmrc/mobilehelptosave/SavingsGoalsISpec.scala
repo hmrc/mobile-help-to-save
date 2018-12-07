@@ -48,12 +48,12 @@ class SavingsGoalsISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
+  private val savingsGoal1 = SavingsGoal(20)
+  private val validGoalJson = Json.toJson(savingsGoal1)
+  private val savingsGoal2 = SavingsGoal(30)
+  private val validGoalJson2 = Json.toJson(savingsGoal2)
+
   "PUT /savings-account/{nino}/goals/current-goal" should {
-
-    val validGoalJson = Json.toJson(SavingsGoal(20))
-    val savingsGoal2 = SavingsGoal(30)
-    val validGoalJson2 = Json.toJson(savingsGoal2)
-
     "respond with 204 when putting a goal" in {
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
@@ -62,6 +62,23 @@ class SavingsGoalsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
 
       response.status shouldBe 204
+    }
+
+    "set the goal" in {
+        HelpToSaveStub.currentUserIsEnrolled()
+        HelpToSaveStub.accountExistsWithNoEmail(nino)
+        AuthStub.userIsLoggedIn(nino)
+
+        val response: WSResponse = await {
+          for {
+            _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
+            resp <- wsUrl(s"/savings-account/$nino").get()
+          } yield resp
+        }
+
+        response.status shouldBe 200
+        val account = Json.parse(response.body).as[Account]
+        account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
     }
 
     "update the goal when called a second time" in {
@@ -106,6 +123,35 @@ class SavingsGoalsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+    }
+  }
+
+  "DELETE /savings-account/{nino}/goals/current-goal" should {
+    "Respond with NoContent" in {
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithNoEmail(nino)
+      AuthStub.userIsLoggedIn(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").delete())
+      response.status shouldBe 204
+    }
+
+    "Remove a previously set goal" in {
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithNoEmail(nino)
+      AuthStub.userIsLoggedIn(nino)
+
+      val response: WSResponse = await {
+        for {
+          _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
+          _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").delete()
+          resp <- wsUrl(s"/savings-account/$nino").get()
+        } yield resp
+      }
+
+      response.status shouldBe 200
+      val account = Json.parse(response.body).as[Account]
+      account.savingsGoal shouldBe None
     }
   }
 }
