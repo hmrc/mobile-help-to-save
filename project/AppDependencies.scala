@@ -11,15 +11,18 @@ object AppDependencies {
   )
 
   private val reactiveMongoVersion = "6.2.0"
+  private val enumeratumVersion = "1.5.11"
 
   val compile: Seq[ModuleID] = Seq(
     ws,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % "4.0.0" withSources(),
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "4.2.0" withSources(),
     "uk.gov.hmrc" %% "domain" % "5.2.0",
     "org.typelevel" %% "cats-core" % "1.1.0",
     "io.lemonlabs" %% "scala-uri" % "1.1.1",
     "uk.gov.hmrc" %% "play-hmrc-api" % "3.3.0-play-25",
-    "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion
+    "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion,
+    "com.beachape" %% "enumeratum" % enumeratumVersion,
+    "com.beachape" %% "enumeratum-play-json" % enumeratumVersion
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import java.time.LocalDateTime
+
 import cats.data.EitherT
 import cats.instances.future._
 import cats.syntax.apply._
@@ -28,7 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalMongoModel, SavingsGoalRepo}
+import uk.gov.hmrc.mobilehelptosave.repository._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,7 +45,7 @@ class HelpToSaveAccountService @Inject()(
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
   helpToSaveGetAccount: HelpToSaveGetAccount,
   config: AccountServiceConfig,
-  savingsGoalRepo: SavingsGoalRepo
+  savingsGoalEventRepo: SavingsGoalEventRepo
 ) extends AccountService {
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
@@ -84,11 +86,20 @@ class HelpToSaveAccountService @Inject()(
     }.value
 
 
-  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Either[ErrorInfo, Option[SavingsGoalMongoModel]]] =
-    savingsGoalRepo.get(nino).map(_.asRight[ErrorInfo]).recover {
+  private val localDateTimeOrdering: Ordering[LocalDateTime] = new Ordering[LocalDateTime] {
+    override def compare(x: LocalDateTime, y: LocalDateTime): Int = x.compareTo(y)
+  }
+
+  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Either[ErrorInfo, Option[SavingsGoalRepoModel]]] = {
+    savingsGoalEventRepo.getEvents(nino).map(_.sortBy(_.date)(localDateTimeOrdering.reverse)).map {
+      case List()                                    => None.asRight[ErrorInfo]
+      case SavingsGoalDeleteEvent(_, _) :: _         => None.asRight[ErrorInfo]
+      case SavingsGoalSetEvent(_, amount, date) :: _ => Some(SavingsGoalRepoModel(nino, amount, date)).asRight[ErrorInfo]
+    }.recover {
       case t =>
         logger.warn("call to mongo to retrieve savings goal failed", t)
-        ErrorInfo.General.asLeft[Option[SavingsGoalMongoModel]]
+        ErrorInfo.General.asLeft[Option[SavingsGoalRepoModel]]
     }
+  }
 
 }

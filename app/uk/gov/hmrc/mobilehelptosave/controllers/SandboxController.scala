@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import java.time.LocalDateTime
+
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalDeleteEvent, SavingsGoalEventsModel, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -34,7 +37,7 @@ class SandboxController @Inject()(
   sandboxData: SandboxData
 ) extends BaseController with ControllerChecks with HelpToSaveActions {
 
-  def getTransactions(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
+  override def getTransactions(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { _ =>
         Future successful Ok(
@@ -45,7 +48,7 @@ class SandboxController @Inject()(
     }
   }
 
-  def getAccount(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
+  override def getAccount(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
     withShuttering(config.shuttering) {
       withValidNino(ninoString) { _ =>
         Future successful Ok(Json.toJson(sandboxData.account))
@@ -53,7 +56,7 @@ class SandboxController @Inject()(
     }
   }
 
-  def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
+  override def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
     Action.async(parse.json[SavingsGoal]) { implicit request =>
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { _ =>
@@ -62,11 +65,25 @@ class SandboxController @Inject()(
       }
     }
 
-  def deleteSavingsGoal(ninoString: String): Action[AnyContent] =
+  override def deleteSavingsGoal(ninoString: String): Action[AnyContent] =
     Action.async { implicit request =>
       withShuttering(config.shuttering) {
         withValidNino(ninoString) { _ =>
           Future.successful(NoContent)
+        }
+      }
+    }
+
+  override def getSavingsGoalsEvents(ninoString: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      withShuttering(config.shuttering) {
+        withValidNino(ninoString) { nino =>
+          val events = List(
+            SavingsGoalDeleteEvent(nino, LocalDateTime.of(2018, 12, 6, 10, 12, 33, 2298)),
+            SavingsGoalSetEvent(nino, 35.0, LocalDateTime.of(2018, 12, 5, 10, 12, 33, 2298)),
+            SavingsGoalSetEvent(nino, 35.0, LocalDateTime.of(2018, 12, 4, 10, 12, 33, 2298))
+          )
+          Future.successful(Ok(Json.toJson(SavingsGoalEventsModel(nino, events))))
         }
       }
     }
