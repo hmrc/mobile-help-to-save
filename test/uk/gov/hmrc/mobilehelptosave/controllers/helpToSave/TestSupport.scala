@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 package helpToSave
 
+import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Assertion, OneInstancePerTest}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -24,7 +25,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -51,15 +51,13 @@ trait TestSupport {
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-    val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
-    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, savingsGoalEventRepo)
+    val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config)
     authorisedActionForNino(controller)
   }
 
   trait AuthorisedTestScenario {
     val accountService            = mock[AccountService]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-    val savingsGoalEventRepo      = mock[SavingsGoalEventRepo]
 
     val controller: HelpToSaveController =
       new HelpToSaveController(
@@ -67,8 +65,8 @@ trait TestSupport {
         accountService,
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
-        config,
-        savingsGoalEventRepo)
+        config
+      )
   }
 
   trait HelpToSaveMocking {
@@ -86,16 +84,16 @@ trait TestSupport {
         .returning(stubbedResponse)
     }
 
-    def setSavingsGoalReturns(expectedNino: Nino, expectedAmount: Double, stubbedResponse:Either[ErrorInfo, Unit]) = {
+    def setSavingsGoalReturns(expectedNino: Nino, expectedAmount: Double, stubbedResponse: Either[ErrorInfo, Unit]) = {
       (accountService.setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier, _: ExecutionContext))
         .expects(where { (nino, amount, _, _) => nino == expectedNino && amount.goalAmount == expectedAmount })
         .returning(Future.successful(stubbedResponse))
     }
 
     def deleteSavingsGoalExpects(expectedNino: Nino) = {
-      (savingsGoalEventRepo.deleteGoal(_: Nino))
-        .expects(where { suppliedNino: Nino => suppliedNino == expectedNino })
-        .returning(Future.successful(()))
+      (accountService.deleteSavingsGoal(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(where { (suppliedNino: Nino, _, _) => suppliedNino == expectedNino })
+        .returning(Future.successful(().asRight))
     }
   }
 }

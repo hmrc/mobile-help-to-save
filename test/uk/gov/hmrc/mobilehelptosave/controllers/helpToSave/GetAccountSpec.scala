@@ -22,12 +22,8 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.controllers.{
-  AlwaysAuthorisedWithIds,
-  HelpToSaveController
-}
+import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -37,7 +33,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 //noinspection TypeAnnotation
 class GetAccountSpec
-    extends WordSpec
+  extends WordSpec
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -61,7 +57,7 @@ class GetAccountSpec
   "getAccount" when {
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
-      with HelpToSaveMocking {
+        with HelpToSaveMocking {
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
@@ -74,7 +70,7 @@ class GetAccountSpec
 
     "there is a savings goal associated with the NINO" should {
       "return the savings goal in the account structure" in new AuthorisedTestScenario
-      with HelpToSaveMocking {
+        with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
@@ -95,7 +91,7 @@ class GetAccountSpec
         (jsonBody \ "message")
           .as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
-        (slf4jLoggerStub.warn(_: String)) verify * never ()
+        (slf4jLoggerStub.warn(_: String)) verify * never()
       }
     }
 
@@ -129,7 +125,8 @@ class GetAccountSpec
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
         (jsonBody \ "message")
-          .as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
+          .as[String] shouldBe
+          """"invalidNino" does not match NINO validation regex"""
       }
     }
 
@@ -141,7 +138,8 @@ class GetAccountSpec
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
         (jsonBody \ "message")
-          .as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
+          .as[String] shouldBe
+          """"AA 00 00 03 D" does not match NINO validation regex"""
       }
     }
 
@@ -149,14 +147,12 @@ class GetAccountSpec
       """return 521 "shuttered": true""" in {
         val accountService = mock[AccountService]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
-        val savingsGoalEventRepo = mock[SavingsGoalEventRepo]
         val controller = new HelpToSaveController(
           logger,
           accountService,
           helpToSaveGetTransactions,
           new AlwaysAuthorisedWithIds(nino),
-          config.copy(shuttering = trueShuttering),
-          savingsGoalEventRepo
+          config.copy(shuttering = trueShuttering)
         )
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
