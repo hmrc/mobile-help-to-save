@@ -22,7 +22,10 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
+import uk.gov.hmrc.mobilehelptosave.controllers.{
+  AlwaysAuthorisedWithIds,
+  HelpToSaveController
+}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
@@ -34,7 +37,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 //noinspection TypeAnnotation
 class GetAccountSpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -57,7 +60,8 @@ class GetAccountSpec
 
   "getAccount" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
+      with HelpToSaveMocking {
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
@@ -69,7 +73,8 @@ class GetAccountSpec
     }
 
     "there is a savings goal associated with the NINO" should {
-      "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "return the savings goal in the account structure" in new AuthorisedTestScenario
+      with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
@@ -87,21 +92,22 @@ class GetAccountSpec
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
-        (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+        (jsonBody \ "message")
+          .as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
-        (slf4jLoggerStub.warn(_: String)) verify * never()
+        (slf4jLoggerStub.warn(_: String)) verify * never ()
       }
     }
 
     "AccountService returns an error" should {
       "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        accountReturns(Left(ErrorInfo("TEST_ERROR_CODE")))
+        accountReturns(Left(ErrorInfo.General))
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "TEST_ERROR_CODE"
+        (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
       }
     }
 
@@ -110,7 +116,8 @@ class GetAccountSpec
 
         val resultF = controller.getAccount(otherNino.value)(FakeRequest())
         status(resultF) shouldBe 403
-        (slf4jLoggerStub.warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s data"
+        (slf4jLoggerStub
+          .warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s data"
       }
     }
 
@@ -121,7 +128,8 @@ class GetAccountSpec
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
-        (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
+        (jsonBody \ "message")
+          .as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
       }
     }
 
@@ -132,7 +140,8 @@ class GetAccountSpec
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
-        (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
+        (jsonBody \ "message")
+          .as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
       }
     }
 
@@ -147,14 +156,16 @@ class GetAccountSpec
           helpToSaveGetTransactions,
           new AlwaysAuthorisedWithIds(nino),
           config.copy(shuttering = trueShuttering),
-          savingsGoalEventRepo)
+          savingsGoalEventRepo
+        )
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
         (jsonBody \ "title").as[String] shouldBe "Shuttered"
-        (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
+        (jsonBody \ "message")
+          .as[String] shouldBe "HTS is currently not available"
       }
     }
   }

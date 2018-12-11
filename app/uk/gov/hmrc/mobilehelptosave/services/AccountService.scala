@@ -37,6 +37,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[HelpToSaveAccountService])
 trait AccountService {
   def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]]
+
+  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Unit]]
 }
 
 @Singleton
@@ -47,6 +49,25 @@ class HelpToSaveAccountService @Inject()(
   config: AccountServiceConfig,
   savingsGoalEventRepo: SavingsGoalEventRepo
 ) extends AccountService {
+
+  override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Unit]] =
+    fetchNSAndIAccount(nino).flatMap {
+      case Right(None) =>
+        Future.successful(ErrorInfo.AccountNotFound.asLeft)
+
+      case Right(Some(acc)) =>
+        val maxGoal = acc.maximumPaidInThisMonth
+        if (savingsGoal.goalAmount < 1.0 || savingsGoal.goalAmount > maxGoal)
+          Future.successful(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
+        else
+          savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount)
+            .recover {
+              case t => logger.error("error writing savings goal to mongo", t)
+            }
+            .map(_.asRight)
+
+      case Left(errorInfo) => Future.successful(errorInfo.asLeft)
+    }
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {

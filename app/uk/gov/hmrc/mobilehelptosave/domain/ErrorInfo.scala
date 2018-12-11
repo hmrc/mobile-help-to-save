@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json.{Json, OWrites}
+import play.api.libs.json.Json._
+import play.api.libs.json.{JsObject, OWrites}
 
-case class ErrorInfo(code: String)
+sealed abstract class ErrorInfo(val code: String)
 
 object ErrorInfo {
-  val General = ErrorInfo("GENERAL")
+  object General extends ErrorInfo("GENERAL")
+  object AccountNotFound extends ErrorInfo("ACCOUNT NOT FOUND")
+  case class ValidationError(message:String) extends ErrorInfo("VALIDATION ERROR")
 
-  implicit val writes: OWrites[ErrorInfo] = Json.writes[ErrorInfo]
+  implicit val writes: OWrites[ErrorInfo] = new OWrites[ErrorInfo] {
+    override def writes(o: ErrorInfo): JsObject = obj("code" -> o.code)
+  }
 }

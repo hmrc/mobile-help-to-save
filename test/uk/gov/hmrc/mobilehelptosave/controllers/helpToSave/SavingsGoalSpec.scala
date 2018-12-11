@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
+import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import play.api.test.Helpers.status
-import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 //noinspection TypeAnnotation
 class SavingsGoalSpec
@@ -38,44 +39,28 @@ class SavingsGoalSpec
     with MockFactory
     with LoggerStub
     with OneInstancePerTest
-    with TestSupport
-{
+    with TestSupport {
   "putSavingsGoal" when {
     "logged in user's NINO matches NINO in URL" should {
       "set the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
         val amount  = 21.50
         val request = FakeRequest().withBody(SavingsGoal(amount))
 
-        accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        setSavingsGoalExpects(nino, amount)
+        setSavingsGoalReturns(nino, amount, ().asRight)
         val resultF = controller.putSavingsGoal(nino.value)(request)
 
         status(resultF) shouldBe 204
       }
 
-      "goalAmount is greater than monthly savings limit" should {
-        "respond with a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
-          val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
-          val request = FakeRequest().withBody(SavingsGoal(amount))
+      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
+        val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
+        val request = FakeRequest().withBody(SavingsGoal(amount))
 
-          accountReturns(Right(Some(mobileHelpToSaveAccount)))
+        setSavingsGoalReturns(nino, amount, ErrorInfo.ValidationError("error message").asLeft)
 
-          val resultF = controller.putSavingsGoal(nino.value)(request)
+        val resultF = controller.putSavingsGoal(nino.value)(request)
 
-          status(resultF) shouldBe 422
-        }
-      }
-
-      "goalAmount is less than 1" should {
-        "respond with a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
-          val amount  = 0.9999
-          val request = FakeRequest().withBody(SavingsGoal(amount))
-
-          accountReturns(Right(Some(mobileHelpToSaveAccount)))
-          val resultF = controller.putSavingsGoal(nino.value)(request)
-
-          status(resultF) shouldBe 422
-        }
+        status(resultF) shouldBe 422
       }
     }
   }
