@@ -75,10 +75,10 @@ class HelpToSaveController @Inject()
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
       verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
         accountService.setSavingsGoal(verifiedUserNino, request.body).map {
-          case Right(_)                                 => NoContent
-          case Left(ErrorInfo.AccountNotFound)          => AccountNotFound
-          case Left(ErrorInfo.ValidationError(message)) => UnprocessableEntity(message)
-          case Left(errorInfo)                          => InternalServerError(Json.toJson(errorInfo))
+          case Right(_)                             => NoContent
+          case Left(ErrorInfo.AccountNotFound)      => AccountNotFound
+          case Left(v@ErrorInfo.ValidationError(_)) => UnprocessableEntity(Json.toJson(v))
+          case Left(errorInfo)                      => InternalServerError(Json.toJson(errorInfo))
         }
       }
     }

@@ -24,9 +24,13 @@ sealed abstract class ErrorInfo(val code: String)
 object ErrorInfo {
   object General extends ErrorInfo("GENERAL")
   object AccountNotFound extends ErrorInfo("ACCOUNT NOT FOUND")
-  case class ValidationError(message:String) extends ErrorInfo("VALIDATION ERROR")
+  case class ValidationError(message: String) extends ErrorInfo("VALIDATION ERROR")
 
   implicit val writes: OWrites[ErrorInfo] = new OWrites[ErrorInfo] {
-    override def writes(o: ErrorInfo): JsObject = obj("code" -> o.code)
+    override def writes(o: ErrorInfo): JsObject = o match {
+      case General                  => obj("code" -> o.code)
+      case AccountNotFound          => obj("code" -> o.code)
+      case ValidationError(message) => obj("code" -> o.code, "message" -> message)
+    }
   }
 }
