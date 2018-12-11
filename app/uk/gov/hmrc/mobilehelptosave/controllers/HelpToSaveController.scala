@@ -19,9 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
-import play.api.libs.json.Json._
-import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.hmrc.domain.Nino
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -29,7 +27,7 @@ import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 trait HelpToSaveActions {
   def getTransactions(ninoString: String): Action[AnyContent]
@@ -76,29 +74,14 @@ class HelpToSaveController @Inject()
   override def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
       verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
-        accountService.account(verifiedUserNino).flatMap {
-          case Right(None) =>
-            Future.successful(AccountNotFound)
-
-          case Right(Some(acc)) =>
-            updateSavingsGoal(verifiedUserNino, acc.maximumPaidInThisMonth)
-
-          case Left(errorInfo) =>
-            Future.successful(InternalServerError(Json.toJson(errorInfo)))
+        accountService.setSavingsGoal(verifiedUserNino, request.body).map {
+          case Right(_)                             => NoContent
+          case Left(ErrorInfo.AccountNotFound)      => AccountNotFound
+          case Left(v@ErrorInfo.ValidationError(_)) => UnprocessableEntity(Json.toJson(v))
+          case Left(errorInfo)                      => InternalServerError(Json.toJson(errorInfo))
         }
       }
     }
-
-  private def updateSavingsGoal(verifiedUserNino: Nino, maxGoal: BigDecimal)(implicit request: RequestWithIds[SavingsGoal]): Future[Result] = {
-    if (request.body.goalAmount < 1.0 || request.body.goalAmount > maxGoal)
-      Future.successful(UnprocessableEntity(obj("error" -> s"goal amount should be in range 1 to $maxGoal")))
-    else
-      savingsGoalEventRepo.setGoal(verifiedUserNino, request.body.goalAmount)
-        .recover {
-          case t => logger.error("error writing savings goal to mongo", t)
-        }
-        .map(_ => NoContent)
-  }
 
   override def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>

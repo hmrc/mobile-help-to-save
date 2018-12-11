@@ -23,7 +23,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo, Shuttering, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
@@ -86,10 +86,10 @@ trait TestSupport {
         .returning(stubbedResponse)
     }
 
-    def setSavingsGoalExpects(expectedNino: Nino, expectedAmount: Double) = {
-      (savingsGoalEventRepo.setGoal(_: Nino, _: Double))
-        .expects(where { (nino, amount) => nino == expectedNino && amount == expectedAmount })
-        .returning(Future.successful(()))
+    def setSavingsGoalReturns(expectedNino: Nino, expectedAmount: Double, stubbedResponse:Either[ErrorInfo, Unit]) = {
+      (accountService.setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(where { (nino, amount, _, _) => nino == expectedNino && amount.goalAmount == expectedAmount })
+        .returning(Future.successful(stubbedResponse))
     }
 
     def deleteSavingsGoalExpects(expectedNino: Nino) = {

@@ -85,12 +85,12 @@ class GetTransactionsSpec
     "HelpToSaveConnector returns an error" should {
       "return 500" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo("TEST_ERROR_CODE")))
+        helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo.General))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "TEST_ERROR_CODE"
+        (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
       }
     }
 
