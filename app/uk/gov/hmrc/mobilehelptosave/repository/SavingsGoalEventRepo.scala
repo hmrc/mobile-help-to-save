@@ -26,7 +26,6 @@ import javax.inject.Inject
 import play.api.libs.json.Json._
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{CommandError, WriteResult}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
@@ -105,7 +104,6 @@ class MongoSavingsGoalEventRepo @Inject()(
 
   override def clearGoalEvents(): Future[Boolean] = {
     removeAll().map(_ => true).recover {
-      case err: CommandError => false
       case _ => false
     }
   }
