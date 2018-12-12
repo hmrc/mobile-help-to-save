@@ -81,6 +81,7 @@ trait SavingsGoalEventRepo {
   def setGoal(nino: Nino, amount: Double): Future[Unit]
   def deleteGoal(nino: Nino): Future[Unit]
   def getEvents(nino: Nino): Future[List[SavingsGoalEvent]]
+  def clearGoalEvents(): Future[Boolean]
 }
 
 case class SavingsGoalEventsModel(nino: Nino, events: List[SavingsGoalEvent])
@@ -101,11 +102,16 @@ class MongoSavingsGoalEventRepo @Inject()(
   override def deleteGoal(nino: Nino): Future[Unit] =
     addEvent(SavingsGoalDeleteEvent(nino, LocalDateTime.now))
 
+  override def clearGoalEvents(): Future[Boolean] = {
+    drop
+  }
+
   private def addEvent(event: SavingsGoalEvent): Future[Unit] =
     atomicUpsert(
       BSONDocument(indexFieldName -> Json.toJson(event.nino)),
       BSONDocument("$push" -> obj("events" -> Json.toJson(event)))
     ).void
+
 
 
   override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
