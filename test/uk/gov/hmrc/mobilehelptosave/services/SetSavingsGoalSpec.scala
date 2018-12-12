@@ -154,6 +154,8 @@ class SetSavingsGoalSpec
         case Right(_) => fUnit
       }
     }
+
+    override def clearGoalEvents(): Future[Boolean] = Future.successful(true)
   }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {

@@ -190,6 +190,8 @@ class HelpToSaveAccountServiceSpec
         nino shouldBe expectedNino
         fUnit
       }
+
+      override def clearGoalEvents(): Future[Boolean] = Future.successful(true)
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
