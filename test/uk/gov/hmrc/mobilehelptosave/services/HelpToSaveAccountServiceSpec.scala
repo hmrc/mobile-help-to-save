@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
@@ -55,7 +56,10 @@ class HelpToSaveAccountServiceSpec
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig, savingsGoalEventRepo)
-      await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
+
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = await(service.account(nino)).map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
     }
 
     "fold the value of the 'savingsGoalEnabled' config into the returned account" in {
@@ -67,7 +71,9 @@ class HelpToSaveAccountServiceSpec
         val config = testConfig.copy(savingsGoalsEnabled = enabled)
         val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, config, savingsGoalEventRepo)
 
-        await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = enabled)))
+        // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+        val result = await(service.account(nino)).map(_.map(_.copy(daysRemainingInMonth = 1)))
+        result shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = enabled)))
       }
     }
 
@@ -76,7 +82,10 @@ class HelpToSaveAccountServiceSpec
       val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service = new HelpToSaveAccountService(logger, fakeEnrolmentStatus, fakeGetAccount, testConfig.copy(inAppPaymentsEnabled = true), savingsGoalEventRepo)
-      await(service.account(nino)) shouldBe Right(Some(mobileHelpToSaveAccount.copy(inAppPaymentsEnabled = true, savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
+
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = await(service.account(nino)).map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result shouldBe Right(Some(mobileHelpToSaveAccount.copy(inAppPaymentsEnabled = true, savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
     }
 
     // this is to avoid unnecessary load on NS&I, see NGC-3799

@@ -204,6 +204,12 @@
           "description": "The amount the user would like to save each month."
         }
       }
+    },"daysRemainingInMonth": {
+      "type": "number",
+      "description": "The number of days the user has left in the month if they want to make a payment, adjusted so that if today is the last day of the month then the value is 1.",
+      "examples": [
+        1
+      ]
     }
   },
   "required": [
