@@ -103,7 +103,9 @@ class MongoSavingsGoalEventRepo @Inject()(
     addEvent(SavingsGoalDeleteEvent(nino, LocalDateTime.now))
 
   override def clearGoalEvents(): Future[Boolean] = {
-    drop
+    removeAll().map(_ => true).recover {
+      case _ => false
+    }
   }
 
   private def addEvent(event: SavingsGoalEvent): Future[Unit] =
@@ -111,8 +113,6 @@ class MongoSavingsGoalEventRepo @Inject()(
       BSONDocument(indexFieldName -> Json.toJson(event.nino)),
       BSONDocument("$push" -> obj("events" -> Json.toJson(event)))
     ).void
-
-
 
   override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
     get(nino).map {
