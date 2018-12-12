@@ -27,7 +27,7 @@ class TestController @Inject()(savingsGoalEventRepo: SavingsGoalEventRepo) {
   def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")
-      case _ => Ok("Failed to clear goal events")
+      case _ => InternalServerError("Failed to clear goal events")
     }
   }
 

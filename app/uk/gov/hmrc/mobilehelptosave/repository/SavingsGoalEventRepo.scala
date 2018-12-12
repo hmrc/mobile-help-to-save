@@ -26,6 +26,7 @@ import javax.inject.Inject
 import play.api.libs.json.Json._
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.commands.{CommandError, WriteResult}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
@@ -103,7 +104,10 @@ class MongoSavingsGoalEventRepo @Inject()(
     addEvent(SavingsGoalDeleteEvent(nino, LocalDateTime.now))
 
   override def clearGoalEvents(): Future[Boolean] = {
-    drop
+    removeAll().map(_ => true).recover {
+      case err: CommandError => false
+      case _ => false
+    }
   }
 
   private def addEvent(event: SavingsGoalEvent): Future[Unit] =
@@ -111,8 +115,6 @@ class MongoSavingsGoalEventRepo @Inject()(
       BSONDocument(indexFieldName -> Json.toJson(event.nino)),
       BSONDocument("$push" -> obj("events" -> Json.toJson(event)))
     ).void
-
-
 
   override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
     get(nino).map {
