@@ -89,6 +89,9 @@ trait AccountTestData {
       |}
     """.stripMargin
 
+  val monthEndDate: LocalDate = new LocalDate(2018, 4, 30)
+  val now         : LocalDate = new LocalDate(2018, 4, 30)
+
   /** A HelpToSaveAccount object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
   protected val helpToSaveAccount: HelpToSaveAccount = HelpToSaveAccount(
     accountNumber = "1000000000001",
@@ -99,7 +102,7 @@ trait AccountTestData {
     paidInThisMonth = BigDecimal("27.88"),
     canPayInThisMonth = BigDecimal("22.12"),
     maximumPaidInThisMonth = 50,
-    thisMonthEndDate = new LocalDate(2018, 4, 30),
+    thisMonthEndDate = monthEndDate,
     accountHolderForename = "Testfore",
     accountHolderSurname = "Testsur",
     accountHolderEmail = Some("testemail@example.com"),
@@ -131,7 +134,7 @@ trait AccountTestData {
     paidInThisMonth = BigDecimal("27.88"),
     canPayInThisMonth = BigDecimal("22.12"),
     maximumPaidInThisMonth = 50,
-    thisMonthEndDate = new LocalDate(2018, 4, 30),
+    thisMonthEndDate = monthEndDate,
     nextPaymentMonthStartDate = Some(new LocalDate(2018, 5, 1)),
     accountHolderName = "Testfore Testsur",
     accountHolderEmail = Some("testemail@example.com"),
@@ -156,7 +159,8 @@ trait AccountTestData {
     closingBalance = None,
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled = true,
-    savingsGoal = None
+    savingsGoal = None,
+    1
   )
 
   protected val closedAccountReturnedByHelpToSaveJsonString: String =

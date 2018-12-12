@@ -65,7 +65,8 @@ case class SandboxData @Inject()
         closingBalance = None
       ),
       inAppPaymentsEnabled = config.inAppPaymentsEnabled,
-      logger)
+      logger,
+      new LocalDate(2018, 4, 30))
   }
 
   val transactions = Transactions({

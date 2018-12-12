@@ -34,5 +34,6 @@
   "savingsGoalsEnabled": false,
   "savingsGoal": {
     "goalAmount":21.50
-  }
+  },
+  "daysRemainingInMonth": 1
 }

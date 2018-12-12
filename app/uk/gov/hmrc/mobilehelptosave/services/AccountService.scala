@@ -24,6 +24,7 @@ import cats.syntax.apply._
 import cats.syntax.either._
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+import org.joda.time.LocalDate
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -123,7 +124,7 @@ class HelpToSaveAccountService @Inject()(
   private def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] =
     EitherT(helpToSaveGetAccount.getAccount(nino)).map {
       case Some(helpToSaveAccount) =>
-        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger))
+        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now()))
       case None                    =>
         logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
         None

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.joda.time.{LocalDate, YearMonth}
+import org.joda.time.{Days, LocalDate, YearMonth}
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
@@ -81,14 +81,16 @@ case class Account(
   savingsGoalsEnabled: Boolean = false,
 
   // This field is populated from the mongo repository
-  savingsGoal: Option[SavingsGoal] = None
+  savingsGoal: Option[SavingsGoal] = None,
+
+  daysRemainingInMonth: Int
 )
 
 object Account {
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
   implicit val format         : OFormat[Account]  = Json.format[Account]
 
-  def apply(h: HelpToSaveAccount, inAppPaymentsEnabled: Boolean, logger: LoggerLike): Account = Account(
+  def apply(h: HelpToSaveAccount, inAppPaymentsEnabled: Boolean, logger: LoggerLike, now: LocalDate): Account = Account(
     number = h.accountNumber,
     openedYearMonth = h.openedYearMonth,
     isClosed = h.isClosed,
@@ -105,8 +107,23 @@ object Account {
     currentBonusTerm = currentBonusTerm(h),
     closureDate = h.closureDate,
     closingBalance = h.closingBalance,
-    inAppPaymentsEnabled = inAppPaymentsEnabled
+    inAppPaymentsEnabled = inAppPaymentsEnabled,
+    daysRemainingInMonth = calculateDaysRemainingInMonth(now, h)
   )
+
+  /**
+    * Calculate the number of days between the current date and the end of month date. We're doing this to supply that
+    * number to the apps as part of the Account structure because the app devs want to vary the messages displayed
+    * based on how much time the user has left to make payments in the month and they are unwilling to write this code
+    * themselves.
+    *
+    * The returned value will be 1-indexed, i.e. if the supplied date is today then the result will be "1 day left"
+    *
+    * @return - calculated number of days between now and the end of month, plus one (so if the supplied date is today
+    *         the result will be 1)
+    */
+  private def calculateDaysRemainingInMonth(now: LocalDate, h: HelpToSaveAccount): Int =
+    Days.daysBetween(now, h.thisMonthEndDate).getDays + 1
 
   private def nextPaymentMonthStartDate(h: HelpToSaveAccount) = {
     if (h.thisMonthEndDate.isBefore(h.bonusTerms.last.endDate)) {
