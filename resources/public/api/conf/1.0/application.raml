@@ -119,7 +119,7 @@ traits:
            type: !include schemas/goal.json
            example: !include examples/goal.json
        displayName: Set a savings goal for the user
-       description: Set a savings goal for the user. This will replace any existing savings goal.
+       description: Set a savings goal for the user. This will replace any existing savings goal. The goal must be between £1 and £50 (or the whatever the remaining monthly savings headroom might be) and not contain any fractional pence values (e.g. £1.234)
        (annotations.scope): "read:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
        responses:
