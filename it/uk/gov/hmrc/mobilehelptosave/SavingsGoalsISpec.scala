@@ -19,10 +19,12 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest._
 import play.api.Application
-import play.api.libs.json.Json
+import play.api.http.Status
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json._
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
@@ -49,25 +51,50 @@ class SavingsGoalsISpec
   private val nino      = generator.nextNino
 
   private val savingsGoal1 = SavingsGoal(20)
-  private val validGoalJson = Json.toJson(savingsGoal1)
+  private val validGoalJson = toJson(savingsGoal1)
   private val savingsGoal2 = SavingsGoal(30)
-  private val validGoalJson2 = Json.toJson(savingsGoal2)
+  private val validGoalJson2 = toJson(savingsGoal2)
+
+  private def setSavingsGoal(nino:Nino, json:JsValue) = {
+    await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal").put(json))
+  }
+
+  trait LoggedInUserScenario {
+    HelpToSaveStub.currentUserIsEnrolled()
+    HelpToSaveStub.accountExistsWithNoEmail(nino)
+    AuthStub.userIsLoggedIn(nino)
+  }
 
   "PUT /savings-account/{nino}/goals/current-goal" should {
-    "respond with 204 when putting a goal" in {
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExistsWithNoEmail(nino)
-      AuthStub.userIsLoggedIn(nino)
+    "respond with 204 when putting a goal" in new LoggedInUserScenario {
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
-
+      val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 204
     }
 
-    "set the goal" in {
-        HelpToSaveStub.currentUserIsEnrolled()
-        HelpToSaveStub.accountExistsWithNoEmail(nino)
-        AuthStub.userIsLoggedIn(nino)
+    "respond with 422 when putting a value that is not a valid monetary amount" in new LoggedInUserScenario {
+
+      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(30.123)))
+      response.status shouldBe Status.UNPROCESSABLE_ENTITY
+      response.body should include ("goal amount should be a valid monetary amount")
+    }
+
+    "respond with 422 when putting a value that is not a valid savings goal" in new LoggedInUserScenario {
+
+      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(0.10)))
+      response.status shouldBe Status.UNPROCESSABLE_ENTITY
+      response.body should include ("goal amount should be a valid monetary amount")
+    }
+
+
+    "respond with 422 when putting a value that is greater than the monthly savings goal" in new LoggedInUserScenario {
+
+      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(51)))
+      response.status shouldBe Status.UNPROCESSABLE_ENTITY
+      response.body should include ("goal amount should be in range 1 to 50")
+    }
+
+    "set the goal" in new LoggedInUserScenario {
 
         val response: WSResponse = await {
           for {
@@ -77,14 +104,11 @@ class SavingsGoalsISpec
         }
 
         response.status shouldBe 200
-        val account = Json.parse(response.body).as[Account]
+        val account = parse(response.body).as[Account]
         account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
     }
 
-    "update the goal when called a second time" in {
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExistsWithNoEmail(nino)
-      AuthStub.userIsLoggedIn(nino)
+    "update the goal when called a second time" in new LoggedInUserScenario {
 
       val response: WSResponse = await {
         for {
@@ -95,7 +119,7 @@ class SavingsGoalsISpec
       }
 
       response.status shouldBe 200
-      val account = Json.parse(response.body).as[Account]
+      val account = parse(response.body).as[Account]
       account.savingsGoal.value.goalAmount shouldBe savingsGoal2.goalAmount
     }
 
@@ -103,7 +127,7 @@ class SavingsGoalsISpec
       HelpToSaveStub.currentUserIsNotEnrolled()
       AuthStub.userIsLoggedIn(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
+      val response: WSResponse = setSavingsGoal(nino,validGoalJson)
 
       (response.json \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (response.json \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
@@ -113,33 +137,28 @@ class SavingsGoalsISpec
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
+      val response: WSResponse = setSavingsGoal(nino,validGoalJson)
       response.status shouldBe 401
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson))
+      val response: WSResponse = setSavingsGoal(nino,validGoalJson)
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
   }
 
+
   "DELETE /savings-account/{nino}/goals/current-goal" should {
-    "Respond with NoContent" in {
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExistsWithNoEmail(nino)
-      AuthStub.userIsLoggedIn(nino)
+    "Respond with NoContent" in new LoggedInUserScenario {
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").delete())
       response.status shouldBe 204
     }
 
-    "Remove a previously set goal" in {
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExistsWithNoEmail(nino)
-      AuthStub.userIsLoggedIn(nino)
+    "Remove a previously set goal" in new LoggedInUserScenario {
 
       val response: WSResponse = await {
         for {
@@ -150,7 +169,7 @@ class SavingsGoalsISpec
       }
 
       response.status shouldBe 200
-      val account = Json.parse(response.body).as[Account]
+      val account = parse(response.body).as[Account]
       account.savingsGoal shouldBe None
     }
   }
