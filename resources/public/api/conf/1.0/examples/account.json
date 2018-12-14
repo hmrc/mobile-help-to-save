@@ -10,6 +10,7 @@
   "canPayInThisMonth": 0,
   "maximumPaidInThisMonth": 50,
   "thisMonthEndDate": "2018-03-31",
+  "daysRemainingInMonth": 1,
   "nextPaymentMonthStartDate": "2018-04-01",
   "accountHolderName": "Testforename Testsurname",
   "accountHolderEmail": "test@example.com",
@@ -34,6 +35,5 @@
   "savingsGoalsEnabled": false,
   "savingsGoal": {
     "goalAmount":21.50
-  },
-  "daysRemainingInMonth": 1
+  }
 }

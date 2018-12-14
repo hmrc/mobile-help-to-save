@@ -58,22 +58,21 @@ class HelpToSaveAccountService @Inject()(
 ) extends AccountService {
 
   override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
-    expectingAccount(nino) { acc =>
-      val maxGoal = acc.maximumPaidInThisMonth
-
-      if (savingsGoal.goalAmount < 1.0 || savingsGoal.goalAmount > maxGoal)
-        Future.successful(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
-      else
-        trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
+    withValidSavingsAmount(savingsGoal.goalAmount) {
+      withHelpToSaveAccount(nino) { acc: Account =>
+        withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
+          trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
+        }
+      }
     }
 
   override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
-    expectingAccount(nino) { _ =>
+    withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
     }
 
   override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]] =
-    expectingAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino)) }
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino)) }
 
   private def trappingRepoExceptions[T](msg: String, f: => Future[T])(implicit ec: ExecutionContext): Future[Result[T]] =
     f.map(_.asRight[ErrorInfo]).recover {
@@ -86,12 +85,27 @@ class HelpToSaveAccountService @Inject()(
     * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
     * to an appropriate ErrorInfo value
     */
-  private def expectingAccount[T](nino: Nino)(f: Account => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] =
+  private def withHelpToSaveAccount[T](nino: Nino)(f: Account => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] =
     fetchNSAndIAccount(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => Future.successful(ErrorInfo.AccountNotFound.asLeft)
       case Left(errorInfo)      => Future.successful(errorInfo.asLeft)
     }
+
+  private def withValidSavingsAmount[T](goal: Double)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
+    if (goal < 1.0 || BigDecimal(goal).scale > 2)
+      Future.successful(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
+    else
+      fn
+  }
+
+  private def withEnoughSavingsHeadroom[T](goal: Double, acc:Account)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
+    val maxGoal = acc.maximumPaidInThisMonth
+    if (goal > maxGoal)
+      Future.successful(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
+    else
+      fn
+  }
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
