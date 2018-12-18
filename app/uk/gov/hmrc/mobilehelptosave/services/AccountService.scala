@@ -66,7 +66,7 @@ class HelpToSaveAccountService @Inject()(
     }
 
   override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] =
-    expectingAccount(nino) { _ =>
+    withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
