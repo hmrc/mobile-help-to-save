@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
@@ -45,65 +45,45 @@ class HelpToSaveController @Inject()
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig
 )(implicit ec: ExecutionContext) extends BaseController with ControllerChecks with HelpToSaveActions {
+  override def shuttering: Shuttering = config.shuttering
 
-  private final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
+  private def orAccountNotFound[T: Writes](o: Option[T]): Result =
+    o.fold(AccountNotFound)(v => Ok(Json.toJson(v)))
 
   override def getTransactions(ninoString: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
-        helpToSaveGetTransactions.getTransactions(verifiedUserNino).map {
-          handlingErrors {
-            case Some(transactions) => Ok(Json.toJson(transactions.reverse))
-            case None               => AccountNotFound
-          }
-        }
+      verifyingMatchingNino(ninoString) { verifiedUserNino =>
+        helpToSaveGetTransactions.getTransactions(verifiedUserNino).map(handlingErrors(txs => Ok(Json.toJson(txs.reverse))))
       }
     }
 
   override def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    verifyingMatchingNino(config.shuttering, ninoString) { nino =>
-      accountService.account(nino).map {
-        handlingErrors {
-          case None          => AccountNotFound
-          case Some(account) => Ok(Json.toJson(account))
-        }
-      }
+    verifyingMatchingNino(ninoString) { nino =>
+      //noinspection ConvertibleToMethodValue
+      accountService.account(nino).map(handlingErrors(orAccountNotFound(_)))
     }
   }
 
   override def putSavingsGoal(ninoString: String): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
-      verifyingMatchingNino(config.shuttering, ninoString) { verifiedUserNino =>
+      verifyingMatchingNino(ninoString) { verifiedUserNino =>
         accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
       }
     }
 
   override def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(config.shuttering, nino) { verifiedNino =>
+      verifyingMatchingNino(nino) { verifiedNino =>
         accountService.deleteSavingsGoal(verifiedNino).map(handlingErrors(_ => NoContent))
       }
     }
 
   override def getSavingsGoalsEvents(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(config.shuttering, nino) { verifiedNino =>
+      verifyingMatchingNino(nino) { verifiedNino =>
         accountService.savingsGoalEvents(verifiedNino).map {
           handlingErrors(events => Ok(Json.toJson(events)))
         }
-      }
-    }
-
-  /**
-    * Standardise the mapping of ErrorInfo values to http responses
-    */
-  private def handlingErrors[T](rightHandler: T => Result)(a: Either[ErrorInfo, T]): Result =
-    a match {
-      case Right(t)        => rightHandler(t)
-      case Left(errorInfo) => errorInfo match {
-        case ErrorInfo.AccountNotFound      => AccountNotFound
-        case v@ErrorInfo.ValidationError(_) => UnprocessableEntity(Json.toJson(v))
-        case ErrorInfo.General              => InternalServerError(Json.toJson(ErrorInfo.General))
       }
     }
 }

@@ -156,6 +156,7 @@ class SetSavingsGoalSpec
     }
 
     override def clearGoalEvents(): Future[Boolean] = Future.successful(true)
+    override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
   }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {

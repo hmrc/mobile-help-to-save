@@ -46,7 +46,7 @@ trait HelpToSaveGetAccount {
 
 @ImplementedBy(classOf[HelpToSaveConnectorImpl])
 trait HelpToSaveGetTransactions {
-  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]]
+  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]]
 }
 
 @Singleton
@@ -70,9 +70,9 @@ class HelpToSaveConnectorImpl @Inject()(
     http.GET[HelpToSaveAccount](string) map (account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
   }
 
-  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[Transactions]]] = {
+  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
     val string = transactionsUrl(nino).toString
-    http.GET[Transactions](string) map (transactions => Right(Some(transactions))) recover (mapNotFoundToNone orElse handleTransactionsHttpErrors)
+    http.GET[Transactions](string) map (Right(_)) recover handleTransactionsHttpErrors
   }
 
   private val mapNotFoundToNone: PartialFunction[Throwable, Either[ErrorInfo, Option[Nothing]]] = {
@@ -81,6 +81,9 @@ class HelpToSaveConnectorImpl @Inject()(
   }
 
   private def handleHttpAndJsonErrors[B](dataDescription: String): PartialFunction[Throwable, Either[ErrorInfo, B]] = {
+    case _: NotFoundException =>
+      Left(ErrorInfo.AccountNotFound)
+
     case e@(_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException | _: JsonParseException) =>
       logger.warn(s"Couldn't get $dataDescription from help-to-save service", e)
       Left(ErrorInfo.General)

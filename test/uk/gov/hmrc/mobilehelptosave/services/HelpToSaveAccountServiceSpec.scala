@@ -26,8 +26,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
-import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalDeleteEvent, SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
@@ -192,6 +192,16 @@ class HelpToSaveAccountServiceSpec
       }
 
       override def clearGoalEvents(): Future[Boolean] = Future.successful(true)
+      override def getGoal(nino: Nino): Future[Option[SavingsGoal]] =
+        goalsOrException match {
+          case Right(events) => Future.successful {
+            events.sortBy(_.date)(localDateTimeOrdering.reverse).headOption.flatMap {
+              case _: SavingsGoalDeleteEvent         => None
+              case SavingsGoalSetEvent(_, amount, _) => Some(SavingsGoal(amount))
+            }
+          }
+          case Left(t)       => Future.failed(t)
+        }
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {

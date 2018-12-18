@@ -25,7 +25,7 @@ import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal, Transactions}
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventsModel
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEvent
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -76,7 +76,7 @@ class SandboxISpec extends WordSpec with Matchers
     "Return OK response containing events JSON" in {
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/events").withHeaders(sandboxRoutingHeader).get())
       response.status shouldBe Status.OK
-      response.json.validate[SavingsGoalEventsModel] shouldBe 'success
+      response.json.validate[List[SavingsGoalEvent]] shouldBe 'success
     }
   }
 }

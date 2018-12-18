@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.LocalDateTime
-
 import cats.data.EitherT
 import cats.instances.future._
 import cats.syntax.apply._
@@ -43,6 +41,7 @@ trait AccountService {
   def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]]
 
   def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]]
+  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]]
   def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]]
 
   def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]]
@@ -64,6 +63,11 @@ class HelpToSaveAccountService @Inject()(
           trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
         }
       }
+    }
+
+  override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] =
+    withHelpToSaveAccount(nino) { _ =>
+      trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
   override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
@@ -125,7 +129,7 @@ class HelpToSaveAccountService @Inject()(
       fetchNSAndIAccount(nino)
     ).mapN {
       case (Right(goal), Right(Some(account))) =>
-        val savingsGoal = goal.map(t => SavingsGoal(t.amount))
+        val savingsGoal = goal.map(t => SavingsGoal(t.goalAmount))
         Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
 
       case (_, Left(errorInfo)) => errorInfo.asLeft
@@ -145,19 +149,11 @@ class HelpToSaveAccountService @Inject()(
     }.value
 
 
-  private val localDateTimeOrdering: Ordering[LocalDateTime] = new Ordering[LocalDateTime] {
-    override def compare(x: LocalDateTime, y: LocalDateTime): Int = x.compareTo(y)
-  }
-
-  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Result[Option[SavingsGoalRepoModel]]] = {
-    savingsGoalEventRepo.getEvents(nino).map(_.sortBy(_.date)(localDateTimeOrdering.reverse)).map {
-      case List()                                    => None.asRight[ErrorInfo]
-      case SavingsGoalDeleteEvent(_, _) :: _         => None.asRight[ErrorInfo]
-      case SavingsGoalSetEvent(_, amount, date) :: _ => Some(SavingsGoalRepoModel(nino, amount, date)).asRight[ErrorInfo]
-    }.recover {
+  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] = {
+    savingsGoalEventRepo.getGoal(nino).map(_.asRight[ErrorInfo]).recover {
       case t =>
         logger.warn("call to repo to retrieve savings goal failed", t)
-        ErrorInfo.General.asLeft[Option[SavingsGoalRepoModel]]
+        ErrorInfo.General.asLeft[Option[SavingsGoal]]
     }
   }
 

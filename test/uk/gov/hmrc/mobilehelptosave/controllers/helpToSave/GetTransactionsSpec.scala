@@ -59,7 +59,7 @@ class GetTransactionsSpec
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsReturns(Future successful Right(Some(transactionsSortedInHelpToSaveOrder)))
+        helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 200
@@ -71,7 +71,7 @@ class GetTransactionsSpec
     "no account is not found by HelpToSaveConnector for the NINO" should {
       "return 404" in new AuthorisedTestScenario with HelpToSaveMocking {
 
-        helpToSaveGetTransactionsReturns(Future successful Right(None))
+        helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo.AccountNotFound))
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
