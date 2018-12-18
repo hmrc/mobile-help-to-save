@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import cats.syntax.either._
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Shuttering}
 
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
@@ -31,6 +32,8 @@ trait ControllerChecks extends Results {
   private final val WebServerIsDown = new Status(521)
 
   def logger: LoggerLike
+
+  def shuttering: Shuttering
 
   def withShuttering(shuttering: Shuttering)(fn: => Future[Result]): Future[Result] = {
     if (shuttering.shuttered) successful(WebServerIsDown(Json.toJson(shuttering))) else fn
@@ -53,7 +56,7 @@ trait ControllerChecks extends Results {
     }
   }
 
-  def verifyingMatchingNino(shuttering: Shuttering, ninoString: String)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] = {
+  def verifyingMatchingNino(ninoString: String)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] = {
     withShuttering(shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
@@ -62,4 +65,17 @@ trait ControllerChecks extends Results {
       }
     }
   }
+
+  protected final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
+  private def errorHandler(errorInfo: ErrorInfo): Result = errorInfo match {
+    case ErrorInfo.AccountNotFound      => AccountNotFound
+    case v@ErrorInfo.ValidationError(_) => UnprocessableEntity(Json.toJson(v))
+    case ErrorInfo.General              => InternalServerError(Json.toJson(ErrorInfo.General))
+  }
+
+  /**
+    * Standardise the mapping of ErrorInfo values to http responses
+    */
+  def handlingErrors[T](rightHandler: T => Result)(a: Either[ErrorInfo, T]): Result =
+    a.bimap(errorHandler, rightHandler).merge
 }

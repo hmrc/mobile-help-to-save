@@ -23,7 +23,7 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import uk.gov.hmrc.mobilehelptosave.domain.{SavingsGoal, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalDeleteEvent, SavingsGoalEventsModel, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -36,6 +36,7 @@ class SandboxController @Inject()(
   config: HelpToSaveControllerConfig,
   sandboxData: SandboxData
 ) extends BaseController with ControllerChecks with HelpToSaveActions {
+  override def shuttering: Shuttering = config.shuttering
 
   override def getTransactions(ninoString: String): Action[AnyContent] = Action.async { implicit request =>
     withShuttering(config.shuttering) {

@@ -78,7 +78,7 @@ trait TestSupport {
         .returning(Future.successful(stubbedResponse))
     }
 
-    def helpToSaveGetTransactionsReturns(stubbedResponse: Future[Either[ErrorInfo, Option[Transactions]]]) = {
+    def helpToSaveGetTransactionsReturns(stubbedResponse: Future[Either[ErrorInfo, Transactions]]) = {
       (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, *, *)
         .returning(stubbedResponse)

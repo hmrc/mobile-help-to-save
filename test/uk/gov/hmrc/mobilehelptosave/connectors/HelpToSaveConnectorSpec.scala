@@ -190,16 +190,17 @@ class HelpToSaveConnectorSpec
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
-      await(connector.getTransactions(nino)) shouldBe Right(Some(transactionsSortedInHelpToSaveOrder))
+      await(connector.getTransactions(nino)) shouldBe Right(transactionsSortedInHelpToSaveOrder)
     }
 
-    "return Right(None) when the help-to-save service returns a 404 response" in {
+    "return Left(AccountNotFound) when the help-to-save service returns a 404 response" in {
 
       val notFoundResponse = httpGet(isTransactionsUrlForNino _, HttpResponse(404))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, notFoundResponse)
 
-      await(connector.getTransactions(nino)) shouldBe Right(None)
+      val result = await(connector.getTransactions(nino))
+      result shouldBe Left(ErrorInfo.AccountNotFound)
     }
   }
 
