@@ -41,12 +41,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class IndexedMongoRepo[I, V: Manifest](
   collectionName: String,
   val indexFieldName: String,
+  unique:Boolean,
   mongo: ReactiveMongoComponent
 )(implicit ec: ExecutionContext, iFormat: Format[I], tFormat: Format[V])
   extends ReactiveRepository[V, BSONObjectID](collectionName, mongo.mongoConnector.db, tFormat) with AtomicUpdate[V] {
 
   override def indexes: Seq[Index] = Seq(
-    Index(Seq(indexFieldName -> IndexType.Text), name = Some(s"${indexFieldName}Idx"), unique = true, sparse = true)
+    Index(Seq(indexFieldName -> IndexType.Text), name = Some(s"${indexFieldName}Idx"), unique = unique, sparse = true)
   )
 
   /**

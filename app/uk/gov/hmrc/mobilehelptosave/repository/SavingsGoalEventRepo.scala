@@ -26,9 +26,9 @@ import javax.inject.Inject
 import play.api.libs.json.Json._
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -80,27 +80,23 @@ object SavingsGoalEvent {
 trait SavingsGoalEventRepo {
   def setGoal(nino: Nino, amount: Double): Future[Unit]
   def deleteGoal(nino: Nino): Future[Unit]
+  def getGoal(nino: Nino): Future[Option[SavingsGoal]]
   def getEvents(nino: Nino): Future[List[SavingsGoalEvent]]
   def clearGoalEvents(): Future[Boolean]
-}
-
-case class SavingsGoalEventsModel(nino: Nino, events: List[SavingsGoalEvent])
-object SavingsGoalEventsModel {
-  implicit val format: OFormat[SavingsGoalEventsModel] = Json.format
 }
 
 class MongoSavingsGoalEventRepo @Inject()(
   mongo: ReactiveMongoComponent
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])
-  extends IndexedMongoRepo[Nino, SavingsGoalEventsModel]("savingsGoalEvents", "nino", mongo)
+  extends IndexedMongoRepo[Nino, SavingsGoalEvent]("savingsGoalEvents", "nino", unique = false, mongo = mongo)
     with SavingsGoalEventRepo {
 
   override def setGoal(nino: Nino, amount: Double): Future[Unit] =
-    addEvent(SavingsGoalSetEvent(nino, amount, LocalDateTime.now))
+    insert(SavingsGoalSetEvent(nino, amount, LocalDateTime.now)).void
 
   override def deleteGoal(nino: Nino): Future[Unit] =
-    addEvent(SavingsGoalDeleteEvent(nino, LocalDateTime.now))
+    insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now)).void
 
   override def clearGoalEvents(): Future[Boolean] = {
     removeAll().map(_ => true).recover {
@@ -108,15 +104,16 @@ class MongoSavingsGoalEventRepo @Inject()(
     }
   }
 
-  private def addEvent(event: SavingsGoalEvent): Future[Unit] =
-    atomicUpsert(
-      BSONDocument(indexFieldName -> Json.toJson(event.nino)),
-      BSONDocument("$push" -> obj("events" -> Json.toJson(event)))
-    ).void
-
   override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
-    get(nino).map {
-      case Some(eventModel) => eventModel.events
-      case None             => List()
+    find("nino" -> Json.toJson(nino))
+
+  override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = {
+    val query = collection.find(obj("nino" -> nino)).sort(obj("date" -> -1))
+    val result: Future[Option[SavingsGoalEvent]] = query.one[SavingsGoalEvent]
+    result.map {
+      case None                                    => None
+      case Some(_: SavingsGoalDeleteEvent)         => None
+      case Some(SavingsGoalSetEvent(_, amount, _)) => Some(SavingsGoal(amount))
     }
+  }
 }

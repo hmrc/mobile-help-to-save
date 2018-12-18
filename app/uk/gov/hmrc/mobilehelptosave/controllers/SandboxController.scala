@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain.{SavingsGoal, Shuttering}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalDeleteEvent, SavingsGoalEventsModel, SavingsGoalSetEvent}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalDeleteEvent, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
@@ -84,7 +84,7 @@ class SandboxController @Inject()(
             SavingsGoalSetEvent(nino, 35.0, LocalDateTime.of(2018, 12, 5, 10, 12, 33, 2298)),
             SavingsGoalSetEvent(nino, 35.0, LocalDateTime.of(2018, 12, 4, 10, 12, 33, 2298))
           )
-          Future.successful(Ok(Json.toJson(SavingsGoalEventsModel(nino, events))))
+          Future.successful(Ok(Json.toJson(events)))
         }
       }
     }
