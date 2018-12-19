@@ -20,14 +20,15 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.play.components.WithApplicationComponents
 import play.api.Application
 import play.api.test.PlayRunners
 import uk.gov.hmrc.mobilehelptosave.stubs.ServiceLocatorStub
-import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, ComponentSupport, WireMockSupport}
 
 class ServiceLocatorRegistrationISpec
   extends WordSpec with Matchers with Eventually
-    with WireMockSupport with PlayRunners {
+    with WireMockSupport with ComponentSupport with WithApplicationComponents with PlayRunners{
 
   lazy val app: Application = appBuilder.build()
 

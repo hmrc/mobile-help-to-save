@@ -24,9 +24,10 @@ import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
 import prod.Routes
+import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
 import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
+import uk.gov.hmrc.mobilehelptosave.api.{DocumentationController, ServiceLocatorRegistrationTask}
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorImpl
 import uk.gov.hmrc.mobilehelptosave.controllers._
@@ -70,9 +71,10 @@ class ServiceComponents(context: Context)
 
   lazy val helpToSaveConfig: MobileHelpToSaveConfig = wire[MobileHelpToSaveConfig]
 
-  lazy val helpToSaveConnector: HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
-  lazy val auditConnector     : AuditConnector          = wire[DefaultAuditConnector]
-  lazy val authConnector      : AuthConnector           = wire[DefaultAuthConnector]
+  lazy val helpToSaveConnector    : HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
+  lazy val auditConnector         : AuditConnector          = wire[DefaultAuditConnector]
+  lazy val authConnector          : AuthConnector           = wire[DefaultAuthConnector]
+  lazy val serviceLocatorConnector: ServiceLocatorConnector = wire[ApiServiceLocatorConnector]
 
   lazy val userService   : UserService    = wire[UserService]
   lazy val accountService: AccountService = wire[HelpToSaveAccountService]
@@ -85,4 +87,6 @@ class ServiceComponents(context: Context)
   lazy val documentationController: DocumentationController = wire[DocumentationController]
   lazy val metricsController      : MetricsController       = wire[MetricsController]
   lazy val sandboxController      : SandboxController       = wire[SandboxController]
+
+  val registrationTask: ServiceLocatorRegistrationTask = wire[ServiceLocatorRegistrationTask]
 }
