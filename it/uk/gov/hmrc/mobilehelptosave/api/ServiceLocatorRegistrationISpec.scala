@@ -21,10 +21,9 @@ import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.PlayRunners
 import uk.gov.hmrc.mobilehelptosave.stubs.ServiceLocatorStub
-import uk.gov.hmrc.mobilehelptosave.support.WireMockSupport
+import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, WireMockSupport}
 
 class ServiceLocatorRegistrationISpec
   extends WordSpec with Matchers with Eventually
@@ -32,7 +31,7 @@ class ServiceLocatorRegistrationISpec
 
   lazy val app: Application = appBuilder.build()
 
-  override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
+  override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
     "microservice.services.service-locator.enabled" -> true,
     "microservice.services.service-locator.host" -> wireMockHost,
     "microservice.services.service-locator.port" -> wireMockPort

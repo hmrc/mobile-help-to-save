@@ -27,7 +27,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEvent
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -42,6 +42,7 @@ class SavingsGoalEventsISpec
     with MongoSupport
     with OptionValues
     with OneServerPerSuiteWsClient
+    with ComponentSupport
     with NumberVerification {
 
   override implicit lazy val app: Application = appBuilder.build()

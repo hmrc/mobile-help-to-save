@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, Result}
@@ -36,8 +35,7 @@ trait HelpToSaveActions {
   def getSavingsGoalsEvents(nino: String): Action[AnyContent]
 }
 
-@Singleton
-class HelpToSaveController @Inject()
+class HelpToSaveController
 (
   val logger: LoggerLike,
   accountService: AccountService,

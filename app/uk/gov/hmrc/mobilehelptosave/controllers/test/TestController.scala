@@ -16,19 +16,17 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.test
 
-import javax.inject.Inject
 import play.api.mvc.Results._
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TestController @Inject()(savingsGoalEventRepo: SavingsGoalEventRepo) {
-
+class TestController(savingsGoalEventRepo: SavingsGoalEventRepo) {
   def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")
-      case _ => InternalServerError("Failed to clear goal events")
+      case _    => InternalServerError("Failed to clear goal events")
     }
   }
-
 }

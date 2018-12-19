@@ -24,7 +24,8 @@ object AppDependencies {
     "io.lemonlabs" %% "scala-uri" % "1.4.0",
     "uk.gov.hmrc" %% "play-hmrc-api" % "3.3.0-play-25",
     "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion,
-    "com.beachape" %% "enumeratum-play-json" % enumeratumVersion
+    "com.beachape" %% "enumeratum-play-json" % enumeratumVersion,
+    "com.softwaremill.macwire" %% "macros" % "2.3.1"
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(
@@ -36,7 +37,6 @@ object AppDependencies {
   )
 
   def testCommon(scope: String): Seq[ModuleID] = Seq(
-    "org.scalatest" %% "scalatest" % "3.0.5" % scope,
     "org.scalacheck" %% "scalacheck" % "1.14.0" % scope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % scope,
     "org.pegdown" % "pegdown" % "1.6.0" % scope,

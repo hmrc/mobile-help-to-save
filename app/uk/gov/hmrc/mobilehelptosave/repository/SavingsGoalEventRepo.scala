@@ -20,9 +20,7 @@ import java.time.LocalDateTime
 
 import cats.instances.future._
 import cats.syntax.functor._
-import com.google.inject.ImplementedBy
 import enumeratum._
-import javax.inject.Inject
 import play.api.libs.json.Json._
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -76,7 +74,6 @@ object SavingsGoalEvent {
   }
 }
 
-@ImplementedBy(classOf[MongoSavingsGoalEventRepo])
 trait SavingsGoalEventRepo {
   def setGoal(nino: Nino, amount: Double): Future[Unit]
   def deleteGoal(nino: Nino): Future[Unit]
@@ -85,7 +82,7 @@ trait SavingsGoalEventRepo {
   def clearGoalEvents(): Future[Boolean]
 }
 
-class MongoSavingsGoalEventRepo @Inject()(
+class MongoSavingsGoalEventRepo(
   mongo: ReactiveMongoComponent
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])

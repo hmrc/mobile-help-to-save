@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.data._
 import cats.implicits._
-import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,12 +27,10 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
-class UserService @Inject()(
-                             logger: LoggerLike,
-                             helpToSaveConnector: HelpToSaveEnrolmentStatus
-                           ) {
-
+class UserService(
+  logger: LoggerLike,
+  helpToSaveConnector: HelpToSaveEnrolmentStatus
+) {
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {
     EitherT(helpToSaveConnector.enrolmentStatus())
       .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)

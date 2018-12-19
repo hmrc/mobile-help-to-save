@@ -20,8 +20,6 @@ import cats.data.EitherT
 import cats.instances.future._
 import cats.syntax.apply._
 import cats.syntax.either._
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
 import org.joda.time.LocalDate
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
@@ -34,7 +32,6 @@ import uk.gov.hmrc.mobilehelptosave.repository._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-@ImplementedBy(classOf[HelpToSaveAccountService])
 trait AccountService {
   type Result[T] = Either[ErrorInfo, T]
 
@@ -47,8 +44,7 @@ trait AccountService {
   def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]]
 }
 
-@Singleton
-class HelpToSaveAccountService @Inject()(
+class HelpToSaveAccountService(
   logger: LoggerLike,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
   helpToSaveGetAccount: HelpToSaveGetAccount,
@@ -103,7 +99,7 @@ class HelpToSaveAccountService @Inject()(
       fn
   }
 
-  private def withEnoughSavingsHeadroom[T](goal: Double, acc:Account)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
+  private def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
       Future.successful(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)

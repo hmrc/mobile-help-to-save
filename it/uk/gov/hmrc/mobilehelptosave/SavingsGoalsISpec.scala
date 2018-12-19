@@ -28,7 +28,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -43,6 +43,7 @@ class SavingsGoalsISpec
     with MongoSupport
     with OptionValues
     with OneServerPerSuiteWsClient
+    with ComponentSupport
     with NumberVerification {
 
   override implicit lazy val app: Application = appBuilder.build()
@@ -50,12 +51,12 @@ class SavingsGoalsISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val savingsGoal1 = SavingsGoal(20)
-  private val validGoalJson = toJson(savingsGoal1)
-  private val savingsGoal2 = SavingsGoal(30)
+  private val savingsGoal1   = SavingsGoal(20)
+  private val validGoalJson  = toJson(savingsGoal1)
+  private val savingsGoal2   = SavingsGoal(30)
   private val validGoalJson2 = toJson(savingsGoal2)
 
-  private def setSavingsGoal(nino:Nino, json:JsValue) = {
+  private def setSavingsGoal(nino: Nino, json: JsValue) = {
     await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal").put(json))
   }
 
@@ -76,14 +77,14 @@ class SavingsGoalsISpec
 
       val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(30.123)))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
-      response.body should include ("goal amount should be a valid monetary amount")
+      response.body should include("goal amount should be a valid monetary amount")
     }
 
     "respond with 422 when putting a value that is not a valid savings goal" in new LoggedInUserScenario {
 
       val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(0.10)))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
-      response.body should include ("goal amount should be a valid monetary amount")
+      response.body should include("goal amount should be a valid monetary amount")
     }
 
 
@@ -91,21 +92,21 @@ class SavingsGoalsISpec
 
       val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(51)))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
-      response.body should include ("goal amount should be in range 1 to 50")
+      response.body should include("goal amount should be in range 1 to 50")
     }
 
     "set the goal" in new LoggedInUserScenario {
 
-        val response: WSResponse = await {
-          for {
-            _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
-            resp <- wsUrl(s"/savings-account/$nino").get()
-          } yield resp
-        }
+      val response: WSResponse = await {
+        for {
+          _ <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
+          resp <- wsUrl(s"/savings-account/$nino").get()
+        } yield resp
+      }
 
-        response.status shouldBe 200
-        val account = parse(response.body).as[Account]
-        account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
+      response.status shouldBe 200
+      val account = parse(response.body).as[Account]
+      account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
     }
 
     "update the goal when called a second time" in new LoggedInUserScenario {
@@ -127,7 +128,7 @@ class SavingsGoalsISpec
       HelpToSaveStub.currentUserIsNotEnrolled()
       AuthStub.userIsLoggedIn(nino)
 
-      val response: WSResponse = setSavingsGoal(nino,validGoalJson)
+      val response: WSResponse = setSavingsGoal(nino, validGoalJson)
 
       (response.json \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (response.json \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
@@ -137,14 +138,14 @@ class SavingsGoalsISpec
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
-      val response: WSResponse = setSavingsGoal(nino,validGoalJson)
+      val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 401
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response: WSResponse = setSavingsGoal(nino,validGoalJson)
+      val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 403
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }

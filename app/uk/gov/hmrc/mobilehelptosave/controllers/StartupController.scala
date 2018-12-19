@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
@@ -26,8 +25,7 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext
 
-@Singleton()
-class StartupController @Inject()(
+class StartupController (
   userService: UserService,
   authorisedWithIds: AuthorisedWithIds,
   config: StartupControllerConfig
