@@ -73,26 +73,26 @@ trait TestSupport {
     scenario: AuthorisedTestScenario =>
 
     def accountReturns(stubbedResponse: Either[ErrorInfo, Option[Account]]) = {
-      (accountService.account(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, *, *)
+      (accountService.account(_: Nino)(_: HeaderCarrier))
+        .expects(nino, *)
         .returning(Future.successful(stubbedResponse))
     }
 
     def helpToSaveGetTransactionsReturns(stubbedResponse: Future[Either[ErrorInfo, Transactions]]) = {
-      (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, *, *)
+      (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier))
+        .expects(nino, *)
         .returning(stubbedResponse)
     }
 
     def setSavingsGoalReturns(expectedNino: Nino, expectedAmount: Double, stubbedResponse: Either[ErrorInfo, Unit]) = {
-      (accountService.setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(where { (nino, amount, _, _) => nino == expectedNino && amount.goalAmount == expectedAmount })
+      (accountService.setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier))
+        .expects(where { (nino, amount, _) => nino == expectedNino && amount.goalAmount == expectedAmount })
         .returning(Future.successful(stubbedResponse))
     }
 
     def deleteSavingsGoalExpects(expectedNino: Nino) = {
-      (accountService.deleteSavingsGoal(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(where { (suppliedNino: Nino, _, _) => suppliedNino == expectedNino })
+      (accountService.deleteSavingsGoal(_: Nino)(_: HeaderCarrier))
+        .expects(where { (suppliedNino: Nino, _) => suppliedNino == expectedNino })
         .returning(Future.successful(().asRight))
     }
   }

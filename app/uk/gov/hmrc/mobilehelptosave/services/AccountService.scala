@@ -35,13 +35,13 @@ import scala.util.control.NonFatal
 trait AccountService {
   type Result[T] = Either[ErrorInfo, T]
 
-  def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]]
+  def account(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[Account]]]
 
-  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]]
-  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]]
-  def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]]
+  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): Future[Result[Unit]]
+  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[SavingsGoal]]]
+  def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Unit]]
 
-  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]]
+  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[List[SavingsGoalEvent]]]
 }
 
 class HelpToSaveAccountService(
@@ -50,9 +50,11 @@ class HelpToSaveAccountService(
   helpToSaveGetAccount: HelpToSaveGetAccount,
   config: AccountServiceConfig,
   savingsGoalEventRepo: SavingsGoalEventRepo
+)(
+  implicit ec: ExecutionContext
 ) extends AccountService {
 
-  override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
+  override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): Future[Result[Unit]] =
     withValidSavingsAmount(savingsGoal.goalAmount) {
       withHelpToSaveAccount(nino) { acc: Account =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
@@ -61,20 +63,20 @@ class HelpToSaveAccountService(
       }
     }
 
-  override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] =
+  override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[SavingsGoal]]] =
     withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
-  override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
+  override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Unit]] =
     withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
     }
 
-  override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]] =
+  override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[List[SavingsGoalEvent]]] =
     withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino)) }
 
-  private def trappingRepoExceptions[T](msg: String, f: => Future[T])(implicit ec: ExecutionContext): Future[Result[T]] =
+  private def trappingRepoExceptions[T](msg: String, f: => Future[T]): Future[Result[T]] =
     f.map(_.asRight[ErrorInfo]).recover {
       case NonFatal(t) =>
         logger.error(msg, t)
@@ -85,21 +87,21 @@ class HelpToSaveAccountService(
     * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
     * to an appropriate ErrorInfo value
     */
-  private def withHelpToSaveAccount[T](nino: Nino)(f: Account => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] =
+  private def withHelpToSaveAccount[T](nino: Nino)(f: Account => Future[Result[T]])(implicit hc: HeaderCarrier): Future[Result[T]] =
     fetchNSAndIAccount(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => Future.successful(ErrorInfo.AccountNotFound.asLeft)
       case Left(errorInfo)      => Future.successful(errorInfo.asLeft)
     }
 
-  private def withValidSavingsAmount[T](goal: Double)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
+  private def withValidSavingsAmount[T](goal: Double)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier): Future[Result[T]] = {
     if (goal < 1.0 || BigDecimal(goal).scale > 2)
       Future.successful(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
     else
       fn
   }
 
-  private def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
+  private def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier): Future[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
       Future.successful(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
@@ -107,7 +109,7 @@ class HelpToSaveAccountService(
       fn
   }
 
-  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] =
+  override def account(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
       case true =>
         EitherT(fetchAccountAndGoal(nino))
@@ -116,7 +118,7 @@ class HelpToSaveAccountService(
         EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
     }.value
 
-  private def fetchAccountAndGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] = {
+  private def fetchAccountAndGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[Account]]] = {
     // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
     // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
     // in parallel.
@@ -135,7 +137,7 @@ class HelpToSaveAccountService(
     }
   }
 
-  private def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] =
+  private def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[Account]]] =
     EitherT(helpToSaveGetAccount.getAccount(nino)).map {
       case Some(helpToSaveAccount) =>
         Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now()))
@@ -145,7 +147,7 @@ class HelpToSaveAccountService(
     }.value
 
 
-  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] = {
+  private def fetchSavingsGoal(nino: Nino): Future[Result[Option[SavingsGoal]]] = {
     savingsGoalEventRepo.getGoal(nino).map(_.asRight[ErrorInfo]).recover {
       case t =>
         logger.warn("call to repo to retrieve savings goal failed", t)

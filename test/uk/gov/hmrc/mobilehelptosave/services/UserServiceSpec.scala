@@ -25,8 +25,8 @@ import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
-import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class UserServiceSpec
   extends WordSpec with Matchers
@@ -37,7 +37,7 @@ class UserServiceSpec
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
 
 
   private class UserServiceWithTestDefaults(
@@ -77,9 +77,8 @@ class UserServiceSpec
   }
 
   private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveEnrolmentStatus {
-    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+    override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
-      ec shouldBe passedEc
 
       Future successful userIsEnrolledInHelpToSave
     }

@@ -30,8 +30,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserService(
   logger: LoggerLike,
   helpToSaveConnector: HelpToSaveEnrolmentStatus
-) {
-  def userDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, UserDetails]] = {
+)(implicit ec: ExecutionContext) {
+  def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] = {
     EitherT(helpToSaveConnector.enrolmentStatus())
       .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)
       .map(state => UserDetails(state = state))

@@ -29,8 +29,8 @@ import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
-import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class SetSavingsGoalSpec
   extends WordSpec
@@ -104,20 +104,18 @@ class SetSavingsGoalSpec
 
   private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus =
     new HelpToSaveEnrolmentStatus {
-      override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+      override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         nino shouldBe expectedNino
         hc shouldBe passedHc
-        ec shouldBe passedEc
 
         Future successful enrolledOrError
       }
     }
 
   private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount = new HelpToSaveGetAccount {
-    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
-      ec shouldBe passedEc
 
       Future successful accountOrError
     }
@@ -161,7 +159,7 @@ class SetSavingsGoalSpec
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
 
-    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       Future failed new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation")
     }
   }
