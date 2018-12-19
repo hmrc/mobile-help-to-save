@@ -19,10 +19,12 @@ package uk.gov.hmrc.mobilehelptosave.wiring
 import com.kenshoo.play.metrics.{Metrics, MetricsController, MetricsImpl}
 import com.softwaremill.macwire.wire
 import play.api.ApplicationLoader.Context
+import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
 import prod.Routes
+import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
@@ -45,6 +47,9 @@ class ServiceComponents(context: Context)
   implicit val ec: ExecutionContext = actorSystem.dispatcher
 
   lazy val prodLogger: LoggerLike = Logger
+
+  override lazy val httpRequestHandler: HttpRequestHandler =
+    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
 
   lazy val prefix          : String            = "/"
   lazy val sandboxRouter   : sandbox.Routes    = wire[sandbox.Routes]
