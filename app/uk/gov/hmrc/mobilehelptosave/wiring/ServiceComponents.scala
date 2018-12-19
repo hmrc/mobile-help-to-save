@@ -21,7 +21,7 @@ import com.softwaremill.macwire.wire
 import play.api.ApplicationLoader.Context
 import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
 import play.api.libs.ws.ahc.AhcWSComponents
-import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
+import play.api.{BuiltInComponents, BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
 import prod.Routes
 import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
@@ -41,16 +41,20 @@ import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 import scala.concurrent.ExecutionContext
 
+trait SandboxRequestRouting {
+  self: BuiltInComponents =>
+  override lazy val httpRequestHandler: HttpRequestHandler =
+    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
+}
+
 class ServiceComponents(context: Context)
   extends BuiltInComponentsFromContext(context)
-    with AhcWSComponents {
+    with AhcWSComponents
+    with SandboxRequestRouting {
 
   implicit val ec: ExecutionContext = actorSystem.dispatcher
 
   lazy val prodLogger: LoggerLike = Logger
-
-  override lazy val httpRequestHandler: HttpRequestHandler =
-    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
 
   lazy val prefix          : String            = "/"
   lazy val sandboxRouter   : sandbox.Routes    = wire[sandbox.Routes]
@@ -88,5 +92,6 @@ class ServiceComponents(context: Context)
   lazy val metricsController      : MetricsController       = wire[MetricsController]
   lazy val sandboxController      : SandboxController       = wire[SandboxController]
 
+  // Not lazy - want this to run at startup
   val registrationTask: ServiceLocatorRegistrationTask = wire[ServiceLocatorRegistrationTask]
 }
