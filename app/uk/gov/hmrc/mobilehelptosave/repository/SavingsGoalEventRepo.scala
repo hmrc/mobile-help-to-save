@@ -20,7 +20,6 @@ import java.time.LocalDateTime
 
 import cats.instances.future._
 import cats.syntax.functor._
-import enumeratum._
 import play.api.libs.json.Json._
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -30,56 +29,12 @@ import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 
 import scala.concurrent.{ExecutionContext, Future}
 
-sealed trait SavingsGoalEventType extends EnumEntry
-
-object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercaseJsonEnum[SavingsGoalEventType] {
-  //noinspection TypeAnnotation
-  val values = findValues
-
-  case object Delete extends SavingsGoalEventType
-  case object Set extends SavingsGoalEventType
-}
-
-
-sealed trait SavingsGoalEvent {
-  def nino: Nino
-  def date: LocalDateTime
-}
-case class SavingsGoalSetEvent(nino: Nino, amount: Double, date: LocalDateTime) extends SavingsGoalEvent
-case class SavingsGoalDeleteEvent(nino: Nino, date: LocalDateTime) extends SavingsGoalEvent
-
-object SavingsGoalEvent {
-  val setEventFormat   : OFormat[SavingsGoalSetEvent]    = Json.format
-  val deleteEventFormat: OFormat[SavingsGoalDeleteEvent] = Json.format
-
-  val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
-
-  implicit val format: OFormat[SavingsGoalEvent] = new OFormat[SavingsGoalEvent] {
-    override def writes(o: SavingsGoalEvent): JsObject = o match {
-      case ev: SavingsGoalSetEvent    => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
-      case ev: SavingsGoalDeleteEvent => deleteEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Delete))
-    }
-
-    override def reads(json: JsValue): JsResult[SavingsGoalEvent] = {
-      typeReads.reads(json) match {
-        case JsSuccess(ev, _) => readEvent(ev, json)
-        case error: JsError   => error
-      }
-    }
-
-    private def readEvent(ev: SavingsGoalEventType, json: JsValue): JsResult[SavingsGoalEvent] = ev match {
-      case SavingsGoalEventType.Set    => setEventFormat.reads(json)
-      case SavingsGoalEventType.Delete => deleteEventFormat.reads(json)
-    }
-  }
-}
-
-trait SavingsGoalEventRepo {
-  def setGoal(nino: Nino, amount: Double): Future[Unit]
-  def deleteGoal(nino: Nino): Future[Unit]
-  def getGoal(nino: Nino): Future[Option[SavingsGoal]]
-  def getEvents(nino: Nino): Future[List[SavingsGoalEvent]]
-  def clearGoalEvents(): Future[Boolean]
+trait SavingsGoalEventRepo[F[_]] {
+  def setGoal(nino: Nino, amount: Double): F[Unit]
+  def deleteGoal(nino: Nino): F[Unit]
+  def getGoal(nino: Nino): F[Option[SavingsGoal]]
+  def getEvents(nino: Nino): F[List[SavingsGoalEvent]]
+  def clearGoalEvents(): F[Boolean]
 }
 
 class MongoSavingsGoalEventRepo(
@@ -87,7 +42,7 @@ class MongoSavingsGoalEventRepo(
 )
   (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])
   extends IndexedMongoRepo[Nino, SavingsGoalEvent]("savingsGoalEvents", "nino", unique = false, mongo = mongo)
-    with SavingsGoalEventRepo {
+    with SavingsGoalEventRepo[Future] {
 
   override def setGoal(nino: Nino, amount: Double): Future[Unit] =
     insert(SavingsGoalSetEvent(nino, amount, LocalDateTime.now)).void

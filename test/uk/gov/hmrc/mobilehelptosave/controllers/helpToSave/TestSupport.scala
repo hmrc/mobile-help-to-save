@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 case class TestHelpToSaveControllerConfig(shuttering: Shuttering)
   extends HelpToSaveControllerConfig
@@ -49,15 +49,15 @@ trait TestSupport {
   val config = TestHelpToSaveControllerConfig(falseShuttering)
 
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
-    val accountService = mock[AccountService]
-    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+    val accountService = mock[AccountService[Future]]
+    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
     val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config)
     authorisedActionForNino(controller)
   }
 
   trait AuthorisedTestScenario {
-    val accountService            = mock[AccountService]
-    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+    val accountService            = mock[AccountService[Future]]
+    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
 
     val controller: HelpToSaveController =
       new HelpToSaveController(

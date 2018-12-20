@@ -32,16 +32,16 @@ import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegment
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait HelpToSaveEnrolmentStatus {
-  def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]]
+trait HelpToSaveEnrolmentStatus[F[_]] {
+  def enrolmentStatus()(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Boolean]]
 }
 
-trait HelpToSaveGetAccount {
-  def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]
+trait HelpToSaveGetAccount[F[_]] {
+  def getAccount(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Option[HelpToSaveAccount]]]
 }
 
-trait HelpToSaveGetTransactions {
-  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Transactions]]
+trait HelpToSaveGetTransactions[F[_]] {
+  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Transactions]]
 }
 
 class HelpToSaveConnectorImpl(
@@ -51,9 +51,9 @@ class HelpToSaveConnectorImpl(
 )(
   implicit ec: ExecutionContext
 )
-  extends HelpToSaveGetTransactions
-    with HelpToSaveGetAccount
-    with HelpToSaveEnrolmentStatus {
+  extends HelpToSaveGetTransactions[Future]
+    with HelpToSaveGetAccount[Future]
+    with HelpToSaveEnrolmentStatus[Future] {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>

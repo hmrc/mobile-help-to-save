@@ -27,10 +27,15 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserService(
+trait UserService[F[_]] {
+  def userDetails(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, UserDetails]]
+}
+
+class ProdUserService(
   logger: LoggerLike,
-  helpToSaveConnector: HelpToSaveEnrolmentStatus
-)(implicit ec: ExecutionContext) {
+  helpToSaveConnector: HelpToSaveEnrolmentStatus[Future]
+)(implicit ec: ExecutionContext)
+  extends UserService[Future] {
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] = {
     EitherT(helpToSaveConnector.enrolmentStatus())
       .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)

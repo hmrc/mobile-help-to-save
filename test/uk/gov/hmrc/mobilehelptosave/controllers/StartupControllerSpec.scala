@@ -25,7 +25,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.services.UserService
+import uk.gov.hmrc.mobilehelptosave.services.ProdUserService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -43,7 +43,7 @@ class StartupControllerSpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val mockUserService = mock[UserService]
+  private val mockUserService = mock[ProdUserService]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")

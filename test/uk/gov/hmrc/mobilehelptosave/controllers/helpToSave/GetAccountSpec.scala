@@ -30,6 +30,7 @@ import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetAccountSpec
@@ -145,8 +146,8 @@ class GetAccountSpec
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService = mock[AccountService]
-        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+        val accountService = mock[AccountService[Future]]
+        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
         val controller = new HelpToSaveController(
           logger,
           accountService,

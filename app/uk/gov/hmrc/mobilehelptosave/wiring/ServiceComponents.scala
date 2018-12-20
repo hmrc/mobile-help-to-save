@@ -23,7 +23,6 @@ import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.{BuiltInComponents, BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
-import prod.Routes
 import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
 import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -39,7 +38,7 @@ import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait SandboxRequestRouting {
   self: BuiltInComponents =>
@@ -63,7 +62,7 @@ class ServiceComponents(context: Context)
   lazy val appRouter       : app.Routes        = wire[app.Routes]
   lazy val apiRouter       : api.Routes        = wire[api.Routes]
 
-  lazy val router: Routes = wire[prod.Routes]
+  lazy val router: prod.Routes = wire[prod.Routes]
 
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
 
@@ -80,11 +79,11 @@ class ServiceComponents(context: Context)
   lazy val authConnector          : AuthConnector           = wire[DefaultAuthConnector]
   lazy val serviceLocatorConnector: ServiceLocatorConnector = wire[ApiServiceLocatorConnector]
 
-  lazy val userService   : UserService    = wire[UserService]
-  lazy val accountService: AccountService = wire[HelpToSaveAccountService]
+  lazy val userService   : UserService[Future]    = wire[ProdUserService]
+  lazy val accountService: AccountService[Future] = wire[HelpToSaveAccountService]
 
-  lazy val mongo    : ReactiveMongoComponent = wire[ReactiveMongoComponentImpl]
-  lazy val eventRepo: SavingsGoalEventRepo   = wire[MongoSavingsGoalEventRepo]
+  lazy val mongo    : ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
+  lazy val eventRepo: SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
 
   lazy val startupController      : StartupController       = wire[StartupController]
   lazy val helpToSaveController   : HelpToSaveController    = wire[HelpToSaveController]

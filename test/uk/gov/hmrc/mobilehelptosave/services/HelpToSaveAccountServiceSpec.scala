@@ -111,7 +111,7 @@ class HelpToSaveAccountServiceSpec
     "not call either fetchSavingsGoal or fetchNSAndIAccount if the user isn't enrolled" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
 
-      val fakeGetAccount = new HelpToSaveGetAccount {
+      val fakeGetAccount = new HelpToSaveGetAccount[Future] {
         override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
           fail("getAccount should not have been called")
       }
@@ -148,8 +148,8 @@ class HelpToSaveAccountServiceSpec
     }
   }
 
-  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus =
-    new HelpToSaveEnrolmentStatus {
+  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[Future] =
+    new HelpToSaveEnrolmentStatus[Future] {
       override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         nino shouldBe expectedNino
         hc shouldBe passedHc
@@ -158,7 +158,8 @@ class HelpToSaveAccountServiceSpec
       }
     }
 
-  private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount = new HelpToSaveGetAccount {
+  private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount[Future] =
+    new HelpToSaveGetAccount[Future] {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
@@ -169,8 +170,8 @@ class HelpToSaveAccountServiceSpec
 
   private val fUnit = Future.successful(())
 
-  private def fakeSavingsGoalEventsRepo(expectedNino: Nino, goalsOrException: Either[Throwable, List[SavingsGoalEvent]]): SavingsGoalEventRepo =
-    new SavingsGoalEventRepo {
+  private def fakeSavingsGoalEventsRepo(expectedNino: Nino, goalsOrException: Either[Throwable, List[SavingsGoalEvent]]): SavingsGoalEventRepo[Future] =
+    new SavingsGoalEventRepo[Future] {
       override def setGoal(nino: Nino, amount: Double): Future[Unit] = {
         nino shouldBe expectedNino
         fUnit
@@ -202,8 +203,7 @@ class HelpToSaveAccountServiceSpec
         }
     }
 
-  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
-
+  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[Future] {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       Future failed new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation")
     }

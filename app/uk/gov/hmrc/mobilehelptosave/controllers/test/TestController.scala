@@ -21,8 +21,9 @@ import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class TestController(savingsGoalEventRepo: SavingsGoalEventRepo) {
+class TestController(savingsGoalEventRepo: SavingsGoalEventRepo[Future]) {
   def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")

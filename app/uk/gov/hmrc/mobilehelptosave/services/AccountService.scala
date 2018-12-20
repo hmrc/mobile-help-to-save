@@ -32,27 +32,27 @@ import uk.gov.hmrc.mobilehelptosave.repository._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-trait AccountService {
+trait AccountService[F[_]] {
   type Result[T] = Either[ErrorInfo, T]
 
-  def account(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[Account]]]
+  def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]]
 
-  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): Future[Result[Unit]]
-  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Option[SavingsGoal]]]
-  def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[Unit]]
+  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]]
+  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]]
+  def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]]
 
-  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): Future[Result[List[SavingsGoalEvent]]]
+  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]]
 }
 
 class HelpToSaveAccountService(
   logger: LoggerLike,
-  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
-  helpToSaveGetAccount: HelpToSaveGetAccount,
+  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
+  helpToSaveGetAccount: HelpToSaveGetAccount[Future],
   config: AccountServiceConfig,
-  savingsGoalEventRepo: SavingsGoalEventRepo
+  savingsGoalEventRepo: SavingsGoalEventRepo[Future]
 )(
   implicit ec: ExecutionContext
-) extends AccountService {
+) extends AccountService[Future] {
 
   override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): Future[Result[Unit]] =
     withValidSavingsAmount(savingsGoal.goalAmount) {

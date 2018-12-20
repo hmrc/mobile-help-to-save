@@ -102,8 +102,8 @@ class SetSavingsGoalSpec
     }
   }
 
-  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus =
-    new HelpToSaveEnrolmentStatus {
+  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[Future] =
+    new HelpToSaveEnrolmentStatus[Future] {
       override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         nino shouldBe expectedNino
         hc shouldBe passedHc
@@ -112,7 +112,8 @@ class SetSavingsGoalSpec
       }
     }
 
-  private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount = new HelpToSaveGetAccount {
+  private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount[Future] =
+    new HelpToSaveGetAccount[Future] {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       nino shouldBe expectedNino
       hc shouldBe passedHc
@@ -128,7 +129,7 @@ class SetSavingsGoalSpec
     goalsOrException: Either[Throwable, List[SavingsGoalEvent]] = List().asRight,
     setGoalResponse: Either[Throwable, Unit] = ().asRight,
     deleteGoalResponse: Either[Throwable, Unit] = ().asRight
-  ): SavingsGoalEventRepo = new SavingsGoalEventRepo {
+  ): SavingsGoalEventRepo[Future] = new SavingsGoalEventRepo[Future] {
     override def setGoal(nino: Nino, amount: Double): Future[Unit] = {
       nino shouldBe expectedNino
       setGoalResponse match {
@@ -157,8 +158,7 @@ class SetSavingsGoalSpec
     override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
   }
 
-  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
-
+  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[Future] {
     override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
       Future failed new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation")
     }
