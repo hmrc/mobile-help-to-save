@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.wiring
 
+import cats.instances.future._
 import com.kenshoo.play.metrics.{Metrics, MetricsController, MetricsImpl}
 import com.softwaremill.macwire.wire
 import play.api.ApplicationLoader.Context
@@ -80,7 +81,7 @@ class ServiceComponents(context: Context)
   lazy val serviceLocatorConnector: ServiceLocatorConnector = wire[ApiServiceLocatorConnector]
 
   lazy val userService   : UserService[Future]    = wire[ProdUserService]
-  lazy val accountService: AccountService[Future] = wire[HelpToSaveAccountService]
+  lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]
 
   lazy val mongo    : ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
   lazy val eventRepo: SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]

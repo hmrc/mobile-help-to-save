@@ -1,6 +1,5 @@
 package org.scalatestplus.play.components
 
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{ BuiltInComponents, _ }
 
 /**
@@ -11,7 +10,7 @@ import play.api.{ BuiltInComponents, _ }
  * This class has several methods that can be used to customize the behavior in specific ways.
  *
  * This is targeted at functional tests requiring a running application that is bootstrapped using Macwire/Compile time DI.
- * This is provided as an alternative to the [[GuiceApplicationBuilder]] which requires guice bootstrapping.
+ * This is provided as an alternative to the [[play.api.inject.guice.GuiceApplicationBuilder]] which requires guice bootstrapping.
  *
  * @see https://www.playframework.com/documentation/2.5.x/ScalaFunctionalTestingWithScalaTest#Creating-Application-instances-for-testing
  */

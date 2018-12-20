@@ -21,6 +21,7 @@ object AppDependencies {
     "uk.gov.hmrc" %% "bootstrap-play-25" % "4.3.0" withSources(),
     "uk.gov.hmrc" %% "domain" % "5.2.0",
     "org.typelevel" %% "cats-core" % "1.5.0",
+    "io.chrisdavenport" %% "cats-par" % "0.2.0",
     "io.lemonlabs" %% "scala-uri" % "1.4.0",
     "uk.gov.hmrc" %% "play-hmrc-api" % "3.3.0-play-25",
     "uk.gov.hmrc" %% "play-reactivemongo" % reactiveMongoVersion,
