@@ -21,6 +21,11 @@ import cats.MonadError
 import scala.util.Try
 import cats.instances.try_._
 
+/**
+  * Defines a type constructor that can be used in tests to instantiate components that have a type constructor
+  * parameter. All tests can just use `TestF` to construct the services, and `F` to generate values (e.g.
+  * `F.pure(a)` or `F.raiseError(t)`
+  */
 trait TestF {
   type TestF[A] = Try[A]
 
