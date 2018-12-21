@@ -25,10 +25,10 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.services.UserService
+import uk.gov.hmrc.mobilehelptosave.services.ProdUserService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class StartupControllerSpec
   extends WordSpec
@@ -43,7 +43,7 @@ class StartupControllerSpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val mockUserService = mock[UserService]
+  private val mockUserService = mock[ProdUserService]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
@@ -59,8 +59,8 @@ class StartupControllerSpec
 
   "startup" should {
     "pass NINO obtained from auth into userService" in {
-      (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, *, *)
+      (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+        .expects(nino, *)
         .returning(Future successful Right(testUserDetails))
 
       val controller = new StartupController(
@@ -89,8 +89,8 @@ class StartupControllerSpec
         config)
 
       "include URLs and user in response" in {
-        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(nino, *, *)
+        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+          .expects(nino, *)
           .returning(Future successful Right(testUserDetails))
 
         val resultF = controller.startup(FakeRequest())
@@ -103,8 +103,8 @@ class StartupControllerSpec
       }
 
       "include shuttering information in response with shuttered = false" in {
-        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(nino, *, *)
+        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+          .expects(nino, *)
           .returning(Future successful Right(testUserDetails))
 
         val resultF = controller.startup(FakeRequest())
@@ -124,8 +124,8 @@ class StartupControllerSpec
         val generator = new Generator(0)
         val nino = generator.nextNino
 
-        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(nino, *, *)
+        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+          .expects(nino, *)
           .returning(Future successful Left(ErrorInfo.General))
 
         val resultF = controller.startup(FakeRequest())

@@ -16,12 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.joda.time.DateTime
+import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 
-trait Clock {
-  def now(): DateTime
-}
-
-class ClockImpl extends Clock {
-  def now(): DateTime = DateTime.now()
-}
+case class TestAccountServiceConfig(inAppPaymentsEnabled: Boolean, savingsGoalsEnabled: Boolean) extends AccountServiceConfig

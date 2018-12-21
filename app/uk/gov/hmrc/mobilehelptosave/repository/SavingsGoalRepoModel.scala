@@ -18,8 +18,10 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
 
-import play.api.libs.json.{Format, Json, OWrites, Reads}
+import enumeratum.{Enum, EnumEntry, PlayLowercaseJsonEnum}
+import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventType.findValues
 
 case class SavingsGoalRepoModel(nino: Nino, amount: Double, createdAt: LocalDateTime)
 
@@ -31,3 +33,46 @@ object SavingsGoalRepoModel {
     Format(reads, writes)
 }
 
+
+sealed trait SavingsGoalEventType extends EnumEntry
+
+object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercaseJsonEnum[SavingsGoalEventType] {
+  //noinspection TypeAnnotation
+  val values = findValues
+
+  case object Delete extends SavingsGoalEventType
+  case object Set extends SavingsGoalEventType
+}
+
+sealed trait SavingsGoalEvent {
+  def nino: Nino
+  def date: LocalDateTime
+}
+case class SavingsGoalSetEvent(nino: Nino, amount: Double, date: LocalDateTime) extends SavingsGoalEvent
+case class SavingsGoalDeleteEvent(nino: Nino, date: LocalDateTime) extends SavingsGoalEvent
+
+object SavingsGoalEvent {
+  val setEventFormat   : OFormat[SavingsGoalSetEvent]    = Json.format
+  val deleteEventFormat: OFormat[SavingsGoalDeleteEvent] = Json.format
+
+  val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
+
+  implicit val format: OFormat[SavingsGoalEvent] = new OFormat[SavingsGoalEvent] {
+    override def writes(o: SavingsGoalEvent): JsObject = o match {
+      case ev: SavingsGoalSetEvent    => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
+      case ev: SavingsGoalDeleteEvent => deleteEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Delete))
+    }
+
+    override def reads(json: JsValue): JsResult[SavingsGoalEvent] = {
+      typeReads.reads(json) match {
+        case JsSuccess(ev, _) => readEvent(ev, json)
+        case error: JsError   => error
+      }
+    }
+
+    private def readEvent(ev: SavingsGoalEventType, json: JsValue): JsResult[SavingsGoalEvent] = ev match {
+      case SavingsGoalEventType.Set    => setEventFormat.reads(json)
+      case SavingsGoalEventType.Delete => deleteEventFormat.reads(json)
+    }
+  }
+}

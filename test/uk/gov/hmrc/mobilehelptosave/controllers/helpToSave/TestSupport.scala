@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 case class TestHelpToSaveControllerConfig(shuttering: Shuttering)
   extends HelpToSaveControllerConfig
@@ -49,15 +49,15 @@ trait TestSupport {
   val config = TestHelpToSaveControllerConfig(falseShuttering)
 
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
-    val accountService = mock[AccountService]
-    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+    val accountService = mock[AccountService[Future]]
+    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
     val controller = new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config)
     authorisedActionForNino(controller)
   }
 
   trait AuthorisedTestScenario {
-    val accountService            = mock[AccountService]
-    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+    val accountService            = mock[AccountService[Future]]
+    val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
 
     val controller: HelpToSaveController =
       new HelpToSaveController(
@@ -73,26 +73,26 @@ trait TestSupport {
     scenario: AuthorisedTestScenario =>
 
     def accountReturns(stubbedResponse: Either[ErrorInfo, Option[Account]]) = {
-      (accountService.account(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, *, *)
+      (accountService.account(_: Nino)(_: HeaderCarrier))
+        .expects(nino, *)
         .returning(Future.successful(stubbedResponse))
     }
 
     def helpToSaveGetTransactionsReturns(stubbedResponse: Future[Either[ErrorInfo, Transactions]]) = {
-      (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, *, *)
+      (helpToSaveGetTransactions.getTransactions(_: Nino)(_: HeaderCarrier))
+        .expects(nino, *)
         .returning(stubbedResponse)
     }
 
     def setSavingsGoalReturns(expectedNino: Nino, expectedAmount: Double, stubbedResponse: Either[ErrorInfo, Unit]) = {
-      (accountService.setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(where { (nino, amount, _, _) => nino == expectedNino && amount.goalAmount == expectedAmount })
+      (accountService.setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier))
+        .expects(where { (nino, amount, _) => nino == expectedNino && amount.goalAmount == expectedAmount })
         .returning(Future.successful(stubbedResponse))
     }
 
     def deleteSavingsGoalExpects(expectedNino: Nino) = {
-      (accountService.deleteSavingsGoal(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(where { (suppliedNino: Nino, _, _) => suppliedNino == expectedNino })
+      (accountService.deleteSavingsGoal(_: Nino)(_: HeaderCarrier))
+        .expects(where { (suppliedNino: Nino, _) => suppliedNino == expectedNino })
         .returning(Future.successful(().asRight))
     }
   }

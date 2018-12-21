@@ -19,9 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.google.inject.ImplementedBy
 import io.lemonlabs.uri.dsl._
-import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
 import play.api.libs.json._
@@ -34,43 +32,41 @@ import uk.gov.hmrc.play.encoding.UriPathEncoding.encodePathSegment
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveEnrolmentStatus {
-  def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]]
+trait HelpToSaveEnrolmentStatus[F[_]] {
+  def enrolmentStatus()(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Boolean]]
 }
 
-@ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveGetAccount {
-  def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]]
+trait HelpToSaveGetAccount[F[_]] {
+  def getAccount(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Option[HelpToSaveAccount]]]
 }
 
-@ImplementedBy(classOf[HelpToSaveConnectorImpl])
-trait HelpToSaveGetTransactions {
-  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]]
+trait HelpToSaveGetTransactions[F[_]] {
+  def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Transactions]]
 }
 
-@Singleton
-class HelpToSaveConnectorImpl @Inject()(
+class HelpToSaveConnectorImpl(
   logger: LoggerLike,
   config: HelpToSaveConnectorConfig,
   http: CoreGet
+)(
+  implicit ec: ExecutionContext
 )
-  extends HelpToSaveGetTransactions
-    with HelpToSaveGetAccount
-    with HelpToSaveEnrolmentStatus {
+  extends HelpToSaveGetTransactions[Future]
+    with HelpToSaveGetAccount[Future]
+    with HelpToSaveEnrolmentStatus[Future] {
 
-  override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+  override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
       Right((json \ "enrolled").as[Boolean])
     } recover handleEnrolmentStatusHttpErrors
   }
 
-  override def getAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+  override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
     val string = accountUrl(nino).toString
     http.GET[HelpToSaveAccount](string) map (account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
   }
 
-  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Transactions]] = {
+  override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Transactions]] = {
     val string = transactionsUrl(nino).toString
     http.GET[Transactions](string) map (Right(_)) recover handleTransactionsHttpErrors
   }

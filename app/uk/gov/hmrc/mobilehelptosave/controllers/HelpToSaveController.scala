@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, Result}
@@ -26,7 +25,7 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait HelpToSaveActions {
   def getTransactions(ninoString: String): Action[AnyContent]
@@ -36,12 +35,11 @@ trait HelpToSaveActions {
   def getSavingsGoalsEvents(nino: String): Action[AnyContent]
 }
 
-@Singleton
-class HelpToSaveController @Inject()
+class HelpToSaveController
 (
   val logger: LoggerLike,
-  accountService: AccountService,
-  helpToSaveGetTransactions: HelpToSaveGetTransactions,
+  accountService: AccountService[Future],
+  helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
   authorisedWithIds: AuthorisedWithIds,
   config: HelpToSaveControllerConfig
 )(implicit ec: ExecutionContext) extends BaseController with ControllerChecks with HelpToSaveActions {

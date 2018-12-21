@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.services
+package uk.gov.hmrc.mobilehelptosave.wiring
 
-import org.joda.time.DateTime
+import play.api.ApplicationLoader.Context
+import play.api.{Application, ApplicationLoader, LoggerConfigurator}
 
-trait Clock {
-  def now(): DateTime
-}
-
-class ClockImpl extends Clock {
-  def now(): DateTime = DateTime.now()
+class AppLoader extends ApplicationLoader {
+  def load(context: Context): Application = {
+    LoggerConfigurator(context.environment.classLoader).foreach { configurator =>
+      configurator.configure(context.environment)
+    }
+    new ServiceComponents(context).application
+  }
 }

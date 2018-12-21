@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.sandbox
 
 
-import javax.inject.{Inject, Singleton}
 import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
@@ -26,8 +25,7 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.Clock
 
 
-@Singleton
-case class SandboxData @Inject()
+case class SandboxData
 (
   logger: LoggerLike,
   clock: Clock,
@@ -69,22 +67,23 @@ case class SandboxData @Inject()
       new LocalDate(2018, 4, 30))
   }
 
-  val transactions = Transactions({
-    Seq(
-      (0, 20.50, 220.50),
-      (1, 20.00, 200.00),
-      (1, 18.20, 180.00),
-      (2, 10.40, 161.80),
-      (3, 35.00, 151.40),
-      (3, 15.00, 116.40),
-      (4, 06.00, 101.40),
-      (5, 20.40, 95.40),
-      (5, 10.00, 75.00),
-      (6, 25.00, 65.00),
-      (7, 40.00, 40.00)
-    ) map { case (monthsAgo, creditAmount, balance) =>
-      val date = today.minusMonths(monthsAgo)
-      Transaction(Credit, BigDecimal(creditAmount), date, date, BigDecimal(balance))
-    }
-  })
+  val transactions = Transactions(
+    {
+      Seq(
+        (0, 20.50, 220.50),
+        (1, 20.00, 200.00),
+        (1, 18.20, 180.00),
+        (2, 10.40, 161.80),
+        (3, 35.00, 151.40),
+        (3, 15.00, 116.40),
+        (4, 06.00, 101.40),
+        (5, 20.40, 95.40),
+        (5, 10.00, 75.00),
+        (6, 25.00, 65.00),
+        (7, 40.00, 40.00)
+      ) map { case (monthsAgo, creditAmount, balance) =>
+        val date = today.minusMonths(monthsAgo)
+        Transaction(Credit, BigDecimal(creditAmount), date, date, BigDecimal(balance))
+      }
+    })
 }

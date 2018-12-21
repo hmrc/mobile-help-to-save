@@ -14,14 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.services
+package uk.gov.hmrc.mobilehelptosave.support
 
-import org.joda.time.DateTime
+import cats.MonadError
 
-trait Clock {
-  def now(): DateTime
-}
+import scala.util.Try
+import cats.instances.try_._
 
-class ClockImpl extends Clock {
-  def now(): DateTime = DateTime.now()
+/**
+  * Defines a type constructor that can be used in tests to instantiate components that have a type constructor
+  * parameter. All tests can just use `TestF` to construct the services, and `F` to generate values (e.g.
+  * `F.pure(a)` or `F.raiseError(t)`
+  */
+trait TestF {
+  type TestF[A] = Try[A]
+
+  implicit val F: MonadError[TestF, Throwable] = MonadError[TestF, Throwable]
+
+  implicit class ValueSyntax[A](v: TestF[A]) {
+    def unsafeGet: A = v.get
+  }
 }

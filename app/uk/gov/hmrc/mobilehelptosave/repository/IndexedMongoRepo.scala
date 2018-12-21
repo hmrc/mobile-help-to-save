@@ -61,7 +61,7 @@ class IndexedMongoRepo[I, V: Manifest](
     * @param indexOf a function to extract the index value from the value being saved. If `V` contains the index
     *                then this is probably just a function to extract that index value.
     */
-  def set(value: V)(indexOf: V => I)(implicit ec: ExecutionContext): Future[Unit] = {
+  def set(value: V)(indexOf: V => I): Future[Unit] = {
     atomicUpsert(
       BSONDocument(indexFieldName -> Json.toJson(indexOf(value))),
       BSONDocument("$set" -> Json.toJson(value))

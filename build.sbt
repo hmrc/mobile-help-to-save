@@ -1,4 +1,5 @@
 import TestPhases.oneForkedJvmPerTest
+import sbt.CrossVersion
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
@@ -68,5 +69,8 @@ lazy val microservice = Project(appName, file("."))
     resolvers ++= Seq(
       Resolver.bintrayRepo("hmrc", "releases"),
       Resolver.jcenterRepo
-    )
+    ),
+    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4"),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )

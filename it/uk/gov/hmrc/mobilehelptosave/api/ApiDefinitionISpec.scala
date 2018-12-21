@@ -19,20 +19,19 @@ package uk.gov.hmrc.mobilehelptosave.api
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class ApiDefinitionISpec
   extends WordSpec with Matchers with Eventually with FutureAwaits with DefaultAwaitTimeout
-    with WireMockSupport with OneServerPerSuiteWsClient {
+    with WireMockSupport with OneServerPerSuiteWsClient with ComponentSupport {
 
-  override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
-      "microservice.services.service-locator.host" -> wireMockHost,
-      "microservice.services.service-locator.port" -> wireMockPort,
-      "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008", "00090002-0003-0004-0005-000600070008"),
-      "api.access.type" -> "TEST_ACCESS_TYPE"
-    )
+  override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
+    "microservice.services.service-locator.host" -> wireMockHost,
+    "microservice.services.service-locator.port" -> wireMockPort,
+    "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008", "00090002-0003-0004-0005-000600070008"),
+    "api.access.type" -> "TEST_ACCESS_TYPE"
+  )
 
   override implicit lazy val app: Application = appBuilder.build()
 

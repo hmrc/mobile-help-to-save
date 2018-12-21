@@ -16,8 +16,34 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
-import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.ApplicationLoader.Context
+import play.api.{Application, ApplicationLoader, Configuration, Environment}
+import uk.gov.hmrc.mobilehelptosave.wiring.ServiceComponents
+
+trait ApplicationBuilder {
+  def build(): Application
+  def configure(conf: (String, Any)*): ApplicationBuilder
+}
+
+class ComponentApplicationBuilder(context: Context = ApplicationLoader.createContext(Environment.simple())) extends ApplicationBuilder {
+  override def build(): Application =
+    new ServiceComponents(context).application
+
+  override def configure(conf: (String, Any)*): ApplicationBuilder =
+    configure(conf.toMap)
+
+  final def configure(conf: Configuration): ComponentApplicationBuilder =
+    new ComponentApplicationBuilder(context.copy(initialConfiguration = context.initialConfiguration ++ conf))
+
+  /**
+    * Add additional configuration.
+    */
+  final def configure(conf: Map[String, Any]): ComponentApplicationBuilder =
+    configure(Configuration.from(conf))
+
+
+}
 
 trait AppBuilder {
-  protected def appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  protected def appBuilder: ApplicationBuilder = new ComponentApplicationBuilder
 }

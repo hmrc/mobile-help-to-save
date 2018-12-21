@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.api
 
-import javax.inject.{Inject, Singleton}
 import play.api.http.HttpErrorHandler
 import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent}
@@ -29,8 +28,7 @@ object ApiAccess {
   implicit val writes: OWrites[ApiAccess] = Json.writes[ApiAccess]
 }
 
-@Singleton
-class DocumentationController @Inject() (
+class DocumentationController(
   errorHandler: HttpErrorHandler,
   config: DocumentationControllerConfig
 ) extends uk.gov.hmrc.api.controllers.DocumentationController(errorHandler) {

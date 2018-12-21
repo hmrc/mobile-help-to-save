@@ -25,18 +25,20 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class AccountsISpec extends WordSpec with Matchers
   with SchemaMatchers with TransactionTestData
   with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport
-  with OneServerPerSuiteWsClient with NumberVerification {
+  with OneServerPerSuiteWsClient
+  with NumberVerification
+  with ComponentSupport {
 
   override implicit lazy val app: Application = appBuilder.build()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
 
   "GET /savings-account/{nino}" should {
 
@@ -129,8 +131,8 @@ class AccountsISpec extends WordSpec with Matchers
 
       response.status shouldBe 404
 
-      (response.json\ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
-      (response.json\ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
+      (response.json \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (response.json \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
       HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
     }
@@ -144,7 +146,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       response.status shouldBe 500
 
-      (response.json\ "code").as[String] shouldBe "GENERAL"
+      (response.json \ "code").as[String] shouldBe "GENERAL"
     }
 
     "respond with 500 with general error message body when get account returns JSON that doesn't conform to the schema" in {
@@ -156,7 +158,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       response.status shouldBe 500
 
-      (response.json\ "code").as[String] shouldBe "GENERAL"
+      (response.json \ "code").as[String] shouldBe "GENERAL"
     }
 
     "respond with 500 with general error message body when get account returns badly formed JSON" in {
@@ -168,7 +170,7 @@ class AccountsISpec extends WordSpec with Matchers
 
       response.status shouldBe 500
 
-      (response.json\ "code").as[String] shouldBe "GENERAL"
+      (response.json \ "code").as[String] shouldBe "GENERAL"
     }
 
     "include account closure fields when account is closed" in {

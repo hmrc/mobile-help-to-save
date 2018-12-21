@@ -25,10 +25,10 @@ import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
-import scala.concurrent.ExecutionContext.Implicits.{global => passedEc}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class UserServiceSpec
+class ProdUserServiceSpec
   extends WordSpec with Matchers
     with FutureAwaits with DefaultAwaitTimeout
     with MockFactory with OneInstancePerTest with LoggerStub
@@ -37,19 +37,19 @@ class UserServiceSpec
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
 
 
-  private class UserServiceWithTestDefaults(
-    helpToSaveConnector: HelpToSaveEnrolmentStatus
-  ) extends UserService(
+  private class ProdUserServiceWithTestDefaults(
+    helpToSaveConnector: HelpToSaveEnrolmentStatus[Future]
+  ) extends ProdUserService(
     logger,
     helpToSaveConnector
   )
 
   "userDetails" should {
     "return state=Enrolled when the current user is enrolled in Help to Save" in {
-      val service = new UserServiceWithTestDefaults(
+      val service = new ProdUserServiceWithTestDefaults(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true))
       )
 
@@ -58,7 +58,7 @@ class UserServiceSpec
     }
 
     "return state=NotEnrolled when the current user is not enrolled in Help to Save" in {
-      val service = new UserServiceWithTestDefaults(
+      val service = new ProdUserServiceWithTestDefaults(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false))
       )
 
@@ -68,7 +68,7 @@ class UserServiceSpec
 
     "return an error when the HelpToSaveConnector return an error" in {
       val error = ErrorInfo.General
-      val service = new UserServiceWithTestDefaults(
+      val service = new ProdUserServiceWithTestDefaults(
         fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Left(error))
       )
 
@@ -76,10 +76,10 @@ class UserServiceSpec
     }
   }
 
-  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) = new HelpToSaveEnrolmentStatus {
-    override def enrolmentStatus()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[ErrorInfo, Boolean]] = {
+  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) =
+    new HelpToSaveEnrolmentStatus[Future] {
+    override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
       hc shouldBe passedHc
-      ec shouldBe passedEc
 
       Future successful userIsEnrolledInHelpToSave
     }

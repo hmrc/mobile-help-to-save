@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
@@ -30,11 +28,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RequestWithIds[+A](val nino: Nino, request: Request[A]) extends WrappedRequest[A](request)
 
-@ImplementedBy(classOf[AuthorisedWithIdsImpl])
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
 
-@Singleton
-class AuthorisedWithIdsImpl @Inject()(
+class AuthorisedWithIdsImpl(
   logger: LoggerLike,
   authConnector: AuthConnector
 )(implicit ec: ExecutionContext) extends AuthorisedWithIds with Results {

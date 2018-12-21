@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import cats.MonadError
 import cats.data.EitherT
-import cats.instances.future._
+import cats.syntax.applicativeError._
 import cats.syntax.apply._
 import cats.syntax.either._
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import org.joda.time.LocalDate
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
@@ -31,32 +32,30 @@ import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEnrolmentStatus, HelpT
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-@ImplementedBy(classOf[HelpToSaveAccountService])
-trait AccountService {
+trait AccountService[F[_]] {
   type Result[T] = Either[ErrorInfo, T]
 
-  def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]]
+  def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]]
 
-  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]]
-  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]]
-  def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]]
+  def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]]
+  def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]]
+  def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]]
 
-  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]]
+  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]]
 }
 
-@Singleton
-class HelpToSaveAccountService @Inject()(
+class AccountServiceImpl[F[_]](
   logger: LoggerLike,
-  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
-  helpToSaveGetAccount: HelpToSaveGetAccount,
   config: AccountServiceConfig,
-  savingsGoalEventRepo: SavingsGoalEventRepo
-) extends AccountService {
+  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],
+  helpToSaveGetAccount: HelpToSaveGetAccount[F],
+  savingsGoalEventRepo: SavingsGoalEventRepo[F]
+)(implicit F: MonadError[F, Throwable])
+  extends AccountService[F] {
 
-  override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
+  override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
     withValidSavingsAmount(savingsGoal.goalAmount) {
       withHelpToSaveAccount(nino) { acc: Account =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
@@ -65,81 +64,38 @@ class HelpToSaveAccountService @Inject()(
       }
     }
 
-  override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] =
+  override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]] =
     withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
-  override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Unit]] =
+
+  override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]] =
     withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
     }
 
-  override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[List[SavingsGoalEvent]]] =
+  override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
     withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino)) }
 
-  private def trappingRepoExceptions[T](msg: String, f: => Future[T])(implicit ec: ExecutionContext): Future[Result[T]] =
-    f.map(_.asRight[ErrorInfo]).recover {
-      case NonFatal(t) =>
-        logger.error(msg, t)
-        ErrorInfo.General.asLeft[T]
-    }
 
-  /**
-    * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
-    * to an appropriate ErrorInfo value
-    */
-  private def withHelpToSaveAccount[T](nino: Nino)(f: Account => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] =
-    fetchNSAndIAccount(nino).flatMap {
-      case Right(Some(account)) => f(account)
-      case Right(None)          => Future.successful(ErrorInfo.AccountNotFound.asLeft)
-      case Left(errorInfo)      => Future.successful(errorInfo.asLeft)
-    }
-
-  private def withValidSavingsAmount[T](goal: Double)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
-    if (goal < 1.0 || BigDecimal(goal).scale > 2)
-      Future.successful(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
-    else
-      fn
-  }
-
-  private def withEnoughSavingsHeadroom[T](goal: Double, acc:Account)(fn: => Future[Result[T]])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[T]] = {
-    val maxGoal = acc.maximumPaidInThisMonth
-    if (goal > maxGoal)
-      Future.successful(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
-    else
-      fn
-  }
-
-  override def account(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] =
+  override def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
       case true =>
-        EitherT(fetchAccountAndGoal(nino))
+        EitherT(fetchAccountWithGoal(nino))
 
       case false =>
-        EitherT.rightT[Future, ErrorInfo](Option.empty[Account])
+        EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
 
-  private def fetchAccountAndGoal(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] = {
-    // Use an applicative approach here as the two requests are independent of each other and can run concurrently.
-    // `mapN` is not inherently parallel, but because the `Future`s run eagerly when created they do end up running
-    // in parallel.
-    (
-      fetchSavingsGoal(nino),
-      fetchNSAndIAccount(nino)
-    ).mapN {
-      case (Right(goal), Right(Some(account))) =>
-        val savingsGoal = goal.map(t => SavingsGoal(t.goalAmount))
-        Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
-
-      case (_, Left(errorInfo)) => errorInfo.asLeft
-      case (Left(errorInfo), _) => errorInfo.asLeft
-
-      case (_, Right(None)) => None.asRight
-    }
+  protected def withValidSavingsAmount[T](goal: Double)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
+    if (goal < 1.0 || BigDecimal(goal).scale > 2)
+      F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
+    else
+      fn
   }
 
-  private def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result[Option[Account]]] =
+  protected def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     EitherT(helpToSaveGetAccount.getAccount(nino)).map {
       case Some(helpToSaveAccount) =>
         Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now()))
@@ -149,7 +105,33 @@ class HelpToSaveAccountService @Inject()(
     }.value
 
 
-  private def fetchSavingsGoal(nino: Nino)(implicit ec: ExecutionContext): Future[Result[Option[SavingsGoal]]] = {
+  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
+    val maxGoal = acc.maximumPaidInThisMonth
+    if (goal > maxGoal)
+      F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
+    else
+      fn
+  }
+
+  /**
+    * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
+    * to an appropriate ErrorInfo value
+    */
+  protected def withHelpToSaveAccount[T](nino: Nino)(f: Account => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
+    fetchNSAndIAccount(nino).flatMap {
+      case Right(Some(account)) => f(account)
+      case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
+      case Left(errorInfo)      => F.pure(errorInfo.asLeft)
+    }
+
+  protected def trappingRepoExceptions[T](msg: String, f: => F[T]): F[Result[T]] =
+    f.map(_.asRight[ErrorInfo]).recover {
+      case NonFatal(t) =>
+        logger.error(msg, t)
+        ErrorInfo.General.asLeft[T]
+    }
+
+  protected def fetchSavingsGoal(nino: Nino): F[Result[Option[SavingsGoal]]] = {
     savingsGoalEventRepo.getGoal(nino).map(_.asRight[ErrorInfo]).recover {
       case t =>
         logger.warn("call to repo to retrieve savings goal failed", t)
@@ -157,4 +139,20 @@ class HelpToSaveAccountService @Inject()(
     }
   }
 
+
+  protected def fetchAccountWithGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] = {
+    (
+      fetchNSAndIAccount(nino),
+      fetchSavingsGoal(nino)
+    ).mapN {
+      case (Right(Some(account)), Right(goal)) =>
+        val savingsGoal = goal.map(t => SavingsGoal(t.goalAmount))
+        Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
+
+      case (Left(errorInfo), _) => errorInfo.asLeft
+      case (_, Left(errorInfo)) => errorInfo.asLeft
+
+      case (Right(None), _) => None.asRight
+    }
+  }
 }

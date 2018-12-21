@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.LocalDateTime
 
-import javax.inject.{Inject, Singleton}
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
@@ -30,8 +29,7 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.Future
 
-@Singleton
-class SandboxController @Inject()(
+class SandboxController(
   val logger: LoggerLike,
   config: HelpToSaveControllerConfig,
   sandboxData: SandboxData

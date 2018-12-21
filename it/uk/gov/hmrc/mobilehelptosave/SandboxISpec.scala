@@ -18,7 +18,6 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.{Matchers, WordSpec}
-import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
@@ -34,8 +33,6 @@ class SandboxISpec extends WordSpec with Matchers
   with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport
   with OneServerPerSuiteWsClient {
-
-  override implicit lazy val app: Application = appBuilder.build()
 
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
   private val generator            = new Generator(0)

@@ -27,13 +27,13 @@ import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class TransactionsISpec extends WordSpec with Matchers
   with SchemaMatchers with TransactionTestData
   with FutureAwaits with DefaultAwaitTimeout
   with WireMockSupport
-  with OneServerPerSuiteWsClient {
+  with OneServerPerSuiteWsClient  with ComponentSupport{
 
   override implicit lazy val app: Application = appBuilder.build()
 

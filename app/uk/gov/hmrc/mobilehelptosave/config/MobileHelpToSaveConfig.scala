@@ -18,8 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
 
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
@@ -27,8 +25,7 @@ import uk.gov.hmrc.play.config.ServicesConfig
 
 import scala.collection.JavaConverters._
 
-@Singleton
-case class MobileHelpToSaveConfig @Inject()(
+case class MobileHelpToSaveConfig(
   environment: Environment,
   configuration: Configuration
 )
@@ -79,34 +76,28 @@ case class MobileHelpToSaveConfig @Inject()(
   }
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait AccountServiceConfig {
   def inAppPaymentsEnabled: Boolean
   def savingsGoalsEnabled: Boolean
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait SandboxDataConfig {
   def inAppPaymentsEnabled: Boolean
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait DocumentationControllerConfig {
   def apiAccessType: String
   def apiWhiteListApplicationIds: Seq[String]
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveConnectorConfig {
   def helpToSaveBaseUrl: URL
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait ServiceLocatorRegistrationTaskConfig {
   def serviceLocatorEnabled: Boolean
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait StartupControllerConfig {
   def shuttering: Shuttering
   def supportFormEnabled: Boolean
@@ -114,7 +105,6 @@ trait StartupControllerConfig {
   def helpToSaveAccessAccountUrl: String
 }
 
-@ImplementedBy(classOf[MobileHelpToSaveConfig])
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
 }

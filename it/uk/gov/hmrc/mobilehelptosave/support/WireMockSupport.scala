@@ -22,7 +22,6 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.api.inject.guice.GuiceApplicationBuilder
 
 case class WireMockBaseUrl(value: URL)
 
@@ -53,7 +52,7 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with App
     wireMockServer.resetAll()
   }
 
-  override protected def appBuilder: GuiceApplicationBuilder = super.appBuilder.configure(
+  override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
     "auditing.enabled" -> false,
     "microservice.services.auth.port" -> wireMockPort,
     "microservice.services.help-to-save.port" -> wireMockPort
