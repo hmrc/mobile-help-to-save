@@ -22,6 +22,7 @@ import com.softwaremill.macwire.wire
 import play.api.ApplicationLoader.Context
 import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
 import play.api.libs.ws.ahc.AhcWSComponents
+import play.api.routing.Router
 import play.api.{BuiltInComponents, BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
 import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
@@ -31,6 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.api.{DocumentationController, ServiceLocator
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorImpl
 import uk.gov.hmrc.mobilehelptosave.controllers._
+import uk.gov.hmrc.mobilehelptosave.controllers.test.TestController
 import uk.gov.hmrc.mobilehelptosave.repository.{MongoSavingsGoalEventRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.services._
@@ -57,14 +59,19 @@ class ServiceComponents(context: Context)
 
   lazy val prodLogger: LoggerLike = Logger
 
-  lazy val prefix          : String            = "/"
-  lazy val sandboxRouter   : sandbox.Routes    = wire[sandbox.Routes]
-  lazy val definitionRouter: definition.Routes = wire[definition.Routes]
-  lazy val healthRouter    : health2.Routes    = wire[health2.Routes]
-  lazy val appRouter       : app.Routes        = wire[app.Routes]
-  lazy val apiRouter       : api.Routes        = wire[api.Routes]
+  lazy val prefix          : String                           = "/"
+  lazy val sandboxRouter   : sandbox.Routes                   = wire[sandbox.Routes]
+  lazy val definitionRouter: definition.Routes                = wire[definition.Routes]
+  lazy val healthRouter    : health2.Routes                   = wire[health2.Routes]
+  lazy val appRouter       : app.Routes                       = wire[app.Routes]
+  lazy val apiRouter       : api.Routes                       = wire[api.Routes]
+  lazy val testRouter      : _root_.test.Routes               = wire[_root_.test.Routes]
+  lazy val prodRoutes      : prod.Routes                      = wire[prod.Routes]
+  lazy val testOnlyRoutes  : testOnlyDoNotUseInAppConf.Routes = wire[testOnlyDoNotUseInAppConf.Routes]
 
-  lazy val router: prod.Routes = wire[prod.Routes]
+  override lazy val router: Router =
+    if (System.getProperty("application.router") == "testOnlyDoNotUseInAppConf.Routes") testOnlyRoutes
+    else prodRoutes
 
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
 
@@ -92,7 +99,9 @@ class ServiceComponents(context: Context)
   lazy val documentationController: DocumentationController = wire[DocumentationController]
   lazy val metricsController      : MetricsController       = wire[MetricsController]
   lazy val sandboxController      : SandboxController       = wire[SandboxController]
-  lazy val healthController       : HealthController        = wire[HealthController]
+  lazy val testController         : TestController          = wire[TestController]
+
+  lazy val healthController: HealthController = wire[HealthController]
 
   // Not lazy - want this to run at startup
   val registrationTask: ServiceLocatorRegistrationTask = wire[ServiceLocatorRegistrationTask]
