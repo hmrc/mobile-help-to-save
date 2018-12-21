@@ -38,6 +38,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.play.health.HealthController
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -59,7 +60,7 @@ class ServiceComponents(context: Context)
   lazy val prefix          : String            = "/"
   lazy val sandboxRouter   : sandbox.Routes    = wire[sandbox.Routes]
   lazy val definitionRouter: definition.Routes = wire[definition.Routes]
-  lazy val healthRouter    : health.Routes     = wire[health.Routes]
+  lazy val healthRouter    : health2.Routes    = wire[health2.Routes]
   lazy val appRouter       : app.Routes        = wire[app.Routes]
   lazy val apiRouter       : api.Routes        = wire[api.Routes]
 
@@ -91,6 +92,7 @@ class ServiceComponents(context: Context)
   lazy val documentationController: DocumentationController = wire[DocumentationController]
   lazy val metricsController      : MetricsController       = wire[MetricsController]
   lazy val sandboxController      : SandboxController       = wire[SandboxController]
+  lazy val healthController       : HealthController        = wire[HealthController]
 
   // Not lazy - want this to run at startup
   val registrationTask: ServiceLocatorRegistrationTask = wire[ServiceLocatorRegistrationTask]
