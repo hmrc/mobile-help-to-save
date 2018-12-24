@@ -16,3 +16,5 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.0")
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.19")
 
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.3.4")
+
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.1")
