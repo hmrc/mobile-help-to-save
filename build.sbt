@@ -43,7 +43,7 @@ lazy val microservice = Project(appName, file("."))
       "-Ywarn-nullary-override",       
       "-Ywarn-nullary-unit",            
       "-Ywarn-numeric-widen",             
-      "-Ywarn-unused-import",            
+      //"-Ywarn-unused-import",            
       "-Xlint"
     ),
     addCommandAlias("testAll", ";reload;test;it:test")

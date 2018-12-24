@@ -70,7 +70,10 @@ class ServiceComponents(context: Context)
   lazy val testOnlyRoutes  : testOnlyDoNotUseInAppConf.Routes = wire[testOnlyDoNotUseInAppConf.Routes]
 
   override lazy val router: Router =
-    if (System.getProperty("application.router") == "testOnlyDoNotUseInAppConf.Routes") testOnlyRoutes
+    if (System.getProperty("application.router") == classOf[testOnlyDoNotUseInAppConf.Routes].getName) {
+      prodLogger.info("Wiring in test-only routes")
+      testOnlyRoutes
+    }
     else prodRoutes
 
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
