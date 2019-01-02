@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param collectionName the name of the collection that is to be created and used in mongo for this repo
   * @param indexFieldName the name of the field in documents within the collection that will be used as the index. The
-  *                       index itself will be named at `${indexFieldName}Idx`
+  *                       index itself will be named at `{indexFieldName}Idx`
   * @tparam I the type of the index values for the repo
   * @tparam V the type of the values stored in the repo
   *
