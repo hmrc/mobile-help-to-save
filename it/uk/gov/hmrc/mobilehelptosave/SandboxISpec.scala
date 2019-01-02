@@ -74,13 +74,4 @@ class SandboxISpec
       response.status shouldBe Status.NO_CONTENT
     }
   }
-
-  "GET /savings-account/{nino}/goals/events with sandbox header" should {
-    "Return OK response containing events JSON" in {
-      val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/events").withHeaders(sandboxRoutingHeader).get())
-      response.status                                shouldBe Status.OK
-      response.json.validate[List[SavingsGoalEvent]] shouldBe 'success
-    }
-  }
 }
