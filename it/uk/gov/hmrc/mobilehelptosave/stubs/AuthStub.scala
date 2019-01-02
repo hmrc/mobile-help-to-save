@@ -36,16 +36,9 @@ object AuthStub {
     wireMockServer.stubFor(
       post(urlPathEqualTo("/auth/authorise"))
         .withRequestBody(equalToJson(authoriseRequestBody))
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withBody(
-              Json
-                .obj(
-                  "nino" -> nino.value
-                )
-                .toString
-            )))
+        .willReturn(aResponse()
+          .withStatus(200)
+          .withBody(Json.obj("nino" -> nino.value).toString)))
 
   def userIsLoggedInWithInsufficientConfidenceLevel()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(

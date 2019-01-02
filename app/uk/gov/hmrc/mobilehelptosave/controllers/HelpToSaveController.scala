@@ -32,7 +32,6 @@ trait HelpToSaveActions {
   def getAccount(ninoString:        String): Action[AnyContent]
   def putSavingsGoal(ninoString:    String): Action[SavingsGoal]
   def deleteSavingsGoal(ninoString: String): Action[AnyContent]
-  def getSavingsGoalsEvents(nino:   String): Action[AnyContent]
 }
 
 class HelpToSaveController(
@@ -81,12 +80,5 @@ class HelpToSaveController(
       }
     }
 
-  override def getSavingsGoalsEvents(nino: String): Action[AnyContent] =
-    authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(nino) { verifiedNino =>
-        accountService.savingsGoalEvents(verifiedNino).map {
-          handlingErrors(events => Ok(Json.toJson(events)))
-        }
-      }
-    }
+
 }

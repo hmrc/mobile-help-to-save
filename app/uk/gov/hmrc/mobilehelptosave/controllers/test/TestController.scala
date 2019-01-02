@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.test
 
+import play.api.libs.json.Json
 import play.api.mvc.Results._
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -28,6 +30,12 @@ class TestController(savingsGoalEventRepo: SavingsGoalEventRepo[Future]) {
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")
       case _    => InternalServerError("Failed to clear goal events")
+    }
+  }
+
+  def getGoalEvents(nino: String): Action[AnyContent] = Action.async { implicit request =>
+    savingsGoalEventRepo.getEvents(Nino(nino)).map { events =>
+      Ok(Json.toJson(events))
     }
   }
 }
