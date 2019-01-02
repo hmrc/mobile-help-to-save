@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ProdUserServiceSpec
-  extends WordSpec with Matchers
-    with FutureAwaits with DefaultAwaitTimeout
-    with MockFactory with OneInstancePerTest with LoggerStub
+    extends WordSpec
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with MockFactory
+    with OneInstancePerTest
+    with LoggerStub
     with EitherValues {
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
@@ -39,13 +43,12 @@ class ProdUserServiceSpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-
   private class ProdUserServiceWithTestDefaults(
     helpToSaveConnector: HelpToSaveEnrolmentStatus[Future]
   ) extends ProdUserService(
-    logger,
-    helpToSaveConnector
-  )
+        logger,
+        helpToSaveConnector
+      )
 
   "userDetails" should {
     "return state=Enrolled when the current user is enrolled in Help to Save" in {
@@ -78,10 +81,10 @@ class ProdUserServiceSpec
 
   private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) =
     new HelpToSaveEnrolmentStatus[Future] {
-    override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
-      hc shouldBe passedHc
+      override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
+        hc shouldBe passedHc
 
-      Future successful userIsEnrolledInHelpToSave
+        Future successful userIsEnrolledInHelpToSave
+      }
     }
-  }
 }

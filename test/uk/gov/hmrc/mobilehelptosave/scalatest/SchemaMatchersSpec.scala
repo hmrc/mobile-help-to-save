@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers.validateAgainstSche
 class SchemaMatchersSpec extends WordSpec with Matchers {
   private val accountSchema: SchemaType = loadResourceJson("test_schema.json").as[SchemaType]
   val goodJsonExampleResourceName = "valid_instance.json"
-  val badJsonExampleResourceName = "invalid_instance.json"
+  val badJsonExampleResourceName  = "invalid_instance.json"
 
   "validateAgainstSchema(resourceName) method returns Matcher" should {
     val matcher = validateAgainstSchema(accountSchema)
@@ -38,8 +38,8 @@ class SchemaMatchersSpec extends WordSpec with Matchers {
       val goodJson: JsValue = loadResourceJson(goodJsonExampleResourceName)
       val goodJsonResult = matcher(goodJson)
 
-      goodJsonResult.matches shouldBe true
-      goodJsonResult.failureMessage shouldBe "JSON was not valid against schema"
+      goodJsonResult.matches               shouldBe true
+      goodJsonResult.failureMessage        shouldBe "JSON was not valid against schema"
       goodJsonResult.negatedFailureMessage shouldBe "JSON was valid against schema"
     }
 
@@ -49,8 +49,8 @@ class SchemaMatchersSpec extends WordSpec with Matchers {
 
       badJsonResult.matches shouldBe false
       badJsonResult.failureMessage should (startWith("JSON was not valid against schema")
-                                           and include("Property line1 missing")
-                                           and include("Property line3 missing"))
+        and include("Property line1 missing")
+        and include("Property line3 missing"))
 
       badJsonResult.negatedFailureMessage shouldBe "JSON was valid against schema"
     }

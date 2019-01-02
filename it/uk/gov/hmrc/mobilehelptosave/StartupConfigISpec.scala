@@ -33,11 +33,20 @@ import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, JsonMatchers, Wir
   * Tests that the startup endpoint uses configuration values correctly
   * (e.g. changes its response when configuration is changed).
   */
-class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with FutureAwaits with DefaultAwaitTimeout
-  with WsScalaTestClient with WireMockSupport with WithTestServer with ComponentSupport with WithApplicationComponents {
+class StartupConfigISpec
+    extends WordSpec
+    with Matchers
+    with JsonMatchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WsScalaTestClient
+    with WireMockSupport
+    with WithTestServer
+    with ComponentSupport
+    with WithApplicationComponents {
 
-  private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val generator     = new Generator(0)
+  private val nino          = generator.nextNino
   private val base64Encoder = Base64.getEncoder
 
   "GET /mobile-help-to-save/startup" should {
@@ -45,25 +54,25 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       appBuilder
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
-          "helpToSave.shuttering.title" -> base64Encode("Shuttered"),
-          "helpToSave.shuttering.message" -> base64Encode("HTS is currently not available"),
-          "helpToSave.supportFormEnabled" -> true
+          "helpToSave.shuttering.title"     -> base64Encode("Shuttered"),
+          "helpToSave.shuttering.message"   -> base64Encode("HTS is currently not available"),
+          "helpToSave.supportFormEnabled"   -> true
         )
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = components.wsClient
+      implicit val wsClient:           WSClient   = components.wsClient
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
 
-      response.status shouldBe 200
+      response.status                                          shouldBe 200
       (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
-      (response.json \ "shuttering" \ "title").as[String] shouldBe "Shuttered"
-      (response.json \ "shuttering" \ "message").as[String] shouldBe "HTS is currently not available"
-      (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
-      response.json.as[JsObject].keys should not contain "user"
+      (response.json \ "shuttering" \ "title").as[String]      shouldBe "Shuttered"
+      (response.json \ "shuttering" \ "message").as[String]    shouldBe "HTS is currently not available"
+      (response.json \ "supportFormEnabled").as[Boolean]       shouldBe true
+      response.json.as[JsObject].keys                          should not contain "user"
 
       AuthStub.authoriseShouldNotHaveBeenCalled()
       HelpToSaveStub.enrolmentStatusShouldNotHaveBeenCalled()
@@ -73,18 +82,18 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       appBuilder
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
-      implicit val wsClient: WSClient = components.wsClient
+      implicit val wsClient:           WSClient   = components.wsClient
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "supportFormEnabled" ).validate[Boolean] should beJsSuccess
-      (response.json \ "infoUrl").as[String] shouldBe "https://www.gov.uk/get-help-savings-low-income"
-      (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
+      response.status                                          shouldBe 200
+      (response.json \ "supportFormEnabled").validate[Boolean] should beJsSuccess
+      (response.json \ "infoUrl").as[String]                   shouldBe "https://www.gov.uk/get-help-savings-low-income"
+      (response.json \ "accessAccountUrl")
+        .as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
     }
-
 
     "allow feature flag and URL settings to be overridden in configuration" in {
       AuthStub.userIsLoggedIn(nino)
@@ -93,19 +102,19 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
       withTestServer(
         appBuilder
           .configure(
-            "helpToSave.infoUrl" -> "http://www.example.com/test/help-to-save-information",
-            "helpToSave.accessAccountUrl" -> "/access-account",
+            "helpToSave.infoUrl"            -> "http://www.example.com/test/help-to-save-information",
+            "helpToSave.accessAccountUrl"   -> "/access-account",
             "helpToSave.supportFormEnabled" -> "true"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
-        implicit val wsClient: WSClient = components.wsClient
+        implicit val wsClient:           WSClient   = components.wsClient
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
-        response.status shouldBe 200
+        response.status                                    shouldBe 200
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
-        (response.json \ "infoUrl").as[String] shouldBe "http://www.example.com/test/help-to-save-information"
-        (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
+        (response.json \ "infoUrl").as[String]             shouldBe "http://www.example.com/test/help-to-save-information"
+        (response.json \ "accessAccountUrl").as[String]    shouldBe "/access-account"
       }
 
       withTestServer(
@@ -115,17 +124,16 @@ class StartupConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
-        implicit val wsClient: WSClient = components.wsClient
+        implicit val wsClient:           WSClient   = components.wsClient
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
-        response.status shouldBe 200
+        response.status                                    shouldBe 200
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe false
       }
     }
 
   }
 
-  private def base64Encode(s: String): String = {
+  private def base64Encode(s: String): String =
     base64Encoder.encodeToString(s.getBytes("UTF-8"))
-  }
 }

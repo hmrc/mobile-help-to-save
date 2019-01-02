@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,20 +26,21 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 class StartupController(
-  userService: UserService[Future],
+  userService:       UserService[Future],
   authorisedWithIds: AuthorisedWithIds,
-  config: StartupControllerConfig
-)(implicit ec: ExecutionContext) extends BaseController {
+  config:            StartupControllerConfig
+)(implicit ec:       ExecutionContext)
+    extends BaseController {
 
   val startup: Action[AnyContent] = if (!config.shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>
       val responseF = userService.userDetails(request.nino).map { userOrError =>
         StartupResponse(
-          shuttering = config.shuttering,
-          infoUrl = Some(config.helpToSaveInfoUrl),
-          accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
-          user = userOrError.right.toOption,
-          userError = userOrError.left.toOption,
+          shuttering         = config.shuttering,
+          infoUrl            = Some(config.helpToSaveInfoUrl),
+          accessAccountUrl   = Some(config.helpToSaveAccessAccountUrl),
+          user               = userOrError.right.toOption,
+          userError          = userOrError.left.toOption,
           supportFormEnabled = config.supportFormEnabled
         )
       }
@@ -49,11 +50,11 @@ class StartupController(
     Action { implicit request =>
       val response =
         StartupResponse(
-          shuttering = config.shuttering,
-          infoUrl = None,
-          accessAccountUrl = None,
-          user = None,
-          userError = None,
+          shuttering         = config.shuttering,
+          infoUrl            = None,
+          accessAccountUrl   = None,
+          user               = None,
+          userError          = None,
           supportFormEnabled = config.supportFormEnabled
         )
 

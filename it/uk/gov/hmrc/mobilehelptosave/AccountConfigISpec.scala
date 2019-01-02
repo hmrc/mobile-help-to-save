@@ -30,8 +30,17 @@ import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, JsonMatchers, Wir
   * Tests that the Get Account endpoint uses configuration values correctly
   * (e.g. changes its response when configuration is changed).
   */
-class AccountConfigISpec extends WordSpec with Matchers with JsonMatchers with FutureAwaits with DefaultAwaitTimeout
-  with WsScalaTestClient with WireMockSupport with WithTestServer with ComponentSupport with WithApplicationComponents {
+class AccountConfigISpec
+    extends WordSpec
+    with Matchers
+    with JsonMatchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WsScalaTestClient
+    with WireMockSupport
+    with WithTestServer
+    with ComponentSupport
+    with WithApplicationComponents {
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
@@ -48,14 +57,14 @@ class AccountConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           .configure(
             "helpToSave.inAppPaymentsEnabled" -> "false"
           )
-          .build()) {
+          .build()) { (app: Application, portNumber: PortNumber) =>
+        implicit val implicitPortNumber: PortNumber = portNumber
+        implicit val wsClient:           WSClient   = components.wsClient
 
-        (app: Application, portNumber: PortNumber) =>
-          implicit val implicitPortNumber: PortNumber = portNumber
-          implicit val wsClient: WSClient = components.wsClient
-
-          responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino").get()), expectedValue = false)
-          responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/sandbox/savings-account/$nino").get()), expectedValue = false)
+        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino").get()), expectedValue = false)
+        responseShouldHaveInAppPaymentsEqualTo(
+          await(wsUrl(s"/sandbox/savings-account/$nino").get()),
+          expectedValue = false)
       }
 
       withTestServer(
@@ -65,10 +74,12 @@ class AccountConfigISpec extends WordSpec with Matchers with JsonMatchers with F
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
-        implicit val wsClient: WSClient = components.wsClient
+        implicit val wsClient:           WSClient   = components.wsClient
 
         responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino").get()), expectedValue = true)
-        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/sandbox/savings-account/$nino").get()), expectedValue = true)
+        responseShouldHaveInAppPaymentsEqualTo(
+          await(wsUrl(s"/sandbox/savings-account/$nino").get()),
+          expectedValue = true)
       }
     }
   }

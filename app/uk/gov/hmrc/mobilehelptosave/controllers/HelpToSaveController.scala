@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,21 +28,24 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HelpToSaveActions {
-  def getTransactions(ninoString: String): Action[AnyContent]
-  def getAccount(ninoString: String): Action[AnyContent]
-  def putSavingsGoal(ninoString: String): Action[SavingsGoal]
+  def getTransactions(ninoString:   String): Action[AnyContent]
+  def getAccount(ninoString:        String): Action[AnyContent]
+  def putSavingsGoal(ninoString:    String): Action[SavingsGoal]
   def deleteSavingsGoal(ninoString: String): Action[AnyContent]
-  def getSavingsGoalsEvents(nino: String): Action[AnyContent]
+  def getSavingsGoalsEvents(nino:   String): Action[AnyContent]
 }
 
-class HelpToSaveController
-(
-  val logger: LoggerLike,
-  accountService: AccountService[Future],
+class HelpToSaveController(
+  val logger:                LoggerLike,
+  accountService:            AccountService[Future],
   helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
-  authorisedWithIds: AuthorisedWithIds,
-  config: HelpToSaveControllerConfig
-)(implicit ec: ExecutionContext) extends BaseController with ControllerChecks with HelpToSaveActions {
+  authorisedWithIds:         AuthorisedWithIds,
+  config:                    HelpToSaveControllerConfig
+)(
+  implicit ec: ExecutionContext
+) extends BaseController
+    with ControllerChecks
+    with HelpToSaveActions {
   override def shuttering: Shuttering = config.shuttering
 
   private def orAccountNotFound[T: Writes](o: Option[T]): Result =
@@ -51,7 +54,9 @@ class HelpToSaveController
   override def getTransactions(ninoString: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
       verifyingMatchingNino(ninoString) { verifiedUserNino =>
-        helpToSaveGetTransactions.getTransactions(verifiedUserNino).map(handlingErrors(txs => Ok(Json.toJson(txs.reverse))))
+        helpToSaveGetTransactions
+          .getTransactions(verifiedUserNino)
+          .map(handlingErrors(txs => Ok(Json.toJson(txs.reverse))))
       }
     }
 

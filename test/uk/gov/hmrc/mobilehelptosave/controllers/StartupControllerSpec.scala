@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class StartupControllerSpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with MockFactory
     with OneInstancePerTest
@@ -50,8 +50,8 @@ class StartupControllerSpec
 
   private val config = TestStartupControllerConfig(
     falseShuttering,
-    supportFormEnabled = false,
-    helpToSaveInfoUrl = "/info",
+    supportFormEnabled         = false,
+    helpToSaveInfoUrl          = "/info",
     helpToSaveAccessAccountUrl = "/accessAccount"
   )
 
@@ -59,23 +59,18 @@ class StartupControllerSpec
 
   "startup" should {
     "pass NINO obtained from auth into userService" in {
-      (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+      (mockUserService
+        .userDetails(_: Nino)(_: HeaderCarrier))
         .expects(nino, *)
         .returning(Future successful Right(testUserDetails))
 
-      val controller = new StartupController(
-        mockUserService,
-        new AlwaysAuthorisedWithIds(nino),
-        config)
+      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config)
 
       status(controller.startup(FakeRequest())) shouldBe 200
     }
 
     "check permissions using AuthorisedWithIds" in {
-      val controller = new StartupController(
-        mockUserService,
-        NeverAuthorisedWithIds,
-        config)
+      val controller = new StartupController(mockUserService, NeverAuthorisedWithIds, config)
 
       status(controller.startup()(FakeRequest())) shouldBe 403
     }
@@ -83,13 +78,11 @@ class StartupControllerSpec
 
   "startup" when {
     "helpToSaveEnabled = true and helpToSaveShuttered = false" should {
-      val controller = new StartupController(
-        mockUserService,
-        new AlwaysAuthorisedWithIds(nino),
-        config)
+      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config)
 
       "include URLs and user in response" in {
-        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+        (mockUserService
+          .userDetails(_: Nino)(_: HeaderCarrier))
           .expects(nino, *)
           .returning(Future successful Right(testUserDetails))
 
@@ -97,13 +90,14 @@ class StartupControllerSpec
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         val jsonKeys = jsonBody.as[JsObject].keys
-        jsonKeys should contain("user")
-        (jsonBody \ "infoUrl").as[String] shouldBe "/info"
+        jsonKeys                                   should contain("user")
+        (jsonBody \ "infoUrl").as[String]          shouldBe "/info"
         (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
       }
 
       "include shuttering information in response with shuttered = false" in {
-        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+        (mockUserService
+          .userDetails(_: Nino)(_: HeaderCarrier))
           .expects(nino, *)
           .returning(Future successful Right(testUserDetails))
 
@@ -115,16 +109,14 @@ class StartupControllerSpec
     }
 
     "there is an error getting user details" should {
-      val controller = new StartupController(
-        mockUserService,
-        new AlwaysAuthorisedWithIds(nino),
-        config)
+      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config)
 
       "include userError and non-user fields such as URLs response" in {
         val generator = new Generator(0)
-        val nino = generator.nextNino
+        val nino      = generator.nextNino
 
-        (mockUserService.userDetails(_: Nino)(_: HeaderCarrier))
+        (mockUserService
+          .userDetails(_: Nino)(_: HeaderCarrier))
           .expects(nino, *)
           .returning(Future successful Left(ErrorInfo.General))
 
@@ -132,10 +124,10 @@ class StartupControllerSpec
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         val jsonKeys = jsonBody.as[JsObject].keys
-        jsonKeys should not contain "user"
+        jsonKeys                                     should not contain "user"
         (jsonBody \ "userError" \ "code").as[String] shouldBe "GENERAL"
-        (jsonBody \ "infoUrl").as[String] shouldBe "/info"
-        (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
+        (jsonBody \ "infoUrl").as[String]            shouldBe "/info"
+        (jsonBody \ "accessAccountUrl").as[String]   shouldBe "/accessAccount"
       }
     }
 
@@ -160,8 +152,8 @@ class StartupControllerSpec
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "shuttering" \ "title").as[String] shouldBe "Shuttered"
-        (jsonBody \ "shuttering" \ "message").as[String] shouldBe "HTS is currently not available"
+        (jsonBody \ "shuttering" \ "title").as[String]      shouldBe "Shuttered"
+        (jsonBody \ "shuttering" \ "message").as[String]    shouldBe "HTS is currently not available"
       }
 
       "continue to include feature flags because some of them take priority over shuttering" in {
@@ -185,16 +177,16 @@ class StartupControllerSpec
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "shuttering" \ "title").as[String] shouldBe "something"
-        (jsonBody \ "shuttering" \ "message").as[String] shouldBe "some message"
+        (jsonBody \ "shuttering" \ "title").as[String]      shouldBe "something"
+        (jsonBody \ "shuttering" \ "message").as[String]    shouldBe "some message"
       }
     }
   }
 }
 
 case class TestStartupControllerConfig(
-  shuttering: Shuttering,
-  supportFormEnabled: Boolean,
-  helpToSaveInfoUrl: String,
+  shuttering:                 Shuttering,
+  supportFormEnabled:         Boolean,
+  helpToSaveInfoUrl:          String,
   helpToSaveAccessAccountUrl: String
 ) extends StartupControllerConfig

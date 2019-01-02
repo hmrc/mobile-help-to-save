@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,7 @@ import play.api.mvc.Result
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 
-class DocumentationControllerSpec
-  extends WordSpec with Matchers
-    with FutureAwaits with DefaultAwaitTimeout  {
+class DocumentationControllerSpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout {
   "definition" should {
     "have content type = application/json" in {
       val controller = new DocumentationController(LazyHttpErrorHandler, TestDocumentationControllerConfig)
@@ -35,6 +33,6 @@ class DocumentationControllerSpec
 }
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
-  override def apiAccessType = "PRIVATE"
+  override def apiAccessType              = "PRIVATE"
   override def apiWhiteListApplicationIds = Seq.empty[String]
 }

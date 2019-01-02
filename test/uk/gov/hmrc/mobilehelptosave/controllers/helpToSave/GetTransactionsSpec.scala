@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetTransactionsSpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -57,7 +57,8 @@ class GetTransactionsSpec
 
   "getTransactions" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario
+      with HelpToSaveMocking {
 
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 
@@ -76,7 +77,7 @@ class GetTransactionsSpec
         val resultF = controller.getTransactions(nino.value)(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+        (jsonBody \ "code").as[String]    shouldBe "ACCOUNT_NOT_FOUND"
         (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
       }
     }
@@ -108,7 +109,7 @@ class GetTransactionsSpec
         val resultF = controller.getTransactions("invalidNino")(FakeRequest())
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
+        (jsonBody \ "code").as[String]    shouldBe "NINO_INVALID"
         (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
       }
     }
@@ -119,14 +120,14 @@ class GetTransactionsSpec
         val resultF = controller.getTransactions("AA 00 00 03 D")(FakeRequest())
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
+        (jsonBody \ "code").as[String]    shouldBe "NINO_INVALID"
         (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
       }
     }
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService = mock[AccountService[Future]]
+        val accountService            = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
 
         val controller = new HelpToSaveController(
@@ -141,8 +142,8 @@ class GetTransactionsSpec
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "title").as[String] shouldBe "Shuttered"
-        (jsonBody \ "message").as[String] shouldBe "HTS is currently not available"
+        (jsonBody \ "title").as[String]      shouldBe "Shuttered"
+        (jsonBody \ "message").as[String]    shouldBe "HTS is currently not available"
       }
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,27 +31,33 @@ class RequestWithIds[+A](val nino: Nino, request: Request[A]) extends WrappedReq
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
 
 class AuthorisedWithIdsImpl(
-  logger: LoggerLike,
+  logger:        LoggerLike,
   authConnector: AuthConnector
-)(implicit ec: ExecutionContext) extends AuthorisedWithIds with Results {
+)(
+  implicit ec: ExecutionContext
+) extends AuthorisedWithIds
+    with Results {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 
     val predicates = ConfidenceLevel.L200
     val retrievals = Retrievals.nino
 
-    authConnector.authorise(predicates, retrievals).map {
-      case Some(nino) =>
-        Right(new RequestWithIds(Nino(nino), request))
-      case None       =>
-        logger.warn("NINO not found")
-        Left(Forbidden("NINO not found"))
-    }.recover {
-      case e: NoActiveSession             => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
-      case e: InsufficientConfidenceLevel =>
-        logger.warn("Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
-        Left(Forbidden(s"Authorisation failure [${e.reason}]"))
-      case e: AuthorisationException      => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
-    }
+    authConnector
+      .authorise(predicates, retrievals)
+      .map {
+        case Some(nino) =>
+          Right(new RequestWithIds(Nino(nino), request))
+        case None =>
+          logger.warn("NINO not found")
+          Left(Forbidden("NINO not found"))
+      }
+      .recover {
+        case e: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
+        case e: InsufficientConfidenceLevel =>
+          logger.warn("Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
+          Left(Forbidden(s"Authorisation failure [${e.reason}]"))
+        case e: AuthorisationException => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
+      }
   }
 }

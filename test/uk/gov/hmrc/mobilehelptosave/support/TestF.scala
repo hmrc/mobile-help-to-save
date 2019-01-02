@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package uk.gov.hmrc.mobilehelptosave.support
 
 import cats.MonadError
+import cats.instances.try_._
 
 import scala.util.Try
-import cats.instances.try_._
 
 /**
   * Defines a type constructor that can be used in tests to instantiate components that have a type constructor

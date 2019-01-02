@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,25 +23,20 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
 import scala.concurrent.Future
 
 class FakeHttpGet(urlPredicate: String => Boolean, responseF: Future[HttpResponse]) extends HttpGet {
-
   override def doGet(url: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     if (urlPredicate(url))
       responseF
-  else
+    else
       Future successful HttpResponse(404)
 
   override def configuration: Option[Config] = None
-
-  override val hooks: Seq[HttpHook] = Seq.empty
-
+  override val hooks:         Seq[HttpHook]  = Seq.empty
 }
 
 object FakeHttpGet {
-
   def apply(expectedUrl: String, responseF: Future[HttpResponse]) = new FakeHttpGet(_ == expectedUrl, responseF)
-  def apply(expectedUrl: String, response: HttpResponse) = new FakeHttpGet(_ == expectedUrl, Future successful response)
+  def apply(expectedUrl: String, response:  HttpResponse)         = new FakeHttpGet(_ == expectedUrl, Future successful response)
 
   def apply(urlPredicate: String => Boolean, responseF: Future[HttpResponse]) = new FakeHttpGet(urlPredicate, responseF)
-  def apply(urlPredicate: String => Boolean, response: HttpResponse) = new FakeHttpGet(urlPredicate, Future successful response)
-
+  def apply(urlPredicate: String => Boolean, response:  HttpResponse)         = new FakeHttpGet(urlPredicate, Future successful response)
 }

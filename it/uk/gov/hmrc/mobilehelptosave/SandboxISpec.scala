@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018 HM Revenue & Customs
  *
@@ -28,11 +27,15 @@ import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEvent
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
-class SandboxISpec extends WordSpec with Matchers
-  with SchemaMatchers with TransactionTestData
-  with FutureAwaits with DefaultAwaitTimeout
-  with WireMockSupport
-  with OneServerPerSuiteWsClient {
+class SandboxISpec
+    extends WordSpec
+    with Matchers
+    with SchemaMatchers
+    with TransactionTestData
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WireMockSupport
+    with OneServerPerSuiteWsClient {
 
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
   private val generator            = new Generator(0)
@@ -40,8 +43,9 @@ class SandboxISpec extends WordSpec with Matchers
 
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").withHeaders(sandboxRoutingHeader).get())
-      response.status shouldBe Status.OK
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/transactions").withHeaders(sandboxRoutingHeader).get())
+      response.status                      shouldBe Status.OK
       response.json.validate[Transactions] shouldBe 'success
     }
   }
@@ -49,7 +53,7 @@ class SandboxISpec extends WordSpec with Matchers
   "GET /savings-account/{nino} with sandbox header" should {
     "Return OK response containing valid Account JSON" in {
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").withHeaders(sandboxRoutingHeader).get())
-      response.status shouldBe Status.OK
+      response.status                 shouldBe Status.OK
       response.json.validate[Account] shouldBe 'success
     }
   }
@@ -57,22 +61,25 @@ class SandboxISpec extends WordSpec with Matchers
   "PUT /savings-account/:nino/goals/current-goal with sandbox header" should {
     "Return a No Content response" in {
       val goal = SavingsGoal(35.0)
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").withHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
+      val response: WSResponse = await(
+        wsUrl(s"/savings-account/$nino/goals/current-goal").withHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
       response.status shouldBe Status.NO_CONTENT
     }
   }
 
   "DELETE /savings-account/:nino/goals/current-goal with sandbox header" should {
     "Return a No Content response" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").withHeaders(sandboxRoutingHeader).delete())
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal").withHeaders(sandboxRoutingHeader).delete())
       response.status shouldBe Status.NO_CONTENT
     }
   }
 
   "GET /savings-account/{nino}/goals/events with sandbox header" should {
     "Return OK response containing events JSON" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/events").withHeaders(sandboxRoutingHeader).get())
-      response.status shouldBe Status.OK
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/events").withHeaders(sandboxRoutingHeader).get())
+      response.status                                shouldBe Status.OK
       response.json.validate[List[SavingsGoalEvent]] shouldBe 'success
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,18 +30,24 @@ import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorisedWithIdsSpec
-  extends WordSpec with Matchers
-    with FutureAwaits with DefaultAwaitTimeout
-    with MockFactory with OneInstancePerTest with LoggerStub with Retrievals with Results {
+    extends WordSpec
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with MockFactory
+    with OneInstancePerTest
+    with LoggerStub
+    with Retrievals
+    with Results {
 
-  private  val generator                       = new Generator(0)
-  private  val testNino                        = generator.nextNino
-  implicit val system      : ActorSystem       = ActorSystem()
+  private val generator = new Generator(0)
+  private val testNino  = generator.nextNino
+  implicit val system:       ActorSystem       = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   "AuthorisedWithIds" should {
@@ -57,7 +63,7 @@ class AuthorisedWithIdsSpec
       }
 
       await(action(FakeRequest())) shouldBe Ok
-      capturedNino shouldBe Some(testNino)
+      capturedNino                 shouldBe Some(testNino)
     }
 
     "return 403 when no NINO can be retrieved" in {
@@ -85,7 +91,8 @@ class AuthorisedWithIdsSpec
     }
 
     "return 403 when AuthConnector throws any other AuthorisationException" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Future failed new AuthorisationException("not authorised") {})
+      val authConnectorStub =
+        authConnectorStubThatWillReturn(Future failed new AuthorisationException("not authorised") {})
 
       val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
 
@@ -97,7 +104,8 @@ class AuthorisedWithIdsSpec
     }
 
     "return 403 Forbidden and log a warning when AuthConnector throws InsufficientConfidenceLevel" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
+      val authConnectorStub = authConnectorStubThatWillReturn(
+        Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
 
       val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
 
@@ -106,19 +114,20 @@ class AuthorisedWithIdsSpec
       }
 
       val resultF = action(FakeRequest())
-      status(resultF) shouldBe FORBIDDEN
+      status(resultF)          shouldBe FORBIDDEN
       contentAsString(resultF) shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
-      (slf4jLoggerStub.warn(_: String)) verify "Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381."
+      (slf4jLoggerStub
+        .warn(_: String)) verify "Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381."
     }
   }
-
 
   private def authConnectorStubThatWillReturn(nino: Option[String]): AuthConnector =
     authConnectorStubThatWillReturn(Future successful nino)
 
   private def authConnectorStubThatWillReturn(futureNino: Future[Option[String]]): AuthConnector = {
     val authConnectorStub = stub[AuthConnector]
-    (authConnectorStub.authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
+    (authConnectorStub
+      .authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
       .when(ConfidenceLevel.L200, nino, *, *)
       .returns(futureNino)
     authConnectorStub

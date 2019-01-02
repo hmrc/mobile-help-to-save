@@ -23,13 +23,21 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class ApiDefinitionISpec
-  extends WordSpec with Matchers with Eventually with FutureAwaits with DefaultAwaitTimeout
-    with WireMockSupport with OneServerPerSuiteWsClient with ComponentSupport {
+    extends WordSpec
+    with Matchers
+    with Eventually
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WireMockSupport
+    with OneServerPerSuiteWsClient
+    with ComponentSupport {
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
     "microservice.services.service-locator.host" -> wireMockHost,
     "microservice.services.service-locator.port" -> wireMockPort,
-    "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008", "00090002-0003-0004-0005-000600070008"),
+    "api.access.white-list.applicationIds" -> Seq(
+      "00010002-0003-0004-0005-000600070008",
+      "00090002-0003-0004-0005-000600070008"),
     "api.access.type" -> "TEST_ACCESS_TYPE"
   )
 
@@ -49,9 +57,9 @@ class ApiDefinitionISpec
       val accessConfigs = definition \ "api" \ "versions" \\ "access"
       accessConfigs.length should be > 0
       accessConfigs.foreach { accessConfig =>
-        (accessConfig \ "type").as[String] shouldBe "TEST_ACCESS_TYPE"
+        (accessConfig \ "type").as[String]                           shouldBe "TEST_ACCESS_TYPE"
         (accessConfig \ "whitelistedApplicationIds").head.as[String] shouldBe "00010002-0003-0004-0005-000600070008"
-        (accessConfig \ "whitelistedApplicationIds") (1).as[String] shouldBe "00090002-0003-0004-0005-000600070008"
+        (accessConfig \ "whitelistedApplicationIds")(1).as[String]   shouldBe "00090002-0003-0004-0005-000600070008"
       }
     }
   }

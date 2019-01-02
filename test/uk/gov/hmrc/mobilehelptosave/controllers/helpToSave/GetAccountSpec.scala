@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetAccountSpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -58,7 +58,7 @@ class GetAccountSpec
   "getAccount" when {
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
-        with HelpToSaveMocking {
+      with HelpToSaveMocking {
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
@@ -70,8 +70,7 @@ class GetAccountSpec
     }
 
     "there is a savings goal associated with the NINO" should {
-      "return the savings goal in the account structure" in new AuthorisedTestScenario
-        with HelpToSaveMocking {
+      "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
         val accountData = controller.getAccount(nino.value)(FakeRequest())
@@ -92,7 +91,7 @@ class GetAccountSpec
         (jsonBody \ "message")
           .as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
-        (slf4jLoggerStub.warn(_: String)) verify * never()
+        (slf4jLoggerStub.warn(_: String)) verify * never ()
       }
     }
 
@@ -146,7 +145,7 @@ class GetAccountSpec
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService = mock[AccountService[Future]]
+        val accountService            = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
         val controller = new HelpToSaveController(
           logger,
@@ -160,7 +159,7 @@ class GetAccountSpec
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "title").as[String] shouldBe "Shuttered"
+        (jsonBody \ "title").as[String]      shouldBe "Shuttered"
         (jsonBody \ "message")
           .as[String] shouldBe "HTS is currently not available"
       }

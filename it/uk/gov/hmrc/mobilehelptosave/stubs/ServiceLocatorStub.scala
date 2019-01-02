@@ -19,27 +19,32 @@ package uk.gov.hmrc.mobilehelptosave.stubs
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.Json
 import uk.gov.hmrc.api.domain.Registration
 
 object ServiceLocatorStub {
 
-  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String)(implicit wireMockServer: WireMockServer): Unit =
+  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String)(
+    implicit wireMockServer:                    WireMockServer): Unit =
     wireMockServer.verify(1, registrationPattern(serviceName, serviceUrl))
 
-  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String)(implicit wireMockServer: WireMockServer): Unit =
+  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String)(
+    implicit wireMockServer:                       WireMockServer): Unit =
     wireMockServer.verify(0, registrationPattern(serviceName, serviceUrl))
 
-  def registrationSucceeds()(implicit wireMockServer: WireMockServer): Unit =
-    wireMockServer.stubFor(post(urlPathEqualTo("/registration"))
-      .willReturn(aResponse()
-        .withStatus(204)))
+  def registrationSucceeds()(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      post(urlPathEqualTo("/registration"))
+        .willReturn(aResponse()
+          .withStatus(204)))
 
   private def regPayloadStringFor(serviceName: String, serviceUrl: String): String =
     Json.toJson(Registration(serviceName, serviceUrl, Some(Map("third-party-api" -> "true")))).toString
 
-  private def registrationPattern(serviceName: String, serviceUrl: String): RequestPatternBuilder = postRequestedFor(urlPathEqualTo("/registration"))
-    .withHeader("content-type", equalTo("application/json"))
-    .withRequestBody(equalTo(regPayloadStringFor(serviceName, serviceUrl)))
+  private def registrationPattern(serviceName: String, serviceUrl: String): RequestPatternBuilder =
+    postRequestedFor(urlPathEqualTo("/registration"))
+      .withHeader("content-type", equalTo("application/json"))
+      .withRequestBody(equalTo(regPayloadStringFor(serviceName, serviceUrl)))
 
 }
