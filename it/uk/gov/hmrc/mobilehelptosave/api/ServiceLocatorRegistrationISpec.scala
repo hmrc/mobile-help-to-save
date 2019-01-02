@@ -27,26 +27,33 @@ import uk.gov.hmrc.mobilehelptosave.stubs.ServiceLocatorStub
 import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, ComponentSupport, WireMockSupport}
 
 class ServiceLocatorRegistrationISpec
-  extends WordSpec with Matchers with Eventually
-    with WireMockSupport with ComponentSupport with WithApplicationComponents with PlayRunners{
+    extends WordSpec
+    with Matchers
+    with Eventually
+    with WireMockSupport
+    with ComponentSupport
+    with WithApplicationComponents
+    with PlayRunners {
 
   lazy val app: Application = appBuilder.build()
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
     "microservice.services.service-locator.enabled" -> true,
-    "microservice.services.service-locator.host" -> wireMockHost,
-    "microservice.services.service-locator.port" -> wireMockPort
+    "microservice.services.service-locator.host"    -> wireMockHost,
+    "microservice.services.service-locator.port"    -> wireMockPort
   )
 
   "microservice" should {
     "register itself with the api platform automatically at start up" in {
       ServiceLocatorStub.registrationSucceeds()
 
-      ServiceLocatorStub.registerShouldNotHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
+      ServiceLocatorStub
+        .registerShouldNotHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
 
       running(app) {
         eventually(Timeout(Span(1000 * 20, Millis))) {
-          ServiceLocatorStub.registerShouldHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
+          ServiceLocatorStub
+            .registerShouldHaveBeenCalled("mobile-help-to-save", "https://mobile-help-to-save.protected.mdtp")
         }
       }
     }

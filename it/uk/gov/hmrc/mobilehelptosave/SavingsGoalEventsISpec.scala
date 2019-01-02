@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018 HM Revenue & Customs
  *
@@ -32,7 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, One
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SavingsGoalEventsISpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with SchemaMatchers
     with TransactionTestData

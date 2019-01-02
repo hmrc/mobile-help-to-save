@@ -29,9 +29,9 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with App
   me: Suite =>
 
   lazy val wireMockPort: Int = wireMockServer.port
-  val wireMockHost = "localhost"
+  val wireMockHost                 = "localhost"
   lazy val wireMockBaseUrlAsString = s"http://$wireMockHost:$wireMockPort"
-  lazy val wireMockBaseUrl = new URL(wireMockBaseUrlAsString)
+  lazy val wireMockBaseUrl         = new URL(wireMockBaseUrlAsString)
   protected implicit lazy val implicitWireMockBaseUrl: WireMockBaseUrl = WireMockBaseUrl(wireMockBaseUrl)
 
   protected def basicWireMockConfig(): WireMockConfiguration = wireMockConfig()
@@ -53,8 +53,8 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with App
   }
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
-    "auditing.enabled" -> false,
-    "microservice.services.auth.port" -> wireMockPort,
+    "auditing.enabled"                        -> false,
+    "microservice.services.auth.port"         -> wireMockPort,
     "microservice.services.help-to-save.port" -> wireMockPort
   )
 }

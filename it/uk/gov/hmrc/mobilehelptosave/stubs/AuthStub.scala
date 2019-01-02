@@ -18,11 +18,11 @@ package uk.gov.hmrc.mobilehelptosave.stubs
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 
 object AuthStub {
-
 
   private val authoriseRequestBody: String = {
     """
@@ -32,8 +32,7 @@ object AuthStub {
       |}""".stripMargin
   }
 
-
-  def userIsLoggedIn(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
+  def userIsLoggedIn(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       post(urlPathEqualTo("/auth/authorise"))
         .withRequestBody(equalToJson(authoriseRequestBody))
@@ -41,12 +40,14 @@ object AuthStub {
           aResponse()
             .withStatus(200)
             .withBody(
-              Json.obj(
-                "nino" -> nino.value
-              ).toString
+              Json
+                .obj(
+                  "nino" -> nino.value
+                )
+                .toString
             )))
 
-  def userIsLoggedInWithInsufficientConfidenceLevel()(implicit wireMockServer: WireMockServer): Unit =
+  def userIsLoggedInWithInsufficientConfidenceLevel()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       post(urlPathEqualTo("/auth/authorise"))
         .withRequestBody(equalToJson(authoriseRequestBody))
@@ -56,7 +57,7 @@ object AuthStub {
             .withHeader("WWW-Authenticate", """MDTP detail="InsufficientConfidenceLevel"""")
         ))
 
-  def userIsNotLoggedIn()(implicit wireMockServer: WireMockServer): Unit =
+  def userIsNotLoggedIn()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       post(urlPathEqualTo("/auth/authorise"))
         .withRequestBody(equalToJson(authoriseRequestBody))

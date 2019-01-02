@@ -23,16 +23,21 @@ import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
-class StartupISpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout
-  with WireMockSupport
-  with OneServerPerSuiteWsClient with ComponentSupport with NumberVerification  {
+class StartupISpec
+    extends WordSpec
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WireMockSupport
+    with OneServerPerSuiteWsClient
+    with ComponentSupport
+    with NumberVerification {
 
   override implicit lazy val app: Application = appBuilder
     .build()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
 
   "GET /mobile-help-to-save/startup" should {
 
@@ -41,7 +46,7 @@ class StartupISpec extends WordSpec with Matchers
       HelpToSaveStub.currentUserIsEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
+      response.status                                  shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
     }
 
@@ -50,26 +55,26 @@ class StartupISpec extends WordSpec with Matchers
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status shouldBe 200
-      (response.json \ "user" \ "state").asOpt[String] shouldBe None
+      response.status                                   shouldBe 200
+      (response.json \ "user" \ "state").asOpt[String]  shouldBe None
       (response.json \ "userError" \ "code").as[String] shouldBe "GENERAL"
       // check that only the user field has been omitted, not all fields
       (response.json \ "supportFormEnabled").asOpt[Boolean] should not be None
-      (response.json \ "infoUrl").asOpt[String] should not be None
+      (response.json \ "infoUrl").asOpt[String]             should not be None
     }
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 401
-      response.body shouldBe "Authorisation failure [Bearer token not supplied]"
+      response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
-      response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+      response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
   }
 }

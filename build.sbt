@@ -31,33 +31,36 @@ lazy val microservice = Project(appName, file("."))
     // from https://github.com/typelevel/cats/blob/master/README.md
     scalacOptions ++= Seq(
       "-deprecation",
-      "-encoding", "UTF-8",
+      "-encoding",
+      "UTF-8",
       "-language:higherKinds",
       "-language:postfixOps",
       "-feature",
       "-Ypartial-unification",
-      "-Ywarn-dead-code",                 
+      "-Ywarn-dead-code",
       "-Ywarn-value-discard",
-      "-Ywarn-inaccessible",             
-      "-Ywarn-infer-any",            
-      "-Ywarn-nullary-override",       
-      "-Ywarn-nullary-unit",            
-      "-Ywarn-numeric-widen",             
-      //"-Ywarn-unused-import",            
+      "-Ywarn-inaccessible",
+      "-Ywarn-infer-any",
+      "-Ywarn-nullary-override",
+      "-Ywarn-nullary-unit",
+      "-Ywarn-numeric-widen",
+      //"-Ywarn-unused-import",
+      "-Xfatal-warnings",
       "-Xlint"
     ),
     addCommandAlias("testAll", ";reload;test;it:test")
   )
   .settings(evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false))
-  .settings(unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon"
-  )
+  .settings(unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon")
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-      unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(
-      base / "it",
-      base / "testcommon"
-    )).value: _*
+    unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(
+      base =>
+        Seq(
+          base / "it",
+          base / "testcommon"
+      )).value: _*
   )
   .settings(
     Keys.fork in IntegrationTest := false,
@@ -70,7 +73,7 @@ lazy val microservice = Project(appName, file("."))
       Resolver.bintrayRepo("hmrc", "releases"),
       Resolver.jcenterRepo
     ),
-    addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
-    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4"),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+    addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.9"),
+    addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.2.4"),
+    addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.1" cross CrossVersion.full)
   )

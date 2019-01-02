@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +21,16 @@ import java.time.LocalDateTime
 import enumeratum.{Enum, EnumEntry, PlayLowercaseJsonEnum}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventType.findValues
 
 case class SavingsGoalRepoModel(nino: Nino, amount: Double, createdAt: LocalDateTime)
 
 object SavingsGoalRepoModel {
-  implicit val reads : Reads[SavingsGoalRepoModel]   = Json.reads[SavingsGoalRepoModel]
+  implicit val reads:  Reads[SavingsGoalRepoModel]   = Json.reads[SavingsGoalRepoModel]
   implicit val writes: OWrites[SavingsGoalRepoModel] = Json.writes[SavingsGoalRepoModel]
 
   implicit val format: Format[SavingsGoalRepoModel] =
     Format(reads, writes)
 }
-
 
 sealed trait SavingsGoalEventType extends EnumEntry
 
@@ -48,27 +46,27 @@ sealed trait SavingsGoalEvent {
   def nino: Nino
   def date: LocalDateTime
 }
-case class SavingsGoalSetEvent(nino: Nino, amount: Double, date: LocalDateTime) extends SavingsGoalEvent
-case class SavingsGoalDeleteEvent(nino: Nino, date: LocalDateTime) extends SavingsGoalEvent
+case class SavingsGoalSetEvent(nino:    Nino, amount: Double, date: LocalDateTime) extends SavingsGoalEvent
+case class SavingsGoalDeleteEvent(nino: Nino, date:   LocalDateTime) extends SavingsGoalEvent
 
 object SavingsGoalEvent {
-  val setEventFormat   : OFormat[SavingsGoalSetEvent]    = Json.format
+  val setEventFormat:    OFormat[SavingsGoalSetEvent]    = Json.format
   val deleteEventFormat: OFormat[SavingsGoalDeleteEvent] = Json.format
 
   val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
 
   implicit val format: OFormat[SavingsGoalEvent] = new OFormat[SavingsGoalEvent] {
     override def writes(o: SavingsGoalEvent): JsObject = o match {
-      case ev: SavingsGoalSetEvent    => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
-      case ev: SavingsGoalDeleteEvent => deleteEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Delete))
+      case ev: SavingsGoalSetEvent => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
+      case ev: SavingsGoalDeleteEvent =>
+        deleteEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Delete))
     }
 
-    override def reads(json: JsValue): JsResult[SavingsGoalEvent] = {
+    override def reads(json: JsValue): JsResult[SavingsGoalEvent] =
       typeReads.reads(json) match {
         case JsSuccess(ev, _) => readEvent(ev, json)
-        case error: JsError   => error
+        case error: JsError => error
       }
-    }
 
     private def readEvent(ev: SavingsGoalEventType, json: JsValue): JsResult[SavingsGoalEvent] = ev match {
       case SavingsGoalEventType.Set    => setEventFormat.reads(json)

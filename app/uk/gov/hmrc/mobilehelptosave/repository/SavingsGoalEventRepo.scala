@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,18 +30,17 @@ import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import scala.concurrent.{ExecutionContext, Future}
 
 trait SavingsGoalEventRepo[F[_]] {
-  def setGoal(nino: Nino, amount: Double): F[Unit]
+  def setGoal(nino:    Nino, amount: Double): F[Unit]
   def deleteGoal(nino: Nino): F[Unit]
-  def getGoal(nino: Nino): F[Option[SavingsGoal]]
-  def getEvents(nino: Nino): F[List[SavingsGoalEvent]]
+  def getGoal(nino:    Nino): F[Option[SavingsGoal]]
+  def getEvents(nino:  Nino): F[List[SavingsGoalEvent]]
   def clearGoalEvents(): F[Boolean]
 }
 
 class MongoSavingsGoalEventRepo(
-  mongo: ReactiveMongoComponent
-)
-  (implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])
-  extends IndexedMongoRepo[Nino, SavingsGoalEvent]("savingsGoalEvents", "nino", unique = false, mongo = mongo)
+  mongo:       ReactiveMongoComponent
+)(implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])
+    extends IndexedMongoRepo[Nino, SavingsGoalEvent]("savingsGoalEvents", "nino", unique = false, mongo = mongo)
     with SavingsGoalEventRepo[Future] {
 
   override def setGoal(nino: Nino, amount: Double): Future[Unit] =
@@ -50,11 +49,10 @@ class MongoSavingsGoalEventRepo(
   override def deleteGoal(nino: Nino): Future[Unit] =
     insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now)).void
 
-  override def clearGoalEvents(): Future[Boolean] = {
+  override def clearGoalEvents(): Future[Boolean] =
     removeAll().map(_ => true).recover {
       case _ => false
     }
-  }
 
   override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
     find("nino" -> Json.toJson(nino))
@@ -63,8 +61,8 @@ class MongoSavingsGoalEventRepo(
     val query = collection.find(obj("nino" -> nino)).sort(obj("date" -> -1))
     val result: Future[Option[SavingsGoalEvent]] = query.one[SavingsGoalEvent]
     result.map {
-      case None                                    => None
-      case Some(_: SavingsGoalDeleteEvent)         => None
+      case None => None
+      case Some(_: SavingsGoalDeleteEvent) => None
       case Some(SavingsGoalSetEvent(_, amount, _)) => Some(SavingsGoal(amount))
     }
   }

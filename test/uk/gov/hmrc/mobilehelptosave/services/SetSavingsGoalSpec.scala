@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEve
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
 class SetSavingsGoalSpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with GeneratorDrivenPropertyChecks
     with TestF
@@ -47,71 +47,105 @@ class SetSavingsGoalSpec
 
   "setSavingsGoal" should {
     "return Right[Unit] if successful" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
-      val service = new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+      val service = new AccountServiceImpl[TestF](
+        logger,
+        testConfig.copy(inAppPaymentsEnabled = true),
+        fakeEnrolmentStatus,
+        fakeGetAccount,
+        savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet shouldBe Right(())
     }
 
     "return a ValidationError if the goal is < 1.0" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
-      val service = new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+      val service = new AccountServiceImpl[TestF](
+        logger,
+        testConfig.copy(inAppPaymentsEnabled = true),
+        fakeEnrolmentStatus,
+        fakeGetAccount,
+        savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(0.99)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
     }
 
     "return a ValidationError if the goal is > maximum for month" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
-      val service = new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+      val service = new AccountServiceImpl[TestF](
+        logger,
+        testConfig.copy(inAppPaymentsEnabled = true),
+        fakeEnrolmentStatus,
+        fakeGetAccount,
+        savingsGoalEventRepo)
 
-      service.setSavingsGoal(nino, SavingsGoal(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
+      service
+        .setSavingsGoal(nino, SavingsGoal(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01))
+        .unsafeGet
+        .left
+        .value shouldBe a[ErrorInfo.ValidationError]
     }
 
     "return an AccountNotFound if the nino does not have an account with NS&I" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(None))
+      val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(None))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
-      val service = new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+      val service = new AccountServiceImpl[TestF](
+        logger,
+        testConfig.copy(inAppPaymentsEnabled = true),
+        fakeEnrolmentStatus,
+        fakeGetAccount,
+        savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
     }
 
     "return a General error if the repo throws a Non-Fatal exception" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, setGoalResponse = Left(new Exception("non fatal")))
 
-      val service = new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+      val service = new AccountServiceImpl[TestF](
+        logger,
+        testConfig.copy(inAppPaymentsEnabled = true),
+        fakeEnrolmentStatus,
+        fakeGetAccount,
+        savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.General
     }
   }
 
-  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =
+  private def fakeHelpToSaveEnrolmentStatus(
+    expectedNino:    Nino,
+    enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =
     new HelpToSaveEnrolmentStatus[TestF] {
       override def enrolmentStatus()(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Boolean]] = {
         nino shouldBe expectedNino
-        hc shouldBe passedHc
+        hc   shouldBe passedHc
 
         F.pure(enrolledOrError)
       }
     }
 
-  private def fakeHelpToSaveGetAccount(expectedNino: Nino, accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount[TestF] =
+  private def fakeHelpToSaveGetAccount(
+    expectedNino:   Nino,
+    accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount[TestF] =
     new HelpToSaveGetAccount[TestF] {
-      override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+      override def getAccount(nino: Nino)(
+        implicit hc:                HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
         nino shouldBe expectedNino
-        hc shouldBe passedHc
+        hc   shouldBe passedHc
 
         F.pure(accountOrError)
       }
@@ -120,9 +154,9 @@ class SetSavingsGoalSpec
   private val fUnit = F.unit
 
   private def fakeSavingsGoalEventsRepo(
-    expectedNino: Nino,
-    goalsOrException: Either[Throwable, List[SavingsGoalEvent]] = List().asRight,
-    setGoalResponse: Either[Throwable, Unit] = ().asRight,
+    expectedNino:       Nino,
+    goalsOrException:   Either[Throwable, List[SavingsGoalEvent]] = List().asRight,
+    setGoalResponse:    Either[Throwable, Unit] = ().asRight,
     deleteGoalResponse: Either[Throwable, Unit] = ().asRight
   ): SavingsGoalEventRepo[TestF] = new SavingsGoalEventRepo[TestF] {
     override def setGoal(nino: Nino, amount: Double): TestF[Unit] = {
@@ -154,8 +188,8 @@ class SetSavingsGoalSpec
   }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
-    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+    override def getAccount(nino: Nino)(
+      implicit hc:                HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
       F.raiseError(new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation"))
-    }
   }
 }

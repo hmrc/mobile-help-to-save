@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 //noinspection TypeAnnotation
 class SavingsGoalSpec
-  extends WordSpec
+    extends WordSpec
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -52,7 +52,8 @@ class SavingsGoalSpec
         status(resultF) shouldBe 204
       }
 
-      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario
+      with HelpToSaveMocking {
         val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
         val request = FakeRequest().withBody(SavingsGoal(amount))
 

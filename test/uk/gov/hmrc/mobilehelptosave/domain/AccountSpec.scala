@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,23 +23,27 @@ import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveBonusTerm
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
-class AccountSpec extends WordSpec with Matchers
-  with AccountTestData
-  with MockFactory with OneInstancePerTest with LoggerStub {
+class AccountSpec
+    extends WordSpec
+    with Matchers
+    with AccountTestData
+    with MockFactory
+    with OneInstancePerTest
+    with LoggerStub {
 
   private val accountOpenedInJan2018 = helpToSaveAccount.copy(
     openedYearMonth = new YearMonth(2018, 1),
     bonusTerms = Seq(
       HelpToSaveBonusTerm(
-        bonusEstimate = BigDecimal("90.99"),
-        bonusPaid = BigDecimal("90.99"),
-        endDate = new LocalDate(2019, 12, 31),
+        bonusEstimate          = BigDecimal("90.99"),
+        bonusPaid              = BigDecimal("90.99"),
+        endDate                = new LocalDate(2019, 12, 31),
         bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
       ),
       HelpToSaveBonusTerm(
-        bonusEstimate = 12,
-        bonusPaid = 0,
-        endDate = new LocalDate(2021, 12, 31),
+        bonusEstimate          = 12,
+        bonusPaid              = 0,
+        endDate                = new LocalDate(2021, 12, 31),
         bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
       )
     )
@@ -127,21 +131,21 @@ class AccountSpec extends WordSpec with Matchers
         openedYearMonth = new YearMonth(2018, 1),
         bonusTerms = Seq(
           HelpToSaveBonusTerm(
-            bonusEstimate = BigDecimal("90.99"),
-            bonusPaid = BigDecimal("90.99"),
-            endDate = new LocalDate(2019, 12, 31),
+            bonusEstimate          = BigDecimal("90.99"),
+            bonusPaid              = BigDecimal("90.99"),
+            endDate                = new LocalDate(2019, 12, 31),
             bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
           ),
           HelpToSaveBonusTerm(
-            bonusEstimate = 12,
-            bonusPaid = 0,
-            endDate = new LocalDate(2021, 12, 31),
+            bonusEstimate          = 12,
+            bonusPaid              = 0,
+            endDate                = new LocalDate(2021, 12, 31),
             bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
           ),
           HelpToSaveBonusTerm(
-            bonusEstimate = 0,
-            bonusPaid = 0,
-            endDate = new LocalDate(2023, 12, 31),
+            bonusEstimate          = 0,
+            bonusPaid              = 0,
+            endDate                = new LocalDate(2023, 12, 31),
             bonusPaidOnOrAfterDate = new LocalDate(2024, 1, 1)
           )
         )
@@ -151,11 +155,12 @@ class AccountSpec extends WordSpec with Matchers
       account.bonusTerms.size shouldBe 2
       // check that the first 2 terms were retained
       account.bonusTerms.head.endDate shouldBe new LocalDate(2019, 12, 31)
-      account.bonusTerms(1).endDate shouldBe new LocalDate(2021, 12, 31)
+      account.bonusTerms(1).endDate   shouldBe new LocalDate(2021, 12, 31)
 
       // If we see this warning in production we should probably enhance it to include an identifier such as the NINO.
       // No identifier included so far because I think it's unlikely this warning will ever be triggered - if it does we can hopefully tie it to a NINO using the request ID field in Kibana.
-      (slf4jLoggerStub.warn(_: String)) verify "Account contained 3 bonus terms, which is more than the expected 2 - discarding all but the first 2 terms"
+      (slf4jLoggerStub
+        .warn(_: String)) verify "Account contained 3 bonus terms, which is more than the expected 2 - discarding all but the first 2 terms"
     }
   }
 }

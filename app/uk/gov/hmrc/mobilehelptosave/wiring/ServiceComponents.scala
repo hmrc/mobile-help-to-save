@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,11 +47,17 @@ import scala.concurrent.{ExecutionContext, Future}
 trait SandboxRequestRouting {
   self: BuiltInComponents =>
   override lazy val httpRequestHandler: HttpRequestHandler =
-    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
+    new RoutingHttpRequestHandler(
+      router,
+      httpErrorHandler,
+      httpConfiguration,
+      new DefaultHttpFilters(httpFilters: _*),
+      environment,
+      configuration)
 }
 
 class ServiceComponents(context: Context)
-  extends BuiltInComponentsFromContext(context)
+    extends BuiltInComponentsFromContext(context)
     with AhcWSComponents
     with SandboxRequestRouting {
 
@@ -59,50 +65,49 @@ class ServiceComponents(context: Context)
 
   lazy val prodLogger: LoggerLike = Logger
 
-  lazy val prefix          : String                           = "/"
-  lazy val sandboxRouter   : sandbox.Routes                   = wire[sandbox.Routes]
+  lazy val prefix:           String                           = "/"
+  lazy val sandboxRouter:    sandbox.Routes                   = wire[sandbox.Routes]
   lazy val definitionRouter: definition.Routes                = wire[definition.Routes]
-  lazy val healthRouter    : health2.Routes                   = wire[health2.Routes]
-  lazy val appRouter       : app.Routes                       = wire[app.Routes]
-  lazy val apiRouter       : api.Routes                       = wire[api.Routes]
-  lazy val testRouter      : _root_.test.Routes               = wire[_root_.test.Routes]
-  lazy val prodRoutes      : prod.Routes                      = wire[prod.Routes]
-  lazy val testOnlyRoutes  : testOnlyDoNotUseInAppConf.Routes = wire[testOnlyDoNotUseInAppConf.Routes]
+  lazy val healthRouter:     health2.Routes                   = wire[health2.Routes]
+  lazy val appRouter:        app.Routes                       = wire[app.Routes]
+  lazy val apiRouter:        api.Routes                       = wire[api.Routes]
+  lazy val testRouter:       _root_.test.Routes               = wire[_root_.test.Routes]
+  lazy val prodRoutes:       prod.Routes                      = wire[prod.Routes]
+  lazy val testOnlyRoutes:   testOnlyDoNotUseInAppConf.Routes = wire[testOnlyDoNotUseInAppConf.Routes]
 
   override lazy val router: Router =
     if (System.getProperty("application.router") == classOf[testOnlyDoNotUseInAppConf.Routes].getName) {
       prodLogger.info("Wiring in test-only routes")
       testOnlyRoutes
-    }
-    else prodRoutes
+    } else prodRoutes
 
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
 
-  lazy val clock      : Clock       = wire[ClockImpl]
-  lazy val metrics    : Metrics     = wire[MetricsImpl]
+  lazy val clock:       Clock       = wire[ClockImpl]
+  lazy val metrics:     Metrics     = wire[MetricsImpl]
   lazy val sandboxData: SandboxData = wire[SandboxData]
 
   lazy val authorisedWithIds: AuthorisedWithIds = wire[AuthorisedWithIdsImpl]
 
   lazy val helpToSaveConfig: MobileHelpToSaveConfig = wire[MobileHelpToSaveConfig]
 
-  lazy val helpToSaveConnector    : HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
-  lazy val auditConnector         : AuditConnector          = wire[DefaultAuditConnector]
-  lazy val authConnector          : AuthConnector           = wire[DefaultAuthConnector]
+  lazy val helpToSaveConnector:     HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
+  lazy val auditConnector:          AuditConnector          = wire[DefaultAuditConnector]
+  lazy val authConnector:           AuthConnector           = wire[DefaultAuthConnector]
   lazy val serviceLocatorConnector: ServiceLocatorConnector = wire[ApiServiceLocatorConnector]
 
-  lazy val userService   : UserService[Future]    = wire[ProdUserService]
+  lazy val userService:    UserService[Future]    = wire[ProdUserService]
   lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]
 
-  lazy val mongo    : ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
+  lazy val mongo:     ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
   lazy val eventRepo: SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
 
-  lazy val startupController      : StartupController       = wire[StartupController]
-  lazy val helpToSaveController   : HelpToSaveController    = wire[HelpToSaveController]
+  lazy val startupController:       StartupController       = wire[StartupController]
+  lazy val helpToSaveController:    HelpToSaveController    = wire[HelpToSaveController]
   lazy val documentationController: DocumentationController = wire[DocumentationController]
-  lazy val metricsController      : MetricsController       = wire[MetricsController]
-  lazy val sandboxController      : SandboxController       = wire[SandboxController]
-  lazy val testController         : TestController          = wire[TestController]
+  lazy val metricsController:       MetricsController       = wire[MetricsController]
+  lazy val sandboxController:       SandboxController       = wire[SandboxController]
+  lazy val testController:          TestController          = wire[TestController]
 
   lazy val healthController: HealthController = wire[HealthController]
 

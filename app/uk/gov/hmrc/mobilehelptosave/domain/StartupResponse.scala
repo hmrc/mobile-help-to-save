@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,18 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import play.api.libs.json._
 
 case class StartupResponse(
-  shuttering: Shuttering,
-  infoUrl: Option[String],
-  accessAccountUrl: Option[String],
-  user: Option[UserDetails],
-  userError: Option[ErrorInfo],
+  shuttering:         Shuttering,
+  infoUrl:            Option[String],
+  accessAccountUrl:   Option[String],
+  user:               Option[UserDetails],
+  userError:          Option[ErrorInfo],
   supportFormEnabled: Boolean
 )
 
-case class Shuttering (
+case class Shuttering(
   shuttered: Boolean,
-  title: String,
-  message: String
+  title:     String,
+  message:   String
 )
 
 case object Shuttering {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,8 @@ class JodaYearMonthJsonSpec extends WordSpec with Matchers {
     }
 
     "reject badly formatted strings with an error.expected.jodayearmonth.format error" in {
-      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(ValidationError("error.expected.jodayearmonth.format"))
+      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(
+        ValidationError("error.expected.jodayearmonth.format"))
     }
   }
 }

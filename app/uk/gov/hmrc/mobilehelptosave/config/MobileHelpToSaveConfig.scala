@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ import uk.gov.hmrc.play.config.ServicesConfig
 import scala.collection.JavaConverters._
 
 case class MobileHelpToSaveConfig(
-  environment: Environment,
+  environment:   Environment,
   configuration: Configuration
-)
-  extends ServicesConfig
+) extends ServicesConfig
     with AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
@@ -38,7 +37,7 @@ case class MobileHelpToSaveConfig(
     with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig {
 
-  override protected lazy val mode: Mode = environment.mode
+  override protected lazy val mode:            Mode          = environment.mode
   override protected def runModeConfiguration: Configuration = configuration
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
@@ -48,19 +47,19 @@ case class MobileHelpToSaveConfig(
 
   override val shuttering: Shuttering = Shuttering(
     shuttered = configBoolean("helpToSave.shuttering.shuttered"),
-    title = configBase64String("helpToSave.shuttering.title"),
-    message = configBase64String("helpToSave.shuttering.message")
+    title     = configBase64String("helpToSave.shuttering.title"),
+    message   = configBase64String("helpToSave.shuttering.message")
   )
 
   override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
 
-  override val supportFormEnabled        : Boolean = configBoolean("helpToSave.supportFormEnabled")
-  override val inAppPaymentsEnabled      : Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
-  override val helpToSaveInfoUrl         : String  = configString("helpToSave.infoUrl")
+  override val supportFormEnabled:         Boolean = configBoolean("helpToSave.supportFormEnabled")
+  override val inAppPaymentsEnabled:       Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
+  override val helpToSaveInfoUrl:          String  = configString("helpToSave.infoUrl")
   override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
 
-  private  val accessConfig                            = configuration.underlying.getConfig("api.access")
-  override val apiAccessType             : String      = accessConfig.getString("type")
+  private val accessConfig = configuration.underlying.getConfig("api.access")
+  override val apiAccessType:              String      = accessConfig.getString("type")
   override val apiWhiteListApplicationIds: Seq[String] = accessConfig.getStringList("white-list.applicationIds").asScala
 
   protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
@@ -78,7 +77,7 @@ case class MobileHelpToSaveConfig(
 
 trait AccountServiceConfig {
   def inAppPaymentsEnabled: Boolean
-  def savingsGoalsEnabled: Boolean
+  def savingsGoalsEnabled:  Boolean
 }
 
 trait SandboxDataConfig {
@@ -86,7 +85,7 @@ trait SandboxDataConfig {
 }
 
 trait DocumentationControllerConfig {
-  def apiAccessType: String
+  def apiAccessType:              String
   def apiWhiteListApplicationIds: Seq[String]
 }
 
@@ -99,9 +98,9 @@ trait ServiceLocatorRegistrationTaskConfig {
 }
 
 trait StartupControllerConfig {
-  def shuttering: Shuttering
-  def supportFormEnabled: Boolean
-  def helpToSaveInfoUrl: String
+  def shuttering:                 Shuttering
+  def supportFormEnabled:         Boolean
+  def helpToSaveInfoUrl:          String
   def helpToSaveAccessAccountUrl: String
 }
 

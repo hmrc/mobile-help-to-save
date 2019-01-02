@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,13 @@ trait UserService[F[_]] {
 }
 
 class ProdUserService(
-  logger: LoggerLike,
+  logger:              LoggerLike,
   helpToSaveConnector: HelpToSaveEnrolmentStatus[Future]
-)(implicit ec: ExecutionContext)
-  extends UserService[Future] {
-  def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] = {
+)(implicit ec:         ExecutionContext)
+    extends UserService[Future] {
+  def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
     EitherT(helpToSaveConnector.enrolmentStatus())
       .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)
       .map(state => UserDetails(state = state))
       .value
-  }
 }

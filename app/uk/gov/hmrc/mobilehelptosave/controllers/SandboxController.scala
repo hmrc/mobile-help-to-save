@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,12 @@ import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import scala.concurrent.Future
 
 class SandboxController(
-  val logger: LoggerLike,
-  config: HelpToSaveControllerConfig,
+  val logger:  LoggerLike,
+  config:      HelpToSaveControllerConfig,
   sandboxData: SandboxData
-) extends BaseController with ControllerChecks with HelpToSaveActions {
+) extends BaseController
+    with ControllerChecks
+    with HelpToSaveActions {
   override def shuttering: Shuttering = config.shuttering
 
   override def getTransactions(ninoString: String): Action[AnyContent] = Action.async { implicit request =>

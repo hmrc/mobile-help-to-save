@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,14 @@ class SavingsGoalEventTest extends FreeSpecLike with Matchers with GeneratorDriv
   val genNino: Gen[Nino] =
     for {
       prefix <- Gen.oneOf(Nino.validPrefixes)
-      num <- Gen.listOfN(6, Gen.numChar).map(_.mkString)
+      num    <- Gen.listOfN(6, Gen.numChar).map(_.mkString)
       suffix <- Gen.oneOf(Nino.validSuffixes)
     } yield Nino(s"$prefix$num$suffix")
 
   val genSetEvent: Gen[SavingsGoalSetEvent] = for {
-    nino <- genNino
+    nino   <- genNino
     amount <- arbDouble.arbitrary
-    date <- genDateTime
+    date   <- genDateTime
   } yield SavingsGoalSetEvent(nino, amount, date)
 
   val genDeleteEvent: Gen[SavingsGoalDeleteEvent] = for {

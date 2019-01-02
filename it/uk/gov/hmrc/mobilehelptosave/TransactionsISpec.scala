@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018 HM Revenue & Customs
  *
@@ -29,16 +28,21 @@ import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
-class TransactionsISpec extends WordSpec with Matchers
-  with SchemaMatchers with TransactionTestData
-  with FutureAwaits with DefaultAwaitTimeout
-  with WireMockSupport
-  with OneServerPerSuiteWsClient  with ComponentSupport{
+class TransactionsISpec
+    extends WordSpec
+    with Matchers
+    with SchemaMatchers
+    with TransactionTestData
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WireMockSupport
+    with OneServerPerSuiteWsClient
+    with ComponentSupport {
 
   override implicit lazy val app: Application = appBuilder.build()
 
   private val generator = new Generator(0)
-  private val nino = generator.nextNino
+  private val nino      = generator.nextNino
 
   "GET /savings-account/{nino}/transactions" should {
 
@@ -49,7 +53,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
-      response.json shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
+      response.json   shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
     }
 
@@ -60,7 +64,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
-      response.json shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
+      response.json   shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
     }
 
@@ -71,7 +75,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
-      response.json shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
+      response.json   shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
     }
 
@@ -82,7 +86,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe Status.OK
-      response.json shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
+      response.json   shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
     }
 
@@ -94,7 +98,7 @@ class TransactionsISpec extends WordSpec with Matchers
 
       response.status shouldBe 404
       val jsonBody: JsValue = response.json
-      (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
+      (jsonBody \ "code").as[String]    shouldBe "ACCOUNT_NOT_FOUND"
       (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
       checkTransactionsResponseInvariants(response)
     }
@@ -116,9 +120,8 @@ class TransactionsISpec extends WordSpec with Matchers
     }
   }
 
-  private def checkTransactionsResponseInvariants(response: WSResponse): Assertion = {
+  private def checkTransactionsResponseInvariants(response: WSResponse): Assertion =
     if (response.status == Status.OK) {
       response.json should validateAgainstSchema(strictRamlTransactionsSchema)
     } else succeed
-  }
 }

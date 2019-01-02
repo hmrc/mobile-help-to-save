@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,19 +38,19 @@ object Operation {
   implicit val reads: Reads[Operation] = new Reads[Operation] {
     override def reads(json: JsValue): JsResult[Operation] = json match {
       case JsString("credit") => JsSuccess(Credit)
-      case JsString("debit") => JsSuccess(Debit)
-      case JsString(unknown) => JsError(s"[$unknown] in not a valid Operation e.g. [credit|debit]")
-      case unknown => JsError(s"Cannot parse $unknown to a valid Operation e.g. [credit|debit]")
+      case JsString("debit")  => JsSuccess(Debit)
+      case JsString(unknown)  => JsError(s"[$unknown] in not a valid Operation e.g. [credit|debit]")
+      case unknown            => JsError(s"Cannot parse $unknown to a valid Operation e.g. [credit|debit]")
     }
   }
 }
 
 case class Transaction(
-  operation:            Operation,
-  amount:               BigDecimal,
-  transactionDate:      LocalDate,
-  accountingDate:       LocalDate,
-  balanceAfter:         BigDecimal
+  operation:       Operation,
+  amount:          BigDecimal,
+  transactionDate: LocalDate,
+  accountingDate:  LocalDate,
+  balanceAfter:    BigDecimal
 )
 
 object Transaction {

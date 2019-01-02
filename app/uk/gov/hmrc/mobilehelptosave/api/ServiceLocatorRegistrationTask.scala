@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
 class ServiceLocatorRegistrationTask(
-  actorSystem: ActorSystem,
-  connector: ServiceLocatorConnector,
-  config: ServiceLocatorRegistrationTaskConfig
+  actorSystem:               ActorSystem,
+  connector:                 ServiceLocatorConnector,
+  config:                    ServiceLocatorRegistrationTaskConfig
 )(implicit executionContext: ExecutionContext) {
   if (config.serviceLocatorEnabled) {
     actorSystem.scheduler.scheduleOnce(delay = FiniteDuration(10, SECONDS)) {

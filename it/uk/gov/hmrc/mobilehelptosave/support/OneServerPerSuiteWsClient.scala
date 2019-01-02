@@ -25,8 +25,8 @@ import play.api.libs.ws.WSClient
   * Provides implicits so that the server started by OneServerPerSuite can
   * be called using the methods in WsScalaTestClient
   */
-trait OneServerPerSuiteWsClient extends OneServerPerSuiteWithComponents with ComponentSupport with WsScalaTestClient  {
+trait OneServerPerSuiteWsClient extends OneServerPerSuiteWithComponents with ComponentSupport with WsScalaTestClient {
   this: TestSuite =>
   implicit lazy val implicitPortNumber: PortNumber = portNumber
-  implicit lazy val wsClient          : WSClient   = components.wsClient
+  implicit lazy val wsClient:           WSClient   = components.wsClient
 }

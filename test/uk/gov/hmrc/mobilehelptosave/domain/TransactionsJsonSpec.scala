@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ class TransactionsJsonSpec extends WordSpec with Matchers with SchemaMatchers wi
   "Transactions JSON" when {
     "there is a typical list of transactions" should {
       "be a valid instance of the schema used in the RAML" in {
-        Json.toJson(transactionsSortedInMobileHelpToSaveOrder) should validateAgainstSchema(strictRamlTransactionsSchema)
+        Json.toJson(transactionsSortedInMobileHelpToSaveOrder) should validateAgainstSchema(
+          strictRamlTransactionsSchema)
       }
     }
 

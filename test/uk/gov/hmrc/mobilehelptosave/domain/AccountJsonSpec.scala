@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,21 +31,35 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
       .as[SchemaType]
 
   private val testAccount = Account(
-    number = "2000000000001",
+    number          = "2000000000001",
     openedYearMonth = new YearMonth(2018, 5),
-    isClosed = false,
+    isClosed        = false,
     Blocking(false),
     BigDecimal("543.12"),
-    0, 0, 0,
-    thisMonthEndDate = new LocalDate(2020, 12, 31),
+    0,
+    0,
+    0,
+    thisMonthEndDate          = new LocalDate(2020, 12, 31),
     nextPaymentMonthStartDate = Some(new LocalDate(2021, 1, 1)),
-    accountHolderName = "Testfore Testsur",
-    accountHolderEmail = Some("testemail@example.com"),
+    accountHolderName         = "Testfore Testsur",
+    accountHolderEmail        = Some("testemail@example.com"),
     bonusTerms = Seq(
-      BonusTerm(bonusEstimate = BigDecimal("200.12"), bonusPaid = BigDecimal("200.12"), endDate = new LocalDate(2020, 4, 30), bonusPaidOnOrAfterDate = new LocalDate(2020, 5, 1), balanceMustBeMoreThanForBonus = 0),
-      BonusTerm(bonusEstimate = BigDecimal("71.44"), bonusPaid = 0, endDate = new LocalDate(2022, 4, 30), bonusPaidOnOrAfterDate = new LocalDate(2022, 5, 1), balanceMustBeMoreThanForBonus = BigDecimal("400.24"))
+      BonusTerm(
+        bonusEstimate                 = BigDecimal("200.12"),
+        bonusPaid                     = BigDecimal("200.12"),
+        endDate                       = new LocalDate(2020, 4, 30),
+        bonusPaidOnOrAfterDate        = new LocalDate(2020, 5, 1),
+        balanceMustBeMoreThanForBonus = 0
+      ),
+      BonusTerm(
+        bonusEstimate                 = BigDecimal("71.44"),
+        bonusPaid                     = 0,
+        endDate                       = new LocalDate(2022, 4, 30),
+        bonusPaidOnOrAfterDate        = new LocalDate(2022, 5, 1),
+        balanceMustBeMoreThanForBonus = BigDecimal("400.24")
+      )
     ),
-    currentBonusTerm = CurrentBonusTerm.First,
+    currentBonusTerm     = CurrentBonusTerm.First,
     inAppPaymentsEnabled = false,
     daysRemainingInMonth = 1
   )
@@ -67,10 +81,10 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     "account is closed" should {
       "be a valid instance of the schema used in the RAML" in {
         val closedAccount = testAccount.copy(
-          isClosed = true,
-          closureDate = Some(new LocalDate(2020, 11, 5)),
+          isClosed       = true,
+          closureDate    = Some(new LocalDate(2020, 11, 5)),
           closingBalance = Some(BigDecimal("543.12")),
-          balance = 0,
+          balance        = 0,
           bonusTerms = Seq(
             testAccount.bonusTerms.head,
             testAccount.bonusTerms(1).copy(bonusEstimate = 0)
@@ -83,9 +97,12 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
 
   "Account JSON" should {
     "format currentBonusTerm as documented in the README" in {
-      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.First)) \ "currentBonusTerm").as[String] shouldBe "First"
-      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.Second)) \ "currentBonusTerm").as[String] shouldBe "Second"
-      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.AfterFinalTerm)) \ "currentBonusTerm").as[String] shouldBe "AfterFinalTerm"
+      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.First)) \ "currentBonusTerm")
+        .as[String] shouldBe "First"
+      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.Second)) \ "currentBonusTerm")
+        .as[String] shouldBe "Second"
+      (Json.toJson(testAccount.copy(currentBonusTerm = CurrentBonusTerm.AfterFinalTerm)) \ "currentBonusTerm")
+        .as[String] shouldBe "AfterFinalTerm"
     }
   }
 }

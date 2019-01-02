@@ -25,7 +25,8 @@ trait ApplicationBuilder {
   def configure(conf: (String, Any)*): ApplicationBuilder
 }
 
-class ComponentApplicationBuilder(context: Context = ApplicationLoader.createContext(Environment.simple())) extends ApplicationBuilder {
+class ComponentApplicationBuilder(context: Context = ApplicationLoader.createContext(Environment.simple()))
+    extends ApplicationBuilder {
   override def build(): Application =
     new ServiceComponents(context).application
 
@@ -40,7 +41,6 @@ class ComponentApplicationBuilder(context: Context = ApplicationLoader.createCon
     */
   final def configure(conf: Map[String, Any]): ComponentApplicationBuilder =
     configure(Configuration.from(conf))
-
 
 }
 

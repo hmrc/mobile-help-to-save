@@ -4,15 +4,17 @@ import org.scalatest.{Matchers, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.support.OneServerPerSuiteWsClient
 
-
 /**
   * Need two separate tests so that the servers can be run with different system
   * property settings for the router
   */
-class TestOnlyRoutesNotWiredISpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout
-  with OneServerPerSuiteWsClient {
-  val clearGoalEventsUrl = "/mobile-help-to-save/test-only/clear-goal-events"
+class TestOnlyRoutesNotWiredISpec
+    extends WordSpec
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with OneServerPerSuiteWsClient {
+  val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
   private val applicationRouterKey = "application.router"
 
   System.clearProperty(applicationRouterKey)
@@ -22,10 +24,12 @@ class TestOnlyRoutesNotWiredISpec extends WordSpec with Matchers
   }
 }
 
-
-class TestOnlyRoutesWiredISpec extends WordSpec with Matchers
-  with FutureAwaits with DefaultAwaitTimeout
-  with OneServerPerSuiteWsClient {
+class TestOnlyRoutesWiredISpec
+    extends WordSpec
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with OneServerPerSuiteWsClient {
   val clearGoalEventsUrl = "/mobile-help-to-save/test-only/clear-goal-events"
 
   private val applicationRouterKey = "application.router"
