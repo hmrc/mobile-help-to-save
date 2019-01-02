@@ -55,8 +55,7 @@ class AuthorisedWithIdsImpl(
       .recover {
         case e: NoActiveSession => Left(Unauthorized(s"Authorisation failure [${e.reason}]"))
         case e: InsufficientConfidenceLevel =>
-          logger.warn(
-            "Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
+          logger.warn("Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
           Left(Forbidden(s"Authorisation failure [${e.reason}]"))
         case e: AuthorisationException => Left(Forbidden(s"Authorisation failure [${e.reason}]"))
       }

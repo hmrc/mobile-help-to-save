@@ -59,9 +59,7 @@ class AccountServiceImpl[F[_]](
     withValidSavingsAmount(savingsGoal.goalAmount) {
       withHelpToSaveAccount(nino) { acc: Account =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
-          trappingRepoExceptions(
-            "error writing savings goal to repo",
-            savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
+          trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
         }
       }
     }
@@ -101,13 +99,11 @@ class AccountServiceImpl[F[_]](
       case Some(helpToSaveAccount) =>
         Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now()))
       case None =>
-        logger.warn(
-          s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
         None
     }.value
 
-  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => F[Result[T]])(
-    implicit hc:                                   HeaderCarrier): F[Result[T]] = {
+  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
       F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
@@ -119,8 +115,7 @@ class AccountServiceImpl[F[_]](
     * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
     * to an appropriate ErrorInfo value
     */
-  protected def withHelpToSaveAccount[T](nino: Nino)(f: Account => F[Result[T]])(
-    implicit hc:                               HeaderCarrier): F[Result[T]] =
+  protected def withHelpToSaveAccount[T](nino: Nino)(f: Account => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
     fetchNSAndIAccount(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)

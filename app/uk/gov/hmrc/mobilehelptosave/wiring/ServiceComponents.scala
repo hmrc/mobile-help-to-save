@@ -47,19 +47,10 @@ import scala.concurrent.{ExecutionContext, Future}
 trait SandboxRequestRouting {
   self: BuiltInComponents =>
   override lazy val httpRequestHandler: HttpRequestHandler =
-    new RoutingHttpRequestHandler(
-      router,
-      httpErrorHandler,
-      httpConfiguration,
-      new DefaultHttpFilters(httpFilters: _*),
-      environment,
-      configuration)
+    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
 }
 
-class ServiceComponents(context: Context)
-    extends BuiltInComponentsFromContext(context)
-    with AhcWSComponents
-    with SandboxRequestRouting {
+class ServiceComponents(context: Context) extends BuiltInComponentsFromContext(context) with AhcWSComponents with SandboxRequestRouting {
 
   implicit val ec: ExecutionContext = actorSystem.dispatcher
 

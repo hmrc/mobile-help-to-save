@@ -60,12 +60,11 @@ class HelpToSaveController(
       }
     }
 
-  override def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async {
-    implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino =>
-        //noinspection ConvertibleToMethodValue
-        accountService.account(nino).map(handlingErrors(orAccountNotFound(_)))
-      }
+  override def getAccount(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+    verifyingMatchingNino(ninoString) { nino =>
+      //noinspection ConvertibleToMethodValue
+      accountService.account(nino).map(handlingErrors(orAccountNotFound(_)))
+    }
   }
 
   override def putSavingsGoal(ninoString: String): Action[SavingsGoal] =

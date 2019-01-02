@@ -139,8 +139,7 @@ object Account {
     )
 
     if (h.bonusTerms.size > 2) {
-      logger.warn(
-        s"Account contained ${h.bonusTerms.size} bonus terms, which is more than the expected 2 - discarding all but the first 2 terms")
+      logger.warn(s"Account contained ${h.bonusTerms.size} bonus terms, which is more than the expected 2 - discarding all but the first 2 terms")
     }
 
     h.bonusTerms.take(2).foldLeft(Vector.empty[BonusTerm]) { (acc, htsTerm) =>

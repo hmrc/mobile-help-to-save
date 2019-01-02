@@ -55,8 +55,7 @@ trait ControllerChecks extends Results {
       successful(Forbidden)
     }
 
-  def verifyingMatchingNino(ninoString: String)(fn: Nino => Future[Result])(
-    implicit request:                   RequestWithIds[_]): Future[Result] =
+  def verifyingMatchingNino(ninoString: String)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] =
     withShuttering(shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>
@@ -65,8 +64,7 @@ trait ControllerChecks extends Results {
       }
     }
 
-  protected final val AccountNotFound = NotFound(
-    Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
+  protected final val AccountNotFound = NotFound(Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO")))
   private def errorHandler(errorInfo: ErrorInfo): Result = errorInfo match {
     case ErrorInfo.AccountNotFound        => AccountNotFound
     case v @ ErrorInfo.ValidationError(_) => UnprocessableEntity(Json.toJson(v))

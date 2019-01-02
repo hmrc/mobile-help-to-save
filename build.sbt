@@ -28,7 +28,7 @@ lazy val microservice = Project(appName, file("."))
     majorVersion := 0,
     unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
-    // from https://github.com/typelevel/cats/blob/master/README.md
+    // based on https://tpolecat.github.io/2017/04/25/scalac-flags.html but cut down for scala 2.11
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding",
@@ -44,7 +44,7 @@ lazy val microservice = Project(appName, file("."))
       "-Ywarn-nullary-override",
       "-Ywarn-nullary-unit",
       "-Ywarn-numeric-widen",
-      //"-Ywarn-unused-import",
+      //"-Ywarn-unused-import", - does not work well with fatal-warnings because of play-generated sources
       "-Xfatal-warnings",
       "-Xlint"
     ),
