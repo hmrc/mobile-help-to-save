@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
 class SetSavingsGoalSpec
@@ -162,15 +162,8 @@ class SetSavingsGoalSpec
 
     override def clearGoalEvents(): TestF[Boolean] = F.pure(true)
 
-    override def getGoal(nino: Nino): TestF[Option[SavingsGoal]] =
-      goalsOrException match {
-        case Left(t) => F.raiseError(t)
-        case Right(events) =>
-          events.sortBy(_.date)(localDateTimeOrdering.reverse).headOption match {
-            case Some(SavingsGoalSetEvent(_, amount, _)) => F.pure(Some(SavingsGoal(amount)))
-            case _                                       => F.pure(None)
-          }
-      }
+    // This should never get called as part of setting a savings goal
+    override def getGoal(nino: Nino): TestF[Option[SavingsGoal]] = ???
   }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {

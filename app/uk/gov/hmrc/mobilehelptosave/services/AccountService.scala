@@ -28,7 +28,7 @@ import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
@@ -57,7 +57,7 @@ class AccountServiceImpl[F[_]](
 
   override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
     withValidSavingsAmount(savingsGoal.goalAmount) {
-      withHelpToSaveAccount(nino) { acc: Account =>
+      withHelpToSaveAccount(nino) { acc =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
           trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
         }
@@ -94,7 +94,7 @@ class AccountServiceImpl[F[_]](
     else
       fn
 
-  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
+  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: HelpToSaveAccount)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
       F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
@@ -103,11 +103,11 @@ class AccountServiceImpl[F[_]](
   }
 
   /**
-    * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
-    * to an appropriate ErrorInfo value
+    * Check if the nino has an NS&I help-to-save account associated with it. If so, run the supplied function on it,
+    * otherwise map to an appropriate ErrorInfo value.
     */
-  protected def withHelpToSaveAccount[T](nino: Nino)(f: Account => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
-    fetchAccountWithGoal(nino).flatMap {
+  protected def withHelpToSaveAccount[T](nino: Nino)(f: HelpToSaveAccount => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
+    helpToSaveGetAccount.getAccount(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
       case Left(errorInfo)      => F.pure(errorInfo.asLeft)
