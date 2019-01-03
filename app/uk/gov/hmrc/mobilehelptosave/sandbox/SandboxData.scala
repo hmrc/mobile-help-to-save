@@ -60,8 +60,10 @@ case class SandboxData(
         closingBalance = None
       ),
       inAppPaymentsEnabled = config.inAppPaymentsEnabled,
+      savingsGoalsEnabled = true,
       logger,
-      new LocalDate(2018, 4, 30)
+      new LocalDate(2018, 4, 30),
+      savingsGoal = Some(SavingsGoal(25.0))
     )
   }
 

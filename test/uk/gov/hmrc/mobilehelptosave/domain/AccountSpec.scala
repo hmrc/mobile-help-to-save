@@ -56,7 +56,7 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2021, 11, 30)
       )
 
-      val account = Account(penultimateMonthHelpToSaveAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(penultimateMonthHelpToSaveAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.nextPaymentMonthStartDate shouldBe Some(new LocalDate(2021, 12, 1))
     }
 
@@ -65,7 +65,7 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2021, 12, 31)
       )
 
-      val account = Account(lastMonthHelpToSaveAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(lastMonthHelpToSaveAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.nextPaymentMonthStartDate shouldBe None
     }
 
@@ -74,7 +74,7 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2018, 1, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.currentBonusTerm shouldBe CurrentBonusTerm.First
     }
 
@@ -83,7 +83,7 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2019, 12, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.currentBonusTerm shouldBe CurrentBonusTerm.First
     }
 
@@ -92,7 +92,7 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2020, 1, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.currentBonusTerm shouldBe CurrentBonusTerm.Second
     }
 
@@ -101,7 +101,7 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2021, 12, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.currentBonusTerm shouldBe CurrentBonusTerm.Second
     }
 
@@ -110,18 +110,18 @@ class AccountSpec
         thisMonthEndDate = new LocalDate(2022, 1, 31)
       )
 
-      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.currentBonusTerm shouldBe CurrentBonusTerm.AfterFinalTerm
     }
 
     // balanceMustBeMoreThanForBonus is always 0 for the first term, we only include it for consistency with the second term
     "return balanceMustBeMoreThanForBonus = 0 for the first bonus term" in {
-      val account = Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.bonusTerms.head.balanceMustBeMoreThanForBonus shouldBe 0
     }
 
     "calculate the second bonus term's balanceMustBeMoreThanForBonus from the first term's bonusEstimate" in {
-      val account = Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.bonusTerms(1).balanceMustBeMoreThanForBonus shouldBe BigDecimal("181.98")
     }
 
@@ -151,7 +151,7 @@ class AccountSpec
         )
       )
 
-      val account = Account(accountWith3Terms, inAppPaymentsEnabled = false, logger, now)
+      val account = Account(accountWith3Terms, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.bonusTerms.size shouldBe 2
       // check that the first 2 terms were retained
       account.bonusTerms.head.endDate shouldBe new LocalDate(2019, 12, 31)

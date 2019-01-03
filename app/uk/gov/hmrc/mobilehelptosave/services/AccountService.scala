@@ -28,7 +28,7 @@ import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
@@ -57,7 +57,7 @@ class AccountServiceImpl[F[_]](
 
   override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
     withValidSavingsAmount(savingsGoal.goalAmount) {
-      withHelpToSaveAccount(nino) { acc: Account =>
+      withHelpToSaveAccount(nino) { acc =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
           trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
         }
@@ -94,16 +94,7 @@ class AccountServiceImpl[F[_]](
     else
       fn
 
-  protected def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
-    EitherT(helpToSaveGetAccount.getAccount(nino)).map {
-      case Some(helpToSaveAccount) =>
-        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now()))
-      case None =>
-        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
-        None
-    }.value
-
-  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
+  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: HelpToSaveAccount)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
       F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
@@ -112,11 +103,11 @@ class AccountServiceImpl[F[_]](
   }
 
   /**
-    * Check if the nino has an NS&I account associated with it. If so, run the supplied function on it, otherwise map
-    * to an appropriate ErrorInfo value
+    * Check if the nino has an NS&I help-to-save account associated with it. If so, run the supplied function on it,
+    * otherwise map to an appropriate ErrorInfo value.
     */
-  protected def withHelpToSaveAccount[T](nino: Nino)(f: Account => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
-    fetchNSAndIAccount(nino).flatMap {
+  protected def withHelpToSaveAccount[T](nino: Nino)(f: HelpToSaveAccount => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
+    helpToSaveGetAccount.getAccount(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
       case Left(errorInfo)      => F.pure(errorInfo.asLeft)
@@ -138,16 +129,24 @@ class AccountServiceImpl[F[_]](
 
   protected def fetchAccountWithGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     (
-      fetchNSAndIAccount(nino),
+      helpToSaveGetAccount.getAccount(nino),
       fetchSavingsGoal(nino)
     ).mapN {
       case (Right(Some(account)), Right(goal)) =>
-        val savingsGoal = goal.map(t => SavingsGoal(t.goalAmount))
-        Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
+        Some(
+          Account(
+            account,
+            inAppPaymentsEnabled = config.inAppPaymentsEnabled,
+            savingsGoalsEnabled  = config.savingsGoalsEnabled,
+            logger,
+            LocalDate.now(),
+            goal)).asRight
 
       case (Left(errorInfo), _) => errorInfo.asLeft
       case (_, Left(errorInfo)) => errorInfo.asLeft
 
-      case (Right(None), _) => None.asRight
+      case (Right(None), _) =>
+        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+        None.asRight
     }
 }
