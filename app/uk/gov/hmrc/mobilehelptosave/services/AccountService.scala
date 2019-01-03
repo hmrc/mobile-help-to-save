@@ -97,7 +97,7 @@ class AccountServiceImpl[F[_]](
   protected def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     EitherT(helpToSaveGetAccount.getAccount(nino)).map {
       case Some(helpToSaveAccount) =>
-        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now()))
+        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now(), None))
       case None =>
         logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
         None
