@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Matchers, OptionValues, WordSpec}
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
@@ -31,6 +31,7 @@ class SandboxISpec
     extends WordSpec
     with Matchers
     with SchemaMatchers
+    with OptionValues
     with TransactionTestData
     with FutureAwaits
     with DefaultAwaitTimeout
@@ -51,10 +52,12 @@ class SandboxISpec
   }
 
   "GET /savings-account/{nino} with sandbox header" should {
-    "Return OK response containing valid Account JSON" in {
+    "Return OK response containing valid Account JSON including a savings goal" in {
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").withHeaders(sandboxRoutingHeader).get())
       response.status                 shouldBe Status.OK
-      response.json.validate[Account] shouldBe 'success
+      val accountV = response.json.validate[Account]
+      accountV shouldBe 'success
+      accountV.asOpt.value.savingsGoal.value.goalAmount shouldBe 25.0
     }
   }
 
