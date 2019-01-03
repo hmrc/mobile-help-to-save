@@ -94,15 +94,6 @@ class AccountServiceImpl[F[_]](
     else
       fn
 
-  protected def fetchNSAndIAccount(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
-    EitherT(helpToSaveGetAccount.getAccount(nino)).map {
-      case Some(helpToSaveAccount) =>
-        Some(Account(helpToSaveAccount, inAppPaymentsEnabled = config.inAppPaymentsEnabled, logger, LocalDate.now(), None))
-      case None =>
-        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
-        None
-    }.value
-
   protected def withEnoughSavingsHeadroom[T](goal: Double, acc: Account)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
@@ -116,7 +107,7 @@ class AccountServiceImpl[F[_]](
     * to an appropriate ErrorInfo value
     */
   protected def withHelpToSaveAccount[T](nino: Nino)(f: Account => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
-    fetchNSAndIAccount(nino).flatMap {
+    fetchAccountWithGoal(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
       case Left(errorInfo)      => F.pure(errorInfo.asLeft)
@@ -138,16 +129,24 @@ class AccountServiceImpl[F[_]](
 
   protected def fetchAccountWithGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     (
-      fetchNSAndIAccount(nino),
+      helpToSaveGetAccount.getAccount(nino),
       fetchSavingsGoal(nino)
     ).mapN {
       case (Right(Some(account)), Right(goal)) =>
-        val savingsGoal = goal.map(t => SavingsGoal(t.goalAmount))
-        Some(account.copy(savingsGoal = savingsGoal, savingsGoalsEnabled = config.savingsGoalsEnabled)).asRight
+        Some(
+          Account(
+            account,
+            inAppPaymentsEnabled = config.inAppPaymentsEnabled,
+            savingsGoalsEnabled  = config.savingsGoalsEnabled,
+            logger,
+            LocalDate.now(),
+            goal)).asRight
 
       case (Left(errorInfo), _) => errorInfo.asLeft
       case (_, Left(errorInfo)) => errorInfo.asLeft
 
-      case (Right(None), _) => None.asRight
+      case (Right(None), _) =>
+        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+        None.asRight
     }
 }

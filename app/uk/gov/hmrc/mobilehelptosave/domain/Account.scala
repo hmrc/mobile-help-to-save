@@ -77,7 +77,13 @@ object Account {
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
   implicit val format:          OFormat[Account]  = Json.format[Account]
 
-  def apply(h: HelpToSaveAccount, inAppPaymentsEnabled: Boolean, logger: LoggerLike, now: LocalDate, savingsGoal: Option[Double]): Account = Account(
+  def apply(
+    h:                    HelpToSaveAccount,
+    inAppPaymentsEnabled: Boolean,
+    savingsGoalsEnabled:  Boolean,
+    logger:               LoggerLike,
+    now:                  LocalDate,
+    savingsGoal:          Option[SavingsGoal]): Account = Account(
     number                    = h.accountNumber,
     openedYearMonth           = h.openedYearMonth,
     isClosed                  = h.isClosed,
@@ -95,8 +101,9 @@ object Account {
     closureDate               = h.closureDate,
     closingBalance            = h.closingBalance,
     inAppPaymentsEnabled      = inAppPaymentsEnabled,
+    savingsGoalsEnabled       = savingsGoalsEnabled,
     daysRemainingInMonth      = calculateDaysRemainingInMonth(now, h),
-    savingsGoal               = savingsGoal.map(SavingsGoal(_))
+    savingsGoal               = savingsGoal
   )
 
   /**

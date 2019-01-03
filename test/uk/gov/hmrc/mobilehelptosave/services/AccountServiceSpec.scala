@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalDeleteEvent, SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
 class AccountServiceSpec
@@ -79,12 +79,8 @@ class AccountServiceSpec
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
-      val service = new AccountServiceImpl[TestF](
-        logger,
-        testConfig.copy(inAppPaymentsEnabled = true),
-        fakeEnrolmentStatus,
-        fakeGetAccount,
-        savingsGoalEventRepo)
+      val service =
+        new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
@@ -97,12 +93,7 @@ class AccountServiceSpec
     "return None without attempting to get account from help-to-save when the user is not enrolled" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
-      val service = new AccountServiceImpl[TestF](
-        logger,
-        testConfig,
-        fakeEnrolmentStatus,
-        ShouldNotBeCalledGetAccount,
-        savingsGoalEventRepo)
+      val service              = new AccountServiceImpl[TestF](logger, testConfig, fakeEnrolmentStatus, ShouldNotBeCalledGetAccount, savingsGoalEventRepo)
       service.account(nino).unsafeGet shouldBe Right(None)
 
       (slf4jLoggerStub.warn(_: String)) verify * never ()
@@ -125,8 +116,7 @@ class AccountServiceSpec
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
 
       val fakeGetAccount = new HelpToSaveGetAccount[TestF] {
-        override def getAccount(nino: Nino)(
-          implicit hc:                HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
+        override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
           fail("getAccount should not have been called")
       }
 
@@ -166,9 +156,7 @@ class AccountServiceSpec
     }
   }
 
-  private def fakeHelpToSaveEnrolmentStatus(
-    expectedNino:    Nino,
-    enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =
+  private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =
     new HelpToSaveEnrolmentStatus[TestF] {
       override def enrolmentStatus()(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Boolean]] = {
         nino shouldBe expectedNino
@@ -182,8 +170,7 @@ class AccountServiceSpec
     expectedNino:   Nino,
     accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]): HelpToSaveGetAccount[TestF] =
     new HelpToSaveGetAccount[TestF] {
-      override def getAccount(nino: Nino)(
-        implicit hc:                HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+      override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
         nino shouldBe expectedNino
         hc   shouldBe passedHc
 
@@ -219,8 +206,8 @@ class AccountServiceSpec
           case Right(events) =>
             F.pure {
               events.sortBy(_.date)(localDateTimeOrdering.reverse).headOption.flatMap {
-                case _: SavingsGoalDeleteEvent => None
                 case SavingsGoalSetEvent(_, amount, _) => Some(SavingsGoal(amount))
+                case _                                 => None
               }
             }
           case Left(t) => F.raiseError(t)
@@ -228,8 +215,7 @@ class AccountServiceSpec
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
-    override def getAccount(nino: Nino)(
-      implicit hc:                HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
+    override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
       new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation")
         .raiseError[TestF, Either[ErrorInfo, Option[HelpToSaveAccount]]]
   }
