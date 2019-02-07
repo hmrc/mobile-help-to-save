@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.JsObject
-import play.api.test.Helpers.{contentAsJson, status, _}
+import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
