@@ -15,13 +15,12 @@
  */
 
 package uk.gov.hmrc.mobilehelptosave.services
+import java.time.LocalDateTime
 
-import org.joda.time.DateTime
-
-class FixedFakeClock(time: DateTime) extends Clock {
-  override def now(): DateTime = time
+class FixedFakeClock(time: LocalDateTime) extends Clock {
+  override def now(): LocalDateTime = time
 }
 
-class VariableFakeClock(var time: DateTime) extends Clock {
-  override def now(): DateTime = time
+class VariableFakeClock(var time: LocalDateTime) extends Clock {
+  override def now(): LocalDateTime = time
 }

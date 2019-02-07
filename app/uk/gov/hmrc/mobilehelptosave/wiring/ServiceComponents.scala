@@ -17,16 +17,15 @@
 package uk.gov.hmrc.mobilehelptosave.wiring
 
 import cats.instances.future._
-import com.kenshoo.play.metrics.{Metrics, MetricsController, MetricsImpl}
+import com.kenshoo.play.metrics._
 import com.softwaremill.macwire.wire
+import controllers.AssetsComponents
 import play.api.ApplicationLoader.Context
-import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.routing.Router
-import play.api.{BuiltInComponents, BuiltInComponentsFromContext, Logger, LoggerLike}
+import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
 import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
-import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mobilehelptosave.api.{DocumentationController, ServiceLocatorRegistrationTask}
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
@@ -36,21 +35,20 @@ import uk.gov.hmrc.mobilehelptosave.controllers.test.TestController
 import uk.gov.hmrc.mobilehelptosave.repository.{MongoSavingsGoalEventRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.services._
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
+import uk.gov.hmrc.play.bootstrap.config._
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.health.HealthController
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait SandboxRequestRouting {
-  self: BuiltInComponents =>
-  override lazy val httpRequestHandler: HttpRequestHandler =
-    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
-}
-
-class ServiceComponents(context: Context) extends BuiltInComponentsFromContext(context) with AhcWSComponents with SandboxRequestRouting {
+class ServiceComponents(context: Context)
+    extends BuiltInComponentsFromContext(context)
+    with AhcWSComponents
+    with SandboxRequestRouting
+    with AssetsComponents
+    with FilterWiring
+    with AuditWiring {
 
   implicit val ec: ExecutionContext = actorSystem.dispatcher
 
@@ -72,20 +70,25 @@ class ServiceComponents(context: Context) extends BuiltInComponentsFromContext(c
       testOnlyRoutes
     } else prodRoutes
 
+  lazy val servicesConfig: ServicesConfig = wire[ServicesConfig]
+
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
 
-  lazy val clock:       Clock       = wire[ClockImpl]
-  lazy val metrics:     Metrics     = wire[MetricsImpl]
+  lazy val clock: Clock = wire[ClockImpl]
+
   lazy val sandboxData: SandboxData = wire[SandboxData]
 
   lazy val authorisedWithIds: AuthorisedWithIds = wire[AuthorisedWithIdsImpl]
 
   lazy val helpToSaveConfig: MobileHelpToSaveConfig = wire[MobileHelpToSaveConfig]
 
-  lazy val helpToSaveConnector:     HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
-  lazy val auditConnector:          AuditConnector          = wire[DefaultAuditConnector]
-  lazy val authConnector:           AuthConnector           = wire[DefaultAuthConnector]
-  lazy val serviceLocatorConnector: ServiceLocatorConnector = wire[ApiServiceLocatorConnector]
+  lazy val helpToSaveConnector: HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
+
+  lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
+  lazy val serviceLocatorConnector: ServiceLocatorConnector = {
+    val appName: String = AppName.fromConfiguration(configuration)
+    wire[ApiServiceLocatorConnector]
+  }
 
   lazy val userService:    UserService[Future]    = wire[ProdUserService]
   lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]

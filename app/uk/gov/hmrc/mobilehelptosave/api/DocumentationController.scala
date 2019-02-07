@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.api
 
+import controllers.Assets
 import play.api.http.HttpErrorHandler
 import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.views.txt
 
@@ -30,8 +31,10 @@ object ApiAccess {
 
 class DocumentationController(
   errorHandler: HttpErrorHandler,
-  config:       DocumentationControllerConfig
-) extends uk.gov.hmrc.api.controllers.DocumentationController(errorHandler) {
+  config:       DocumentationControllerConfig,
+  cc:           ControllerComponents,
+  assets:       Assets
+) extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
 
   private lazy val apiAccess = ApiAccess(config.apiAccessType, config.apiWhiteListApplicationIds)
 

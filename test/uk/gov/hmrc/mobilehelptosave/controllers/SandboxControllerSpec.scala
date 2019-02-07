@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import org.joda.time.{DateTime, DateTimeZone}
+import java.time.LocalDateTime
+
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import play.api.libs.json.{JsArray, JsLookupResult, JsValue}
+import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
@@ -55,14 +56,15 @@ class SandboxControllerSpec
   private val shuttering          = Shuttering(shuttered = false, "", "")
   private val shutteredShuttering = Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
   private val config              = TestHelpToSaveControllerConfig(shuttering)
-  private val currentTime         = new DateTime(2018, 9, 29, 12, 30, DateTimeZone.forID("Europe/London"))
+  private val currentTime         = LocalDateTime.of(2018, 9, 29, 12, 30)
   private val fixedClock          = new FixedFakeClock(currentTime)
   private val controller: SandboxController =
-    new SandboxController(logger, config, SandboxData(logger, fixedClock, TestSandboxDataConfig))
+    new SandboxController(logger, config, SandboxData(logger, fixedClock, TestSandboxDataConfig), stubControllerComponents())
   private val shutteredController: SandboxController = new SandboxController(
     logger,
     config.copy(shuttering = shutteredShuttering),
-    SandboxData(logger, fixedClock, TestSandboxDataConfig))
+    SandboxData(logger, fixedClock, TestSandboxDataConfig),
+    stubControllerComponents())
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions")(transactionIndex) \ "operation").as[String]
@@ -192,13 +194,13 @@ class SandboxControllerSpec
       (json \ "maximumPaidInThisMonth").as[BigDecimal] shouldBe BigDecimal(50)
       (json \ "thisMonthEndDate").as[String]           shouldBe "2018-09-30"
 
-      val firstBonusTermJson: JsLookupResult = (json \ "bonusTerms")(0)
+      val firstBonusTermJson = (json \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("110.25"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("0"))
       (firstBonusTermJson \ "endDate").as[String]                shouldBe "2020-01-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-02-01"
 
-      val secondBonusTermJson: JsLookupResult = (json \ "bonusTerms")(1)
+      val secondBonusTermJson = (json \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String]                shouldBe "2022-01-31"

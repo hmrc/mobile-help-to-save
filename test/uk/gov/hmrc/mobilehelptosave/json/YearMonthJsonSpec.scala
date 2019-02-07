@@ -16,31 +16,30 @@
 
 package uk.gov.hmrc.mobilehelptosave.json
 
-import org.joda.time.YearMonth
-import org.scalatest.{Matchers, WordSpec}
-import play.api.data.validation.ValidationError
-import play.api.libs.json._
-import uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
+import java.time.YearMonth
 
-class JodaYearMonthJsonSpec extends WordSpec with Matchers {
+import org.scalatest.{Matchers, WordSpec}
+import play.api.libs.json._
+import uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
+
+class YearMonthJsonSpec extends WordSpec with Matchers {
   "YearMonth JSON writes" should {
     "write in format YYYY-MM" in {
-      Json.toJson(new YearMonth(1999, 12)) shouldBe JsString("1999-12")
+      Json.toJson(YearMonth.of(1999, 12)) shouldBe JsString("1999-12")
     }
   }
 
   "YearMonth JSON reads" should {
     "read from YYYY-MM string" in {
-      JsString("1999-12").validate[YearMonth] shouldBe JsSuccess(new YearMonth(1999, 12))
+      JsString("1999-12").validate[YearMonth] shouldBe JsSuccess(YearMonth.of(1999, 12))
     }
 
     "reject non-String values with an error.expected.yearmonth error" in {
       JsNumber(1999).validate[YearMonth] shouldBe JsError("error.expected.yearmonth")
     }
 
-    "reject badly formatted strings with an error.expected.jodayearmonth.format error" in {
-      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(
-        ValidationError("error.expected.jodayearmonth.format"))
+    "reject badly formatted strings with an error.expected.yearmonth.format error" in {
+      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(JsonValidationError("error.expected.yearmonth.format"))
     }
   }
 }

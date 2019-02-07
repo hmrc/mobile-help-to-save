@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.joda.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, YearMonth}
+
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
 
@@ -89,77 +90,77 @@ trait AccountTestData {
       |}
     """.stripMargin
 
-  val monthEndDate: LocalDate = new LocalDate(2018, 4, 30)
-  val now         : LocalDate = new LocalDate(2018, 4, 30)
+  val monthEndDate: LocalDate = LocalDate.of(2018, 4, 30)
+  val now:          LocalDate = LocalDate.of(2018, 4, 30)
 
   /** A HelpToSaveAccount object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
   protected val helpToSaveAccount: HelpToSaveAccount = HelpToSaveAccount(
-    accountNumber = "1000000000001",
-    openedYearMonth = new YearMonth(2018, 1),
-    isClosed = false,
-    blocked = Blocking(false),
-    balance = BigDecimal("123.45"),
-    paidInThisMonth = BigDecimal("27.88"),
-    canPayInThisMonth = BigDecimal("22.12"),
+    accountNumber          = "1000000000001",
+    openedYearMonth        = YearMonth.of(2018, 1),
+    isClosed               = false,
+    blocked                = Blocking(false),
+    balance                = BigDecimal("123.45"),
+    paidInThisMonth        = BigDecimal("27.88"),
+    canPayInThisMonth      = BigDecimal("22.12"),
     maximumPaidInThisMonth = 50,
-    thisMonthEndDate = monthEndDate,
-    accountHolderForename = "Testfore",
-    accountHolderSurname = "Testsur",
-    accountHolderEmail = Some("testemail@example.com"),
+    thisMonthEndDate       = monthEndDate,
+    accountHolderForename  = "Testfore",
+    accountHolderSurname   = "Testsur",
+    accountHolderEmail     = Some("testemail@example.com"),
     bonusTerms = Seq(
       HelpToSaveBonusTerm(
-        bonusEstimate = BigDecimal("90.99"),
-        bonusPaid = BigDecimal("90.99"),
-        endDate = new LocalDate(2019, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
+        bonusEstimate          = BigDecimal("90.99"),
+        bonusPaid              = BigDecimal("90.99"),
+        endDate                = LocalDate.of(2019, 12, 31),
+        bonusPaidOnOrAfterDate = LocalDate.of(2020, 1, 1)
       ),
       HelpToSaveBonusTerm(
-        bonusEstimate = 12,
-        bonusPaid = 0,
-        endDate = new LocalDate(2021, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
+        bonusEstimate          = 12,
+        bonusPaid              = 0,
+        endDate                = LocalDate.of(2021, 12, 31),
+        bonusPaidOnOrAfterDate = LocalDate.of(2022, 1, 1)
       )
     ),
-    closureDate = None,
+    closureDate    = None,
     closingBalance = None
   )
 
   /** An Account object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
   protected val mobileHelpToSaveAccount: Account = Account(
-    number = "1000000000001",
-    openedYearMonth = new YearMonth(2018, 1),
-    isClosed = false,
-    blocked = Blocking(false),
-    balance = BigDecimal("123.45"),
-    paidInThisMonth = BigDecimal("27.88"),
-    canPayInThisMonth = BigDecimal("22.12"),
-    maximumPaidInThisMonth = 50,
-    thisMonthEndDate = monthEndDate,
-    nextPaymentMonthStartDate = Some(new LocalDate(2018, 5, 1)),
-    accountHolderName = "Testfore Testsur",
-    accountHolderEmail = Some("testemail@example.com"),
+    number                    = "1000000000001",
+    openedYearMonth           = YearMonth.of(2018, 1),
+    isClosed                  = false,
+    blocked                   = Blocking(false),
+    balance                   = BigDecimal("123.45"),
+    paidInThisMonth           = BigDecimal("27.88"),
+    canPayInThisMonth         = BigDecimal("22.12"),
+    maximumPaidInThisMonth    = 50,
+    thisMonthEndDate          = monthEndDate,
+    nextPaymentMonthStartDate = Some(LocalDate.of(2018, 5, 1)),
+    accountHolderName         = "Testfore Testsur",
+    accountHolderEmail        = Some("testemail@example.com"),
     bonusTerms = Seq(
       BonusTerm(
-        bonusEstimate = BigDecimal("90.99"),
-        bonusPaid = BigDecimal("90.99"),
-        endDate = new LocalDate(2019, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1),
+        bonusEstimate                 = BigDecimal("90.99"),
+        bonusPaid                     = BigDecimal("90.99"),
+        endDate                       = LocalDate.of(2019, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(2020, 1, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
-        bonusEstimate = 12,
-        bonusPaid = 0,
-        endDate = new LocalDate(2021, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1),
+        bonusEstimate                 = 12,
+        bonusPaid                     = 0,
+        endDate                       = LocalDate.of(2021, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(2022, 1, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("181.98")
       )
     ),
-    currentBonusTerm = CurrentBonusTerm.First,
-    closureDate = None,
-    closingBalance = None,
+    currentBonusTerm     = CurrentBonusTerm.First,
+    closureDate          = None,
+    closingBalance       = None,
     inAppPaymentsEnabled = false,
-    savingsGoalsEnabled = true,
-    savingsGoal = None,
+    savingsGoalsEnabled  = true,
+    savingsGoal          = None,
     1
   )
 

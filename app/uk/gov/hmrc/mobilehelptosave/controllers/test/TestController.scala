@@ -17,15 +17,18 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.test
 
 import play.api.libs.json.Json
-import play.api.mvc.Results._
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
+import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TestController(savingsGoalEventRepo: SavingsGoalEventRepo[Future]) {
+class TestController(
+  savingsGoalEventRepo: SavingsGoalEventRepo[Future],
+  val controllerComponents: ControllerComponents
+) extends BackendBaseController {
   def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")

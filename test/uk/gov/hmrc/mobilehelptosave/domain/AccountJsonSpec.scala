@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
+import java.time.{LocalDate, YearMonth}
+
 import com.eclipsesource.schema.SchemaType
-import org.joda.time.{LocalDate, YearMonth}
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.json.JsonResource.loadResourceJson
@@ -32,30 +33,30 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
 
   private val testAccount = Account(
     number          = "2000000000001",
-    openedYearMonth = new YearMonth(2018, 5),
+    openedYearMonth = YearMonth.of(2018, 5),
     isClosed        = false,
     Blocking(false),
     BigDecimal("543.12"),
     0,
     0,
     0,
-    thisMonthEndDate          = new LocalDate(2020, 12, 31),
-    nextPaymentMonthStartDate = Some(new LocalDate(2021, 1, 1)),
+    thisMonthEndDate          =  LocalDate.of(2020, 12, 31),
+    nextPaymentMonthStartDate = Some(LocalDate.of(2021, 1, 1)),
     accountHolderName         = "Testfore Testsur",
     accountHolderEmail        = Some("testemail@example.com"),
     bonusTerms = Seq(
       BonusTerm(
         bonusEstimate                 = BigDecimal("200.12"),
         bonusPaid                     = BigDecimal("200.12"),
-        endDate                       = new LocalDate(2020, 4, 30),
-        bonusPaidOnOrAfterDate        = new LocalDate(2020, 5, 1),
+        endDate                       = LocalDate.of(2020, 4, 30),
+        bonusPaidOnOrAfterDate        = LocalDate.of(2020, 5, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
         bonusEstimate                 = BigDecimal("71.44"),
         bonusPaid                     = 0,
-        endDate                       = new LocalDate(2022, 4, 30),
-        bonusPaidOnOrAfterDate        = new LocalDate(2022, 5, 1),
+        endDate                       = LocalDate.of(2022, 4, 30),
+        bonusPaidOnOrAfterDate        = LocalDate.of(2022, 5, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("400.24")
       )
     ),
@@ -82,7 +83,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
       "be a valid instance of the schema used in the RAML" in {
         val closedAccount = testAccount.copy(
           isClosed       = true,
-          closureDate    = Some(new LocalDate(2020, 11, 5)),
+          closureDate    = Some(LocalDate.of(2020, 11, 5)),
           closingBalance = Some(BigDecimal("543.12")),
           balance        = 0,
           bonusTerms = Seq(

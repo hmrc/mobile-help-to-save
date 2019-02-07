@@ -21,16 +21,17 @@ import play.api.mvc._
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class StartupController(
-  userService:       UserService[Future],
-  authorisedWithIds: AuthorisedWithIds,
-  config:            StartupControllerConfig
-)(implicit ec:       ExecutionContext)
-    extends BaseController {
+  userService:              UserService[Future],
+  authorisedWithIds:        AuthorisedWithIds,
+  config:                   StartupControllerConfig,
+  val controllerComponents: ControllerComponents
+)(implicit ec:              ExecutionContext)
+    extends BackendBaseController {
 
   val startup: Action[AnyContent] = if (!config.shuttering.shuttered) {
     authorisedWithIds.async { implicit request =>

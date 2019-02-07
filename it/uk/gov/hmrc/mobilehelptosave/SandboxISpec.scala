@@ -45,7 +45,7 @@ class SandboxISpec
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/transactions").withHeaders(sandboxRoutingHeader).get())
+        await(wsUrl(s"/savings-account/$nino/transactions").addHttpHeaders(sandboxRoutingHeader).get())
       response.status                      shouldBe Status.OK
       response.json.validate[Transactions] shouldBe 'success
     }
@@ -53,7 +53,7 @@ class SandboxISpec
 
   "GET /savings-account/{nino} with sandbox header" should {
     "Return OK response containing valid Account JSON including a savings goal" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").withHeaders(sandboxRoutingHeader).get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").addHttpHeaders(sandboxRoutingHeader).get())
       response.status                 shouldBe Status.OK
       val accountV = response.json.validate[Account]
       accountV shouldBe 'success
@@ -65,7 +65,7 @@ class SandboxISpec
     "Return a No Content response" in {
       val goal = SavingsGoal(35.0)
       val response: WSResponse = await(
-        wsUrl(s"/savings-account/$nino/goals/current-goal").withHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
+        wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
       response.status shouldBe Status.NO_CONTENT
     }
   }
@@ -73,7 +73,7 @@ class SandboxISpec
   "DELETE /savings-account/:nino/goals/current-goal with sandbox header" should {
     "Return a No Content response" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/current-goal").withHeaders(sandboxRoutingHeader).delete())
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).delete())
       response.status shouldBe Status.NO_CONTENT
     }
   }

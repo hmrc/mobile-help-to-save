@@ -20,6 +20,7 @@ package helpToSave
 import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Assertion, OneInstancePerTest}
+import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
@@ -51,7 +52,7 @@ trait TestSupport {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
     val controller =
-      new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config)
+      new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, stubControllerComponents())
     authorisedActionForNino(controller)
   }
 
@@ -65,7 +66,8 @@ trait TestSupport {
         accountService,
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
-        config
+        config,
+        stubControllerComponents()
       )
   }
 

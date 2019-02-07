@@ -18,27 +18,23 @@ package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
 
-import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.collection.JavaConverters._
 
 case class MobileHelpToSaveConfig(
-  environment:   Environment,
-  configuration: Configuration
-) extends ServicesConfig
-    with AccountServiceConfig
+  environment:    Environment,
+  configuration:  Configuration,
+  servicesConfig: ServicesConfig
+) extends AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
     with SandboxDataConfig
     with ServiceLocatorRegistrationTaskConfig
     with StartupControllerConfig {
-
-  override protected lazy val mode:            Mode          = environment.mode
-  override protected def runModeConfiguration: Configuration = configuration
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
@@ -62,7 +58,7 @@ case class MobileHelpToSaveConfig(
   override val apiAccessType:              String      = accessConfig.getString("type")
   override val apiWhiteListApplicationIds: Seq[String] = accessConfig.getStringList("white-list.applicationIds").asScala
 
-  protected def configBaseUrl(serviceName: String): URL = new URL(baseUrl(serviceName))
+  protected def configBaseUrl(serviceName: String): URL = new URL(servicesConfig.baseUrl(serviceName))
 
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
 
