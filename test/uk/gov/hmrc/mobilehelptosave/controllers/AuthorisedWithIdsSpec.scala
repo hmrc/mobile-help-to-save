@@ -20,9 +20,8 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import play.api.http.Status._
 import play.api.mvc.Results
-import play.api.test.Helpers.{contentAsString, status}
+import play.api.test.Helpers.{contentAsString, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -54,7 +53,7 @@ class AuthorisedWithIdsSpec
     "include the NINO in the request" in {
       val authConnectorStub = authConnectorStubThatWillReturn(Some(testNino.value))
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, stubControllerComponents())
 
       var capturedNino: Option[Nino] = None
       val action = authorised { request =>
@@ -69,7 +68,7 @@ class AuthorisedWithIdsSpec
     "return 403 when no NINO can be retrieved" in {
       val authConnectorStub = authConnectorStubThatWillReturn(None)
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok
@@ -81,7 +80,7 @@ class AuthorisedWithIdsSpec
     "return 401 when AuthConnector throws NoActiveSession" in {
       val authConnectorStub = authConnectorStubThatWillReturn(Future failed new NoActiveSession("not logged in") {})
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok
@@ -94,7 +93,7 @@ class AuthorisedWithIdsSpec
       val authConnectorStub =
         authConnectorStubThatWillReturn(Future failed new AuthorisationException("not authorised") {})
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok
@@ -104,10 +103,9 @@ class AuthorisedWithIdsSpec
     }
 
     "return 403 Forbidden and log a warning when AuthConnector throws InsufficientConfidenceLevel" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(
-        Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
+      val authConnectorStub = authConnectorStubThatWillReturn(Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub)
+      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok

@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.joda.time.{Days, LocalDate, YearMonth}
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, YearMonth}
+
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
@@ -70,11 +72,11 @@ case class Account(
   savingsGoalsEnabled: Boolean = false,
   // This field is populated from the mongo repository
   savingsGoal:          Option[SavingsGoal] = None,
-  daysRemainingInMonth: Int
+  daysRemainingInMonth: Long
 )
 
 object Account {
-  implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
+  implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
   implicit val format:          OFormat[Account]  = Json.format[Account]
 
   def apply(
@@ -117,8 +119,8 @@ object Account {
     * @return - calculated number of days between now and the end of month, plus one (so if the supplied date is today
     *         the result will be 1)
     */
-  private def calculateDaysRemainingInMonth(now: LocalDate, h: HelpToSaveAccount): Int =
-    Days.daysBetween(now, h.thisMonthEndDate).getDays + 1
+  private def calculateDaysRemainingInMonth(now: LocalDate, h: HelpToSaveAccount): Long =
+    ChronoUnit.DAYS.between(now, h.thisMonthEndDate) + 1
 
   private def nextPaymentMonthStartDate(h: HelpToSaveAccount) =
     if (h.thisMonthEndDate.isBefore(h.bonusTerms.last.endDate)) {

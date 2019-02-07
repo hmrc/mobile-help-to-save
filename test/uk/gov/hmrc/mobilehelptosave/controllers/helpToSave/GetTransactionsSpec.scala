@@ -57,8 +57,7 @@ class GetTransactionsSpec
 
   "getTransactions" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario
-      with HelpToSaveMocking {
+      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
 
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 
@@ -135,7 +134,8 @@ class GetTransactionsSpec
           accountService,
           helpToSaveGetTransactions,
           new AlwaysAuthorisedWithIds(nino),
-          config.copy(shuttering = trueShuttering)
+          config.copy(shuttering = trueShuttering),
+          stubControllerComponents()
         )
 
         val resultF = controller.getTransactions(nino.value)(FakeRequest())

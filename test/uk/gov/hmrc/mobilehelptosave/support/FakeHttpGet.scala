@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
+import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
@@ -29,8 +30,9 @@ class FakeHttpGet(urlPredicate: String => Boolean, responseF: Future[HttpRespons
     else
       Future successful HttpResponse(404)
 
-  override def configuration: Option[Config] = None
-  override val hooks:         Seq[HttpHook]  = Seq.empty
+  override def configuration:         Option[Config] = None
+  override val hooks:                 Seq[HttpHook]  = Seq.empty
+  override protected def actorSystem: ActorSystem    = ActorSystem()
 }
 
 object FakeHttpGet {

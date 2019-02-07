@@ -18,12 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,10 +39,11 @@ class HelpToSaveController(
   accountService:            AccountService[Future],
   helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
   authorisedWithIds:         AuthorisedWithIds,
-  config:                    HelpToSaveControllerConfig
+  config:                    HelpToSaveControllerConfig,
+  val controllerComponents:  ControllerComponents
 )(
   implicit ec: ExecutionContext
-) extends BaseController
+) extends BackendBaseController
     with ControllerChecks
     with HelpToSaveActions {
   override def shuttering: Shuttering = config.shuttering
@@ -79,6 +80,5 @@ class HelpToSaveController(
         accountService.deleteSavingsGoal(verifiedNino).map(handlingErrors(_ => NoContent))
       }
     }
-
 
 }

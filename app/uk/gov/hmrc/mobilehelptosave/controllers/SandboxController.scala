@@ -18,19 +18,20 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.LoggerLike
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain.{SavingsGoal, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.Future
 
 class SandboxController(
-  val logger:  LoggerLike,
-  config:      HelpToSaveControllerConfig,
-  sandboxData: SandboxData
-) extends BaseController
+  val logger:               LoggerLike,
+  config:                   HelpToSaveControllerConfig,
+  sandboxData:              SandboxData,
+  val controllerComponents: ControllerComponents
+) extends BackendBaseController
     with ControllerChecks
     with HelpToSaveActions {
   override def shuttering: Shuttering = config.shuttering

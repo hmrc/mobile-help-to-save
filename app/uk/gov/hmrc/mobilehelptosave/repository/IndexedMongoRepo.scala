@@ -18,12 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import cats.instances.future._
 import cats.syntax.functor._
+import play.api.libs.json.Json._
 import play.api.libs.json.{Format, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID}
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.mongo.{AtomicUpdate, ReactiveRepository}
+import reactivemongo.bson.BSONObjectID
+import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,8 +44,7 @@ class IndexedMongoRepo[I, V: Manifest](
   unique:             Boolean,
   mongo:              ReactiveMongoComponent
 )(implicit ec:        ExecutionContext, iFormat: Format[I], tFormat: Format[V])
-    extends ReactiveRepository[V, BSONObjectID](collectionName, mongo.mongoConnector.db, tFormat)
-    with AtomicUpdate[V] {
+    extends ReactiveRepository[V, BSONObjectID](collectionName, mongo.mongoConnector.db, tFormat) {
 
   override def indexes: Seq[Index] = Seq(
     Index(Seq(indexFieldName -> IndexType.Text), name = Some(s"${indexFieldName}Idx"), unique = unique, sparse = true)
@@ -63,12 +62,10 @@ class IndexedMongoRepo[I, V: Manifest](
     *                then this is probably just a function to extract that index value.
     */
   def set(value: V)(indexOf: V => I): Future[Unit] =
-    atomicUpsert(
-      BSONDocument(indexFieldName -> Json.toJson(indexOf(value))),
-      BSONDocument("$set"         -> Json.toJson(value))
+    findAndUpdate(
+      obj(indexFieldName -> Json.toJson(indexOf(value))),
+      obj("$set"         -> Json.toJson(value))
     ).void
-
-  override def isInsertion(newRecordId: BSONObjectID, oldRecord: V): Boolean = false
 
   def get(indexValue: I): Future[Option[V]] =
     find(indexFieldName -> indexValue).map(_.headOption)

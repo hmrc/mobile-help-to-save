@@ -152,7 +152,8 @@ class GetAccountSpec
           accountService,
           helpToSaveGetTransactions,
           new AlwaysAuthorisedWithIds(nino),
-          config.copy(shuttering = trueShuttering)
+          config.copy(shuttering = trueShuttering),
+          stubControllerComponents()
         )
 
         val resultF = controller.getAccount(nino.value)(FakeRequest())

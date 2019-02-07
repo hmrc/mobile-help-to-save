@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave.json
 
-import org.joda.time.YearMonth
+import java.time.YearMonth
+import java.time.format.DateTimeParseException
+
 import play.api.libs.json._
 
 object Formats {
-  implicit object JodaYearMonthFormat extends Format[YearMonth] {
+  implicit object YearMonthFormat extends Format[YearMonth] {
     def writes(yearMonth: YearMonth): JsValue = JsString(yearMonth.toString)
 
     override def reads(json: JsValue): JsResult[YearMonth] = json match {
@@ -28,7 +30,7 @@ object Formats {
         try {
           JsSuccess(YearMonth.parse(s))
         } catch {
-          case _: IllegalArgumentException => JsError("error.expected.jodayearmonth.format")
+          case _: DateTimeParseException => JsError("error.expected.yearmonth.format")
         }
 
       case _ => JsError("error.expected.yearmonth")

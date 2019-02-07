@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.services
-import java.time.LocalDateTime
+package uk.gov.hmrc.mobilehelptosave.wiring
+import play.api.BuiltInComponents
+import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
+import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 
-trait Clock {
-  def now(): LocalDateTime
-}
-
-class ClockImpl extends Clock {
-  def now(): LocalDateTime = LocalDateTime.now()
+trait SandboxRequestRouting {
+  self: BuiltInComponents =>
+  override lazy val httpRequestHandler: HttpRequestHandler =
+    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
 }

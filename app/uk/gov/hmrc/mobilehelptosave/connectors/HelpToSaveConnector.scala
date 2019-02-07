@@ -17,10 +17,10 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
+import java.time.{LocalDate, YearMonth}
 
 import com.fasterxml.jackson.core.JsonParseException
 import io.lemonlabs.uri.dsl._
-import org.joda.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -128,6 +128,6 @@ case class HelpToSaveAccount(
 )
 
 object HelpToSaveAccount {
-  implicit val jodaFormat: Format[YearMonth]        = uk.gov.hmrc.mobilehelptosave.json.Formats.JodaYearMonthFormat
-  implicit val reads:      Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
+  implicit val yearMonthFormat: Format[YearMonth]        = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
+  implicit val reads:           Reads[HelpToSaveAccount] = Json.reads[HelpToSaveAccount]
 }

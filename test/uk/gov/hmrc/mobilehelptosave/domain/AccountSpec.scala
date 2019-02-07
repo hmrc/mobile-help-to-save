@@ -16,35 +16,30 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.joda.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, YearMonth}
+
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveBonusTerm
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
-class AccountSpec
-    extends WordSpec
-    with Matchers
-    with AccountTestData
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub {
+class AccountSpec extends WordSpec with Matchers with AccountTestData with MockFactory with OneInstancePerTest with LoggerStub {
 
   private val accountOpenedInJan2018 = helpToSaveAccount.copy(
-    openedYearMonth = new YearMonth(2018, 1),
+    openedYearMonth = YearMonth.of(2018, 1),
     bonusTerms = Seq(
       HelpToSaveBonusTerm(
         bonusEstimate          = BigDecimal("90.99"),
         bonusPaid              = BigDecimal("90.99"),
-        endDate                = new LocalDate(2019, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
+        endDate                = LocalDate.of(2019, 12, 31),
+        bonusPaidOnOrAfterDate = LocalDate.of(2020, 1, 1)
       ),
       HelpToSaveBonusTerm(
         bonusEstimate          = 12,
         bonusPaid              = 0,
-        endDate                = new LocalDate(2021, 12, 31),
-        bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
+        endDate                = LocalDate.of(2021, 12, 31),
+        bonusPaidOnOrAfterDate = LocalDate.of(2022, 1, 1)
       )
     )
   )
@@ -53,16 +48,16 @@ class AccountSpec
 
     "include nextPaymentMonthStartDate when next month will start before the end of the the last bonus term" in {
       val penultimateMonthHelpToSaveAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2021, 11, 30)
+        thisMonthEndDate = LocalDate.of(2021, 11, 30)
       )
 
       val account = Account(penultimateMonthHelpToSaveAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
-      account.nextPaymentMonthStartDate shouldBe Some(new LocalDate(2021, 12, 1))
+      account.nextPaymentMonthStartDate shouldBe Some(LocalDate.of(2021, 12, 1))
     }
 
     "omit nextPaymentMonthStartDate when payments will not be possible next month because it will be after the last bonus term" in {
       val lastMonthHelpToSaveAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2021, 12, 31)
+        thisMonthEndDate = LocalDate.of(2021, 12, 31)
       )
 
       val account = Account(lastMonthHelpToSaveAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
@@ -71,7 +66,7 @@ class AccountSpec
 
     "return currentBonusTerm = *first* when current month is first month of *first* term" in {
       val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2018, 1, 31)
+        thisMonthEndDate = LocalDate.of(2018, 1, 31)
       )
 
       val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
@@ -80,7 +75,7 @@ class AccountSpec
 
     "return currentBonusTerm = *first* when current month is last month of *first* term" in {
       val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2019, 12, 31)
+        thisMonthEndDate = LocalDate.of(2019, 12, 31)
       )
 
       val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
@@ -89,7 +84,7 @@ class AccountSpec
 
     "return currentBonusTerm = *second* when current month is first month of *second* term" in {
       val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2020, 1, 31)
+        thisMonthEndDate = LocalDate.of(2020, 1, 31)
       )
 
       val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
@@ -98,7 +93,7 @@ class AccountSpec
 
     "return currentBonusTerm = *second* when current month is last month of *second* term" in {
       val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2021, 12, 31)
+        thisMonthEndDate = LocalDate.of(2021, 12, 31)
       )
 
       val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
@@ -107,7 +102,7 @@ class AccountSpec
 
     "return currentBonusTerm = *afterFinalTerm* when current month is after end of second term" in {
       val firstMonthOfFirstTermHtSAccount = accountOpenedInJan2018.copy(
-        thisMonthEndDate = new LocalDate(2022, 1, 31)
+        thisMonthEndDate = LocalDate.of(2022, 1, 31)
       )
 
       val account = Account(firstMonthOfFirstTermHtSAccount, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
@@ -128,25 +123,25 @@ class AccountSpec
     "log a warning and truncate the bonusTerms list when the source data contains more than 2 bonus terms, rather than returning an incorrect balanceMustBeMoreThanForBonus in the third term" in {
 
       val accountWith3Terms = helpToSaveAccount.copy(
-        openedYearMonth = new YearMonth(2018, 1),
+        openedYearMonth = YearMonth.of(2018, 1),
         bonusTerms = Seq(
           HelpToSaveBonusTerm(
             bonusEstimate          = BigDecimal("90.99"),
             bonusPaid              = BigDecimal("90.99"),
-            endDate                = new LocalDate(2019, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2020, 1, 1)
+            endDate                = LocalDate.of(2019, 12, 31),
+            bonusPaidOnOrAfterDate = LocalDate.of(2020, 1, 1)
           ),
           HelpToSaveBonusTerm(
             bonusEstimate          = 12,
             bonusPaid              = 0,
-            endDate                = new LocalDate(2021, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2022, 1, 1)
+            endDate                = LocalDate.of(2021, 12, 31),
+            bonusPaidOnOrAfterDate = LocalDate.of(2022, 1, 1)
           ),
           HelpToSaveBonusTerm(
             bonusEstimate          = 0,
             bonusPaid              = 0,
-            endDate                = new LocalDate(2023, 12, 31),
-            bonusPaidOnOrAfterDate = new LocalDate(2024, 1, 1)
+            endDate                = LocalDate.of(2023, 12, 31),
+            bonusPaidOnOrAfterDate = LocalDate.of(2024, 1, 1)
           )
         )
       )
@@ -154,8 +149,8 @@ class AccountSpec
       val account = Account(accountWith3Terms, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
       account.bonusTerms.size shouldBe 2
       // check that the first 2 terms were retained
-      account.bonusTerms.head.endDate shouldBe new LocalDate(2019, 12, 31)
-      account.bonusTerms(1).endDate   shouldBe new LocalDate(2021, 12, 31)
+      account.bonusTerms.head.endDate shouldBe LocalDate.of(2019, 12, 31)
+      account.bonusTerms(1).endDate   shouldBe LocalDate.of(2021, 12, 31)
 
       // If we see this warning in production we should probably enhance it to include an identifier such as the NINO.
       // No identifier included so far because I think it's unlikely this warning will ever be triggered - if it does we can hopefully tie it to a NINO using the request ID field in Kibana.

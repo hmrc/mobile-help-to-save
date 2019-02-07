@@ -25,19 +25,18 @@ import uk.gov.hmrc.api.domain.Registration
 
 object ServiceLocatorStub {
 
-  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String)(
-    implicit wireMockServer:                    WireMockServer): Unit =
-    wireMockServer.verify(1, registrationPattern(serviceName, serviceUrl))
+  def registerShouldHaveBeenCalled(serviceName: String, serviceUrl: String)(implicit wireMockServer: WireMockServer): Unit = {
+    val pattern = registrationPattern(serviceName, serviceUrl)
+    wireMockServer.verify(1, pattern)
+  }
 
-  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String)(
-    implicit wireMockServer:                       WireMockServer): Unit =
+  def registerShouldNotHaveBeenCalled(serviceName: String, serviceUrl: String)(implicit wireMockServer: WireMockServer): Unit =
     wireMockServer.verify(0, registrationPattern(serviceName, serviceUrl))
 
   def registrationSucceeds()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       post(urlPathEqualTo("/registration"))
-        .willReturn(aResponse()
-          .withStatus(204)))
+        .willReturn(aResponse().withStatus(204)))
 
   private def regPayloadStringFor(serviceName: String, serviceUrl: String): String =
     Json.toJson(Registration(serviceName, serviceUrl, Some(Map("third-party-api" -> "true")))).toString

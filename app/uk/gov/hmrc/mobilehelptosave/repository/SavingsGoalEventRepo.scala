@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 import cats.instances.future._
 import cats.syntax.functor._
-import play.api.libs.json.Json._
+import play.api.libs.json.Json.obj
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -58,7 +58,7 @@ class MongoSavingsGoalEventRepo(
     find("nino" -> Json.toJson(nino))
 
   override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = {
-    val query = collection.find(obj("nino" -> nino)).sort(obj("date" -> -1))
+    val query = collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).sort(obj("date" -> -1))
     val result: Future[Option[SavingsGoalEvent]] = query.one[SavingsGoalEvent]
     result.map {
       case None => None

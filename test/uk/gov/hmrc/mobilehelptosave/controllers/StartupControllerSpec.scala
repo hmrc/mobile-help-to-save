@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.JsObject
-import play.api.test.Helpers.{contentAsJson, status}
+import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,13 +30,7 @@ import uk.gov.hmrc.mobilehelptosave.services.ProdUserService
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class StartupControllerSpec
-    extends WordSpec
-    with Matchers
-    with MockFactory
-    with OneInstancePerTest
-    with FutureAwaits
-    with DefaultAwaitTimeout {
+class StartupControllerSpec extends WordSpec with Matchers with MockFactory with OneInstancePerTest with FutureAwaits with DefaultAwaitTimeout {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -64,13 +58,13 @@ class StartupControllerSpec
         .expects(nino, *)
         .returning(Future successful Right(testUserDetails))
 
-      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config)
+      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
       status(controller.startup(FakeRequest())) shouldBe 200
     }
 
     "check permissions using AuthorisedWithIds" in {
-      val controller = new StartupController(mockUserService, NeverAuthorisedWithIds, config)
+      val controller = new StartupController(mockUserService, NeverAuthorisedWithIds, config, stubControllerComponents())
 
       status(controller.startup()(FakeRequest())) shouldBe 403
     }
@@ -78,7 +72,7 @@ class StartupControllerSpec
 
   "startup" when {
     "helpToSaveEnabled = true and helpToSaveShuttered = false" should {
-      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config)
+      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
       "include URLs and user in response" in {
         (mockUserService
@@ -109,7 +103,7 @@ class StartupControllerSpec
     }
 
     "there is an error getting user details" should {
-      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config)
+      val controller = new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
       "include userError and non-user fields such as URLs response" in {
         val generator = new Generator(0)
@@ -135,7 +129,8 @@ class StartupControllerSpec
       val controller = new StartupController(
         mockUserService,
         ShouldNotBeCalledAuthorisedWithIds,
-        config.copy(shuttering = trueShuttering))
+        config.copy(shuttering = trueShuttering),
+        stubControllerComponents())
 
       "omit URLs and user from response, and not call UserService or AuthorisedWithIds" in {
         val resultF = controller.startup(FakeRequest())
@@ -170,7 +165,9 @@ class StartupControllerSpec
         ShouldNotBeCalledAuthorisedWithIds,
         config.copy(
           shuttering = Shuttering(shuttered = true, "something", "some message")
-        ))
+        ),
+        stubControllerComponents()
+      )
 
       "include the passed in shuttering info in response" in {
         val resultF = controller.startup(FakeRequest())

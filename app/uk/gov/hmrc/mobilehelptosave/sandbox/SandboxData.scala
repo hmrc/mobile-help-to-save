@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave.sandbox
 
-import org.joda.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, YearMonth}
+import java.time.temporal.TemporalAdjusters
+
 import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
@@ -31,8 +33,8 @@ case class SandboxData(
 
   private def today:             LocalDate = clock.now().toLocalDate
   private def openedDate:        LocalDate = today.minusMonths(7)
-  private def endOfMonth:        LocalDate = today.dayOfMonth.withMaximumValue
-  private def startOfFirstTerm:  LocalDate = openedDate.dayOfMonth.withMinimumValue
+  private def endOfMonth:        LocalDate = today.`with`(TemporalAdjusters.lastDayOfMonth())
+  private def startOfFirstTerm:  LocalDate = openedDate.`with`(TemporalAdjusters.firstDayOfMonth())
   private def endOfFirstTerm:    LocalDate = startOfFirstTerm.plusYears(2).minusDays(1)
   private def startOfSecondTerm: LocalDate = startOfFirstTerm.plusYears(2)
   private def endOfSecondTerm:   LocalDate = startOfSecondTerm.plusYears(2).minusDays(1)
@@ -41,7 +43,7 @@ case class SandboxData(
     Account(
       HelpToSaveAccount(
         accountNumber          = "1100000112057",
-        openedYearMonth        = new YearMonth(openedDate.getYear, openedDate.getMonthOfYear),
+        openedYearMonth        = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
         isClosed               = false,
         blocked                = Blocking(false),
         balance                = BigDecimal("220.50"),
@@ -62,24 +64,24 @@ case class SandboxData(
       inAppPaymentsEnabled = config.inAppPaymentsEnabled,
       savingsGoalsEnabled = true,
       logger,
-      new LocalDate(2018, 4, 30),
+      LocalDate.of(2018, 4, 30),
       savingsGoal = Some(SavingsGoal(25.0))
     )
   }
 
   val transactions = Transactions({
     Seq(
-      (0, 20.50, 220.50),
-      (1, 20.00, 200.00),
-      (1, 18.20, 180.00),
-      (2, 10.40, 161.80),
-      (3, 35.00, 151.40),
-      (3, 15.00, 116.40),
-      (4, 06.00, 101.40),
-      (5, 20.40, 95.40),
-      (5, 10.00, 75.00),
-      (6, 25.00, 65.00),
-      (7, 40.00, 40.00)
+      (0L, 20.50, 220.50),
+      (1L, 20.00, 200.00),
+      (1L, 18.20, 180.00),
+      (2L, 10.40, 161.80),
+      (3L, 35.00, 151.40),
+      (3L, 15.00, 116.40),
+      (4L, 06.00, 101.40),
+      (5L, 20.40, 95.40),
+      (5L, 10.00, 75.00),
+      (6L, 25.00, 65.00),
+      (7L, 40.00, 40.00)
     ) map {
       case (monthsAgo, creditAmount, balance) =>
         val date = today.minusMonths(monthsAgo)

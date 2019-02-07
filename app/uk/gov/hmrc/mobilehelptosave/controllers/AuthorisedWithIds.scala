@@ -28,15 +28,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RequestWithIds[+A](val nino: Nino, request: Request[A]) extends WrappedRequest[A](request)
 
-trait AuthorisedWithIds extends ActionBuilder[RequestWithIds] with ActionRefiner[Request, RequestWithIds]
+trait AuthorisedWithIds extends ActionBuilder[RequestWithIds, AnyContent] with ActionRefiner[Request, RequestWithIds]
 
 class AuthorisedWithIdsImpl(
   logger:        LoggerLike,
-  authConnector: AuthConnector
+  authConnector: AuthConnector,
+  cc:            ControllerComponents
 )(
-  implicit ec: ExecutionContext
+  implicit val executionContext: ExecutionContext
 ) extends AuthorisedWithIds
     with Results {
+
+  override def parser: BodyParser[AnyContent] = cc.parsers.anyContent
+
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
 

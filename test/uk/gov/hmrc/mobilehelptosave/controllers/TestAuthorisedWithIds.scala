@@ -16,22 +16,36 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import play.api.mvc.{Request, Result, Results}
+import akka.stream.Materializer
+import play.api.mvc._
+import play.api.test.NoMaterializer
 import uk.gov.hmrc.domain.Nino
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AlwaysAuthorisedWithIds(nino: Nino) extends AuthorisedWithIds {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
     Future successful Right(new RequestWithIds(nino, request))
+
+  implicit val materializer:               Materializer           = NoMaterializer
+  override def parser:                     BodyParser[AnyContent] = PlayBodyParsers().anyContent
+  override protected def executionContext: ExecutionContext       = scala.concurrent.ExecutionContext.Implicits.global
 }
 
 object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
     Future successful Left(Forbidden)
+
+  implicit val materializer:               Materializer           = NoMaterializer
+  override def parser:                     BodyParser[AnyContent] = PlayBodyParsers().anyContent
+  override protected def executionContext: ExecutionContext       = scala.concurrent.ExecutionContext.Implicits.global
 }
 
 object ShouldNotBeCalledAuthorisedWithIds extends AuthorisedWithIds with Results {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
     Future failed new RuntimeException("AuthorisedWithIds should not be called in this situation")
+
+  implicit val materializer:               Materializer           = NoMaterializer
+  override def parser:                     BodyParser[AnyContent] = PlayBodyParsers().anyContent
+  override protected def executionContext: ExecutionContext       = scala.concurrent.ExecutionContext.Implicits.global
 }

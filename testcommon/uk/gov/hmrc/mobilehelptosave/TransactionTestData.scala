@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.time.LocalDate
 
-import org.joda.time.LocalDate
 import uk.gov.hmrc.mobilehelptosave.domain.{Credit, Debit, Transaction, Transactions}
 
 trait TransactionTestData {
@@ -120,7 +120,6 @@ trait TransactionTestData {
       |}
     """.stripMargin
   }
-
 
   protected val transactionsWithOver50PoundDebitReturnedByHelpToSaveJsonString: String = {
     """
@@ -335,19 +334,21 @@ trait TransactionTestData {
   }
 
   // help-to-save returns transactions earliest first, but mobile-help-to-save returns them latest-first because that is the order the apps need to display them in
-  val transactionsSortedInHelpToSaveOrder: Transactions = Transactions(Seq(
-    Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50")),
-    Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),
-    Transaction(Debit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("9.38")),
-    Transaction(Credit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-12-04"), BigDecimal("10.49")),
-    Transaction(Credit, BigDecimal(50), LocalDate.parse("2018-04-10"), LocalDate.parse("2018-04-10"), BigDecimal("60.49"))
-  ))
+  val transactionsSortedInHelpToSaveOrder: Transactions = Transactions(
+    Seq(
+      Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50")),
+      Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),
+      Transaction(Debit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("9.38")),
+      Transaction(Credit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-12-04"), BigDecimal("10.49")),
+      Transaction(Credit, BigDecimal(50), LocalDate.parse("2018-04-10"), LocalDate.parse("2018-04-10"), BigDecimal("60.49"))
+    ))
 
-  val transactionsSortedInMobileHelpToSaveOrder: Transactions = Transactions(Seq(
-    Transaction(Credit, BigDecimal(50), LocalDate.parse("2018-04-10"), LocalDate.parse("2018-04-10"), BigDecimal("60.49")),
-    Transaction(Credit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-12-04"), BigDecimal("10.49")),
-    Transaction(Debit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("9.38")),
-    Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),
-    Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50"))
-  ))
+  val transactionsSortedInMobileHelpToSaveOrder: Transactions = Transactions(
+    Seq(
+      Transaction(Credit, BigDecimal(50), LocalDate.parse("2018-04-10"), LocalDate.parse("2018-04-10"), BigDecimal("60.49")),
+      Transaction(Credit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-12-04"), BigDecimal("10.49")),
+      Transaction(Debit, BigDecimal("1.11"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("9.38")),
+      Transaction(Debit, BigDecimal("1.01"), LocalDate.parse("2017-11-27"), LocalDate.parse("2017-11-27"), BigDecimal("10.49")),
+      Transaction(Credit, BigDecimal("11.50"), LocalDate.parse("2017-11-20"), LocalDate.parse("2017-11-20"), BigDecimal("11.50"))
+    ))
 }
