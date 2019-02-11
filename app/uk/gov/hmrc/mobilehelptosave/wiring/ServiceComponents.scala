@@ -57,7 +57,7 @@ class ServiceComponents(context: Context)
   lazy val prefix:           String                           = "/"
   lazy val sandboxRouter:    sandbox.Routes                   = wire[sandbox.Routes]
   lazy val definitionRouter: definition.Routes                = wire[definition.Routes]
-  lazy val healthRouter:     health2.Routes                   = wire[health2.Routes]
+  lazy val healthRouter:     health.Routes                    = wire[health.Routes]
   lazy val appRouter:        app.Routes                       = wire[app.Routes]
   lazy val apiRouter:        api.Routes                       = wire[api.Routes]
   lazy val testRouter:       _root_.test.Routes               = wire[_root_.test.Routes]
