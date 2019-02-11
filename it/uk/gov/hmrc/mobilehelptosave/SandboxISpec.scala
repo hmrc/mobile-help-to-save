@@ -23,7 +23,6 @@ import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal, Transactions}
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEvent
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -54,9 +53,9 @@ class SandboxISpec
   "GET /savings-account/{nino} with sandbox header" should {
     "Return OK response containing valid Account JSON including a savings goal" in {
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").addHttpHeaders(sandboxRoutingHeader).get())
-      response.status                 shouldBe Status.OK
+      response.status shouldBe Status.OK
       val accountV = response.json.validate[Account]
-      accountV shouldBe 'success
+      accountV                                          shouldBe 'success
       accountV.asOpt.value.savingsGoal.value.goalAmount shouldBe 25.0
     }
   }
@@ -64,8 +63,8 @@ class SandboxISpec
   "PUT /savings-account/:nino/goals/current-goal with sandbox header" should {
     "Return a No Content response" in {
       val goal = SavingsGoal(35.0)
-      val response: WSResponse = await(
-        wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
       response.status shouldBe Status.NO_CONTENT
     }
   }
