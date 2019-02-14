@@ -46,7 +46,8 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
     falseShuttering,
     supportFormEnabled         = false,
     helpToSaveInfoUrl          = "/info",
-    helpToSaveAccessAccountUrl = "/accessAccount"
+    helpToSaveAccessAccountUrl = "/accessAccount",
+    helpToSaveAccountPayInUrl  = "/payIn"
   )
 
   private val testUserDetails = UserDetails(UserState.NotEnrolled)
@@ -87,6 +88,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         jsonKeys                                   should contain("user")
         (jsonBody \ "infoUrl").as[String]          shouldBe "/info"
         (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
+        (jsonBody \ "accountPayInUrl").as[String]    shouldBe "/payIn"
       }
 
       "include shuttering information in response with shuttered = false" in {
@@ -122,6 +124,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         (jsonBody \ "userError" \ "code").as[String] shouldBe "GENERAL"
         (jsonBody \ "infoUrl").as[String]            shouldBe "/info"
         (jsonBody \ "accessAccountUrl").as[String]   shouldBe "/accessAccount"
+        (jsonBody \ "accountPayInUrl").as[String]    shouldBe "/payIn"
       }
     }
 
@@ -140,6 +143,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         jsonKeys should not contain "user"
         jsonKeys should not contain "infoUrl"
         jsonKeys should not contain "accessAccountUrl"
+        jsonKeys should not contain "accountPayInUrl"
       }
 
       "include shuttering info in response" in {
@@ -185,5 +189,6 @@ case class TestStartupControllerConfig(
   shuttering:                 Shuttering,
   supportFormEnabled:         Boolean,
   helpToSaveInfoUrl:          String,
-  helpToSaveAccessAccountUrl: String
+  helpToSaveAccessAccountUrl: String,
+  helpToSaveAccountPayInUrl:  String
 ) extends StartupControllerConfig

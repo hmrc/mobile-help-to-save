@@ -40,6 +40,7 @@ class StartupController(
           shuttering         = config.shuttering,
           infoUrl            = Some(config.helpToSaveInfoUrl),
           accessAccountUrl   = Some(config.helpToSaveAccessAccountUrl),
+          accountPayInUrl    = Some(config.helpToSaveAccountPayInUrl),
           user               = userOrError.right.toOption,
           userError          = userOrError.left.toOption,
           supportFormEnabled = config.supportFormEnabled
@@ -54,6 +55,7 @@ class StartupController(
           shuttering         = config.shuttering,
           infoUrl            = None,
           accessAccountUrl   = None,
+          accountPayInUrl    = None,
           user               = None,
           userError          = None,
           supportFormEnabled = config.supportFormEnabled

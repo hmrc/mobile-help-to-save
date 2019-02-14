@@ -22,6 +22,7 @@ case class StartupResponse(
   shuttering:         Shuttering,
   infoUrl:            Option[String],
   accessAccountUrl:   Option[String],
+  accountPayInUrl:    Option[String],
   user:               Option[UserDetails],
   userError:          Option[ErrorInfo],
   supportFormEnabled: Boolean
