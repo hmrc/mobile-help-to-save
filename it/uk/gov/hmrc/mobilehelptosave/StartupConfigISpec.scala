@@ -91,8 +91,8 @@ class StartupConfigISpec
       response.status                                          shouldBe 200
       (response.json \ "supportFormEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String]                   shouldBe "https://www.gov.uk/get-help-savings-low-income"
-      (response.json \ "accessAccountUrl")
-        .as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
+      (response.json \ "accessAccountUrl").as[String]          shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
+      (response.json \ "accountPayInUrl").as[String]           shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
     }
 
     "allow feature flag and URL settings to be overridden in configuration" in {
@@ -104,6 +104,7 @@ class StartupConfigISpec
           .configure(
             "helpToSave.infoUrl"            -> "http://www.example.com/test/help-to-save-information",
             "helpToSave.accessAccountUrl"   -> "/access-account",
+            "helpToSave.accountPayInUrl"    -> "/pay-in",
             "helpToSave.supportFormEnabled" -> "true"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
@@ -115,6 +116,7 @@ class StartupConfigISpec
         (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
         (response.json \ "infoUrl").as[String]             shouldBe "http://www.example.com/test/help-to-save-information"
         (response.json \ "accessAccountUrl").as[String]    shouldBe "/access-account"
+        (response.json \ "accountPayInUrl").as[String]     shouldBe "/pay-in"
       }
 
       withTestServer(

@@ -53,6 +53,7 @@ case class MobileHelpToSaveConfig(
   override val inAppPaymentsEnabled:       Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override val helpToSaveInfoUrl:          String  = configString("helpToSave.infoUrl")
   override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
+  override val helpToSaveAccountPayInUrl:  String  = configString("helpToSave.accountPayInUrl")
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType:              String      = accessConfig.getString("type")
@@ -98,6 +99,7 @@ trait StartupControllerConfig {
   def supportFormEnabled:         Boolean
   def helpToSaveInfoUrl:          String
   def helpToSaveAccessAccountUrl: String
+  def helpToSaveAccountPayInUrl:  String
 }
 
 trait HelpToSaveControllerConfig {

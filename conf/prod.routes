@@ -1,9 +1,9 @@
 # Add all the application routes to the app.routes file
-->    /mobile-help-to-save                app.Routes
-->    /                                   api.Routes
-->    /                                   health.Routes
-->    /                                   definition.Routes
+->         /mobile-help-to-save        app.Routes
+->         /                           api.Routes
+->         /                           health.Routes
+->         /                           definition.Routes
 
-GET   /admin/metrics                     com.kenshoo.play.metrics.MetricsController.metrics
+GET        /admin/metrics              com.kenshoo.play.metrics.MetricsController.metrics
 
-->    /sandbox                            sandbox.Routes
+->         /sandbox                    sandbox.Routes
