@@ -35,7 +35,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     number          = "2000000000001",
     openedYearMonth = YearMonth.of(2018, 5),
     isClosed        = false,
-    Blocking(false),
+    Blocking(unspecified = false, payments = false),
     BigDecimal("543.12"),
     0,
     0,
@@ -74,7 +74,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
 
     "account is blocked" should {
       "be a valid instance of the schema used in the RAML" in {
-        val blockedAccount = testAccount.copy(blocked = Blocking(true))
+        val blockedAccount = testAccount.copy(blocked = Blocking(unspecified = true, payments = false))
         Json.toJson(blockedAccount) should validateAgainstSchema(strictRamlAccountSchema)
       }
     }

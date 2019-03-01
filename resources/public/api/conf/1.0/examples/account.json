@@ -2,7 +2,8 @@
   "number": "1000000000001",
   "isClosed": false,
   "blocked": {
-    "unspecified": false
+    "unspecified": false,
+    "payments": false
   },
   "balance": 200,
   "openedYearMonth": "2018-01",
@@ -34,6 +35,6 @@
   "inAppPaymentsEnabled": false,
   "savingsGoalsEnabled": false,
   "savingsGoal": {
-    "goalAmount":21.50
+    "goalAmount": 21.50
   }
 }
