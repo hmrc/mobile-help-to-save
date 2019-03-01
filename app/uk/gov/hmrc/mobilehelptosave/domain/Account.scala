@@ -36,7 +36,8 @@ object BonusTerm {
 }
 
 case class Blocking(
-  unspecified: Boolean
+  unspecified: Boolean,
+  payments:    Boolean
 )
 
 object Blocking {

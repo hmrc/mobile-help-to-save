@@ -27,6 +27,13 @@
           "examples": [
             "false"
           ]
+        },
+        "payments" : {
+          "type": "boolean",
+          "description": "Payments to this account are blocked.",
+          "examples": [
+            "false"
+          ]
         }
       },
       "required": [
