@@ -25,9 +25,8 @@ import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.routing.Router
 import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
-import uk.gov.hmrc.api.connector.{ApiServiceLocatorConnector, ServiceLocatorConnector}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.mobilehelptosave.api.{DocumentationController, ServiceLocatorRegistrationTask}
+import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorImpl
 import uk.gov.hmrc.mobilehelptosave.controllers._
@@ -85,10 +84,6 @@ class ServiceComponents(context: Context)
   lazy val helpToSaveConnector: HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
-  lazy val serviceLocatorConnector: ServiceLocatorConnector = {
-    val appName: String = AppName.fromConfiguration(configuration)
-    wire[ApiServiceLocatorConnector]
-  }
 
   lazy val userService:    UserService[Future]    = wire[ProdUserService]
   lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]
@@ -105,6 +100,4 @@ class ServiceComponents(context: Context)
 
   lazy val healthController: HealthController = wire[HealthController]
 
-  // Not lazy - want this to run at startup
-  val registrationTask: ServiceLocatorRegistrationTask = wire[ServiceLocatorRegistrationTask]
 }
