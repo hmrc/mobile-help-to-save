@@ -34,10 +34,27 @@
           "examples": [
             "false"
           ]
+        },
+        "withdrawals" : {
+          "type": "boolean",
+          "description": "Withdrawals from this account are blocked.",
+          "examples": [
+            "false"
+          ]
+        },
+        "bonuses" : {
+          "type": "boolean",
+          "description": "Bonuses to this account are blocked.",
+          "examples": [
+            "false"
+          ]
         }
       },
       "required": [
-        "unspecified"
+        "unspecified",
+        "payments",
+        "withdrawals",
+        "bonuses"
       ]
     },
     "balance": {

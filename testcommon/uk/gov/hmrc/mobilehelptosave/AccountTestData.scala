@@ -31,7 +31,9 @@ trait AccountTestData {
       |  "isClosed": false,
       |  "blocked": {
       |    "unspecified": false,
-      |    "payments": false
+      |    "payments": false,
+      |    "withdrawals": false,
+      |    "bonuses": false
       |  },
       |  "balance": 123.45,
       |  "paidInThisMonth": 27.88,
@@ -66,7 +68,9 @@ trait AccountTestData {
       |  "isClosed": false,
       |  "blocked": {
       |    "unspecified": false,
-      |    "payments": false
+      |    "payments": false,
+      |    "withdrawals": false,
+      |    "bonuses": false
       |  },
       |  "balance": 123.45,
       |  "paidInThisMonth": 27.88,
@@ -100,7 +104,7 @@ trait AccountTestData {
     accountNumber          = "1000000000001",
     openedYearMonth        = YearMonth.of(2018, 1),
     isClosed               = false,
-    blocked                = Blocking(unspecified = false, payments = false),
+    blocked                = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
     balance                = BigDecimal("123.45"),
     paidInThisMonth        = BigDecimal("27.88"),
     canPayInThisMonth      = BigDecimal("22.12"),
@@ -132,7 +136,7 @@ trait AccountTestData {
     number                    = "1000000000001",
     openedYearMonth           = YearMonth.of(2018, 1),
     isClosed                  = false,
-    blocked                   = Blocking(unspecified = false, payments = false),
+    blocked                   = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
     balance                   = BigDecimal("123.45"),
     paidInThisMonth           = BigDecimal("27.88"),
     canPayInThisMonth         = BigDecimal("22.12"),
@@ -174,7 +178,9 @@ trait AccountTestData {
       |  "isClosed": true,
       |  "blocked": {
       |    "unspecified": false,
-      |    "payments": false
+      |    "payments": false,
+      |    "withdrawals": false,
+      |    "bonuses": false
       |  },
       |  "balance": 0,
       |  "paidInThisMonth": 0,
@@ -210,7 +216,9 @@ trait AccountTestData {
       |  "isClosed" : false,
       |  "blocked" : {
       |    "unspecified" : true,
-      |    "payments": false
+      |    "payments": false,
+      |    "withdrawals": false,
+      |    "bonuses": false
       |  },
       |  "balance" : 250,
       |  "paidInThisMonth" : 50,
@@ -241,7 +249,9 @@ trait AccountTestData {
       |  "accountNumber": "1000000000001",
       |  "blocked": {
       |    "unspecified": false,
-      |    "payments": false
+      |    "payments": false,
+      |    "withdrawals": false,
+      |    "bonuses": false
       |  },
       |  "balance": 249.45,
       |  "paidInThisMonth": 27.88,

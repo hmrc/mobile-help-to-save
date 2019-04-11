@@ -3,7 +3,9 @@
   "isClosed": false,
   "blocked": {
     "unspecified": false,
-    "payments": false
+    "payments": false,
+    "withdrawals": false,
+    "bonuses": false
   },
   "balance": 200,
   "openedYearMonth": "2018-01",
