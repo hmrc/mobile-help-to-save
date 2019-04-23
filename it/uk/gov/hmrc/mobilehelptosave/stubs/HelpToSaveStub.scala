@@ -114,13 +114,37 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
           .withStatus(200)
           .withBody(closedAccountReturnedByHelpToSaveJsonString)))
 
-  def blockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+  def unspecifiedBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
         .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(aResponse()
           .withStatus(200)
-          .withBody(enrolledButBlockedReturnedByHelpToSaveJsonString)))
+          .withBody(enrolledButUnspecifiedBlockedReturnedByHelpToSaveJsonString)))
+
+  def paymentsBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(getAccountUrlPathPattern(nino))
+        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+        .willReturn(aResponse()
+          .withStatus(200)
+          .withBody(enrolledButPaymentsBlockedReturnedByHelpToSaveJsonString)))
+
+  def withdrawalsBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(getAccountUrlPathPattern(nino))
+        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+        .willReturn(aResponse()
+          .withStatus(200)
+          .withBody(enrolledButWithdrawalsBlockedReturnedByHelpToSaveJsonString)))
+
+  def bonusesBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(getAccountUrlPathPattern(nino))
+        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+        .willReturn(aResponse()
+          .withStatus(200)
+          .withBody(enrolledButBonusesBlockedReturnedByHelpToSaveJsonString)))
 
   def accountReturnsInvalidJson(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(

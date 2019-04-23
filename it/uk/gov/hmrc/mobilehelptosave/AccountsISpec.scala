@@ -59,6 +59,9 @@ class AccountsISpec
       (response.json \ "openedYearMonth").as[String]          shouldBe "2018-01"
       (response.json \ "isClosed").as[Boolean]                shouldBe false
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
       shouldBeBigDecimal(response.json \ "balance", BigDecimal("123.45"))
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
@@ -216,10 +219,10 @@ class AccountsISpec
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
     }
 
-    "include account blocked fields when account is enrolled but blocked" in {
+    "include account unspecified blocked fields when account is enrolled but blocked" in {
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.blockedAccountExists(nino)
+      HelpToSaveStub.unspecifiedBlockedAccountExists(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
       response.status shouldBe 200
@@ -232,6 +235,9 @@ class AccountsISpec
       (response.json \ "closingBalance").asOpt[String] shouldBe None
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe true
+      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
       shouldBeBigDecimal(response.json \ "balance", BigDecimal(250))
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal(50))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(0))
@@ -254,6 +260,48 @@ class AccountsISpec
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("250.00")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
+    }
+
+    "include account payments blocked field when account is enrolled but blocked" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.paymentsBlockedAccountExists(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 200
+
+      (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe true
+      (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
+    }
+
+    "include account withdrawals blocked field when account is enrolled but blocked" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.withdrawalsBlockedAccountExists(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 200
+
+      (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe true
+      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
+    }
+
+    "include account bonuses blocked field when account is enrolled but blocked" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.bonusesBlockedAccountExists(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 200
+
+      (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe true
     }
 
     "return 401 when the user is not logged in" in {
