@@ -59,6 +59,9 @@ class AccountsISpec
       (response.json \ "openedYearMonth").as[String]          shouldBe "2018-01"
       (response.json \ "isClosed").as[Boolean]                shouldBe false
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
       shouldBeBigDecimal(response.json \ "balance", BigDecimal("123.45"))
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
