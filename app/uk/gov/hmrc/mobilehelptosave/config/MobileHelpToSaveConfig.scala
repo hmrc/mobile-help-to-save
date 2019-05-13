@@ -49,7 +49,6 @@ case class MobileHelpToSaveConfig(
 
   override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
 
-  override val supportFormEnabled:         Boolean = configBoolean("helpToSave.supportFormEnabled")
   override val inAppPaymentsEnabled:       Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override val helpToSaveInfoUrl:          String  = configString("helpToSave.infoUrl")
   override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
@@ -96,7 +95,6 @@ trait ServiceLocatorRegistrationTaskConfig {
 
 trait StartupControllerConfig {
   def shuttering:                 Shuttering
-  def supportFormEnabled:         Boolean
   def helpToSaveInfoUrl:          String
   def helpToSaveAccessAccountUrl: String
   def helpToSaveAccountPayInUrl:  String

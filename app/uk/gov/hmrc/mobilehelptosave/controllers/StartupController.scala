@@ -42,8 +42,7 @@ class StartupController(
           accessAccountUrl   = Some(config.helpToSaveAccessAccountUrl),
           accountPayInUrl    = Some(config.helpToSaveAccountPayInUrl),
           user               = userOrError.right.toOption,
-          userError          = userOrError.left.toOption,
-          supportFormEnabled = config.supportFormEnabled
+          userError          = userOrError.left.toOption
         )
       }
       responseF.map(response => Ok(Json.toJson(response)))
@@ -57,8 +56,7 @@ class StartupController(
           accessAccountUrl   = None,
           accountPayInUrl    = None,
           user               = None,
-          userError          = None,
-          supportFormEnabled = config.supportFormEnabled
+          userError          = None
         )
 
       Ok(Json.toJson(response))

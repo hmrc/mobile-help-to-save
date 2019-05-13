@@ -46,6 +46,7 @@ class HelpToSaveController(
 ) extends BackendBaseController
     with ControllerChecks
     with HelpToSaveActions {
+
   override def shuttering: Shuttering = config.shuttering
 
   private def orAccountNotFound[T: Writes](o: Option[T]): Result =

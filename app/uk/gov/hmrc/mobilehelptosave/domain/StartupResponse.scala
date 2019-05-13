@@ -19,13 +19,12 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import play.api.libs.json._
 
 case class StartupResponse(
-  shuttering:         Shuttering,
-  infoUrl:            Option[String],
-  accessAccountUrl:   Option[String],
-  accountPayInUrl:    Option[String],
-  user:               Option[UserDetails],
-  userError:          Option[ErrorInfo],
-  supportFormEnabled: Boolean
+  shuttering:       Shuttering,
+  infoUrl:          Option[String],
+  accessAccountUrl: Option[String],
+  accountPayInUrl:  Option[String],
+  user:             Option[UserDetails],
+  userError:        Option[ErrorInfo]
 )
 
 case class Shuttering(

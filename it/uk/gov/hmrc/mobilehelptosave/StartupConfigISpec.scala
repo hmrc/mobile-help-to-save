@@ -55,8 +55,7 @@ class StartupConfigISpec
         .configure(
           "helpToSave.shuttering.shuttered" -> true,
           "helpToSave.shuttering.title"     -> base64Encode("Shuttered"),
-          "helpToSave.shuttering.message"   -> base64Encode("HTS is currently not available"),
-          "helpToSave.supportFormEnabled"   -> true
+          "helpToSave.shuttering.message"   -> base64Encode("HTS is currently not available")
         )
         .build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
@@ -71,7 +70,6 @@ class StartupConfigISpec
       (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
       (response.json \ "shuttering" \ "title").as[String]      shouldBe "Shuttered"
       (response.json \ "shuttering" \ "message").as[String]    shouldBe "HTS is currently not available"
-      (response.json \ "supportFormEnabled").as[Boolean]       shouldBe true
       response.json.as[JsObject].keys                          should not contain "user"
 
       AuthStub.authoriseShouldNotHaveBeenCalled()
@@ -89,7 +87,6 @@ class StartupConfigISpec
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status                                          shouldBe 200
-      (response.json \ "supportFormEnabled").validate[Boolean] should beJsSuccess
       (response.json \ "infoUrl").as[String]                   shouldBe "https://www.gov.uk/get-help-savings-low-income"
       (response.json \ "accessAccountUrl").as[String]          shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
       (response.json \ "accountPayInUrl").as[String]           shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
@@ -104,8 +101,7 @@ class StartupConfigISpec
           .configure(
             "helpToSave.infoUrl"            -> "http://www.example.com/test/help-to-save-information",
             "helpToSave.accessAccountUrl"   -> "/access-account",
-            "helpToSave.accountPayInUrl"    -> "/pay-in",
-            "helpToSave.supportFormEnabled" -> "true"
+            "helpToSave.accountPayInUrl"    -> "/pay-in"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
@@ -113,27 +109,11 @@ class StartupConfigISpec
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
         response.status                                    shouldBe 200
-        (response.json \ "supportFormEnabled").as[Boolean] shouldBe true
         (response.json \ "infoUrl").as[String]             shouldBe "http://www.example.com/test/help-to-save-information"
         (response.json \ "accessAccountUrl").as[String]    shouldBe "/access-account"
         (response.json \ "accountPayInUrl").as[String]     shouldBe "/pay-in"
       }
-
-      withTestServer(
-        appBuilder
-          .configure(
-            "helpToSave.supportFormEnabled" -> "false"
-          )
-          .build()) { (app: Application, portNumber: PortNumber) =>
-        implicit val implicitPortNumber: PortNumber = portNumber
-        implicit val wsClient:           WSClient   = components.wsClient
-
-        val response = await(wsUrl("/mobile-help-to-save/startup").get())
-        response.status                                    shouldBe 200
-        (response.json \ "supportFormEnabled").as[Boolean] shouldBe false
-      }
     }
-
   }
 
   private def base64Encode(s: String): String =
