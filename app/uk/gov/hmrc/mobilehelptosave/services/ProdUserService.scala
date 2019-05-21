@@ -74,8 +74,6 @@ class ProdUserService[F[_]](
     }
   }
 
-  //eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
-
   private def firstDayOfNextMonth: DateTime = {
     DateTime.now.plusMonths(1).withDayOfMonth(1)
   }
