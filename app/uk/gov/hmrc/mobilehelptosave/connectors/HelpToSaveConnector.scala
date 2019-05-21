@@ -44,6 +44,10 @@ trait HelpToSaveGetTransactions[F[_]] {
   def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, Transactions]]
 }
 
+trait HelpToSaveEligibility[F[_]] {
+  def checkEligibility()(implicit hc: HeaderCarrier): F[Either[ErrorInfo, EligibilityCheckResponse]]
+}
+
 class HelpToSaveConnectorImpl(
   logger: LoggerLike,
   config: HelpToSaveConnectorConfig,
@@ -52,7 +56,8 @@ class HelpToSaveConnectorImpl(
   implicit ec: ExecutionContext
 ) extends HelpToSaveGetTransactions[Future]
     with HelpToSaveGetAccount[Future]
-    with HelpToSaveEnrolmentStatus[Future] {
+    with HelpToSaveEnrolmentStatus[Future]
+    with HelpToSaveEligibility[Future] {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
     http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
@@ -67,6 +72,11 @@ class HelpToSaveConnectorImpl(
   override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Transactions]] = {
     val string = transactionsUrl(nino).toString
     http.GET[Transactions](string) map (Right(_)) recover handleTransactionsHttpErrors
+  }
+
+  override def checkEligibility()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
+    val string = eligibilityUrl.toString
+    http.GET[EligibilityCheckResponse](string) map (Right(_)) recover handleTransactionsHttpErrors
   }
 
   private val mapNotFoundToNone: PartialFunction[Throwable, Either[ErrorInfo, Option[Nothing]]] = {
@@ -86,6 +96,7 @@ class HelpToSaveConnectorImpl(
   private val handleEnrolmentStatusHttpErrors = handleHttpAndJsonErrors("enrolment status")
   private val handleAccountHttpErrors         = handleHttpAndJsonErrors("account")
   private val handleTransactionsHttpErrors    = handleHttpAndJsonErrors("transaction information")
+  private val handleEligibilityHttpErrors      = handleHttpAndJsonErrors("eligibility")
 
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
 
@@ -94,6 +105,9 @@ class HelpToSaveConnectorImpl(
 
   private def transactionsUrl(nino: Nino): URL =
     new URL(config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
+
+  private def eligibilityUrl: URL =
+    new URL(config.helpToSaveBaseUrl, s"/help-to-save/eligibility-check")
 }
 
 /** Bonus term in help-to-save microservice's domain */

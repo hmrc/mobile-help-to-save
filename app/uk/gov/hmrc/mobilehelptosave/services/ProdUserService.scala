@@ -18,12 +18,14 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.data._
 import cats.implicits._
+import org.joda.time.DateTime
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
 import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,14 +33,55 @@ trait UserService[F[_]] {
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, UserDetails]]
 }
 
-class ProdUserService(
-  logger:              LoggerLike,
-  helpToSaveConnector: HelpToSaveEnrolmentStatus[Future]
-)(implicit ec:         ExecutionContext)
-    extends UserService[Future] {
+class ProdUserService[F[_]](
+                             logger: LoggerLike,
+                             helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
+                             helpToSaveEligibility: HelpToSaveEligibility[Future],
+                             eligibilityStatusRepo: EligibilityRepo[Future]
+                           )(implicit ec: ExecutionContext)
+  extends UserService[Future] {
+
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
-    EitherT(helpToSaveConnector.enrolmentStatus())
-      .map(isEnrolled => if (isEnrolled) Enrolled else NotEnrolled)
+    EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
+      .flatMap(isEnrolled =>
+        EitherT(checkEligibility(nino))
+          .map(
+            isEligible =>
+              (isEnrolled, isEligible) match {
+                case (true, _) => Enrolled
+                case (false, true) => NotEnrolledButEligible
+                case _ => NotEnrolled
+              }
+          ))
       .map(state => UserDetails(state = state))
       .value
+
+  def checkEligibility(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
+    eligibilityStatusRepo.getEligibility(nino).flatMap(e => e match {
+      case Some(e) => Future.successful(e.eligible.asRight[ErrorInfo])
+      case None =>
+        EitherT(helpToSaveEligibility.checkEligibility())
+          .map(r =>
+            (r.eligibilityCheckResult.resultCode, r.eligibilityCheckResult.reasonCode) match {
+              case (1, 6) =>
+                eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
+                true
+              case (1, 7) =>
+                eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
+                true
+              case (1, 8) =>
+                eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
+                true
+              case _ =>
+                eligibilityStatusRepo.setEligibility(Eligibility(nino, false, firstDayOfNextMonth))
+                false
+            }
+          ).value
+    })
+  }
+
+  private def firstDayOfNextMonth: DateTime = {
+    DateTime.now.plusMonths(1).withDayOfMonth(1)
+  }
+
 }
