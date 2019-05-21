@@ -57,28 +57,24 @@ class ProdUserService[F[_]](
       .value
 
   def checkEligibility(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
-    eligibilityStatusRepo.getEligibility(nino).flatMap(e => e match {
+    eligibilityStatusRepo.getEligibility(nino).flatMap {
       case Some(e) => Future.successful(e.eligible.asRight[ErrorInfo])
       case None =>
         EitherT(helpToSaveEligibility.checkEligibility())
           .map(r =>
             (r.eligibilityCheckResult.resultCode, r.eligibilityCheckResult.reasonCode) match {
-              case (1, 6) =>
-                eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
-                true
-              case (1, 7) =>
-                eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
-                true
-              case (1, 8) =>
-                eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
-                true
-              case _ =>
-                eligibilityStatusRepo.setEligibility(Eligibility(nino, false, firstDayOfNextMonth))
-                false
+              case (1, 6) => true
+              case (1, 7) => true
+              case (1, 8) => true
+              case _ => false
             }
-          ).value
-    })
+          )
+          .flatMap(e => EitherT.liftF(eligibilityStatusRepo.setEligibility(Eligibility(nino, e, firstDayOfNextMonth)).map(_ => e)))
+          .value
+    }
   }
+
+  //eligibilityStatusRepo.setEligibility(Eligibility(nino, true, firstDayOfNextMonth))
 
   private def firstDayOfNextMonth: DateTime = {
     DateTime.now.plusMonths(1).withDayOfMonth(1)
