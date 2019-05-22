@@ -34,29 +34,25 @@ trait UserService[F[_]] {
 }
 
 class ProdUserService[F[_]](
-                             logger: LoggerLike,
-                             helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
-                             helpToSaveEligibility: HelpToSaveEligibility[Future],
-                             eligibilityStatusRepo: EligibilityRepo[Future]
-                           )(implicit ec: ExecutionContext)
-  extends UserService[Future] {
+  logger:                    LoggerLike,
+  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
+  helpToSaveEligibility:     HelpToSaveEligibility[Future],
+  eligibilityStatusRepo:     EligibilityRepo[Future]
+)(implicit ec:               ExecutionContext)
+    extends UserService[Future] {
 
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
-    EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
-      .flatMap(isEnrolled =>
-        EitherT(checkEligibility(nino))
-          .map(
-            isEligible =>
-              (isEnrolled, isEligible) match {
-                case (true, _) => Enrolled
-                case (false, true) => NotEnrolledButEligible
-                case _ => NotEnrolled
-              }
-          ))
-      .map(state => UserDetails(state = state))
-      .value
+    (for {
+      enrolmentStatus <- EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
+      isEligible      <- EitherT(checkEligibility(nino))
+      userDetails = (enrolmentStatus, isEligible) match {
+        case (true, _) => UserDetails(Enrolled)
+        case (_, true) => UserDetails(NotEnrolledButEligible)
+        case (_, _)    => UserDetails(NotEnrolled)
+      }
+    } yield userDetails).value
 
-  def checkEligibility(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
+  protected def checkEligibility(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
     eligibilityStatusRepo.getEligibility(nino).flatMap {
       case Some(e) => Future.successful(e.eligible.asRight[ErrorInfo])
       case None =>
@@ -66,16 +62,14 @@ class ProdUserService[F[_]](
               case (1, 6) => true
               case (1, 7) => true
               case (1, 8) => true
-              case _ => false
-            }
-          )
-          .flatMap(e => EitherT.liftF(eligibilityStatusRepo.setEligibility(Eligibility(nino, e, firstDayOfNextMonth)).map(_ => e)))
+              case _      => false
+          })
+          .flatMap(e =>
+            EitherT.liftF[Future, ErrorInfo, Boolean](eligibilityStatusRepo.setEligibility(Eligibility(nino, e, firstDayOfNextMonth)).map(_ => e)))
           .value
     }
-  }
 
-  private def firstDayOfNextMonth: DateTime = {
+  protected def firstDayOfNextMonth: DateTime =
     DateTime.now.plusMonths(1).withDayOfMonth(1)
-  }
 
 }

@@ -60,8 +60,7 @@ class HelpToSaveConnectorImpl(
     with HelpToSaveEligibility[Future] {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
-    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
-      Right((json \ "enrolled").as[Boolean])
+    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue => Right((json \ "enrolled").as[Boolean])
     } recover handleEnrolmentStatusHttpErrors
 
   override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
@@ -76,7 +75,7 @@ class HelpToSaveConnectorImpl(
 
   override def checkEligibility()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
     val string = eligibilityUrl.toString
-    http.GET[EligibilityCheckResponse](string) map (Right(_)) recover handleTransactionsHttpErrors
+    http.GET[EligibilityCheckResponse](string) map (Right(_)) recover handleEligibilityHttpErrors
   }
 
   private val mapNotFoundToNone: PartialFunction[Throwable, Either[ErrorInfo, Option[Nothing]]] = {
@@ -96,7 +95,7 @@ class HelpToSaveConnectorImpl(
   private val handleEnrolmentStatusHttpErrors = handleHttpAndJsonErrors("enrolment status")
   private val handleAccountHttpErrors         = handleHttpAndJsonErrors("account")
   private val handleTransactionsHttpErrors    = handleHttpAndJsonErrors("transaction information")
-  private val handleEligibilityHttpErrors      = handleHttpAndJsonErrors("eligibility")
+  private val handleEligibilityHttpErrors     = handleHttpAndJsonErrors("eligibility")
 
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
 
