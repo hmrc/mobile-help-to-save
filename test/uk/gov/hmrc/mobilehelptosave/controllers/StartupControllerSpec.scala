@@ -37,7 +37,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val mockUserService = mock[ProdUserService]
+  private val mockUserService = mock[ProdUserService[Future]]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")
@@ -88,7 +88,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         jsonKeys                                   should contain("user")
         (jsonBody \ "infoUrl").as[String]          shouldBe "/info"
         (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
-        (jsonBody \ "accountPayInUrl").as[String]    shouldBe "/payIn"
+        (jsonBody \ "accountPayInUrl").as[String]  shouldBe "/payIn"
       }
 
       "include shuttering information in response with shuttered = false" in {

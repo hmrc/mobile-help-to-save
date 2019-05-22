@@ -17,15 +17,17 @@
 package uk.gov.hmrc.mobilehelptosave.stubs
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.{status, _}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 object HelpToSaveStub extends AccountTestData with TransactionTestData {
-  def currentUserIsEnrolled()(implicit wireMockServer:    WireMockServer): StubMapping = enrolmentStatusIs(status = true)
-  def currentUserIsNotEnrolled()(implicit wireMockServer: WireMockServer): StubMapping = enrolmentStatusIs(status = false)
+  def currentUserIsEnrolled()(implicit wireMockServer:    WireMockServer): StubMapping = enrolmentStatusIs(status       = true)
+  def currentUserIsNotEnrolled()(implicit wireMockServer: WireMockServer): StubMapping = enrolmentStatusIs(status       = false)
+  def currentUserIsEligible()(implicit wireMockServer:    WireMockServer): StubMapping = eligibilityStatusIs(isEligible = true)
+  def currentUserIsNotEligible()(implicit wireMockServer: WireMockServer): StubMapping = eligibilityStatusIs(isEligible = false)
 
   def enrolmentStatusShouldNotHaveBeenCalled()(implicit wireMockServer: WireMockServer): Unit =
     wireMockServer.verify(0, getRequestedFor(urlPathEqualTo("/help-to-save/enrolment-status")))
@@ -45,6 +47,21 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
             .withBody(
               s"""{"enrolled":$status}"""
             )))
+
+  private def eligibilityStatusIs(isEligible: Boolean)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(urlPathEqualTo("/help-to-save/eligibility-check"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.OK)
+            .withBody(s"""{
+                          |"eligibilityCheckResult": {
+                                 |"result": "",
+                                 |"resultCode": ${if (true) 1 else 2},
+                                 |"reason": "",
+                                 |"reasonCode": ${if (true) 6 else 10}
+                          |}
+                 }""".stripMargin)))
 
   def transactionsExistForUser(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
