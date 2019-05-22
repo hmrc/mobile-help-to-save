@@ -44,7 +44,6 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
   private val config = TestStartupControllerConfig(
     falseShuttering,
-    supportFormEnabled         = false,
     helpToSaveInfoUrl          = "/info",
     helpToSaveAccessAccountUrl = "/accessAccount",
     helpToSaveAccountPayInUrl  = "/payIn"
@@ -159,7 +158,6 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "supportFormEnabled").as[Boolean] shouldBe false
       }
     }
 
@@ -187,7 +185,6 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 
 case class TestStartupControllerConfig(
   shuttering:                 Shuttering,
-  supportFormEnabled:         Boolean,
   helpToSaveInfoUrl:          String,
   helpToSaveAccessAccountUrl: String,
   helpToSaveAccountPayInUrl:  String
