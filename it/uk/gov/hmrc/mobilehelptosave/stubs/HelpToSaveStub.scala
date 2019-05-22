@@ -57,9 +57,9 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
             .withBody(s"""{
                           |"eligibilityCheckResult": {
                                  |"result": "",
-                                 |"resultCode": ${if (true) 1 else 2},
+                                 |"resultCode": ${if (isEligible) 1 else 2},
                                  |"reason": "",
-                                 |"reasonCode": ${if (true) 6 else 10}
+                                 |"reasonCode": ${if (isEligible) 6 else 10}
                           |}
                  }""".stripMargin)))
 
