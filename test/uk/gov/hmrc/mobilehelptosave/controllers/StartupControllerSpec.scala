@@ -37,7 +37,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val mockUserService = mock[ProdUserService[Future]]
+  private val mockUserService = mock[ProdUserService]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")

@@ -33,7 +33,7 @@ trait UserService[F[_]] {
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, UserDetails]]
 }
 
-class ProdUserService[F[_]](
+class ProdUserService(
   logger:                    LoggerLike,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
   helpToSaveEligibility:     HelpToSaveEligibility[Future],

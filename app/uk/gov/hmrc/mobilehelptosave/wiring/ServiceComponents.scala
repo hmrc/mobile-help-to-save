@@ -85,7 +85,7 @@ class ServiceComponents(context: Context)
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
-  lazy val userService:    UserService[Future]    = wire[ProdUserService[Future]]
+  lazy val userService:    UserService[Future]    = wire[ProdUserService]
   lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]
 
   lazy val mongo:           ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
