@@ -19,10 +19,11 @@ package uk.gov.hmrc.mobilehelptosave.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{EitherValues, Matchers, OneInstancePerTest, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveEnrolmentStatus
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
 import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -44,42 +45,83 @@ class ProdUserServiceSpec
   private val nino      = generator.nextNino
 
   private class ProdUserServiceWithTestDefaults(
-    helpToSaveConnector: HelpToSaveEnrolmentStatus[Future]
+    helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
+    helpToSaveEligibility:     HelpToSaveEligibility[Future],
+    eligibilityStatusRepo:     EligibilityRepo[Future]
   ) extends ProdUserService(
         logger,
-        helpToSaveConnector
+        helpToSaveEnrolmentStatus,
+        helpToSaveEligibility,
+        eligibilityStatusRepo
       )
 
   "userDetails" should {
+    val eligible = EligibilityCheckResponse(
+      EligibilityCheckResult(
+        result     = "",
+        resultCode = 1,
+        reason     = "",
+        reasonCode = 6
+      ),
+      threshold = None
+    )
+
+    val notEligible = EligibilityCheckResponse(
+      EligibilityCheckResult(
+        result     = "",
+        resultCode = 2,
+        reason     = "",
+        reasonCode = 10
+      ),
+      threshold = None
+    )
+
     "return state=Enrolled when the current user is enrolled in Help to Save" in {
       val service = new ProdUserServiceWithTestDefaults(
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(true))
+        fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(true)),
+        fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(eligible)),
+        fakeEligibilityRepo(None)
       )
 
       val user: UserDetails = await(service.userDetails(nino)).right.value
       user.state shouldBe UserState.Enrolled
     }
 
-    "return state=NotEnrolled when the current user is not enrolled in Help to Save" in {
+    "return state=NotEnrolled when the current user is not enrolled in Help to Save and not eligible" in {
       val service = new ProdUserServiceWithTestDefaults(
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Right(false))
+        fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(false)),
+        fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(notEligible)),
+        fakeEligibilityRepo(None)
       )
 
       val user: UserDetails = await(service.userDetails(nino)).right.value
       user.state shouldBe UserState.NotEnrolled
     }
 
-    "return an error when the HelpToSaveConnector return an error" in {
+    "return state=NotEnrolledButEligible when the current user is not enrolled in Help to Save but is eligible" in {
+      val service = new ProdUserServiceWithTestDefaults(
+        fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(false)),
+        fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(eligible)),
+        fakeEligibilityRepo(None)
+      )
+
+      val user: UserDetails = await(service.userDetails(nino)).right.value
+      user.state shouldBe UserState.NotEnrolledButEligible
+    }
+
+    "return an error when the HelpToSaveConnector returns an error" in {
       val error = ErrorInfo.General
       val service = new ProdUserServiceWithTestDefaults(
-        fakeHelpToSaveConnector(userIsEnrolledInHelpToSave = Left(error))
+        fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Left(error)),
+        fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Left(error)),
+        fakeEligibilityRepo(None)
       )
 
       await(service.userDetails(nino)) shouldBe Left(error)
     }
   }
 
-  private def fakeHelpToSaveConnector(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) =
+  private def fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) =
     new HelpToSaveEnrolmentStatus[Future] {
       override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         hc shouldBe passedHc
@@ -87,4 +129,20 @@ class ProdUserServiceSpec
         Future successful userIsEnrolledInHelpToSave
       }
     }
+
+  private def fakeHelpToSaveEligibility(userIsEligibleForHelpToSave: Either[ErrorInfo, EligibilityCheckResponse]) =
+    new HelpToSaveEligibility[Future] {
+      override def checkEligibility()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
+        hc shouldBe passedHc
+
+        Future successful userIsEligibleForHelpToSave
+      }
+    }
+
+  private def fakeEligibilityRepo(eligibility: Option[Eligibility]) =
+    new EligibilityRepo[Future] {
+      override def setEligibility(eligibility: Eligibility): Future[Unit]                = Future.successful(())
+      override def getEligibility(nino:        Nino):        Future[Option[Eligibility]] = Future.successful(eligibility)
+    }
+
 }

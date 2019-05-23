@@ -44,6 +44,7 @@ class StartupISpec
     "include user.state" in {
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.currentUserIsEligible()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status                                  shouldBe 200

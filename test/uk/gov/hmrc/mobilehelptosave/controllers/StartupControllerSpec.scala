@@ -87,7 +87,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
         jsonKeys                                   should contain("user")
         (jsonBody \ "infoUrl").as[String]          shouldBe "/info"
         (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
-        (jsonBody \ "accountPayInUrl").as[String]    shouldBe "/payIn"
+        (jsonBody \ "accountPayInUrl").as[String]  shouldBe "/payIn"
       }
 
       "include shuttering information in response with shuttered = false" in {
