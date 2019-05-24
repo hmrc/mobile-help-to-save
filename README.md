@@ -20,7 +20,7 @@ Response format:
       ""message": "Please try again tomorrow"
   },
   // URL of page containing information about the Help to Save scheme
-  "infoUrl": "https://www.gov.uk/get-help-savings-low-income",
+  "infoUrl": "/mobile-help-to-save/info",
   // URL that will redirect enrolled users to the NS&I Help to Save account homepage
   "accessAccountUrl": "/mobile-help-to-save/access-account",
   // User-specific Help to Save data
