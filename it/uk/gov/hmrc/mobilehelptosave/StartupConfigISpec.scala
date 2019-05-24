@@ -87,7 +87,7 @@ class StartupConfigISpec
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status                                          shouldBe 200
-      (response.json \ "infoUrl").as[String]                   shouldBe "https://www.gov.uk/get-help-savings-low-income"
+      (response.json \ "infoUrl").as[String]                   shouldBe "http://localhost:8249/mobile-help-to-save/info"
       (response.json \ "accessAccountUrl").as[String]          shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
       (response.json \ "accountPayInUrl").as[String]           shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
     }
