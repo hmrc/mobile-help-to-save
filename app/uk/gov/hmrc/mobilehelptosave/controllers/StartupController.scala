@@ -37,12 +37,13 @@ class StartupController(
     authorisedWithIds.async { implicit request =>
       val responseF = userService.userDetails(request.nino).map { userOrError =>
         StartupResponse(
-          shuttering         = config.shuttering,
-          infoUrl            = Some(config.helpToSaveInfoUrl),
-          accessAccountUrl   = Some(config.helpToSaveAccessAccountUrl),
-          accountPayInUrl    = Some(config.helpToSaveAccountPayInUrl),
-          user               = userOrError.right.toOption,
-          userError          = userOrError.left.toOption
+          shuttering       = config.shuttering,
+          infoUrl          = Some(config.helpToSaveInfoUrl),
+          infoUrlSso       = Some(config.helpToSaveInfoUrlSso),
+          accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
+          accountPayInUrl  = Some(config.helpToSaveAccountPayInUrl),
+          user             = userOrError.right.toOption,
+          userError        = userOrError.left.toOption
         )
       }
       responseF.map(response => Ok(Json.toJson(response)))
@@ -51,12 +52,13 @@ class StartupController(
     Action { implicit request =>
       val response =
         StartupResponse(
-          shuttering         = config.shuttering,
-          infoUrl            = None,
-          accessAccountUrl   = None,
-          accountPayInUrl    = None,
-          user               = None,
-          userError          = None
+          shuttering       = config.shuttering,
+          infoUrl          = None,
+          infoUrlSso       = None,
+          accessAccountUrl = None,
+          accountPayInUrl  = None,
+          user             = None,
+          userError        = None
         )
 
       Ok(Json.toJson(response))

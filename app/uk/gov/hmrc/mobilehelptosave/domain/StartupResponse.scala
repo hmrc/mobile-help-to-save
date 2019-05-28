@@ -21,6 +21,7 @@ import play.api.libs.json._
 case class StartupResponse(
   shuttering:       Shuttering,
   infoUrl:          Option[String],
+  infoUrlSso:       Option[String],
   accessAccountUrl: Option[String],
   accountPayInUrl:  Option[String],
   user:             Option[UserDetails],

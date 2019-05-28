@@ -48,6 +48,7 @@ case class MobileHelpToSaveConfig(
 
   override val inAppPaymentsEnabled:       Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override val helpToSaveInfoUrl:          String  = configString("helpToSave.infoUrl")
+  override val helpToSaveInfoUrlSso:       String  = configString("helpToSave.infoUrlSso")
   override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
   override val helpToSaveAccountPayInUrl:  String  = configString("helpToSave.accountPayInUrl")
 
@@ -89,6 +90,7 @@ trait HelpToSaveConnectorConfig {
 trait StartupControllerConfig {
   def shuttering:                 Shuttering
   def helpToSaveInfoUrl:          String
+  def helpToSaveInfoUrlSso:       String
   def helpToSaveAccessAccountUrl: String
   def helpToSaveAccountPayInUrl:  String
 }
