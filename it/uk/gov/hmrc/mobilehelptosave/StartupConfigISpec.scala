@@ -86,10 +86,11 @@ class StartupConfigISpec
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status                                          shouldBe 200
-      (response.json \ "infoUrl").as[String]                   shouldBe "http://localhost:8249/mobile-help-to-save/info"
-      (response.json \ "accessAccountUrl").as[String]          shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
-      (response.json \ "accountPayInUrl").as[String]           shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
+      response.status                                 shouldBe 200
+      (response.json \ "infoUrl").as[String]          shouldBe "https://www.gov.uk/get-help-savings-low-income"
+      (response.json \ "infoUrlSso").as[String]       shouldBe "http://localhost:8249/mobile-help-to-save/info"
+      (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
+      (response.json \ "accountPayInUrl").as[String]  shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
     }
 
     "allow feature flag and URL settings to be overridden in configuration" in {
@@ -99,19 +100,21 @@ class StartupConfigISpec
       withTestServer(
         appBuilder
           .configure(
-            "helpToSave.infoUrl"            -> "http://www.example.com/test/help-to-save-information",
-            "helpToSave.accessAccountUrl"   -> "/access-account",
-            "helpToSave.accountPayInUrl"    -> "/pay-in"
+            "helpToSave.infoUrl"          -> "http://www.example.com/test/help-to-save-information",
+            "helpToSave.infoUrlSso"       -> "/info",
+            "helpToSave.accessAccountUrl" -> "/access-account",
+            "helpToSave.accountPayInUrl"  -> "/pay-in"
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
         val response = await(wsUrl("/mobile-help-to-save/startup").get())
-        response.status                                    shouldBe 200
-        (response.json \ "infoUrl").as[String]             shouldBe "http://www.example.com/test/help-to-save-information"
-        (response.json \ "accessAccountUrl").as[String]    shouldBe "/access-account"
-        (response.json \ "accountPayInUrl").as[String]     shouldBe "/pay-in"
+        response.status                                 shouldBe 200
+        (response.json \ "infoUrl").as[String]          shouldBe "http://www.example.com/test/help-to-save-information"
+        (response.json \ "infoUrlSso").as[String]       shouldBe "/info"
+        (response.json \ "accessAccountUrl").as[String] shouldBe "/access-account"
+        (response.json \ "accountPayInUrl").as[String]  shouldBe "/pay-in"
       }
     }
   }

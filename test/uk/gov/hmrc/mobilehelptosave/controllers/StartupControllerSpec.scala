@@ -45,6 +45,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
   private val config = TestStartupControllerConfig(
     falseShuttering,
     helpToSaveInfoUrl          = "/info",
+    helpToSaveInfoUrlSso       = "/infoSso",
     helpToSaveAccessAccountUrl = "/accessAccount",
     helpToSaveAccountPayInUrl  = "/payIn"
   )
@@ -186,6 +187,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
 case class TestStartupControllerConfig(
   shuttering:                 Shuttering,
   helpToSaveInfoUrl:          String,
+  helpToSaveInfoUrlSso:       String,
   helpToSaveAccessAccountUrl: String,
   helpToSaveAccountPayInUrl:  String
 ) extends StartupControllerConfig
