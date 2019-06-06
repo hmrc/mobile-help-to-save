@@ -43,8 +43,8 @@ class ProdUserService(
 
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
     (for {
-      enrolled <- EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
-      isEligible      <- if(!enrolled) EitherT(checkEligibility(nino)) else EitherT(Future.successful(false.asRight[ErrorInfo]))
+      enrolled   <- EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
+      isEligible <- if (!enrolled) EitherT(checkEligibility(nino)) else EitherT(Future.successful(false.asRight[ErrorInfo]))
       userDetails = (enrolled, isEligible) match {
         case (true, _) => UserDetails(Enrolled)
         case (_, true) => UserDetails(NotEnrolledButEligible)
