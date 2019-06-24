@@ -98,3 +98,8 @@ trait StartupControllerConfig {
 trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
 }
+
+trait MessagesControllerConfig {
+  def shuttering: Shuttering
+}
+

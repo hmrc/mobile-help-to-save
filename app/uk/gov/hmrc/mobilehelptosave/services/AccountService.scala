@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 import cats.MonadError
 import cats.data.EitherT
@@ -28,7 +28,7 @@ import cats.syntax.functor._
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
+import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, Messages}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
@@ -45,6 +45,9 @@ trait AccountService[F[_]] {
   def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]]
 
   def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]]
+
+  def setPreviousBalance(nino: Nino, previousBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Result[Unit]]
+  def getPreviousBalance(nino: Nino)(implicit hc:     HeaderCarrier): F[Result[Option[PreviousBalance]]]
 }
 
 class AccountServiceImpl[F[_]](
@@ -52,7 +55,9 @@ class AccountServiceImpl[F[_]](
   config:                    AccountServiceConfig,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],
   helpToSaveGetAccount:      HelpToSaveGetAccount[F],
-  savingsGoalEventRepo:      SavingsGoalEventRepo[F]
+  savingsGoalEventRepo:      SavingsGoalEventRepo[F],
+  previousBalanceRepo:       PreviousBalanceRepo[F],
+  messagesService:           MessagesService[F]
 )(implicit F:                MonadError[F, Throwable])
     extends AccountService[F] {
 
@@ -66,28 +71,38 @@ class AccountServiceImpl[F[_]](
     }
 
   override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
   override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
     }
 
   override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
     }
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
       case true =>
-        EitherT(fetchAccountWithGoal(nino))
+        EitherT(fetchAccountWithGoal(nino)).flatMap {
+          case Some(account) => EitherT.liftF[F, ErrorInfo, Option[Account]](setBalanceMessage(nino, account.balance).map(_ => Some(account)))
+          case _             => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
+        }
 
       case false =>
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
+
+  override def setPreviousBalance(nino: Nino, previousBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
+    withHelpToSaveAccount(nino) { _ =>
+      trappingRepoExceptions("error writing to the previous balance repo", previousBalanceRepo.setPreviousBalance(nino, previousBalance))
+    }
+
+  override def getPreviousBalance(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[PreviousBalance]]] =
+    withHelpToSaveAccount(nino) { _ =>
+      trappingRepoExceptions("error reading from previous balance repo", previousBalanceRepo.getPreviousBalance(nino))
+    }
 
   protected def withValidSavingsAmount[T](goal: Double)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
     if (goal < 1.0 || BigDecimal(goal).scale > 2)
@@ -149,5 +164,35 @@ class AccountServiceImpl[F[_]](
       case (Right(None), _) =>
         logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
         None.asRight
+    }
+
+  protected def setBalanceMessage(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Unit] =
+    previousBalanceRepo.getPreviousBalance(nino) map {
+      case Some(pb) =>
+        previousBalanceRepo
+          .setPreviousBalance(nino, currentBalance)
+          .map(_ =>
+            generateBalanceMessage(nino, pb.previousBalance, currentBalance) match {
+              case Some(message) => messagesService.setMessage(message).map(_ => ())
+              case _             => ()
+          })
+      case _ => previousBalanceRepo.setPreviousBalance(nino, currentBalance).map(_ => ())
+    }
+
+  protected def generateBalanceMessage(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Message] =
+    if (previousBalance < 200 && currentBalance >= 200 && currentBalance < 500) {
+      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(200), date = LocalDateTime.now()))
+    } else if (previousBalance < 500 && currentBalance >= 500 && currentBalance < 750) {
+      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(500), date = LocalDateTime.now()))
+    } else if (previousBalance < 750 && currentBalance >= 750 && currentBalance < 1500) {
+      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(750), date = LocalDateTime.now()))
+    } else if (previousBalance < 1500 && currentBalance >= 1500 && currentBalance < 2000) {
+      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(1500), date = LocalDateTime.now()))
+    } else if (previousBalance < 2000 && currentBalance >= 2000 && currentBalance < 2400) {
+      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(2000), date = LocalDateTime.now()))
+    } else if (previousBalance < 2400 && currentBalance >= 2400) {
+      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(2400), date = LocalDateTime.now()))
+    } else {
+      None
     }
 }

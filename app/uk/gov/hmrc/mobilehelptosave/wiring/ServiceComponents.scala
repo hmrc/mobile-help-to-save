@@ -31,7 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorImpl
 import uk.gov.hmrc.mobilehelptosave.controllers._
 import uk.gov.hmrc.mobilehelptosave.controllers.test.TestController
-import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MongoEligibilityRepo, MongoSavingsGoalEventRepo, SavingsGoalEventRepo}
+import uk.gov.hmrc.mobilehelptosave.repository._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.services._
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
@@ -85,15 +85,19 @@ class ServiceComponents(context: Context)
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
-  lazy val userService:    UserService[Future]    = wire[ProdUserService]
-  lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]
+  lazy val userService:     UserService[Future]     = wire[ProdUserService]
+  lazy val accountService:  AccountService[Future]  = wire[AccountServiceImpl[Future]]
+  lazy val messagesService: MessagesService[Future] = wire[MessagesServiceImpl[Future]]
 
-  lazy val mongo:           ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
-  lazy val eventRepo:       SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
-  lazy val eligibilityRepo: EligibilityRepo[Future]      = wire[MongoEligibilityRepo]
+  lazy val mongo:               ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
+  lazy val eventRepo:           SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
+  lazy val eligibilityRepo:     EligibilityRepo[Future]      = wire[MongoEligibilityRepo]
+  lazy val previousBalanceRepo: PreviousBalanceRepo[Future]  = wire[MongoPreviousBalanceRepo]
+  lazy val messagesRepo:        MessagesRepo[Future]         = wire[MongoMessagesRepo]
 
   lazy val startupController:       StartupController       = wire[StartupController]
   lazy val helpToSaveController:    HelpToSaveController    = wire[HelpToSaveController]
+  lazy val messagesController:      MessagesController      = wire[MessagesController]
   lazy val documentationController: DocumentationController = wire[DocumentationController]
   lazy val metricsController:       MetricsController       = wire[MetricsController]
   lazy val sandboxController:       SandboxController       = wire[SandboxController]
