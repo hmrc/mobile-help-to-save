@@ -52,8 +52,8 @@ class MongoMessagesRepo(
 
   override def markAsSeen(messageId: String): Future[Unit] =
     findAndUpdate(
-      query  = obj("_id" -> messageId),
-      update = obj("$set" -> Json.obj("seen" -> true)),
+      query  = obj("messageId" -> messageId),
+      update = obj("$set" -> Json.obj("isSeen" -> true)),
       upsert = true
     ).void
 

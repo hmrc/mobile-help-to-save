@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDate
 
 import cats.MonadError
 import cats.data.EitherT
@@ -28,7 +28,7 @@ import cats.syntax.functor._
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, Messages}
+import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
@@ -181,17 +181,17 @@ class AccountServiceImpl[F[_]](
 
   protected def generateBalanceMessage(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Message] =
     if (previousBalance < 200 && currentBalance >= 200 && currentBalance < 500) {
-      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(200), date = LocalDateTime.now()))
+      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached200))
     } else if (previousBalance < 500 && currentBalance >= 500 && currentBalance < 750) {
-      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(500), date = LocalDateTime.now()))
+      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached500))
     } else if (previousBalance < 750 && currentBalance >= 750 && currentBalance < 1500) {
-      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(750), date = LocalDateTime.now()))
+      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached750))
     } else if (previousBalance < 1500 && currentBalance >= 1500 && currentBalance < 2000) {
-      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(1500), date = LocalDateTime.now()))
+      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached1500))
     } else if (previousBalance < 2000 && currentBalance >= 2000 && currentBalance < 2400) {
-      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(2000), date = LocalDateTime.now()))
+      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached2000))
     } else if (previousBalance < 2400 && currentBalance >= 2400) {
-      Some(Message(nino = nino, messageType = BalanceReached, message = Messages.balancedReached(2400), date = LocalDateTime.now()))
+      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached2400))
     } else {
       None
     }

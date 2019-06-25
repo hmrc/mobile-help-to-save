@@ -22,20 +22,27 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.domain.Nino
 
 case class Message(
-  _id:         String = BSONObjectID.generate().stringify,
+  messageId:   String = BSONObjectID.generate().stringify,
   nino:        Nino,
   messageType: MessageType,
-  message:     String,
-  seen:        Boolean = false,
-  date:        LocalDateTime) {
+  messageKey:  MessageKey,
+  isSeen:      Boolean = false,
+  date:        LocalDateTime = LocalDateTime.now()) {
 
   def toApiMessage: ApiMessage =
     ApiMessage(
-      messageId   = _id,
+      messageId   = messageId,
       messageType = messageType,
-      message     = message,
-      seen        = seen,
-      date        = date
+      message = messageKey match {
+        case BalanceReached200  => "Your balance has reached £200. That's great!"
+        case BalanceReached500  => "Your balance has reached £500. That's great!"
+        case BalanceReached750  => "Your balance has reached £750. That's great!"
+        case BalanceReached1500 => "Your balance has reached £1000. That's great!"
+        case BalanceReached2000 => "Your balance has reached £2000. That's great!"
+        case BalanceReached2400 => "Your balance has reached £2400. That's great!"
+      },
+      isSeen = isSeen,
+      date   = date
     )
 }
 
@@ -43,7 +50,7 @@ object Message {
   implicit val formats: OFormat[Message] = Json.format
 }
 
-case class ApiMessage(messageId: String, messageType: MessageType, message: String, seen: Boolean, date: LocalDateTime)
+case class ApiMessage(messageId: String, messageType: MessageType, message: String, isSeen: Boolean, date: LocalDateTime)
 
 object ApiMessage {
   implicit val formats: OFormat[ApiMessage] = Json.format
@@ -59,6 +66,30 @@ object MessageType {
       case "BalanceReached" => JsSuccess(BalanceReached)
       case _                => JsError("Invalid message type")
     }
-    override def writes(messageType: MessageType) = JsString(messageType.toString)
+    override def writes(messageType: MessageType): JsString = JsString(messageType.toString)
+  }
+}
+
+sealed trait MessageKey
+
+case object BalanceReached200 extends MessageKey
+case object BalanceReached500 extends MessageKey
+case object BalanceReached750 extends MessageKey
+case object BalanceReached1500 extends MessageKey
+case object BalanceReached2000 extends MessageKey
+case object BalanceReached2400 extends MessageKey
+
+object MessageKey {
+  implicit val messageTypeFormat: Format[MessageKey] = new Format[MessageKey] {
+    override def reads(json: JsValue): JsResult[MessageKey] = json.as[String] match {
+      case "BalanceReached200"  => JsSuccess(BalanceReached200)
+      case "BalanceReached500"  => JsSuccess(BalanceReached500)
+      case "BalanceReached750"  => JsSuccess(BalanceReached750)
+      case "BalanceReached1500" => JsSuccess(BalanceReached1500)
+      case "BalanceReached2000" => JsSuccess(BalanceReached2000)
+      case "BalanceReached2400" => JsSuccess(BalanceReached2400)
+      case _                    => JsError("Invalid message key")
+    }
+    override def writes(messageKey: MessageKey): JsString = JsString(messageKey.toString)
   }
 }
