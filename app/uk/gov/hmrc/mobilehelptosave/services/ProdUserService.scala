@@ -22,6 +22,7 @@ import org.joda.time.DateTime
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, UserServiceConfig}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
 import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -35,6 +36,7 @@ trait UserService[F[_]] {
 
 class ProdUserService(
   logger:                    LoggerLike,
+  config:                    UserServiceConfig,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
   helpToSaveEligibility:     HelpToSaveEligibility[Future],
   eligibilityStatusRepo:     EligibilityRepo[Future]
@@ -44,7 +46,8 @@ class ProdUserService(
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
     (for {
       isEnrolled <- EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
-      isEligible <- if (!isEnrolled) EitherT(checkEligibility(nino)) else EitherT(Future.successful(false.asRight[ErrorInfo]))
+      isEligible <- if (!isEnrolled && config.eligibilityCheckEnabled) EitherT(checkEligibility(nino))
+                   else EitherT(Future.successful(false.asRight[ErrorInfo]))
       userDetails = (isEnrolled, isEligible) match {
         case (true, _) => UserDetails(Enrolled)
         case (_, true) => UserDetails(NotEnrolledButEligible)

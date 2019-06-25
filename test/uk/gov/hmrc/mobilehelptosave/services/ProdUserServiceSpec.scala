@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -41,8 +41,9 @@ class ProdUserServiceSpec
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
+  private val generator  = new Generator(0)
+  private val nino       = generator.nextNino
+  private val testConfig = TestUserServiceConfig(eligibilityCheckEnabled = true)
 
   private class ProdUserServiceWithTestDefaults(
     helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
@@ -50,6 +51,7 @@ class ProdUserServiceSpec
     eligibilityStatusRepo:     EligibilityRepo[Future]
   ) extends ProdUserService(
         logger,
+        testConfig,
         helpToSaveEnrolmentStatus,
         helpToSaveEligibility,
         eligibilityStatusRepo
@@ -107,6 +109,19 @@ class ProdUserServiceSpec
 
       val user: UserDetails = await(service.userDetails(nino)).right.value
       user.state shouldBe UserState.NotEnrolledButEligible
+    }
+
+    "allow eligibilityCheckEnabled to be overridden in configuration" in {
+      val service = new ProdUserService(
+        logger,
+        testConfig.copy(eligibilityCheckEnabled                  = false),
+        fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(false)),
+        fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(eligible)),
+        fakeEligibilityRepo(None)
+      )
+
+      val user: UserDetails = await(service.userDetails(nino)).right.value
+      user.state shouldBe UserState.NotEnrolled
     }
 
     "return an error when the HelpToSaveConnector returns an error" in {

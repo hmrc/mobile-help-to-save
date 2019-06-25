@@ -33,7 +33,8 @@ case class MobileHelpToSaveConfig(
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
     with SandboxDataConfig
-    with StartupControllerConfig {
+    with StartupControllerConfig
+    with UserServiceConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
@@ -44,13 +45,14 @@ case class MobileHelpToSaveConfig(
     message   = configBase64String("helpToSave.shuttering.message")
   )
 
-  override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
+  override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
+  override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
+  override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
 
-  override val inAppPaymentsEnabled:       Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
-  override val helpToSaveInfoUrl:          String  = configString("helpToSave.infoUrl")
-  override val helpToSaveInfoUrlSso:       String  = configString("helpToSave.infoUrlSso")
-  override val helpToSaveAccessAccountUrl: String  = configString("helpToSave.accessAccountUrl")
-  override val helpToSaveAccountPayInUrl:  String  = configString("helpToSave.accountPayInUrl")
+  override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
+  override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
+  override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
+  override val helpToSaveAccountPayInUrl:  String = configString("helpToSave.accountPayInUrl")
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType:              String      = accessConfig.getString("type")
@@ -72,6 +74,10 @@ case class MobileHelpToSaveConfig(
 trait AccountServiceConfig {
   def inAppPaymentsEnabled: Boolean
   def savingsGoalsEnabled:  Boolean
+}
+
+trait UserServiceConfig {
+  def eligibilityCheckEnabled: Boolean
 }
 
 trait SandboxDataConfig {
