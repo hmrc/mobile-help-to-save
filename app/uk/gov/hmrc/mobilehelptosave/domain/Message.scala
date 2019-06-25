@@ -22,12 +22,12 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.domain.Nino
 
 case class Message(
-  messageId:   String = BSONObjectID.generate().stringify,
-  nino:        Nino,
-  messageType: MessageType,
-  messageKey:  MessageKey,
-  isSeen:      Boolean = false,
-  date:        LocalDateTime = LocalDateTime.now()) {
+  messageId:     String = BSONObjectID.generate().stringify,
+  nino:          Nino,
+  messageType:   MessageType,
+  messageKey:    MessageKey,
+  isSeen:        Boolean = false,
+  generatedDate: LocalDateTime = LocalDateTime.now()) {
 
   def toApiMessage: ApiMessage =
     ApiMessage(
@@ -37,12 +37,12 @@ case class Message(
         case BalanceReached200  => "Your balance has reached £200. That's great!"
         case BalanceReached500  => "Your balance has reached £500. That's great!"
         case BalanceReached750  => "Your balance has reached £750. That's great!"
-        case BalanceReached1500 => "Your balance has reached £1000. That's great!"
+        case BalanceReached1500 => "Your balance has reached £1500. That's great!"
         case BalanceReached2000 => "Your balance has reached £2000. That's great!"
         case BalanceReached2400 => "Your balance has reached £2400. That's great!"
       },
-      isSeen = isSeen,
-      date   = date
+      isSeen        = isSeen,
+      generatedDate = generatedDate
     )
 }
 
@@ -50,7 +50,7 @@ object Message {
   implicit val formats: OFormat[Message] = Json.format
 }
 
-case class ApiMessage(messageId: String, messageType: MessageType, message: String, isSeen: Boolean, date: LocalDateTime)
+case class ApiMessage(messageId: String, messageType: MessageType, message: String, isSeen: Boolean, generatedDate: LocalDateTime)
 
 object ApiMessage {
   implicit val formats: OFormat[ApiMessage] = Json.format
