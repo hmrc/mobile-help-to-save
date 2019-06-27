@@ -35,6 +35,8 @@ trait SavingsGoalEventRepo[F[_]] {
   def getGoal(nino:    Nino): F[Option[SavingsGoal]]
   def getEvents(nino:  Nino): F[List[SavingsGoalEvent]]
   def clearGoalEvents(): F[Boolean]
+
+  def getGoalSetEvents(): F[List[SavingsGoalSetEvent]]
 }
 
 class MongoSavingsGoalEventRepo(
@@ -66,4 +68,19 @@ class MongoSavingsGoalEventRepo(
       case Some(SavingsGoalSetEvent(_, amount, _)) => Some(SavingsGoal(amount))
     }
   }
+
+  override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = {
+    val query = find("type" -> "set")
+
+    val result: Future[List[SavingsGoalEvent]] = query
+
+    result.map(
+      _.map(event =>
+        event match {
+          case event: SavingsGoalSetEvent => event
+          case _ => throw new IllegalStateException("Event must be a set event")
+      })
+    )
+  }
+
 }

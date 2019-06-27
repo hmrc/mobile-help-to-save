@@ -69,6 +69,8 @@ class ServiceComponents(context: Context)
       testOnlyRoutes
     } else prodRoutes
 
+  val reportingService: ReportingService = wire[ReportingService]
+
   lazy val servicesConfig: ServicesConfig = wire[ServicesConfig]
 
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
@@ -85,8 +87,8 @@ class ServiceComponents(context: Context)
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
-  lazy val userService:    UserService[Future]    = wire[ProdUserService]
-  lazy val accountService: AccountService[Future] = wire[AccountServiceImpl[Future]]
+  lazy val userService:    UserService[Future]    = wire[HtsUserService]
+  lazy val accountService: AccountService[Future] = wire[HtsAccountService[Future]]
 
   lazy val mongo:           ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
   lazy val eventRepo:       SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]

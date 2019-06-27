@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.services.AccountService
+import uk.gov.hmrc.mobilehelptosave.services.{AccountService, ReportingService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -77,8 +77,7 @@ class HelpToSaveController(
 
   override def deleteSavingsGoal(nino: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(nino) { verifiedNino =>
-        accountService.deleteSavingsGoal(verifiedNino).map(handlingErrors(_ => NoContent))
+      verifyingMatchingNino(nino) { verifiedNino => accountService.deleteSavingsGoal(verifiedNino).map(handlingErrors(_ => NoContent))
       }
     }
 
