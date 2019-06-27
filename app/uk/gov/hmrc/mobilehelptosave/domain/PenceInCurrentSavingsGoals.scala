@@ -17,8 +17,8 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 import play.api.libs.json.{Json, OFormat}
 
-case class CurrentGoalPenceValues(count: Int, values: List[Double])
+case class PenceInCurrentSavingsGoals(count: Int, values: List[Double])
 
-case object CurrentGoalPenceValues {
-  implicit val format: OFormat[CurrentGoalPenceValues] = Json.format[CurrentGoalPenceValues]
+case object PenceInCurrentSavingsGoals {
+  implicit val format: OFormat[PenceInCurrentSavingsGoals] = Json.format[PenceInCurrentSavingsGoals]
 }

@@ -33,7 +33,7 @@ class ReportingService(
   savingsGoalEventRepo: SavingsGoalEventRepo[Future]
 )(implicit ec:          ExecutionContext) {
 
-  def getCurrentGoalsPenceValues(): Future[CurrentGoalPenceValues] =
+  def getPenceInCurrentSavingsGoals(): Future[PenceInCurrentSavingsGoals] =
     savingsGoalEventRepo
       .getGoalSetEvents()
       .map(
@@ -48,11 +48,11 @@ class ReportingService(
                     .max(localDateTimeOrdering))
                   .filter(!_.amount.isWhole())
                   .map(_.amount)))
-      .map(penceValues => CurrentGoalPenceValues(penceValues.size, penceValues.toList))
+      .map(p => PenceInCurrentSavingsGoals(p.size, p.toList))
 
   if (config.penceInCurrentSavingsGoalsEnabled) {
-    getCurrentGoalsPenceValues().map(currentGoalPenceValues =>
-      logger.info(s"Pence in current savings goals:\n${Json.prettyPrint(Json.toJson(currentGoalPenceValues))}"))
+    getPenceInCurrentSavingsGoals().map(penceInCurrentSavingsGoals =>
+      logger.info(s"Pence in current savings goals:\n${Json.prettyPrint(Json.toJson(penceInCurrentSavingsGoals))}"))
   }
 
 }
