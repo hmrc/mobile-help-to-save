@@ -37,16 +37,16 @@ class ReportingService(
     savingsGoalEventRepo
       .getGoalSetEvents()
       .map(
-        values =>
-          values
+        events =>
+          events
             .groupBy(_.nino)
             .flatMap(
               grouped =>
                 grouped._2
-                  .filter(_.date == grouped._2
-                    .map(_.date)
-                    .max(localDateTimeOrdering))
-                  .filter(!_.amount.isWhole())
+                  .filter(event =>
+                    event.date == grouped._2
+                      .map(_.date)
+                      .max(localDateTimeOrdering) && !event.amount.isWhole())
                   .map(_.amount)))
       .map(p => PenceInCurrentSavingsGoals(p.size, p.toList))
 
