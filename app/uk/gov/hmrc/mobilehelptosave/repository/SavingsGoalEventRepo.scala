@@ -71,11 +71,10 @@ class MongoSavingsGoalEventRepo(
 
   override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] =
     find("type" -> "set").map(
-      _.map(event =>
-        event match {
-          case event: SavingsGoalSetEvent => event
-          case _ => throw new IllegalStateException("Event must be a set event")
-      })
+      _.map {
+        case event: SavingsGoalSetEvent => event
+        case _ => throw new IllegalStateException("Event must be a set event")
+      }
     )
-
+  
 }
