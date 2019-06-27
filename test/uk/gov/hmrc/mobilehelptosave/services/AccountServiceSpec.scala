@@ -212,6 +212,9 @@ class AccountServiceSpec
             }
           case Left(t) => F.raiseError(t)
         }
+
+      // This should never get called as part of the account service
+      override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
