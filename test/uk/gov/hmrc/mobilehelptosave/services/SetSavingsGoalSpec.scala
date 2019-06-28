@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
 class SetSavingsGoalSpec
@@ -52,7 +52,7 @@ class SetSavingsGoalSpec
       val fakeGoalsRepo       = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, fakeGoalsRepo)
+        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, fakeGoalsRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet shouldBe Right(())
     }
@@ -63,7 +63,7 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(0.99)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
     }
@@ -74,7 +74,7 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
 
       service
         .setSavingsGoal(nino, SavingsGoal(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01))
@@ -89,7 +89,7 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
     }
@@ -100,7 +100,7 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, setGoalResponse = Left(new Exception("non fatal")))
 
       val service =
-        new AccountServiceImpl[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.General
     }
@@ -162,8 +162,9 @@ class SetSavingsGoalSpec
 
     override def clearGoalEvents(): TestF[Boolean] = F.pure(true)
 
-    // This should never get called as part of setting a savings goal
+    // These should never get called as part of setting a savings goal
     override def getGoal(nino: Nino): TestF[Option[SavingsGoal]] = ???
+    override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
   }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {

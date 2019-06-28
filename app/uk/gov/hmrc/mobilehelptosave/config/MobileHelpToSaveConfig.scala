@@ -34,7 +34,8 @@ case class MobileHelpToSaveConfig(
     with HelpToSaveControllerConfig
     with SandboxDataConfig
     with StartupControllerConfig
-    with UserServiceConfig {
+    with UserServiceConfig
+    with ReportingServiceConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
@@ -48,6 +49,8 @@ case class MobileHelpToSaveConfig(
   override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
+
+  override def penceInCurrentSavingsGoalsEnabled: Boolean = configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
 
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
@@ -78,6 +81,10 @@ trait AccountServiceConfig {
 
 trait UserServiceConfig {
   def eligibilityCheckEnabled: Boolean
+}
+
+trait ReportingServiceConfig {
+  def penceInCurrentSavingsGoalsEnabled: Boolean
 }
 
 trait SandboxDataConfig {

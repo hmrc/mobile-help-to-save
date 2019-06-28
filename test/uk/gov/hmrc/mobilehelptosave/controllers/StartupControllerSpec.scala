@@ -25,7 +25,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.services.ProdUserService
+import uk.gov.hmrc.mobilehelptosave.services.HtsUserService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,7 +37,7 @@ class StartupControllerSpec extends WordSpec with Matchers with MockFactory with
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val mockUserService = mock[ProdUserService]
+  private val mockUserService = mock[HtsUserService]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   private val falseShuttering = Shuttering(shuttered = false, "", "")

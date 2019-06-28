@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.services
+package uk.gov.hmrc.mobilehelptosave.domain
+import play.api.libs.json.{Json, OFormat}
 
-import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
+case class PenceInCurrentSavingsGoals(count: Int, values: List[Double])
 
-case class TestAccountServiceConfig(inAppPaymentsEnabled: Boolean, savingsGoalsEnabled: Boolean)
-    extends AccountServiceConfig
+case object PenceInCurrentSavingsGoals {
+  implicit val format: OFormat[PenceInCurrentSavingsGoals] = Json.format[PenceInCurrentSavingsGoals]
+}
