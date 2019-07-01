@@ -95,7 +95,7 @@ class ReportingServiceSpec
         new ReportingService(logger, testConfig, fakeGoalsRepo)
 
       val expectedResult = penceInCurrentSavingsGoals
-      val result         = await(service.getPenceInCurrentSavingsGoals())
+      val result      a dasdas dasd   = await(service.getPenceInCurrentSavingsGoals())
 
       result shouldBe expectedResult
     }
