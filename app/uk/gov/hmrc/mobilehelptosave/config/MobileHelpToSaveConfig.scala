@@ -50,7 +50,8 @@ case class MobileHelpToSaveConfig(
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
 
-  override def penceInCurrentSavingsGoalsEnabled: Boolean = configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
+  override def penceInCurrentSavingsGoalsEnabled:    Boolean = configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
+  override def currentSavingsGoalRangeCountsEnabled: Boolean = configBoolean("helpToSave.reporting.currentSavingsGoalRangeCountsEnabled")
 
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
@@ -84,7 +85,8 @@ trait UserServiceConfig {
 }
 
 trait ReportingServiceConfig {
-  def penceInCurrentSavingsGoalsEnabled: Boolean
+  def penceInCurrentSavingsGoalsEnabled:    Boolean
+  def currentSavingsGoalRangeCountsEnabled: Boolean
 }
 
 trait SandboxDataConfig {

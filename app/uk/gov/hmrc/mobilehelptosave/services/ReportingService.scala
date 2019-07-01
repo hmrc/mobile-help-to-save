@@ -18,11 +18,10 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import javax.inject.Singleton
 import play.api.LoggerLike
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.mobilehelptosave.config.ReportingServiceConfig
 import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _}
-import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalSetEvent}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,7 +32,7 @@ class ReportingService(
   savingsGoalEventRepo: SavingsGoalEventRepo[Future]
 )(implicit ec:          ExecutionContext) {
 
-  def getPenceInCurrentSavingsGoals(): Future[PenceInCurrentSavingsGoals] =
+  def getCurrentSavingsGoalsEvents(): Future[List[SavingsGoalSetEvent]] =
     savingsGoalEventRepo
       .getGoalSetEvents()
       .map(
@@ -46,9 +45,35 @@ class ReportingService(
                   .filter(event =>
                     event.date == grouped._2
                       .map(_.date)
-                      .max(localDateTimeOrdering) && !event.amount.isWhole())
-                  .map(_.amount)))
-      .map(p => PenceInCurrentSavingsGoals(p.size, p.toList))
+                      .max(localDateTimeOrdering)))
+            .toList)
+
+  def getPenceInCurrentSavingsGoals(): Future[JsObject] =
+    getCurrentSavingsGoalsEvents()
+      .map(_.filter(!_.amount.isWhole()).map(_.amount))
+      .map(
+        p =>
+          Json.obj(
+            "count"  -> p.size,
+            "values" -> p
+        ))
+
+  def getCurrentSavingsGoalRangeCounts(): Future[JsObject] =
+    getCurrentSavingsGoalsEvents().map(
+      events =>
+        Json.obj(
+          "1.00 - 10.00"  -> events.count(event => event.amount > 1 && event.amount <= 10),
+          "10.01 - 20.00" -> events.count(event => event.amount > 10 && event.amount <= 20),
+          "20.01 - 30.00" -> events.count(event => event.amount > 20 && event.amount <= 30),
+          "30.01 - 40.00" -> events.count(event => event.amount > 30 && event.amount <= 40),
+          "40.01 - 50.00" -> events.count(event => event.amount > 40 && event.amount <= 50)
+      )
+    )
+
+  if (config.currentSavingsGoalRangeCountsEnabled) {
+    getCurrentSavingsGoalRangeCounts().map(currentGoalRangeCounts =>
+      logger.info(s"Current savings goal range counts:\n${Json.prettyPrint(currentGoalRangeCounts)}"))
+  }
 
   if (config.penceInCurrentSavingsGoalsEnabled) {
     getPenceInCurrentSavingsGoals().map(penceInCurrentSavingsGoals =>
