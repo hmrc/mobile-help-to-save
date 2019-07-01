@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.domain.{PenceInCurrentSavingsGoals, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -40,7 +40,7 @@ class ReportingServiceSpec
     with FutureAwaits
     with DefaultAwaitTimeout {
 
-  private val testConfig = TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = true)
+  private val testConfig = TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = true, currentSavingsGoalRangeCountsEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -53,13 +53,42 @@ class ReportingServiceSpec
     SavingsGoalSetEvent(Nino("AA000000D"), 1.55, LocalDateTime.parse("2019-05-06T10:00:00"))
   )
 
-  val penceInCurrentSavingsGoals = PenceInCurrentSavingsGoals(
-    count  = 3,
-    values = List(20.52, 49.5, 1.55)
-  )
+  val penceInCurrentSavingsGoals =
+    Json.obj(
+      "count"  -> 3,
+      "values" -> List(20.52, 49.5, 1.55)
+    )
+
+  val currentSavingsGoalRangeCounts =
+    Json.obj(
+      "1.00 - 10.00"  -> 1,
+      "10.01 - 20.00" -> 0,
+      "20.01 - 30.00" -> 1,
+      "30.01 - 40.00" -> 0,
+      "40.01 - 50.00" -> 1
+    )
+
+  "getCurrentSavingsGoalsEvents" should {
+    "get all current savings goal events" in {
+      val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
+
+      val service =
+        new ReportingService(logger, testConfig, fakeGoalsRepo)
+
+      val expectedResult = List(
+        SavingsGoalSetEvent(Nino("AA000000C"), 20.52, LocalDateTime.parse("2019-05-25T20:00:30")),
+        SavingsGoalSetEvent(Nino("AA000000B"), 49.5, LocalDateTime.parse("2019-01-16T15:20:35")),
+        SavingsGoalSetEvent(Nino("AA000000D"), 1.55, LocalDateTime.parse("2019-05-06T10:00:00"))
+      )
+
+      val result = await(service.getCurrentSavingsGoalsEvents())
+
+      result shouldBe expectedResult
+    }
+  }
 
   "getPenceInCurrentSavingsGoals" should {
-    "get only current savings goals with pence values" in {
+    "get current savings goals with pence values" in {
       val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
 
       val service =
@@ -67,6 +96,20 @@ class ReportingServiceSpec
 
       val expectedResult = penceInCurrentSavingsGoals
       val result         = await(service.getPenceInCurrentSavingsGoals())
+
+      result shouldBe expectedResult
+    }
+  }
+
+  "getCurrentSavingsGoalRangeCounts" should {
+    "get current savings goals counts per each range" in {
+      val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
+
+      val service =
+        new ReportingService(logger, testConfig, fakeGoalsRepo)
+
+      val expectedResult = currentSavingsGoalRangeCounts
+      val result         = await(service.getCurrentSavingsGoalRangeCounts())
 
       result shouldBe expectedResult
     }
@@ -82,11 +125,23 @@ class ReportingServiceSpec
       (slf4jLoggerStub.info(_: String)) verify s"Pence in current savings goals:\n${Json.prettyPrint(Json.toJson(penceInCurrentSavingsGoals))}"
     }
 
-    "not execute getPenceInCurrentSavingsGoal and log the output as JSON if penceInCurrentSavingsGoalsEnabled = false" in {
+    "execute getCurrentSavingsGoalRangeCounts and log the output as JSON if currentSavingsGoalRangeCountsEnabled = true" in {
       val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
 
       val service =
-        new ReportingService(logger, TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = false), fakeGoalsRepo)
+        new ReportingService(logger, testConfig, fakeGoalsRepo)
+
+      (slf4jLoggerStub.info(_: String)) verify s"Current savings goal range counts:\n${Json.prettyPrint(Json.toJson(currentSavingsGoalRangeCounts))}"
+    }
+
+    "not execute any reporting functions or log the output as JSON if all reporting configuration is set to false" in {
+      val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
+
+      val service =
+        new ReportingService(
+          logger,
+          TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = false, currentSavingsGoalRangeCountsEnabled = false),
+          fakeGoalsRepo)
 
       (slf4jLoggerStub.info(_: String)) verify * never ()
     }

@@ -21,4 +21,5 @@ case class TestAccountServiceConfig(inAppPaymentsEnabled: Boolean, savingsGoalsE
 
 case class TestUserServiceConfig(eligibilityCheckEnabled: Boolean) extends UserServiceConfig
 
-case class TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled: Boolean) extends ReportingServiceConfig
+case class TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled: Boolean, currentSavingsGoalRangeCountsEnabled: Boolean)
+    extends ReportingServiceConfig
