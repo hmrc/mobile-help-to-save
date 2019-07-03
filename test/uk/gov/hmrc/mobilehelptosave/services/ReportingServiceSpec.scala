@@ -115,38 +115,6 @@ class ReportingServiceSpec
     }
   }
 
-  "ReportingService" should {
-    "execute getPenceInCurrentSavingsGoal and log the output as JSON if penceInCurrentSavingsGoalsEnabled = true" in {
-      val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
-
-      val service =
-        new ReportingService(logger, testConfig, fakeGoalsRepo)
-
-      (slf4jLoggerStub.info(_: String)) verify s"Pence in current savings goals:\n${Json.prettyPrint(Json.toJson(penceInCurrentSavingsGoals))}"
-    }
-
-    "execute getCurrentSavingsGoalRangeCounts and log the output as JSON if currentSavingsGoalRangeCountsEnabled = true" in {
-      val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
-
-      val service =
-        new ReportingService(logger, testConfig, fakeGoalsRepo)
-
-      (slf4jLoggerStub.info(_: String)) verify s"Current savings goal range counts:\n${Json.prettyPrint(Json.toJson(currentSavingsGoalRangeCounts))}"
-    }
-
-    "not execute any reporting functions or log the output as JSON if all reporting configuration is set to false" in {
-      val fakeGoalsRepo = fakeSavingsGoalEventsRepo(savingsGoalSetEvents)
-
-      val service =
-        new ReportingService(
-          logger,
-          TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = false, currentSavingsGoalRangeCountsEnabled = false),
-          fakeGoalsRepo)
-
-      (slf4jLoggerStub.info(_: String)) verify * never ()
-    }
-  }
-
   private def fakeSavingsGoalEventsRepo(goalSetEvents: List[SavingsGoalSetEvent]): SavingsGoalEventRepo[Future] = new SavingsGoalEventRepo[Future] {
     override def setGoal(nino:    Nino, amount: Double): Future[Unit] = ???
     override def getEvents(nino:  Nino): Future[List[SavingsGoalEvent]] = ???
