@@ -10,7 +10,7 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
   )
 
-  private val reactiveMongoVersion = "7.20.0-play-26"
+  private val reactiveMongoVersion = "7.11.0-play-26"
 
   private val enumeratumVersion = "1.5.15"
 
