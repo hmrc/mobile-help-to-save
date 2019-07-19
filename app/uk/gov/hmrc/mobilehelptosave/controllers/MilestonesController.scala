@@ -20,21 +20,21 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.mobilehelptosave.services.MessagesService
+import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MessagesActions {
-  def getMessages(ninoString: String): Action[AnyContent]
+trait MilestonesActions {
+  def getMilestones(ninoString: String): Action[AnyContent]
 
-  def markAsSeen(ninoString: String, messageId: String): Action[AnyContent]
+  def markAsSeen(ninoString: String, milestoneId: String): Action[AnyContent]
 }
 
-class MessagesController(
+class MilestonesController(
   val logger:               LoggerLike,
-  messagesService:          MessagesService[Future],
+  milestonesService:        MilestonesService[Future],
   authorisedWithIds:        AuthorisedWithIds,
   config:                   HelpToSaveControllerConfig,
   val controllerComponents: ControllerComponents
@@ -42,18 +42,18 @@ class MessagesController(
   implicit ec: ExecutionContext
 ) extends BackendBaseController
     with ControllerChecks
-    with MessagesActions {
+    with MilestonesActions {
 
   override def shuttering: Shuttering = config.shuttering
 
-  override def getMessages(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    verifyingMatchingNino(ninoString) { nino => messagesService.getMessages(nino).map(messages => Ok(Json.toJson(messages.map(_.toApiMessage))))
+  override def getMilestones(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+    verifyingMatchingNino(ninoString) { nino => milestonesService.getMilestones(nino).map(milestones => Ok(Json.toJson(Milestones(milestones))))
     }
   }
 
   override def markAsSeen(ninoString: String, messageId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino => messagesService.markAsSeen(messageId).map(_ => NoContent)
+      verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(messageId).map(_ => NoContent)
       }
   }
 

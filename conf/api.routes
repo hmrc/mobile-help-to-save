@@ -1,11 +1,11 @@
 # microservice specific routes
 
-GET           /savings-account/:nino/transactions                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino:String)
+GET           /savings-account/:nino/transactions                        uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino:String)
 
-GET           /savings-account/:nino                                 uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino:String)
+GET           /savings-account/:nino                                     uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino:String)
 
-PUT           /savings-account/:nino/goals/current-goal              uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino:String)
-DELETE        /savings-account/:nino/goals/current-goal              uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino:String)
+PUT           /savings-account/:nino/goals/current-goal                  uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino:String)
+DELETE        /savings-account/:nino/goals/current-goal                  uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino:String)
 
-GET           /savings-account/:nino/messages                        uk.gov.hmrc.mobilehelptosave.controllers.MessagesController.getMessages(nino:String)
-PUT           /savings-account/:nino/messages/:messageId/seen        uk.gov.hmrc.mobilehelptosave.controllers.MessagesController.markAsSeen(nino:String, messageId:String)
+GET           /savings-account/:nino/milestones                          uk.gov.hmrc.mobilehelptosave.controllers.MilestonesController.getMilestones(nino:String)
+PUT           /savings-account/:nino/milestones/:milestoneId/seen        uk.gov.hmrc.mobilehelptosave.controllers.MilestonesController.markAsSeen(nino:String, milestoneId:String)

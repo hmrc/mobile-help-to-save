@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "description": "Milestones that have been hit by a user",
+  "properties": {
+    "milestones": {
+      "type": "array",
+      "description": "The list of milestones",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "milestoneId": {
+              "description": "A unique ID for the milestone",
+              "type": "string"
+            },
+            "milestoneType": {
+              "description": "The type of milestone that has been hit by the user, there should only be one milestone per milestoneType at any one time",
+              "type": "string"
+            },
+            "milestoneMessage": {
+              "description": "The message to be displayed to the user related to the type of milestone",
+              "type": "string"
+            },
+            "generatedDate": {
+              "description": "The date and time that the milestone was identified and generated on MDTP, not necessarily when the milestone was actually hit",
+              "type": "string"
+            }
+          },
+          "required": [
+            "milestoneId",
+            "milestoneType",
+            "milestoneMessage",
+            "generatedDate"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "milestones"
+  ]
+}

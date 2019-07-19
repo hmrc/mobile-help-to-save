@@ -85,19 +85,19 @@ class ServiceComponents(context: Context)
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
-  lazy val userService:     UserService[Future]     = wire[ProdUserService]
-  lazy val accountService:  AccountService[Future]  = wire[AccountServiceImpl[Future]]
-  lazy val messagesService: MessagesService[Future] = wire[MessagesServiceImpl[Future]]
+  lazy val userService:       UserService[Future]       = wire[ProdUserService]
+  lazy val accountService:    AccountService[Future]    = wire[AccountServiceImpl[Future]]
+  lazy val milestonesService: MilestonesService[Future] = wire[MilestonesServiceImpl[Future]]
 
   lazy val mongo:               ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
   lazy val eventRepo:           SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
   lazy val eligibilityRepo:     EligibilityRepo[Future]      = wire[MongoEligibilityRepo]
   lazy val previousBalanceRepo: PreviousBalanceRepo[Future]  = wire[MongoPreviousBalanceRepo]
-  lazy val messagesRepo:        MessagesRepo[Future]         = wire[MongoMessagesRepo]
+  lazy val messagesRepo:        MilestonesRepo[Future]       = wire[MongoMilestonesRepo]
 
   lazy val startupController:       StartupController       = wire[StartupController]
   lazy val helpToSaveController:    HelpToSaveController    = wire[HelpToSaveController]
-  lazy val messagesController:      MessagesController      = wire[MessagesController]
+  lazy val messagesController:      MilestonesController    = wire[MilestonesController]
   lazy val documentationController: DocumentationController = wire[DocumentationController]
   lazy val metricsController:       MetricsController       = wire[MetricsController]
   lazy val sandboxController:       SandboxController       = wire[SandboxController]

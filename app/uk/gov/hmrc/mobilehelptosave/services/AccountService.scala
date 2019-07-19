@@ -45,9 +45,6 @@ trait AccountService[F[_]] {
   def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]]
 
   def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]]
-
-  def setPreviousBalance(nino: Nino, previousBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Result[Unit]]
-  def getPreviousBalance(nino: Nino)(implicit hc:     HeaderCarrier): F[Result[Option[PreviousBalance]]]
 }
 
 class AccountServiceImpl[F[_]](
@@ -56,8 +53,7 @@ class AccountServiceImpl[F[_]](
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],
   helpToSaveGetAccount:      HelpToSaveGetAccount[F],
   savingsGoalEventRepo:      SavingsGoalEventRepo[F],
-  previousBalanceRepo:       PreviousBalanceRepo[F],
-  messagesService:           MessagesService[F]
+  milestonesService:         MilestonesService[F]
 )(implicit F:                MonadError[F, Throwable])
     extends AccountService[F] {
 
@@ -86,23 +82,14 @@ class AccountServiceImpl[F[_]](
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
       case true =>
         EitherT(fetchAccountWithGoal(nino)).flatMap {
-          case Some(account) => EitherT.liftF[F, ErrorInfo, Option[Account]](setBalanceMessage(nino, account.balance).map(_ => Some(account)))
-          case _             => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
+          case Some(account) =>
+            EitherT.liftF[F, ErrorInfo, Option[Account]](milestonesService.balanceMilestoneCheck(nino, account.balance).map(_ => Some(account)))
+          case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
         }
 
       case false =>
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
-
-  override def setPreviousBalance(nino: Nino, previousBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error writing to the previous balance repo", previousBalanceRepo.setPreviousBalance(nino, previousBalance))
-    }
-
-  override def getPreviousBalance(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[PreviousBalance]]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error reading from previous balance repo", previousBalanceRepo.getPreviousBalance(nino))
-    }
 
   protected def withValidSavingsAmount[T](goal: Double)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
     if (goal < 1.0 || BigDecimal(goal).scale > 2)
@@ -166,33 +153,4 @@ class AccountServiceImpl[F[_]](
         None.asRight
     }
 
-  protected def setBalanceMessage(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Unit] =
-    previousBalanceRepo.getPreviousBalance(nino) map {
-      case Some(pb) =>
-        previousBalanceRepo
-          .setPreviousBalance(nino, currentBalance)
-          .map(_ =>
-            generateBalanceMessage(nino, pb.previousBalance, currentBalance) match {
-              case Some(message) => messagesService.setMessage(message).map(_ => ())
-              case _             => ()
-          })
-      case _ => previousBalanceRepo.setPreviousBalance(nino, currentBalance).map(_ => ())
-    }
-
-  protected def generateBalanceMessage(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Message] =
-    if (previousBalance < 200 && currentBalance >= 200 && currentBalance < 500) {
-      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached200))
-    } else if (previousBalance < 500 && currentBalance >= 500 && currentBalance < 750) {
-      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached500))
-    } else if (previousBalance < 750 && currentBalance >= 750 && currentBalance < 1500) {
-      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached750))
-    } else if (previousBalance < 1500 && currentBalance >= 1500 && currentBalance < 2000) {
-      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached1500))
-    } else if (previousBalance < 2000 && currentBalance >= 2000 && currentBalance < 2400) {
-      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached2000))
-    } else if (previousBalance < 2400 && currentBalance >= 2400) {
-      Some(Message(nino = nino, messageType = BalanceReached, messageKey = BalanceReached2400))
-    } else {
-      None
-    }
 }
