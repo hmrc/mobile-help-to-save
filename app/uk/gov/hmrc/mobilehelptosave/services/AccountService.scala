@@ -47,7 +47,7 @@ trait AccountService[F[_]] {
   def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]]
 }
 
-class AccountServiceImpl[F[_]](
+class HtsAccountService[F[_]](
   logger:                    LoggerLike,
   config:                    AccountServiceConfig,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],

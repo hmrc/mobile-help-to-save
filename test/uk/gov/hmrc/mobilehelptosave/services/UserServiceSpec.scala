@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ProdUserServiceSpec
+class UserServiceSpec
     extends WordSpec
     with Matchers
     with FutureAwaits
@@ -41,15 +41,17 @@ class ProdUserServiceSpec
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
+  private val generator  = new Generator(0)
+  private val nino       = generator.nextNino
+  private val testConfig = TestUserServiceConfig(eligibilityCheckEnabled = true)
 
-  private class ProdUserServiceWithTestDefaults(
+  private class UserServiceWithTestDefaults(
     helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
     helpToSaveEligibility:     HelpToSaveEligibility[Future],
     eligibilityStatusRepo:     EligibilityRepo[Future]
-  ) extends ProdUserService(
+  ) extends HtsUserService(
         logger,
+        testConfig,
         helpToSaveEnrolmentStatus,
         helpToSaveEligibility,
         eligibilityStatusRepo
@@ -77,7 +79,7 @@ class ProdUserServiceSpec
     )
 
     "return state=Enrolled when the current user is enrolled in Help to Save" in {
-      val service = new ProdUserServiceWithTestDefaults(
+      val service = new UserServiceWithTestDefaults(
         fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(true)),
         fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(eligible)),
         fakeEligibilityRepo(None)
@@ -88,7 +90,7 @@ class ProdUserServiceSpec
     }
 
     "return state=NotEnrolled when the current user is not enrolled in Help to Save and not eligible" in {
-      val service = new ProdUserServiceWithTestDefaults(
+      val service = new UserServiceWithTestDefaults(
         fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(false)),
         fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(notEligible)),
         fakeEligibilityRepo(None)
@@ -99,7 +101,7 @@ class ProdUserServiceSpec
     }
 
     "return state=NotEnrolledButEligible when the current user is not enrolled in Help to Save but is eligible" in {
-      val service = new ProdUserServiceWithTestDefaults(
+      val service = new UserServiceWithTestDefaults(
         fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(false)),
         fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(eligible)),
         fakeEligibilityRepo(None)
@@ -109,9 +111,22 @@ class ProdUserServiceSpec
       user.state shouldBe UserState.NotEnrolledButEligible
     }
 
+    "allow eligibilityCheckEnabled to be overridden in configuration" in {
+      val service = new HtsUserService(
+        logger,
+        testConfig.copy(eligibilityCheckEnabled                  = false),
+        fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Right(false)),
+        fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Right(eligible)),
+        fakeEligibilityRepo(None)
+      )
+
+      val user: UserDetails = await(service.userDetails(nino)).right.value
+      user.state shouldBe UserState.NotEnrolled
+    }
+
     "return an error when the HelpToSaveConnector returns an error" in {
       val error = ErrorInfo.General
-      val service = new ProdUserServiceWithTestDefaults(
+      val service = new UserServiceWithTestDefaults(
         fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave = Left(error)),
         fakeHelpToSaveEligibility(userIsEligibleForHelpToSave    = Left(error)),
         fakeEligibilityRepo(None)

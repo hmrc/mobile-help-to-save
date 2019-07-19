@@ -34,7 +34,7 @@ trait MilestonesService[F[_]] {
   def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Unit]
 }
 
-class MilestonesServiceImpl[F[_]](
+class HtsMilestonesService[F[_]](
   logger:              LoggerLike,
   milestonesRepo:      MilestonesRepo[F],
   previousBalanceRepo: PreviousBalanceRepo[F]
