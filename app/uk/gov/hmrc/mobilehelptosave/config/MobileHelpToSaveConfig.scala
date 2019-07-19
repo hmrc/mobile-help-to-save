@@ -54,6 +54,8 @@ case class MobileHelpToSaveConfig(
   override def penceInCurrentSavingsGoalsEnabled:    Boolean = configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
   override def currentSavingsGoalRangeCountsEnabled: Boolean = configBoolean("helpToSave.reporting.currentSavingsGoalRangeCountsEnabled")
 
+  override def startedSavingMilestoneEnabled: Boolean = configBoolean("helpToSave.milestones.startedSavingMilestoneEnabled")
+
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
@@ -116,5 +118,6 @@ trait HelpToSaveControllerConfig {
 }
 
 trait MilestonesControllerConfig {
-  def shuttering: Shuttering
+  def shuttering:                    Shuttering
+  def startedSavingMilestoneEnabled: Boolean
 }

@@ -20,7 +20,7 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering, StartedSaving}
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
@@ -47,7 +47,14 @@ class MilestonesController(
   override def shuttering: Shuttering = config.shuttering
 
   override def getMilestones(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    verifyingMatchingNino(ninoString) { nino => milestonesService.getMilestones(nino).map(milestones => Ok(Json.toJson(Milestones(milestones))))
+    verifyingMatchingNino(ninoString) { nino =>
+      milestonesService
+        .getMilestones(nino)
+        .map(milestones =>
+          config.startedSavingMilestoneEnabled match {
+            case true => Ok(Json.toJson(Milestones(milestones)))
+            case _    => Ok(Json.toJson(Milestones(milestones.filter(_.milestoneType != StartedSaving))))
+        })
     }
   }
 
