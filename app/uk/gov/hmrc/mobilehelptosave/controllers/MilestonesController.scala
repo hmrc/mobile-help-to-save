@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
+import uk.gov.hmrc.mobilehelptosave.config.MilestonesControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
@@ -36,7 +36,7 @@ class MilestonesController(
   val logger:               LoggerLike,
   milestonesService:        MilestonesService[Future],
   authorisedWithIds:        AuthorisedWithIds,
-  config:                   HelpToSaveControllerConfig,
+  config:                   MilestonesControllerConfig,
   val controllerComponents: ControllerComponents
 )(
   implicit ec: ExecutionContext
@@ -51,9 +51,9 @@ class MilestonesController(
     }
   }
 
-  override def markAsSeen(ninoString: String, messageId: String): Action[AnyContent] = authorisedWithIds.async {
+  override def markAsSeen(ninoString: String, milestoneId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(messageId).map(_ => NoContent)
+      verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(milestoneId).map(_ => NoContent)
       }
   }
 

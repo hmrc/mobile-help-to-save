@@ -93,11 +93,11 @@ class ServiceComponents(context: Context)
   lazy val eventRepo:           SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
   lazy val eligibilityRepo:     EligibilityRepo[Future]      = wire[MongoEligibilityRepo]
   lazy val previousBalanceRepo: PreviousBalanceRepo[Future]  = wire[MongoPreviousBalanceRepo]
-  lazy val messagesRepo:        MilestonesRepo[Future]       = wire[MongoMilestonesRepo]
+  lazy val milestonesRepo:      MilestonesRepo[Future]       = wire[MongoMilestonesRepo]
 
   lazy val startupController:       StartupController       = wire[StartupController]
   lazy val helpToSaveController:    HelpToSaveController    = wire[HelpToSaveController]
-  lazy val messagesController:      MilestonesController    = wire[MilestonesController]
+  lazy val milestonesController:    MilestonesController    = wire[MilestonesController]
   lazy val documentationController: DocumentationController = wire[DocumentationController]
   lazy val metricsController:       MetricsController       = wire[MetricsController]
   lazy val sandboxController:       SandboxController       = wire[SandboxController]

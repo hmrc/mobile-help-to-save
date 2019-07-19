@@ -99,7 +99,7 @@ trait HelpToSaveControllerConfig {
   def shuttering: Shuttering
 }
 
-trait MessagesControllerConfig {
+trait MilestonesControllerConfig {
   def shuttering: Shuttering
 }
 
