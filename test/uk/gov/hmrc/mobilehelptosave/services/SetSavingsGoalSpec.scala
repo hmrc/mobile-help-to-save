@@ -24,7 +24,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Milestone, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
@@ -52,7 +52,13 @@ class SetSavingsGoalSpec
       val fakeGoalsRepo       = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, fakeGoalsRepo)
+        new HtsAccountService[TestF](
+          logger,
+          testConfig.copy(inAppPaymentsEnabled = true),
+          fakeEnrolmentStatus,
+          fakeGetAccount,
+          fakeGoalsRepo,
+          fakeMilestoneService)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet shouldBe Right(())
     }
@@ -63,7 +69,13 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](
+          logger,
+          testConfig.copy(inAppPaymentsEnabled = true),
+          fakeEnrolmentStatus,
+          fakeGetAccount,
+          savingsGoalEventRepo,
+          fakeMilestoneService)
 
       service.setSavingsGoal(nino, SavingsGoal(0.99)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
     }
@@ -74,7 +86,13 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](
+          logger,
+          testConfig.copy(inAppPaymentsEnabled = true),
+          fakeEnrolmentStatus,
+          fakeGetAccount,
+          savingsGoalEventRepo,
+          fakeMilestoneService)
 
       service
         .setSavingsGoal(nino, SavingsGoal(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01))
@@ -89,7 +107,13 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
-        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](
+          logger,
+          testConfig.copy(inAppPaymentsEnabled = true),
+          fakeEnrolmentStatus,
+          fakeGetAccount,
+          savingsGoalEventRepo,
+          fakeMilestoneService)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
     }
@@ -100,11 +124,26 @@ class SetSavingsGoalSpec
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, setGoalResponse = Left(new Exception("non fatal")))
 
       val service =
-        new HtsAccountService[TestF](logger, testConfig.copy(inAppPaymentsEnabled = true), fakeEnrolmentStatus, fakeGetAccount, savingsGoalEventRepo)
+        new HtsAccountService[TestF](
+          logger,
+          testConfig.copy(inAppPaymentsEnabled = true),
+          fakeEnrolmentStatus,
+          fakeGetAccount,
+          savingsGoalEventRepo,
+          fakeMilestoneService)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.General
     }
   }
+
+  private def fakeMilestoneService: MilestonesService[TestF] =
+    new MilestonesService[TestF] {
+      override def setMilestone(milestone:     Milestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
+      override def getMilestones(nino:         Nino)(implicit hc:      HeaderCarrier): TestF[List[Milestone]] = ???
+      override def markAsSeen(milestoneId:     String)(implicit hc:    HeaderCarrier): TestF[Unit] = ???
+      override def balanceMilestoneCheck(nino: Nino, currentBalance:   BigDecimal)(implicit hc: HeaderCarrier): TestF[Unit] =
+        ???
+    }
 
   private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =
     new HelpToSaveEnrolmentStatus[TestF] {
