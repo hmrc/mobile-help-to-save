@@ -32,6 +32,7 @@ case class MobileHelpToSaveConfig(
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
+    with MilestonesControllerConfig
     with SandboxDataConfig
     with StartupControllerConfig {
 
@@ -102,4 +103,3 @@ trait HelpToSaveControllerConfig {
 trait MilestonesControllerConfig {
   def shuttering: Shuttering
 }
-
