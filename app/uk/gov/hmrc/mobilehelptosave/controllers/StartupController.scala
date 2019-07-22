@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 class StartupController(
-  userService:              UserService[Future],
+  userService:              UserService,
   authorisedWithIds:        AuthorisedWithIds,
   config:                   StartupControllerConfig,
   val controllerComponents: ControllerComponents

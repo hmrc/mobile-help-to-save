@@ -36,7 +36,8 @@ case class MobileHelpToSaveConfig(
     with SandboxDataConfig
     with StartupControllerConfig
     with UserServiceConfig
-    with ReportingServiceConfig {
+    with ReportingServiceConfig
+    with MilestonesServiceConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
@@ -92,6 +93,10 @@ trait ReportingServiceConfig {
   def currentSavingsGoalRangeCountsEnabled: Boolean
 }
 
+trait MilestonesServiceConfig {
+  def startedSavingMilestoneEnabled: Boolean
+}
+
 trait SandboxDataConfig {
   def inAppPaymentsEnabled: Boolean
 }
@@ -118,6 +123,5 @@ trait HelpToSaveControllerConfig {
 }
 
 trait MilestonesControllerConfig {
-  def shuttering:                    Shuttering
-  def startedSavingMilestoneEnabled: Boolean
+  def shuttering: Shuttering
 }

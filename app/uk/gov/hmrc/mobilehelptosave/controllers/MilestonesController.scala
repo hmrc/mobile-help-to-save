@@ -20,7 +20,7 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering, StartedSaving}
+import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering}
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
@@ -34,7 +34,8 @@ trait MilestonesActions {
 
 class MilestonesController(
   val logger:               LoggerLike,
-  milestonesService:        MilestonesService[Future],
+  milestonesService:        MilestonesService[Future]
+  ,
   authorisedWithIds:        AuthorisedWithIds,
   config:                   MilestonesControllerConfig,
   val controllerComponents: ControllerComponents
@@ -50,11 +51,7 @@ class MilestonesController(
     verifyingMatchingNino(ninoString) { nino =>
       milestonesService
         .getMilestones(nino)
-        .map(milestones =>
-          config.startedSavingMilestoneEnabled match {
-            case true => Ok(Json.toJson(Milestones(milestones)))
-            case _    => Ok(Json.toJson(Milestones(milestones.filter(_.milestoneType != StartedSaving))))
-        })
+        .map(milestones => Ok(Json.toJson(Milestones(milestones))))
     }
   }
 

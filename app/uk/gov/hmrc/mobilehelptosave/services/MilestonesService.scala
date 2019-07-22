@@ -17,10 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.MonadError
+import cats.syntax.flatMap._
 import cats.syntax.functor._
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.config.MilestonesServiceConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
@@ -31,33 +33,40 @@ trait MilestonesService[F[_]] {
 
   def markAsSeen(milestoneId: String)(implicit hc: HeaderCarrier): F[Unit]
 
-  def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Unit]
+  def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[MilestoneCheckResult]
 }
 
 class HtsMilestonesService[F[_]](
   logger:              LoggerLike,
+  config:              MilestonesServiceConfig,
   milestonesRepo:      MilestonesRepo[F],
   previousBalanceRepo: PreviousBalanceRepo[F]
 )(implicit F:          MonadError[F, Throwable])
     extends MilestonesService[F] {
 
-  override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[Milestone]] = milestonesRepo.getMilestones(nino)
+  override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[Milestone]] =
+    milestonesRepo.getMilestones(nino).map { milestones =>
+      config.startedSavingMilestoneEnabled match {
+        case true => milestones
+        case _    => milestones.filter(_.milestoneType != StartedSaving)
+      }
+    }
 
   override def setMilestone(milestone: Milestone)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.setMilestone(milestone)
 
   override def markAsSeen(milestoneId: String)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.markAsSeen(milestoneId)
 
-  override def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[Unit] =
-    previousBalanceRepo.getPreviousBalance(nino) map {
+  override def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[MilestoneCheckResult] =
+    previousBalanceRepo.getPreviousBalance(nino) flatMap {
       case Some(pb) =>
         previousBalanceRepo
           .setPreviousBalance(nino, currentBalance)
-          .map(_ =>
+          .flatMap(_ =>
             compareBalances(nino, pb.previousBalance, currentBalance) match {
-              case Some(milestone) => setMilestone(milestone).map(_ => ())
-              case _               => ()
+              case Some(milestone) => setMilestone(milestone).map(_ => MilestoneHit)
+              case _               => F.pure(MilestoneNotHit)
           })
-      case _ => previousBalanceRepo.setPreviousBalance(nino, currentBalance).map(_ => ())
+      case _ => previousBalanceRepo.setPreviousBalance(nino, currentBalance).map(_ => CouldNotCheck)
     }
 
   protected def compareBalances(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Milestone] =

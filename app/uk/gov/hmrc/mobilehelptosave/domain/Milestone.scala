@@ -69,3 +69,9 @@ object MilestoneType {
   }
 
 }
+
+sealed trait MilestoneCheckResult
+
+case object MilestoneHit extends MilestoneCheckResult
+case object MilestoneNotHit extends MilestoneCheckResult
+case object CouldNotCheck extends MilestoneCheckResult

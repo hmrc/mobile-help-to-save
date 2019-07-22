@@ -87,7 +87,7 @@ class ServiceComponents(context: Context)
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
-  lazy val userService:       UserService[Future]       = wire[HtsUserService]
+  lazy val userService:       UserService               = wire[HtsUserService]
   lazy val accountService:    AccountService[Future]    = wire[HtsAccountService[Future]]
   lazy val milestonesService: MilestonesService[Future] = wire[HtsMilestonesService[Future]]
 
