@@ -34,8 +34,7 @@ trait MilestonesActions {
 
 class MilestonesController(
   val logger:               LoggerLike,
-  milestonesService:        MilestonesService[Future]
-  ,
+  milestonesService:        MilestonesService[Future],
   authorisedWithIds:        AuthorisedWithIds,
   config:                   MilestonesControllerConfig,
   val controllerComponents: ControllerComponents
