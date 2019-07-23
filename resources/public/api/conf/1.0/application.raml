@@ -152,11 +152,11 @@ traits:
               type: !include schemas/milestones.json
               example: !include examples/milestones.json
 
-  /milestones/{milestoneId}/seen:
+  /milestones/{milestoneType}/seen:
      is: [headers.acceptHeader, loginRequired, permissionOnAccountNinoRequired, ninoInvalid, mobileHelpToSaveShuttered]
      put:
        displayName: Mark milestone as a seen
-       description: Marks a milestone as seen by the user, meaning it will not be retrieved in the future
+       description: Marks a milestone as seen by the user, meaning it will not be retrieved in the future unless it is repeatable and hit again
        (annotations.scope): "read:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
        responses:

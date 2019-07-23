@@ -18,16 +18,15 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import java.time.LocalDateTime
 
 import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.domain.Nino
 
 case class Milestone(
-  milestoneId:   String = BSONObjectID.generate().stringify,
-  nino:          Nino,
-  milestoneType: MilestoneType,
-  isSeen:        Boolean = false,
-  isRepeatable:  Boolean,
-  generatedDate: LocalDateTime = LocalDateTime.now())
+  nino:                Nino,
+  milestoneType:       MilestoneType,
+  milestoneMessageKey: MilestoneMessageKey,
+  isSeen:              Boolean = false,
+  isRepeatable:        Boolean,
+  generatedDate:       LocalDateTime = LocalDateTime.now())
 
 object Milestone {
   implicit val format: OFormat[Milestone] = Json.format
@@ -39,9 +38,9 @@ object Milestones {
   implicit val milestoneWrites: Writes[Milestone] = new Writes[Milestone] {
     override def writes(milestone: Milestone): JsObject =
       Json.obj(
-        "milestoneId"      -> milestone.milestoneId,
         "milestoneType"    -> milestone.milestoneType,
-        "milestoneMessage" -> Json.toJson(milestone.milestoneType)(MilestoneType.typeToMessageWrites),
+        "milestoneTitle"   -> Json.toJson(milestone.milestoneMessageKey)(MilestoneMessageKey.messageKeyToTitleWrites),
+        "milestoneMessage" -> Json.toJson(milestone.milestoneMessageKey)(MilestoneMessageKey.messageKeyToMessageWrites),
         "generatedDate"    -> milestone.generatedDate
       )
   }
@@ -51,23 +50,42 @@ object Milestones {
 
 sealed trait MilestoneType
 
-case object StartedSaving extends MilestoneType
+case object BalanceReached extends MilestoneType
 
 object MilestoneType {
   implicit val format: Format[MilestoneType] = new Format[MilestoneType] {
     override def reads(json: JsValue): JsResult[MilestoneType] = json.as[String] match {
-      case "StartedSaving" => JsSuccess(StartedSaving)
-      case _               => JsError("Invalid milestone type")
+      case "BalanceReached" => JsSuccess(BalanceReached)
+      case _                => JsError("Invalid milestone type")
     }
     override def writes(milestoneType: MilestoneType): JsString = JsString(milestoneType.toString)
   }
+}
 
-  val typeToMessageWrites: Writes[MilestoneType] = new Writes[MilestoneType] {
-    override def writes(milestoneType: MilestoneType): JsString = milestoneType match {
-      case StartedSaving => JsString("You've started saving. Well done for making your first payment.")
+sealed trait MilestoneMessageKey
+
+case object StartedSaving extends MilestoneMessageKey
+
+object MilestoneMessageKey {
+  implicit val format: Format[MilestoneMessageKey] = new Format[MilestoneMessageKey] {
+    override def reads(json: JsValue): JsResult[MilestoneMessageKey] = json.as[String] match {
+      case "StartedSaving" => JsSuccess(StartedSaving)
+      case _               => JsError("Invalid milestone message key")
+    }
+    override def writes(milestoneMessageKey: MilestoneMessageKey): JsString = JsString(milestoneMessageKey.toString)
+  }
+
+  val messageKeyToTitleWrites: Writes[MilestoneMessageKey] = new Writes[MilestoneMessageKey] {
+    override def writes(milestoneMessageKey: MilestoneMessageKey): JsString = milestoneMessageKey match {
+      case StartedSaving => JsString("You've started saving")
     }
   }
 
+  val messageKeyToMessageWrites: Writes[MilestoneMessageKey] = new Writes[MilestoneMessageKey] {
+    override def writes(milestoneMessageKey: MilestoneMessageKey): JsString = milestoneMessageKey match {
+      case StartedSaving => JsString("Well done for making your first payment.")
+    }
+  }
 }
 
 sealed trait MilestoneCheckResult

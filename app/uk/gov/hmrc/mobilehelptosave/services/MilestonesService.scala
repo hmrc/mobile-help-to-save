@@ -31,7 +31,7 @@ trait MilestonesService[F[_]] {
 
   def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[Milestone]]
 
-  def markAsSeen(milestoneId: String)(implicit hc: HeaderCarrier): F[Unit]
+  def markAsSeen(nino: Nino, milestoneId: String)(implicit hc: HeaderCarrier): F[Unit]
 
   def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[MilestoneCheckResult]
 }
@@ -44,17 +44,25 @@ class HtsMilestonesService[F[_]](
 )(implicit F:          MonadError[F, Throwable])
     extends MilestonesService[F] {
 
+  protected def filterDuplicateMilestoneTypes(milestones: List[Milestone]): List[Milestone] =
+    milestones
+      .groupBy(_.milestoneType)
+      .flatMap(grouped => grouped._2.filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering)))
+      .toList
+
   override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[Milestone]] =
     milestonesRepo.getMilestones(nino).map { milestones =>
+      val filteredMilestones = filterDuplicateMilestoneTypes(milestones)
+
       config.startedSavingMilestoneEnabled match {
-        case true => milestones
-        case _    => milestones.filter(_.milestoneType != StartedSaving)
+        case true => filteredMilestones
+        case _    => filteredMilestones.filter(_.milestoneMessageKey != StartedSaving)
       }
     }
 
   override def setMilestone(milestone: Milestone)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.setMilestone(milestone)
 
-  override def markAsSeen(milestoneId: String)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.markAsSeen(milestoneId)
+  override def markAsSeen(nino: Nino, milestoneType: String)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.markAsSeen(nino, milestoneType)
 
   override def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[MilestoneCheckResult] =
     previousBalanceRepo.getPreviousBalance(nino) flatMap {
@@ -72,7 +80,7 @@ class HtsMilestonesService[F[_]](
   protected def compareBalances(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Milestone] =
     (previousBalance, currentBalance) match {
       case (_, _) if previousBalance < 1 && currentBalance >= 1 =>
-        Some(Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false))
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneMessageKey = StartedSaving, isRepeatable = false))
       case _ => None
     }
 

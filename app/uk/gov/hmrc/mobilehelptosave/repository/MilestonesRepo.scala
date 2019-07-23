@@ -32,7 +32,7 @@ trait MilestonesRepo[F[_]] {
 
   def getMilestones(nino: Nino): F[List[Milestone]]
 
-  def markAsSeen(milestoneId: String): F[Unit]
+  def markAsSeen(nino: Nino, milestoneType: String): F[Unit]
 }
 
 class MongoMilestonesRepo(
@@ -43,21 +43,25 @@ class MongoMilestonesRepo(
 
   override def setMilestone(milestone: Milestone): Future[Unit] =
     collection
-      .find(obj("nino" -> milestone.nino, "milestoneType" -> milestone.milestoneType), None)(JsObjectDocumentWriter, JsObjectDocumentWriter)
+      .find(obj("nino" -> milestone.nino, "milestoneMessageKey" -> milestone.milestoneMessageKey), None)(
+        JsObjectDocumentWriter,
+        JsObjectDocumentWriter)
       .one[Milestone]
       .map {
-        case Some(milestone) => if (milestone.isRepeatable) insert(milestone).void else ()
-        case _               => insert(milestone)
+        case Some(m) => if (m.isRepeatable) insert(milestone).void else ()
+        case _       => insert(milestone).void
       }
 
   override def getMilestones(nino: Nino): Future[List[Milestone]] =
     find("nino" -> Json.toJson(nino), "isSeen" -> false)
 
-  override def markAsSeen(milestoneId: String): Future[Unit] =
-    findAndUpdate(
-      query  = obj("milestoneId" -> milestoneId),
-      update = obj("$set" -> Json.obj("isSeen" -> true)),
-      upsert = true
-    ).void
+  override def markAsSeen(nino: Nino, milestoneType: String): Future[Unit] =
+    collection
+      .update(
+        selector = obj("nino" -> nino, "milestoneType" -> milestoneType, "isSeen" -> false),
+        update   = obj("$set" -> Json.obj("isSeen" -> true)),
+        multi    = true
+      )
+      .void
 
 }

@@ -10,16 +10,16 @@
         {
           "type": "object",
           "properties": {
-            "milestoneId": {
-              "description": "A unique ID for the milestone",
-              "type": "string"
-            },
             "milestoneType": {
               "description": "The type of milestone that has been hit by the user, there should only be one milestone per milestoneType at any one time",
               "type": "string"
             },
+            "milestoneTitle": {
+              "description": "The title of the milestone",
+              "type": "string"
+            },
             "milestoneMessage": {
-              "description": "The message to be displayed to the user related to the type of milestone",
+              "description": "The message relating to the milestone",
               "type": "string"
             },
             "generatedDate": {
@@ -28,8 +28,8 @@
             }
           },
           "required": [
-            "milestoneId",
             "milestoneType",
+            "milestoneTitle",
             "milestoneMessage",
             "generatedDate"
           ]

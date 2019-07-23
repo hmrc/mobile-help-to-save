@@ -54,9 +54,9 @@ class MilestonesController(
     }
   }
 
-  override def markAsSeen(ninoString: String, milestoneId: String): Action[AnyContent] = authorisedWithIds.async {
+  override def markAsSeen(ninoString: String, milestoneType: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(milestoneId).map(_ => NoContent)
+      verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
       }
   }
 

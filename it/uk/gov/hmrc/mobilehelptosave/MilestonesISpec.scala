@@ -43,12 +43,34 @@ class MilestonesISpec
   private val nino      = generator.nextNino
 
   "GET /savings-account/:nino/milestones" should {
-    "respond with 200 and the list of milestones as JSON" in {
+    "respond with 200 and empty list as JSON when there are no unseen milestones" in {
       AuthStub.userIsLoggedIn(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
 
       response.status shouldBe 200
+    }
+
+    "respond with 200 and the list of milestones as JSON when milestones have been hit" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithZeroBalance(nino)
+
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      wireMockServer.resetAll()
+
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExists(nino)
+
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
+
+      response.status shouldBe 200
+
+      println(response.body)
     }
   }
 
