@@ -21,12 +21,12 @@ import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 
 case class Milestone(
-  nino:                Nino,
-  milestoneType:       MilestoneType,
-  milestoneMessageKey: MilestoneMessageKey,
-  isSeen:              Boolean = false,
-  isRepeatable:        Boolean,
-  generatedDate:       LocalDateTime = LocalDateTime.now())
+  nino:          Nino,
+  milestoneType: MilestoneType,
+  milestoneKey:  MilestoneKey,
+  isSeen:        Boolean = false,
+  isRepeatable:  Boolean,
+  generatedDate: LocalDateTime = LocalDateTime.now())
 
 object Milestone {
   implicit val format: OFormat[Milestone] = Json.format
@@ -39,8 +39,8 @@ object Milestones {
     override def writes(milestone: Milestone): JsObject =
       Json.obj(
         "milestoneType"    -> milestone.milestoneType,
-        "milestoneTitle"   -> Json.toJson(milestone.milestoneMessageKey)(MilestoneMessageKey.messageKeyToTitleWrites),
-        "milestoneMessage" -> Json.toJson(milestone.milestoneMessageKey)(MilestoneMessageKey.messageKeyToMessageWrites),
+        "milestoneTitle"   -> Json.toJson(milestone.milestoneKey)(MilestoneKey.keyToTitleWrites),
+        "milestoneMessage" -> Json.toJson(milestone.milestoneKey)(MilestoneKey.keyToMessageWrites),
         "generatedDate"    -> milestone.generatedDate
       )
   }
@@ -62,27 +62,27 @@ object MilestoneType {
   }
 }
 
-sealed trait MilestoneMessageKey
+sealed trait MilestoneKey
 
-case object StartedSaving extends MilestoneMessageKey
+case object StartedSaving extends MilestoneKey
 
-object MilestoneMessageKey {
-  implicit val format: Format[MilestoneMessageKey] = new Format[MilestoneMessageKey] {
-    override def reads(json: JsValue): JsResult[MilestoneMessageKey] = json.as[String] match {
+object MilestoneKey {
+  implicit val format: Format[MilestoneKey] = new Format[MilestoneKey] {
+    override def reads(json: JsValue): JsResult[MilestoneKey] = json.as[String] match {
       case "StartedSaving" => JsSuccess(StartedSaving)
-      case _               => JsError("Invalid milestone message key")
+      case _               => JsError("Invalid milestone key")
     }
-    override def writes(milestoneMessageKey: MilestoneMessageKey): JsString = JsString(milestoneMessageKey.toString)
+    override def writes(milestoneKey: MilestoneKey): JsString = JsString(milestoneKey.toString)
   }
 
-  val messageKeyToTitleWrites: Writes[MilestoneMessageKey] = new Writes[MilestoneMessageKey] {
-    override def writes(milestoneMessageKey: MilestoneMessageKey): JsString = milestoneMessageKey match {
+  val keyToTitleWrites: Writes[MilestoneKey] = new Writes[MilestoneKey] {
+    override def writes(milestoneKey: MilestoneKey): JsString = milestoneKey match {
       case StartedSaving => JsString("You've started saving")
     }
   }
 
-  val messageKeyToMessageWrites: Writes[MilestoneMessageKey] = new Writes[MilestoneMessageKey] {
-    override def writes(milestoneMessageKey: MilestoneMessageKey): JsString = milestoneMessageKey match {
+  val keyToMessageWrites: Writes[MilestoneKey] = new Writes[MilestoneKey] {
+    override def writes(milestoneKey: MilestoneKey): JsString = milestoneKey match {
       case StartedSaving => JsString("Well done for making your first payment.")
     }
   }

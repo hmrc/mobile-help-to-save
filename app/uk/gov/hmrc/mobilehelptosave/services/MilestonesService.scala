@@ -56,7 +56,7 @@ class HtsMilestonesService[F[_]](
 
       config.startedSavingMilestoneEnabled match {
         case true => filteredMilestones
-        case _    => filteredMilestones.filter(_.milestoneMessageKey != StartedSaving)
+        case _    => filteredMilestones.filter(_.milestoneKey != StartedSaving)
       }
     }
 
@@ -80,7 +80,7 @@ class HtsMilestonesService[F[_]](
   protected def compareBalances(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Milestone] =
     (previousBalance, currentBalance) match {
       case (_, _) if previousBalance < 1 && currentBalance >= 1 =>
-        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneMessageKey = StartedSaving, isRepeatable = false))
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
       case _ => None
     }
 

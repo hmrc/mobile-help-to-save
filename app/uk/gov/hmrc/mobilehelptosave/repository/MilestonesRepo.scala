@@ -43,9 +43,7 @@ class MongoMilestonesRepo(
 
   override def setMilestone(milestone: Milestone): Future[Unit] =
     collection
-      .find(obj("nino" -> milestone.nino, "milestoneMessageKey" -> milestone.milestoneMessageKey), None)(
-        JsObjectDocumentWriter,
-        JsObjectDocumentWriter)
+      .find(obj("nino" -> milestone.nino, "milestoneKey" -> milestone.milestoneKey), None)(JsObjectDocumentWriter, JsObjectDocumentWriter)
       .one[Milestone]
       .map {
         case Some(m) => if (m.isRepeatable) insert(milestone).void else ()
