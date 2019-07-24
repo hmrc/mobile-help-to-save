@@ -47,7 +47,7 @@ class MilestonesServiceSpec
 
   "getMilestones" should {
     "retrieve a list of unseen milestones including a StartedSaving milestone when startedSavingMilestoneEnabled is set to true" in {
-      val milestones = List(Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false))
+      val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
 
       val milestonesRepo      = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
@@ -59,8 +59,31 @@ class MilestonesServiceSpec
       result shouldBe milestones
     }
 
+    "filter out any milestones with the same milestoneType that have not been seen, only retrieving the most recent one" in {
+      val milestone = Milestone(
+        nino          = nino,
+        milestoneType = BalanceReached,
+        milestoneKey  = StartedSaving,
+        isRepeatable  = false,
+        generatedDate = LocalDateTime.parse("2019-01-16T10:15:30"))
+
+      val milestones = List(
+        milestone,
+        milestone.copy(generatedDate = LocalDateTime.parse("2019-01-17T10:15:30"))
+      )
+
+      val milestonesRepo      = fakeMilestonesRepo(milestones)
+      val previousBalanceRepo = fakePreviousBalanceRepo()
+
+      val service =
+        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val result = service.getMilestones(nino).unsafeGet
+      result shouldBe List(milestone.copy(generatedDate = LocalDateTime.parse("2019-01-17T10:15:30")))
+    }
+
     "retrieve a list of unseen milestones not including a StartedSaving milestone when startedSavingMilestoneEnabled is set to false" in {
-      val milestones = List(Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false))
+      val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
 
       val milestonesRepo      = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
@@ -75,7 +98,7 @@ class MilestonesServiceSpec
 
   "setMilestone" should {
     "store the milestone that has been hit by the user" in {
-      val milestone = Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false)
+      val milestone = Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false)
 
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
@@ -90,7 +113,7 @@ class MilestonesServiceSpec
 
   "balanceMilestoneCheck" should {
     "check if the user's previous balance has been set before and if not, set it and return CouldNotCheck" in {
-      val milestone = Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false)
+      val milestone = Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false)
 
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
@@ -103,7 +126,7 @@ class MilestonesServiceSpec
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneNotHit if the StartedSaving milestone has not been hit" in {
-      val milestone = Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false)
+      val milestone = Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false)
 
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
@@ -116,7 +139,7 @@ class MilestonesServiceSpec
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneHit if the StartedSaving milestone has been hit" in {
-      val milestone = Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false)
+      val milestone = Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false)
 
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
@@ -130,9 +153,9 @@ class MilestonesServiceSpec
   }
 
   private def fakeMilestonesRepo(milestones: List[Milestone] = List.empty) = new MilestonesRepo[TestF] {
-    override def setMilestone(milestone: Milestone): TestF[Unit]            = F.unit
-    override def getMilestones(nino:     Nino):      TestF[List[Milestone]] = F.pure(milestones)
-    override def markAsSeen(milestoneId: String):    TestF[Unit]            = ???
+    override def setMilestone(milestone: Milestone): TestF[Unit] = F.unit
+    override def getMilestones(nino:     Nino): TestF[List[Milestone]] = F.pure(milestones)
+    override def markAsSeen(nino:        Nino, milestoneId: String): TestF[Unit] = ???
   }
 
   private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) = new PreviousBalanceRepo[TestF] {

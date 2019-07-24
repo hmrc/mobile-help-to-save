@@ -61,7 +61,7 @@ class MilestonesControllerSpec
 
   "getMilestones" should {
     "return 200 and the list of milestones as JSON" in {
-      val milestones = List(Milestone(nino = nino, milestoneType = StartedSaving, isRepeatable = false))
+      val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
 
       (mockMilestonesService
         .getMilestones(_: Nino)(_: HeaderCarrier))
@@ -81,8 +81,8 @@ class MilestonesControllerSpec
   "markAsSeen" should {
     "return 204 when the milestone has been marked as seen" in {
       (mockMilestonesService
-        .markAsSeen(_: String)(_: HeaderCarrier))
-        .expects(*, *)
+        .markAsSeen(_: Nino, _: String)(_: HeaderCarrier))
+        .expects(nino, *, *)
         .returning(Future.successful(()))
 
       val controller =

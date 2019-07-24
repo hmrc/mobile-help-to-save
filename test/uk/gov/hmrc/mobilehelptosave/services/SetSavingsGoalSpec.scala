@@ -140,7 +140,7 @@ class SetSavingsGoalSpec
     new MilestonesService[TestF] {
       override def setMilestone(milestone:     Milestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
       override def getMilestones(nino:         Nino)(implicit hc:      HeaderCarrier): TestF[List[Milestone]] = ???
-      override def markAsSeen(milestoneId:     String)(implicit hc:    HeaderCarrier): TestF[Unit] = ???
+      override def markAsSeen(nino:            Nino, milestoneId:      String)(implicit hc: HeaderCarrier): TestF[Unit] = ???
       override def balanceMilestoneCheck(nino: Nino, currentBalance:   BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
         ???
     }
