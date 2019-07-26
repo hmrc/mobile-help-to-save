@@ -51,7 +51,7 @@ class MilestonesISpec
       response.status shouldBe 200
     }
 
-    "respond with 200 and the list of milestones as JSON when milestones have been hit" in {
+    "respond with 200 and the BalanceReached milestone in a list as JSON when milestones have been hit" in {
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithZeroBalance(nino)
@@ -70,7 +70,9 @@ class MilestonesISpec
 
       response.status shouldBe 200
 
-      println(response.body)
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
     }
   }
 

@@ -152,10 +152,23 @@ class MilestonesServiceSpec
     }
   }
 
+  "markAsSeen" should {
+    "mark milestones as seen using the nino and milestone type" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo()
+
+      val service =
+        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val result = service.markAsSeen(nino, "TestMilestoneType").unsafeGet
+      result shouldBe (())
+    }
+  }
+
   private def fakeMilestonesRepo(milestones: List[Milestone] = List.empty) = new MilestonesRepo[TestF] {
     override def setMilestone(milestone: Milestone): TestF[Unit] = F.unit
     override def getMilestones(nino:     Nino): TestF[List[Milestone]] = F.pure(milestones)
-    override def markAsSeen(nino:        Nino, milestoneId: String): TestF[Unit] = ???
+    override def markAsSeen(nino:        Nino, milestoneId: String): TestF[Unit] = F.unit
   }
 
   private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) = new PreviousBalanceRepo[TestF] {
