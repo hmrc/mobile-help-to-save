@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest._
 import play.api.Application
-import play.api.libs.json.JsObject
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
@@ -73,6 +72,38 @@ class MilestonesISpec
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
       (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+    }
+  }
+
+  "PUT /savings-account/:nino/milestones/:milestoneType/seen" should {
+    "mark milestones of a certain type as seen using the nino and milestone type" in {
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExistsWithZeroBalance(nino)
+
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      wireMockServer.resetAll()
+
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExists(nino)
+
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+
+      wireMockServer.resetAll()
+
+      AuthStub.userIsLoggedIn(nino)
+
+      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen").put(""))
+      val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
+
+      response.status shouldBe 204
+
+      milestones.status                                                       shouldBe 200
+      (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
   }
 
