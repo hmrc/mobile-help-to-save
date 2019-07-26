@@ -39,9 +39,10 @@ class MilestonesISpec
   override implicit lazy val app: Application = appBuilder.build()
 
   private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-
+  
   "GET /savings-account/:nino/milestones" should {
+    val nino = generator.nextNino
+
     "respond with 200 and empty list as JSON when there are no unseen milestones" in {
       AuthStub.userIsLoggedIn(nino)
 
@@ -77,6 +78,8 @@ class MilestonesISpec
 
   "PUT /savings-account/:nino/milestones/:milestoneType/seen" should {
     "mark milestones of a certain type as seen using the nino and milestone type" in {
+      val nino = generator.nextNino
+
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithZeroBalance(nino)
