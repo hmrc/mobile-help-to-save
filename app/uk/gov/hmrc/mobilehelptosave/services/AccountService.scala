@@ -52,7 +52,8 @@ class HtsAccountService[F[_]](
   config:                    AccountServiceConfig,
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],
   helpToSaveGetAccount:      HelpToSaveGetAccount[F],
-  savingsGoalEventRepo:      SavingsGoalEventRepo[F]
+  savingsGoalEventRepo:      SavingsGoalEventRepo[F],
+  milestonesService:         MilestonesService[F]
 )(implicit F:                MonadError[F, Throwable])
     extends AccountService[F] {
 
@@ -66,24 +67,25 @@ class HtsAccountService[F[_]](
     }
 
   override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
   override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
     }
 
   override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
+    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
     }
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     EitherT(helpToSaveEnrolmentStatus.enrolmentStatus()).flatMap {
       case true =>
-        EitherT(fetchAccountWithGoal(nino))
+        EitherT(fetchAccountWithGoal(nino)).flatMap {
+          case Some(account) =>
+            EitherT.liftF[F, ErrorInfo, Option[Account]](milestonesService.balanceMilestoneCheck(nino, account.balance).map(_ => Some(account)))
+          case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
+        }
 
       case false =>
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
@@ -150,4 +152,5 @@ class HtsAccountService[F[_]](
         logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
         None.asRight
     }
+
 }

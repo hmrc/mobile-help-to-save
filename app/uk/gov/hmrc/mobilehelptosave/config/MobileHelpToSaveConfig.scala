@@ -32,10 +32,12 @@ case class MobileHelpToSaveConfig(
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with HelpToSaveControllerConfig
+    with MilestonesControllerConfig
     with SandboxDataConfig
     with StartupControllerConfig
     with UserServiceConfig
-    with ReportingServiceConfig {
+    with ReportingServiceConfig
+    with MilestonesServiceConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
@@ -52,6 +54,8 @@ case class MobileHelpToSaveConfig(
 
   override def penceInCurrentSavingsGoalsEnabled:    Boolean = configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
   override def currentSavingsGoalRangeCountsEnabled: Boolean = configBoolean("helpToSave.reporting.currentSavingsGoalRangeCountsEnabled")
+
+  override def startedSavingMilestoneEnabled: Boolean = configBoolean("helpToSave.milestones.startedSavingMilestoneEnabled")
 
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
@@ -89,6 +93,10 @@ trait ReportingServiceConfig {
   def currentSavingsGoalRangeCountsEnabled: Boolean
 }
 
+trait MilestonesServiceConfig {
+  def startedSavingMilestoneEnabled: Boolean
+}
+
 trait SandboxDataConfig {
   def inAppPaymentsEnabled: Boolean
 }
@@ -111,5 +119,9 @@ trait StartupControllerConfig {
 }
 
 trait HelpToSaveControllerConfig {
+  def shuttering: Shuttering
+}
+
+trait MilestonesControllerConfig {
   def shuttering: Shuttering
 }

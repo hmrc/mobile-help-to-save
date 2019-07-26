@@ -15,7 +15,7 @@
  */
 
 package uk.gov.hmrc.mobilehelptosave.services
-import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, ReportingServiceConfig, UserServiceConfig}
+import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, MilestonesServiceConfig, ReportingServiceConfig, UserServiceConfig}
 
 case class TestAccountServiceConfig(inAppPaymentsEnabled: Boolean, savingsGoalsEnabled: Boolean) extends AccountServiceConfig
 
@@ -23,3 +23,5 @@ case class TestUserServiceConfig(eligibilityCheckEnabled: Boolean) extends UserS
 
 case class TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled: Boolean, currentSavingsGoalRangeCountsEnabled: Boolean)
     extends ReportingServiceConfig
+
+case class TestMilestonesServiceConfig(startedSavingMilestoneEnabled: Boolean) extends MilestonesServiceConfig

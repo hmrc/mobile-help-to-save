@@ -30,8 +30,8 @@ import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait UserService[F[_]] {
-  def userDetails(nino: Nino)(implicit hc: HeaderCarrier): F[Either[ErrorInfo, UserDetails]]
+trait UserService {
+  def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]]
 }
 
 class HtsUserService(
@@ -41,7 +41,7 @@ class HtsUserService(
   helpToSaveEligibility:     HelpToSaveEligibility[Future],
   eligibilityStatusRepo:     EligibilityRepo[Future]
 )(implicit ec:               ExecutionContext)
-    extends UserService[Future] {
+    extends UserService {
 
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
     (for {

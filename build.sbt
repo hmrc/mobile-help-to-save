@@ -39,7 +39,6 @@ lazy val microservice = Project(appName, file("."))
       "-feature",
       "-Ypartial-unification",
       "-Ywarn-dead-code",
-      "-Ywarn-value-discard",
       "-Ywarn-inaccessible",
       "-Ywarn-infer-any",
       "-Ywarn-nullary-override",
