@@ -12,7 +12,10 @@
           "properties": {
             "milestoneType": {
               "description": "The type of milestone that has been hit by the user, there should only be one milestone per milestoneType at any one time",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "BalanceReached"
+              ]
             },
             "milestoneTitle": {
               "description": "The title of the milestone",
