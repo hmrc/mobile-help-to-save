@@ -28,7 +28,7 @@ import cats.syntax.functor._
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.AccountServiceConfig
+import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, MilestonesConfig}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
@@ -53,7 +53,8 @@ class HtsAccountService[F[_]](
   helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],
   helpToSaveGetAccount:      HelpToSaveGetAccount[F],
   savingsGoalEventRepo:      SavingsGoalEventRepo[F],
-  milestonesService:         MilestonesService[F]
+  milestonesService:         MilestonesService[F],
+  milestonesConfig:          MilestonesConfig
 )(implicit F:                MonadError[F, Throwable])
     extends AccountService[F] {
 
@@ -83,7 +84,10 @@ class HtsAccountService[F[_]](
       case true =>
         EitherT(fetchAccountWithGoal(nino)).flatMap {
           case Some(account) =>
-            EitherT.liftF[F, ErrorInfo, Option[Account]](milestonesService.balanceMilestoneCheck(nino, account.balance).map(_ => Some(account)))
+            EitherT.liftF[F, ErrorInfo, Option[Account]](
+              if (milestonesConfig.balanceMilestoneCheckEnabled)
+                milestonesService.balanceMilestoneCheck(nino, account.balance).map(_ => Some(account))
+              else F.pure(Some(account)))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
         }
 

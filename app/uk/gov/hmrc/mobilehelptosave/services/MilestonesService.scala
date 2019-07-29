@@ -22,7 +22,7 @@ import cats.syntax.functor._
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.MilestonesServiceConfig
+import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
@@ -38,7 +38,7 @@ trait MilestonesService[F[_]] {
 
 class HtsMilestonesService[F[_]](
   logger:              LoggerLike,
-  config:              MilestonesServiceConfig,
+  config:              MilestonesConfig,
   milestonesRepo:      MilestonesRepo[F],
   previousBalanceRepo: PreviousBalanceRepo[F]
 )(implicit F:          MonadError[F, Throwable])
@@ -54,9 +54,9 @@ class HtsMilestonesService[F[_]](
     milestonesRepo.getMilestones(nino).map { milestones =>
       val filteredMilestones = filterDuplicateMilestoneTypes(milestones)
 
-      config.startedSavingMilestoneEnabled match {
+      config.balanceMilestoneCheckEnabled match {
         case true => filteredMilestones
-        case _    => filteredMilestones.filter(_.milestoneKey != StartedSaving)
+        case _    => filteredMilestones.filter(_.milestoneType != BalanceReached)
       }
     }
 
