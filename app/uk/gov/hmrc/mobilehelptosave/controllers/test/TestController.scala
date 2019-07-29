@@ -19,14 +19,16 @@ package uk.gov.hmrc.mobilehelptosave.controllers.test
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
+import uk.gov.hmrc.mobilehelptosave.repository.{MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TestController(
-  savingsGoalEventRepo: SavingsGoalEventRepo[Future],
+  savingsGoalEventRepo:     SavingsGoalEventRepo[Future],
+  milestonesRepo:           MilestonesRepo[Future],
+  previousBalanceRepo:      PreviousBalanceRepo[Future],
   val controllerComponents: ControllerComponents
 ) extends BackendBaseController {
   def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
@@ -37,8 +39,14 @@ class TestController(
   }
 
   def getGoalEvents(nino: String): Action[AnyContent] = Action.async { implicit request =>
-    savingsGoalEventRepo.getEvents(Nino(nino)).map { events =>
-      Ok(Json.toJson(events))
+    savingsGoalEventRepo.getEvents(Nino(nino)).map { events => Ok(Json.toJson(events))
     }
+  }
+
+  def clearMilestoneData(): Action[AnyContent] = Action.async { implicit request =>
+    for {
+      _ <- previousBalanceRepo.clearPreviousBalance()
+      _ <- milestonesRepo.clearMilestones()
+    } yield Ok("Successfully cleared all milestone data")
   }
 }

@@ -32,6 +32,8 @@ trait PreviousBalanceRepo[F[_]] {
   def setPreviousBalance(nino: Nino, previousBalance: BigDecimal): F[Unit]
 
   def getPreviousBalance(nino: Nino): F[Option[PreviousBalance]]
+
+  def clearPreviousBalance(): Future[Unit]
 }
 
 class MongoPreviousBalanceRepo(
@@ -48,6 +50,9 @@ class MongoPreviousBalanceRepo(
 
   override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] =
     collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).one[PreviousBalance]
+
+  override def clearPreviousBalance(): Future[Unit] =
+    removeAll().void
 }
 
 case class PreviousBalance(nino: Nino, previousBalance: BigDecimal, date: LocalDateTime)
