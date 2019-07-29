@@ -28,6 +28,8 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
+import scala.concurrent.Future
+
 class MilestonesServiceSpec
     extends WordSpec
     with Matchers
@@ -169,11 +171,13 @@ class MilestonesServiceSpec
     override def setMilestone(milestone: Milestone): TestF[Unit] = F.unit
     override def getMilestones(nino:     Nino): TestF[List[Milestone]] = F.pure(milestones)
     override def markAsSeen(nino:        Nino, milestoneId: String): TestF[Unit] = F.unit
+    override def clearMilestones(): TestF[Unit] = ???
   }
 
   private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) = new PreviousBalanceRepo[TestF] {
     override def setPreviousBalance(nino: Nino, previousBalance: BigDecimal): TestF[Unit] = F.unit
     override def getPreviousBalance(nino: Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
+    override def clearPreviousBalance(): Future[Unit] = ???
   }
 
 }
