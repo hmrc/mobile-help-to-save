@@ -43,12 +43,12 @@ class MilestonesServiceSpec
 
   private val generator  = new Generator(0)
   private val nino       = generator.nextNino
-  private val testConfig = TestMilestonesServiceConfig(startedSavingMilestoneEnabled = true)
+  private val testConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   "getMilestones" should {
-    "retrieve a list of unseen milestones including a StartedSaving milestone when startedSavingMilestoneEnabled is set to true" in {
+    "retrieve a list of unseen milestones including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to true" in {
       val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
 
       val milestonesRepo      = fakeMilestonesRepo(milestones)
@@ -84,14 +84,14 @@ class MilestonesServiceSpec
       result shouldBe List(milestone.copy(generatedDate = LocalDateTime.parse("2019-01-17T10:15:30")))
     }
 
-    "retrieve a list of unseen milestones not including a StartedSaving milestone when startedSavingMilestoneEnabled is set to false" in {
+    "retrieve a list of unseen milestones not including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to false" in {
       val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
 
       val milestonesRepo      = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
-        new HtsMilestonesService(logger, testConfig.copy(startedSavingMilestoneEnabled = false), milestonesRepo, previousBalanceRepo)
+        new HtsMilestonesService(logger, testConfig.copy(balanceMilestoneCheckEnabled = false), milestonesRepo, previousBalanceRepo)
 
       val result = service.getMilestones(nino).unsafeGet
       result shouldBe List.empty

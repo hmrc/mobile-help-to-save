@@ -39,9 +39,10 @@ class SetSavingsGoalSpec
     with OneInstancePerTest
     with LoggerStub {
 
-  private val generator  = new Generator(0)
-  private val nino       = generator.nextNino
-  private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
+  private val generator            = new Generator(0)
+  private val nino                 = generator.nextNino
+  private val testConfig           = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
+  private val testMilestonesConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -58,7 +59,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           fakeGoalsRepo,
-          fakeMilestoneService)
+          fakeMilestoneService,
+          testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet shouldBe Right(())
     }
@@ -75,7 +77,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService)
+          fakeMilestoneService,
+          testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(0.99)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
     }
@@ -92,7 +95,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService)
+          fakeMilestoneService,
+          testMilestonesConfig)
 
       service
         .setSavingsGoal(nino, SavingsGoal(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01))
@@ -113,7 +117,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService)
+          fakeMilestoneService,
+          testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
     }
@@ -130,7 +135,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService)
+          fakeMilestoneService,
+          testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.General
     }
