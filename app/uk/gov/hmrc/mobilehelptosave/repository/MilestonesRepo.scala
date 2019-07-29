@@ -33,6 +33,8 @@ trait MilestonesRepo[F[_]] {
   def getMilestones(nino: Nino): F[List[Milestone]]
 
   def markAsSeen(nino: Nino, milestoneType: String): F[Unit]
+
+  def clearMilestones(): F[Unit]
 }
 
 class MongoMilestonesRepo(
@@ -61,5 +63,8 @@ class MongoMilestonesRepo(
         multi    = true
       )
       .void
+
+  override def clearMilestones(): Future[Unit] =
+    removeAll().void
 
 }
