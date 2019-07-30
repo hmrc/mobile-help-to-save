@@ -50,7 +50,7 @@ class GetAccountSpec
   "getAccount" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       isForbiddenIfNotAuthorisedForUser { controller =>
-        status(controller.getAccount(nino.value)(FakeRequest())) shouldBe FORBIDDEN
+        status(controller.getAccount(nino.value, journeyId)(FakeRequest())) shouldBe FORBIDDEN
       }
     }
   }
@@ -62,7 +62,7 @@ class GetAccountSpec
 
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        val accountData = controller.getAccount(nino.value)(FakeRequest())
+        val accountData = controller.getAccount(nino.value, journeyId)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
         jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount)
@@ -73,7 +73,7 @@ class GetAccountSpec
       "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        val accountData = controller.getAccount(nino.value)(FakeRequest())
+        val accountData = controller.getAccount(nino.value, journeyId)(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).validate[Account]
       }
@@ -84,7 +84,7 @@ class GetAccountSpec
 
         accountReturns(Right(None))
 
-        val resultF = controller.getAccount(nino.value)(FakeRequest())
+        val resultF = controller.getAccount(nino.value, journeyId)(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
@@ -100,7 +100,7 @@ class GetAccountSpec
 
         accountReturns(Left(ErrorInfo.General))
 
-        val resultF = controller.getAccount(nino.value)(FakeRequest())
+        val resultF = controller.getAccount(nino.value, journeyId)(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
@@ -110,7 +110,7 @@ class GetAccountSpec
     "the NINO in the URL does not match the logged in user's NINO" should {
       "return 403" in new AuthorisedTestScenario {
 
-        val resultF = controller.getAccount(otherNino.value)(FakeRequest())
+        val resultF = controller.getAccount(otherNino.value, journeyId)(FakeRequest())
         status(resultF) shouldBe 403
         (slf4jLoggerStub
           .warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s data"
@@ -120,7 +120,7 @@ class GetAccountSpec
     "the NINO is not in the correct format" should {
       "return 400 NINO_INVALID" in new AuthorisedTestScenario {
 
-        val resultF = controller.getAccount("invalidNino")(FakeRequest())
+        val resultF = controller.getAccount("invalidNino", journeyId)(FakeRequest())
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
@@ -133,7 +133,7 @@ class GetAccountSpec
     "the NINO in the URL contains spaces" should {
       "return 400 NINO_INVALID" in new AuthorisedTestScenario {
 
-        val resultF = controller.getAccount("AA 00 00 03 D")(FakeRequest())
+        val resultF = controller.getAccount("AA 00 00 03 D", journeyId)(FakeRequest())
         status(resultF) shouldBe 400
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "NINO_INVALID"
@@ -156,7 +156,7 @@ class GetAccountSpec
           stubControllerComponents()
         )
 
-        val resultF = controller.getAccount(nino.value)(FakeRequest())
+        val resultF = controller.getAccount(nino.value, journeyId)(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true

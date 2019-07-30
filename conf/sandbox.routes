@@ -1,7 +1,7 @@
 # Add all the application routes to the app.routes file
-GET           /savings-account/:nino/transactions              uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.getTransactions(nino:String)
+GET           /savings-account/:nino/transactions              uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.getTransactions(nino:String, journeyId:String)
 
-GET           /savings-account/:nino                           uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.getAccount(nino:String)
+GET           /savings-account/:nino                           uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.getAccount(nino:String, journeyId:String)
 
-PUT           /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.putSavingsGoal(nino:String)
-DELETE        /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.deleteSavingsGoal(nino:String)
+PUT           /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.putSavingsGoal(nino:String, journeyId:String)
+DELETE        /savings-account/:nino/goals/current-goal        uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.deleteSavingsGoal(nino:String, journeyId:String)

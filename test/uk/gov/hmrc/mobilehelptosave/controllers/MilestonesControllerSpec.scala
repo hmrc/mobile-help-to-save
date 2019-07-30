@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import java.util.UUID.randomUUID
+
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
@@ -45,7 +47,7 @@ class MilestonesControllerSpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
-
+  private val journeyId = randomUUID().toString
   private val mockMilestonesService = mock[MilestonesService[Future]]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
@@ -71,7 +73,7 @@ class MilestonesControllerSpec
       val controller =
         new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
-      val result = controller.getMilestones(nino.value)(FakeRequest())
+      val result = controller.getMilestones(nino.value, journeyId)(FakeRequest())
 
       status(result)        shouldBe 200
       contentAsJson(result) shouldBe Json.toJson(Milestones(milestones))
@@ -88,7 +90,7 @@ class MilestonesControllerSpec
       val controller =
         new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
-      val result = controller.markAsSeen(nino.value, "5d3181afa400004cdf56dc76")(FakeRequest())
+      val result = controller.markAsSeen(nino.value, "5d3181afa400004cdf56dc76", journeyId)(FakeRequest())
 
       status(result) shouldBe 204
     }

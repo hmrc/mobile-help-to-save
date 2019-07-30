@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.util.UUID.randomUUID
+
 import org.scalatest._
 import play.api.Application
 import play.api.libs.json.JsObject
@@ -42,6 +44,7 @@ class AccountsISpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
+  private val journeyId = randomUUID().toString
 
   "GET /savings-account/{nino}" should {
 
@@ -51,7 +54,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       response.status shouldBe 200
 
@@ -94,7 +97,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       response.status shouldBe 200
 
@@ -133,7 +136,7 @@ class AccountsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       response.status shouldBe 404
 
@@ -148,7 +151,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInternalServerError(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       response.status shouldBe 500
 
@@ -160,7 +163,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInvalidJson(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       response.status shouldBe 500
 
@@ -172,7 +175,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsBadlyFormedJson(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       response.status shouldBe 500
 
@@ -184,7 +187,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.closedAccountExists(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
       (response.json \ "number").as[String]          shouldBe "1000000000002"
@@ -224,7 +227,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.unspecifiedBlockedAccountExists(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
       (response.json \ "number").as[String]          shouldBe "1100000112068"
@@ -267,7 +270,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.paymentsBlockedAccountExists(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
@@ -281,7 +284,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.withdrawalsBlockedAccountExists(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
@@ -295,7 +298,7 @@ class AccountsISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.bonusesBlockedAccountExists(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
@@ -306,14 +309,14 @@ class AccountsISpec
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 401
       response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 403
       response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }

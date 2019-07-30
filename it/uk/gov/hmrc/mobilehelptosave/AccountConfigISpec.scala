@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.util.UUID.randomUUID
+
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.components.WithApplicationComponents
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
@@ -44,6 +46,7 @@ class AccountConfigISpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
+  private val journeyId = randomUUID().toString
 
   "GET /savings-account/{nino} and /sandbox/savings-account/{nino}" should {
     "allow inAppPaymentsEnabled to be overridden with configuration" in {
@@ -61,9 +64,9 @@ class AccountConfigISpec
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
-        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino").get()), expectedValue = false)
+        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()), expectedValue = false)
         responseShouldHaveInAppPaymentsEqualTo(
-          await(wsUrl(s"/sandbox/savings-account/$nino").get()),
+          await(wsUrl(s"/sandbox/savings-account/$nino?journeyId=$journeyId").get()),
           expectedValue = false)
       }
 
@@ -76,9 +79,9 @@ class AccountConfigISpec
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
-        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino").get()), expectedValue = true)
+        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()), expectedValue = true)
         responseShouldHaveInAppPaymentsEqualTo(
-          await(wsUrl(s"/sandbox/savings-account/$nino").get()),
+          await(wsUrl(s"/sandbox/savings-account/$nino?journeyId=$journeyId").get()),
           expectedValue = true)
       }
     }
