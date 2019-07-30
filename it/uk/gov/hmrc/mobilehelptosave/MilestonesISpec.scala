@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.util.UUID.randomUUID
+
 import org.scalatest._
 import play.api.Application
 import play.api.libs.ws.WSResponse
@@ -39,6 +41,7 @@ class MilestonesISpec
   override implicit lazy val app: Application = appBuilder.build()
 
   private val generator = new Generator(0)
+  private val journeyId = randomUUID().toString
   
   "GET /savings-account/:nino/milestones" should {
     val nino = generator.nextNino
@@ -46,7 +49,7 @@ class MilestonesISpec
     "respond with 200 and empty list as JSON when there are no unseen milestones" in {
       AuthStub.userIsLoggedIn(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 200
     }
@@ -56,7 +59,7 @@ class MilestonesISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithZeroBalance(nino)
 
-      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       wireMockServer.resetAll()
 
@@ -64,9 +67,9 @@ class MilestonesISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 200
 
@@ -84,7 +87,7 @@ class MilestonesISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithZeroBalance(nino)
 
-      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       wireMockServer.resetAll()
 
@@ -92,14 +95,14 @@ class MilestonesISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(nino)
 
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       wireMockServer.resetAll()
 
       AuthStub.userIsLoggedIn(nino)
 
-      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen").put(""))
-      val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
+      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=$journeyId").put(""))
+      val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 204
 
