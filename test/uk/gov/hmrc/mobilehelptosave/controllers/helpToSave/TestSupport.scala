@@ -28,6 +28,7 @@ import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import java.util.UUID.randomUUID
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -42,7 +43,7 @@ trait TestSupport {
   val generator = new Generator(0)
   val nino      = generator.nextNino
   val otherNino = generator.nextNino
-
+  val journeyId = randomUUID().toString
   val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
   val falseShuttering = Shuttering(shuttered = false, "", "")
 

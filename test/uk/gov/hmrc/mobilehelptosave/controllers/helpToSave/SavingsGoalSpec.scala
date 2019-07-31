@@ -47,7 +47,7 @@ class SavingsGoalSpec
         val request = FakeRequest().withBody(SavingsGoal(amount))
 
         setSavingsGoalReturns(nino, amount, ().asRight)
-        val resultF = controller.putSavingsGoal(nino.value)(request)
+        val resultF = controller.putSavingsGoal(nino.value, journeyId)(request)
 
         status(resultF) shouldBe 204
       }
@@ -59,7 +59,7 @@ class SavingsGoalSpec
 
         setSavingsGoalReturns(nino, amount, ErrorInfo.ValidationError("error message").asLeft)
 
-        val resultF = controller.putSavingsGoal(nino.value)(request)
+        val resultF = controller.putSavingsGoal(nino.value, journeyId)(request)
 
         status(resultF) shouldBe 422
       }
@@ -71,7 +71,7 @@ class SavingsGoalSpec
       "delete the goal value from the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
         deleteSavingsGoalExpects(nino)
 
-        val resultF = controller.deleteSavingsGoal(nino.value)(FakeRequest())
+        val resultF = controller.deleteSavingsGoal(nino.value, journeyId)(FakeRequest())
         status(resultF) shouldBe 204
       }
     }

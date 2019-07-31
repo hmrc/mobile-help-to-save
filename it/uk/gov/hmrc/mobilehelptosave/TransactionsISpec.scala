@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.util.UUID.randomUUID
+
 import org.scalatest.{Assertion, Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
@@ -43,6 +45,7 @@ class TransactionsISpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
+  private val journeyId = randomUUID().toString
 
   "GET /savings-account/{nino}/transactions" should {
 
@@ -51,7 +54,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsExistForUser(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -62,7 +65,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -73,7 +76,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -84,7 +87,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -94,7 +97,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userDoesNotHaveAnHtsAccount(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
 
       response.status shouldBe 404
       val jsonBody: JsValue = response.json
@@ -105,7 +108,7 @@ class TransactionsISpec
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 401
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
@@ -113,7 +116,7 @@ class TransactionsISpec
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 403
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
