@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.util.UUID.randomUUID
+
 import org.scalatest._
 import play.api.Application
 import play.api.http.Status
@@ -54,9 +56,10 @@ class SavingsGoalsISpec
   private val validGoalJson  = toJson(savingsGoal1)
   private val savingsGoal2   = SavingsGoal(30)
   private val validGoalJson2 = toJson(savingsGoal2)
+  private val journeyId = randomUUID().toString
 
   private def setSavingsGoal(nino: Nino, json: JsValue) =
-    await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal").put(json))
+    await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=$journeyId").put(json))
 
   trait LoggedInUserScenario {
     HelpToSaveStub.currentUserIsEnrolled()
@@ -96,8 +99,8 @@ class SavingsGoalsISpec
 
       val response: WSResponse = await {
         for {
-          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
-          resp <- wsUrl(s"/savings-account/$nino").get()
+          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
+          resp <- wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
       }
 
@@ -110,9 +113,9 @@ class SavingsGoalsISpec
 
       val response: WSResponse = await {
         for {
-          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
-          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson2)
-          resp <- wsUrl(s"/savings-account/$nino").get()
+          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
+          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson2)
+          resp <- wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
       }
 
@@ -151,7 +154,7 @@ class SavingsGoalsISpec
   "DELETE /savings-account/{nino}/goals/current-goal" should {
     "Respond with NoContent" in new LoggedInUserScenario {
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").delete())
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").delete())
       response.status shouldBe 204
     }
 
@@ -159,9 +162,9 @@ class SavingsGoalsISpec
 
       val response: WSResponse = await {
         for {
-          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal").put(validGoalJson)
-          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal").delete()
-          resp <- wsUrl(s"/savings-account/$nino").get()
+          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
+          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").delete()
+          resp <- wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
       }
 

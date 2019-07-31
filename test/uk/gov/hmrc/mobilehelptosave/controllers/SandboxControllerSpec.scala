@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.LocalDateTime
+import java.util.UUID.randomUUID
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
@@ -65,6 +66,7 @@ class SandboxControllerSpec
     config.copy(shuttering = shutteredShuttering),
     SandboxData(logger, fixedClock, TestSandboxDataConfig),
     stubControllerComponents())
+  private val journeyId = randomUUID().toString
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions")(transactionIndex) \ "operation").as[String]
@@ -82,7 +84,7 @@ class SandboxControllerSpec
   "Sandbox getTransactions" should {
     "return the sandbox transaction data" in {
 
-      val response: Future[Result] = controller.getTransactions(nino.value)(FakeRequest())
+      val response: Future[Result] = controller.getTransactions(nino.value, journeyId)(FakeRequest())
 
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
@@ -169,7 +171,7 @@ class SandboxControllerSpec
 
     "return a shuttered response when the service is shuttered" in {
 
-      val response: Future[Result] = shutteredController.getTransactions(nino.value)(FakeRequest())
+      val response: Future[Result] = shutteredController.getTransactions(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
         .as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
@@ -179,7 +181,7 @@ class SandboxControllerSpec
   "Sandbox getAccount" should {
     "return the sandbox account data" in {
 
-      val response: Future[Result] = controller.getAccount(nino.value)(FakeRequest())
+      val response: Future[Result] = controller.getAccount(nino.value, journeyId)(FakeRequest())
 
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
@@ -211,7 +213,7 @@ class SandboxControllerSpec
 
     "return a shuttered response when the service is shuttered" in {
 
-      val response: Future[Result] = shutteredController.getAccount(nino.value)(FakeRequest())
+      val response: Future[Result] = shutteredController.getAccount(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
         .as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")

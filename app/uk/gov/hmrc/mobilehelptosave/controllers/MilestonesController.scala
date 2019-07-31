@@ -27,9 +27,9 @@ import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesActions {
-  def getMilestones(ninoString: String): Action[AnyContent]
+  def getMilestones(ninoString: String, journeyId: String): Action[AnyContent]
 
-  def markAsSeen(ninoString: String, milestoneId: String): Action[AnyContent]
+  def markAsSeen(ninoString: String, milestoneId: String, journeyId: String): Action[AnyContent]
 }
 
 class MilestonesController(
@@ -46,7 +46,7 @@ class MilestonesController(
 
   override def shuttering: Shuttering = config.shuttering
 
-  override def getMilestones(ninoString: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     verifyingMatchingNino(ninoString) { nino =>
       milestonesService
         .getMilestones(nino)
@@ -54,7 +54,7 @@ class MilestonesController(
     }
   }
 
-  override def markAsSeen(ninoString: String, milestoneType: String): Action[AnyContent] = authorisedWithIds.async {
+  override def markAsSeen(ninoString: String, milestoneType: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
       verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
       }
