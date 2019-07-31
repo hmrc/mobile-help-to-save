@@ -48,6 +48,11 @@ class SandboxISpec
       response.status                      shouldBe Status.OK
       response.json.validate[Transactions] shouldBe 'success
     }
+    "Return 400 when journeyId not supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/transactions").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe 400
+    }
   }
 
   "GET /savings-account/{nino} with sandbox header" should {
@@ -58,6 +63,11 @@ class SandboxISpec
       accountV                                          shouldBe 'success
       accountV.asOpt.value.savingsGoal.value.goalAmount shouldBe 25.0
     }
+    "Return 400 when journeyId not supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe 400
+    }
   }
 
   "PUT /savings-account/:nino/goals/current-goal with sandbox header" should {
@@ -67,6 +77,12 @@ class SandboxISpec
         await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
       response.status shouldBe Status.NO_CONTENT
     }
+    "Return 400 when journeyId not supplied" in {
+      val goal = SavingsGoal(35.0)
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
+      response.status shouldBe 400
+    }
   }
 
   "DELETE /savings-account/:nino/goals/current-goal with sandbox header" should {
@@ -74,6 +90,11 @@ class SandboxISpec
       val response: WSResponse =
         await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).delete())
       response.status shouldBe Status.NO_CONTENT
+    }
+    "Return 400 when journeyId not supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).delete())
+      response.status shouldBe 400
     }
   }
 }

@@ -146,6 +146,12 @@ class SavingsGoalsISpec
       response.status shouldBe 403
       response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
+
+    "return 400 when journeyId is not supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse = await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal").put(validGoalJson))
+      response.status shouldBe 400
+    }
   }
 
   "DELETE /savings-account/{nino}/goals/current-goal" should {
@@ -168,6 +174,12 @@ class SavingsGoalsISpec
       response.status shouldBe 200
       val account = parse(response.body).as[Account]
       account.savingsGoal shouldBe None
+    }
+
+    "return 400 when journeyId is not supplied" in new LoggedInUserScenario {
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").delete())
+      response.status shouldBe 400
     }
   }
 }

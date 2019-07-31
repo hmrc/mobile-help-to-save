@@ -118,6 +118,12 @@ class TransactionsISpec
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
+
+    "return 400 when journeyId is not supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      response.status shouldBe 400
+    }
   }
 
   private def checkTransactionsResponseInvariants(response: WSResponse): Assertion =

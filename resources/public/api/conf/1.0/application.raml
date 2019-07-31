@@ -85,6 +85,10 @@ traits:
     description: Retrieves the details of the Help to Save account
     (annotations.scope): "read:native-apps-api-orchestration"
     securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+    queryParameters:
+      journeyId:
+        type: string
+        required: true
     responses:
       200:
         body:
@@ -104,6 +108,10 @@ traits:
       description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned. Transactions will be returned in the reverse of the order they were applied to the account (i.e. newest first).
       (annotations.scope): "read:native-apps-api-orchestration"
       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+      queryParameters:
+        journeyId:
+          type: string
+          required: true
       responses:
         200:
           body:
@@ -122,6 +130,10 @@ traits:
        description: Set a savings goal for the user. This will replace any existing savings goal. The goal must be between £1 and £50 (or the whatever the remaining monthly savings headroom might be) and not contain any fractional pence values (e.g. £1.234)
        (annotations.scope): "read:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+       queryParameters:
+         journeyId:
+           type: string
+           required: true
        responses:
          204:
          422:
@@ -135,6 +147,10 @@ traits:
        description: Remove the users' current savings goal
        (annotations.scope): "read:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+       queryParameters:
+         journeyId:
+           type: string
+           required: true
        responses:
          204:
 
@@ -145,6 +161,10 @@ traits:
       description: Retrieves key milestones about a user account, there can only be one milestone per milestone type at any one time and milestones marked as seen will not be retrieved
       (annotations.scope): "read:native-apps-api-orchestration"
       securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+      queryParameters:
+        journeyId:
+          type: string
+          required: true
       responses:
         200:
           body:
@@ -159,5 +179,9 @@ traits:
        description: Marks a milestone as seen by the user, meaning it will not be retrieved in the future unless it is repeatable and hit again
        (annotations.scope): "read:native-apps-api-orchestration"
        securedBy: [ sec.oauth_2_0: { scopes: [ "read:native-apps-api-orchestration" ] } ]
+       queryParameters:
+         journeyId:
+           type: string
+           required: true
        responses:
          204:

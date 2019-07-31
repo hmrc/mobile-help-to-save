@@ -74,6 +74,14 @@ class MilestonesISpec
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
       (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
     }
+
+    "return 400 when journeyId is not supplied" in {
+      AuthStub.userIsLoggedIn(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
+
+      response.status shouldBe 400
+    }
   }
 
   "PUT /savings-account/:nino/milestones/:milestoneType/seen" should {
@@ -107,6 +115,16 @@ class MilestonesISpec
       (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
       (milestones.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
       (milestones.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
+    }
+
+    "return 400 when journeyId is not supplied" in {
+      val nino = generator.nextNino
+
+      AuthStub.userIsLoggedIn(nino)
+
+      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen").put(""))
+
+      response.status shouldBe 400
     }
   }
 
