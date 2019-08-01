@@ -22,7 +22,7 @@ import org.scalatest._
 import play.api.Application
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
@@ -44,35 +44,33 @@ class MilestonesISpec
   private val journeyId = randomUUID().toString
   
   "GET /savings-account/:nino/milestones" should {
-    val nino = generator.nextNino
-
     "respond with 200 and empty list as JSON when there are no unseen milestones" in {
+      val nino = generator.nextNino
       AuthStub.userIsLoggedIn(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
 
     "respond with 200 and the BalanceReached milestone in a list as JSON when milestones have been hit" in {
-      AuthStub.userIsLoggedIn(nino)
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExistsWithZeroBalance(nino)
+      val nino = generator.nextNino
+      loginWithZeroBalanceUser(nino)
 
       val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       wireMockServer.resetAll()
 
-      AuthStub.userIsLoggedIn(nino)
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
+      loginWithNonZeroBalanceUser(nino)
 
       val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 200
-
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
       (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
@@ -82,18 +80,13 @@ class MilestonesISpec
   "PUT /savings-account/:nino/milestones/:milestoneType/seen" should {
     "mark milestones of a certain type as seen using the nino and milestone type" in {
       val nino = generator.nextNino
-
-      AuthStub.userIsLoggedIn(nino)
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExistsWithZeroBalance(nino)
+      loginWithZeroBalanceUser(nino)
 
       val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       wireMockServer.resetAll()
 
-      AuthStub.userIsLoggedIn(nino)
-      HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
+      loginWithNonZeroBalanceUser(nino)
 
       val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
@@ -111,6 +104,55 @@ class MilestonesISpec
       (milestones.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
       (milestones.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
+
+    "mark unrepeatable milestones as seen and response comes back as an empty list" in {
+      val nino = generator.nextNino
+      loginWithZeroBalanceUser(nino)
+
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      wireMockServer.resetAll()
+
+      loginWithNonZeroBalanceUser(nino)
+
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      wireMockServer.resetAll()
+
+      AuthStub.userIsLoggedIn(nino)
+
+      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=$journeyId").put(""))
+      val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      wireMockServer.resetAll()
+
+      loginWithZeroBalanceUser(nino)
+
+      val accountWithZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      wireMockServer.resetAll()
+
+      loginWithNonZeroBalanceUser(nino)
+
+      val accountWithNonZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val milestonesAgain: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+      milestonesAgain.status shouldBe 200
+      (milestonesAgain.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (milestonesAgain.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (milestonesAgain.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
+    }
   }
 
+  private def loginWithZeroBalanceUser(nino: Nino) = {
+    AuthStub.userIsLoggedIn(nino)
+    HelpToSaveStub.currentUserIsEnrolled()
+    HelpToSaveStub.accountExistsWithZeroBalance(nino)
+  }
+
+  private def loginWithNonZeroBalanceUser(nino: Nino) = {
+    AuthStub.userIsLoggedIn(nino)
+    HelpToSaveStub.currentUserIsEnrolled()
+    HelpToSaveStub.accountExists(nino)
+  }
 }
