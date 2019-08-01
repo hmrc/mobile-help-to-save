@@ -320,5 +320,11 @@ class AccountsISpec
       response.status shouldBe 403
       response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
+
+    "return 400 when no journeyId is supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+      response.status shouldBe 400
+    }
   }
 }

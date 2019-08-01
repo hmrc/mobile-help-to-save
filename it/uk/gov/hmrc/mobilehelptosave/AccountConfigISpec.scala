@@ -77,12 +77,33 @@ class AccountConfigISpec
           )
           .build()) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
-        implicit val wsClient:           WSClient   = components.wsClient
+        implicit val wsClient: WSClient = components.wsClient
 
         responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()), expectedValue = true)
         responseShouldHaveInAppPaymentsEqualTo(
           await(wsUrl(s"/sandbox/savings-account/$nino?journeyId=$journeyId").get()),
           expectedValue = true)
+      }
+    }
+    "return 400 if no journeyId is supplied" in {
+
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.currentUserIsEnrolled()
+      HelpToSaveStub.accountExists(nino)
+
+      withTestServer(
+        appBuilder
+          .configure(
+            "helpToSave.inAppPaymentsEnabled" -> "true"
+          )
+          .build()) { (app: Application, portNumber: PortNumber) =>
+        implicit val implicitPortNumber: PortNumber = portNumber
+        implicit val wsClient: WSClient = components.wsClient
+
+        val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
+        response.status shouldBe (400)
+        val sandboxResponse: WSResponse = await(wsUrl(s"/sandbox/savings-account/$nino").get())
+        sandboxResponse.status shouldBe (400)
       }
     }
   }
