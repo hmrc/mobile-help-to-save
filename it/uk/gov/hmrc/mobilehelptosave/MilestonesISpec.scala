@@ -77,6 +77,7 @@ class MilestonesISpec
     }
 
     "return 400 when journeyId is not supplied" in {
+      val nino = generator.nextNino
       AuthStub.userIsLoggedIn(nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones").get())
