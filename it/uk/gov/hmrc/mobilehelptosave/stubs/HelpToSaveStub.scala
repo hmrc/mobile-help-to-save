@@ -107,21 +107,13 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def accountShouldNotHaveBeenCalled(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
     wireMockServer.verify(0, getRequestedFor(getAccountUrlPathPattern(nino)))
 
-  def accountExistsWithZeroBalance(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+  def accountExists(balance: BigDecimal, nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
         .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(aResponse()
           .withStatus(200)
-          .withBody(accountReturnedWithZeroBalanceByHelpToSaveJsonString)))
-
-  def accountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
-    wireMockServer.stubFor(
-      get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
-        .willReturn(aResponse()
-          .withStatus(200)
-          .withBody(accountReturnedByHelpToSaveJsonString)))
+          .withBody(accountReturnedByHelpToSaveJsonString(balance))))
 
   def accountExistsWithNoEmail(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(

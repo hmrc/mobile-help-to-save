@@ -52,7 +52,7 @@ class AccountsISpec
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
+      HelpToSaveStub.accountExists(123.45, nino = nino)
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
