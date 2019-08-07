@@ -17,6 +17,21 @@
                 "BalanceReached"
               ]
             },
+            "milestoneKey": {
+              "description": "The milestone key that determines the milestone title and message",
+              "type": "string",
+              "enum": [
+                "StartedSaving",
+                "BalanceReached100",
+                "BalanceReached200",
+                "BalanceReached500",
+                "BalanceReached750",
+                "BalanceReached1000",
+                "BalanceReached1500",
+                "BalanceReached2000",
+                "BalanceReached2400"
+              ]
+            },
             "milestoneTitle": {
               "description": "The title of the milestone",
               "type": "string"
@@ -24,17 +39,13 @@
             "milestoneMessage": {
               "description": "The message relating to the milestone",
               "type": "string"
-            },
-            "generatedDate": {
-              "description": "The date and time that the milestone was identified and generated on MDTP, not necessarily when the milestone was actually hit",
-              "type": "string"
             }
           },
           "required": [
             "milestoneType",
+            "milestoneKey",
             "milestoneTitle",
-            "milestoneMessage",
-            "generatedDate"
+            "milestoneMessage"
           ]
         }
       ]

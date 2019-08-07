@@ -90,7 +90,7 @@ class MilestonesControllerSpec
       val controller =
         new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
-      val result = controller.markAsSeen(nino.value, "5d3181afa400004cdf56dc76", journeyId)(FakeRequest())
+      val result = controller.markAsSeen(nino.value, "BalancedReached", journeyId)(FakeRequest())
 
       status(result) shouldBe 204
     }

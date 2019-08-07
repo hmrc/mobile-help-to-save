@@ -35,7 +35,7 @@ trait AccountTestData {
       |    "withdrawals": false,
       |    "bonuses": false
       |  },
-      |  "balance": 123.45,
+      |  "balance": 1,
       |  "paidInThisMonth": 27.88,
       |  "canPayInThisMonth": 22.12,
       |  "maximumPaidInThisMonth": 50,

@@ -77,11 +77,34 @@ class HtsMilestonesService[F[_]](
       case _ => previousBalanceRepo.setPreviousBalance(nino, currentBalance).map(_ => CouldNotCheck)
     }
 
-  protected def compareBalances(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Milestone] =
+  protected def compareBalances(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[Milestone] = {
+    def inRange(min: BigDecimal, max: BigDecimal): Boolean =
+      previousBalance < min && currentBalance >= min && currentBalance < max
+
+    def reached(value: BigDecimal): Boolean =
+      previousBalance < value && currentBalance >= value
+
     (previousBalance, currentBalance) match {
-      case (_, _) if previousBalance < 1 && currentBalance >= 1 =>
+      case (_, _) if inRange(1, 100) =>
         Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
+      case (_, _) if inRange(100, 200) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached100))
+      case (_, _) if inRange(200, 500) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached200))
+      case (_, _) if inRange(500, 750) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached500))
+      case (_, _) if inRange(750, 1000) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached750))
+      case (_, _) if inRange(1000, 1500) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached1000))
+      case (_, _) if inRange(1500, 2000) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached1500))
+      case (_, _) if inRange(2000, 2400) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached2000))
+      case (_, _) if reached(2400) =>
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached2400))
       case _ => None
     }
+  }
 
 }

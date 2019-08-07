@@ -42,7 +42,7 @@ class MilestonesISpec
 
   private val generator = new Generator(0)
   private val journeyId = randomUUID().toString
-  
+
   "GET /savings-account/:nino/milestones" should {
     "respond with 200 and empty list as JSON when there are no unseen milestones" in {
       val nino = generator.nextNino
@@ -50,8 +50,9 @@ class MilestonesISpec
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
-      response.status shouldBe 200
+      response.status                                                       shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
       (response.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
       (response.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
@@ -70,8 +71,9 @@ class MilestonesISpec
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
-      response.status shouldBe 200
+      response.status                                                    shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]     shouldBe "StartedSaving"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
       (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
     }
@@ -110,6 +112,7 @@ class MilestonesISpec
 
       milestones.status                                                       shouldBe 200
       (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
       (milestones.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
       (milestones.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
@@ -146,17 +149,18 @@ class MilestonesISpec
       val accountWithNonZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val milestonesAgain: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
-      milestonesAgain.status shouldBe 200
+      milestonesAgain.status                                                       shouldBe 200
       (milestonesAgain.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (milestonesAgain.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
       (milestonesAgain.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
       (milestonesAgain.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
-    
+
     "return 400 when journeyId is not supplied" in {
       val nino = generator.nextNino
       AuthStub.userIsLoggedIn(nino)
 
-      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen").put(""))
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen").put(""))
       response.status shouldBe 400
     }
   }
