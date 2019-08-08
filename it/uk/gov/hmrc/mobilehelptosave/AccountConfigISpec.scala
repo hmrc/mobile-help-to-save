@@ -53,7 +53,7 @@ class AccountConfigISpec
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
+      HelpToSaveStub.accountExists(1, nino)
 
       withTestServer(
         appBuilder
@@ -89,7 +89,7 @@ class AccountConfigISpec
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(nino)
+      HelpToSaveStub.accountExists(1, nino = nino)
 
       withTestServer(
         appBuilder

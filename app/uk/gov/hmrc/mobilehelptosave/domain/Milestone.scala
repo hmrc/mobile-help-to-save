@@ -25,7 +25,7 @@ case class Milestone(
   milestoneType: MilestoneType,
   milestoneKey:  MilestoneKey,
   isSeen:        Boolean = false,
-  isRepeatable:  Boolean,
+  isRepeatable:  Boolean = true,
   generatedDate: LocalDateTime = LocalDateTime.now())
 
 object Milestone {
@@ -39,9 +39,9 @@ object Milestones {
     override def writes(milestone: Milestone): JsObject =
       Json.obj(
         "milestoneType"    -> milestone.milestoneType,
+        "milestoneKey"     -> milestone.milestoneKey,
         "milestoneTitle"   -> Json.toJson(milestone.milestoneKey)(MilestoneKey.keyToTitleWrites),
-        "milestoneMessage" -> Json.toJson(milestone.milestoneKey)(MilestoneKey.keyToMessageWrites),
-        "generatedDate"    -> milestone.generatedDate
+        "milestoneMessage" -> Json.toJson(milestone.milestoneKey)(MilestoneKey.keyToMessageWrites)
       )
   }
 
@@ -65,25 +65,57 @@ object MilestoneType {
 sealed trait MilestoneKey
 
 case object StartedSaving extends MilestoneKey
+case object BalanceReached100 extends MilestoneKey
+case object BalanceReached200 extends MilestoneKey
+case object BalanceReached500 extends MilestoneKey
+case object BalanceReached750 extends MilestoneKey
+case object BalanceReached1000 extends MilestoneKey
+case object BalanceReached1500 extends MilestoneKey
+case object BalanceReached2000 extends MilestoneKey
+case object BalanceReached2400 extends MilestoneKey
 
 object MilestoneKey {
   implicit val format: Format[MilestoneKey] = new Format[MilestoneKey] {
     override def reads(json: JsValue): JsResult[MilestoneKey] = json.as[String] match {
-      case "StartedSaving" => JsSuccess(StartedSaving)
-      case _               => JsError("Invalid milestone key")
+      case "StartedSaving"      => JsSuccess(StartedSaving)
+      case "BalanceReached100"  => JsSuccess(BalanceReached100)
+      case "BalanceReached200"  => JsSuccess(BalanceReached200)
+      case "BalanceReached500"  => JsSuccess(BalanceReached500)
+      case "BalanceReached750"  => JsSuccess(BalanceReached750)
+      case "BalanceReached1000" => JsSuccess(BalanceReached1000)
+      case "BalanceReached1500" => JsSuccess(BalanceReached1500)
+      case "BalanceReached2000" => JsSuccess(BalanceReached2000)
+      case "BalanceReached2400" => JsSuccess(BalanceReached2400)
+      case _                    => JsError("Invalid milestone key")
     }
     override def writes(milestoneKey: MilestoneKey): JsString = JsString(milestoneKey.toString)
   }
 
   val keyToTitleWrites: Writes[MilestoneKey] = new Writes[MilestoneKey] {
     override def writes(milestoneKey: MilestoneKey): JsString = milestoneKey match {
-      case StartedSaving => JsString("You've started saving")
+      case StartedSaving      => JsString("You've started saving")
+      case BalanceReached100  => JsString("You have saved your first £100")
+      case BalanceReached200  => JsString("Well done for saving £200 so far")
+      case BalanceReached500  => JsString("Well done")
+      case BalanceReached750  => JsString("You have £750 saved up in your Help to Save account so far")
+      case BalanceReached1000 => JsString("Well done for saving £1,000")
+      case BalanceReached1500 => JsString("Your savings are £1,500 so far")
+      case BalanceReached2000 => JsString("Well done")
+      case BalanceReached2400 => JsString("You have £2,400 in savings")
     }
   }
 
   val keyToMessageWrites: Writes[MilestoneKey] = new Writes[MilestoneKey] {
     override def writes(milestoneKey: MilestoneKey): JsString = milestoneKey match {
-      case StartedSaving => JsString("Well done for making your first payment.")
+      case StartedSaving      => JsString("Well done for making your first payment.")
+      case BalanceReached100  => JsString("That's great!")
+      case BalanceReached200  => JsString("Your savings are growing.")
+      case BalanceReached500  => JsString("You have saved £500 since opening your account.")
+      case BalanceReached750  => JsString("That's great!")
+      case BalanceReached1000 => JsString("Your savings are growing.")
+      case BalanceReached1500 => JsString("That's great!")
+      case BalanceReached2000 => JsString("You have £2,000 in savings now.")
+      case BalanceReached2400 => JsString("You have saved the most possible with Help to Save!")
     }
   }
 }

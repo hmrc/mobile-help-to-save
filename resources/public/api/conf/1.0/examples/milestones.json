@@ -2,9 +2,9 @@
   "milestones": [
     {
       "milestoneType": "BalanceReached",
+      "milestoneKey": "StartedSaving",
       "milestoneTitle": "You've started saving",
-      "milestoneMessage": "Well done for making your first payment.",
-      "generatedDate": "2019-07-19T09:39:11.297"
+      "milestoneMessage": "Well done for making your first payment."
     }
   ]
 }
