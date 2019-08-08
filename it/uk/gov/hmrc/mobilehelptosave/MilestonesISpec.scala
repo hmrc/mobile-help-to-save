@@ -221,6 +221,56 @@ class MilestonesISpec
       (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "You have saved the most possible with Help to Save!"
     }
 
+    "respond with 200 and an empty list when the same milestone has been hit twice and is not repeatable" in {
+      val nino = generator.nextNino
+
+      loginWithBalance(0, nino)
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      loginWithBalance(1, nino)
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      val markedAsSeen:              WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=$journeyId").put(""))
+
+      loginWithBalance(0, nino)
+      val accountWithZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      loginWithBalance(1, nino)
+      val accountWithNonZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                       shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
+    }
+
+    "respond with 200 and the same milestone after it has been hit once before if it is repeatable" in {
+      val nino = generator.nextNino
+
+      loginWithBalance(0, nino)
+      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      loginWithBalance(250, nino)
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      val markedAsSeen:              WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=$journeyId").put(""))
+
+      loginWithBalance(0, nino)
+      val accountWithZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      loginWithBalance(270, nino)
+      val accountWithNonZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                    shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]     shouldBe "BalanceReached200"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "Well done for saving £200 so far"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Your savings are growing."
+    }
+
     "respond with 200 and only the most recent milestone of a specific type in a list as JSON" in {
       val nino = generator.nextNino
 
