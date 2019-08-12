@@ -77,7 +77,7 @@ case object BalanceReached2400 extends MilestoneKey
 object MilestoneKey {
   implicit val format: Format[MilestoneKey] = new Format[MilestoneKey] {
     override def reads(json: JsValue): JsResult[MilestoneKey] = json.as[String] match {
-      case "BalanceReached1"      => JsSuccess(BalanceReached1)
+      case "BalanceReached1"    => JsSuccess(BalanceReached1)
       case "BalanceReached100"  => JsSuccess(BalanceReached100)
       case "BalanceReached200"  => JsSuccess(BalanceReached200)
       case "BalanceReached500"  => JsSuccess(BalanceReached500)
@@ -93,7 +93,7 @@ object MilestoneKey {
 
   val keyToTitleWrites: Writes[MilestoneKey] = new Writes[MilestoneKey] {
     override def writes(milestoneKey: MilestoneKey): JsString = milestoneKey match {
-      case BalanceReached1      => JsString("You've started saving")
+      case BalanceReached1    => JsString("You've started saving")
       case BalanceReached100  => JsString("You have saved your first £100")
       case BalanceReached200  => JsString("Well done for saving £200 so far")
       case BalanceReached500  => JsString("Well done")
@@ -107,7 +107,7 @@ object MilestoneKey {
 
   val keyToMessageWrites: Writes[MilestoneKey] = new Writes[MilestoneKey] {
     override def writes(milestoneKey: MilestoneKey): JsString = milestoneKey match {
-      case BalanceReached1      => JsString("Well done for making your first payment.")
+      case BalanceReached1    => JsString("Well done for making your first payment.")
       case BalanceReached100  => JsString("That's great!")
       case BalanceReached200  => JsString("Your savings are growing.")
       case BalanceReached500  => JsString("You have saved £500 since opening your account.")
