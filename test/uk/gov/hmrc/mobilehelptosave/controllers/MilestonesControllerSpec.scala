@@ -63,7 +63,7 @@ class MilestonesControllerSpec
 
   "getMilestones" should {
     "return 200 and the list of milestones as JSON" in {
-      val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
+      val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached1, isRepeatable = false))
 
       (mockMilestonesService
         .getMilestones(_: Nino)(_: HeaderCarrier))

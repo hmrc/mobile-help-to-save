@@ -59,7 +59,7 @@ class MilestonesISpec
       (response.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
     }
 
-    "respond with 200 and the StartedSaving milestone in a list as JSON when the milestone is hit" in {
+    "respond with 200 and the BalanceReached1 milestone in a list as JSON when the milestone is hit" in {
       val nino = generator.nextNino
 
       loginWithBalance(0, nino)
@@ -72,7 +72,7 @@ class MilestonesISpec
 
       response.status                                                    shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
-      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]     shouldBe "StartedSaving"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
       (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
     }

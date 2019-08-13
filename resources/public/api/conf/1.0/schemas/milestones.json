@@ -21,7 +21,7 @@
               "description": "The milestone key that determines the milestone title and message",
               "type": "string",
               "enum": [
-                "StartedSaving",
+                "BalanceReached1",
                 "BalanceReached100",
                 "BalanceReached200",
                 "BalanceReached500",

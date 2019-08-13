@@ -86,7 +86,7 @@ class HtsMilestonesService[F[_]](
 
     (previousBalance, currentBalance) match {
       case (_, _) if inRange(1, 100) =>
-        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = StartedSaving, isRepeatable = false))
+        Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached1, isRepeatable = false))
       case (_, _) if inRange(100, 200) =>
         Some(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached100))
       case (_, _) if inRange(200, 500) =>
