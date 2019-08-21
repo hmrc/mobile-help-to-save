@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.time.LocalDate
 import java.util.UUID.randomUUID
 
 import org.scalatest._
 import play.api.Application
+import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -297,6 +299,22 @@ class MilestonesISpec
       (response.json \ "milestones" \ 1 \ "milestoneMessage").asOpt[String] shouldBe None
     }
 
+    "respond with 200 and the EndOfFirstBonusPeriodPositiveBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(1), 400, LocalDate.now().plusYears(2))
+      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodPositiveBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 2"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe s"Your first bonus of £200 will be paid into your bank account from 2020-01-01."
+    }
+
     "return 400 when journeyId is not supplied" in {
       val nino = generator.nextNino
       AuthStub.userIsLoggedIn(nino)
@@ -369,5 +387,26 @@ class MilestonesISpec
     AuthStub.userIsLoggedIn(nino)
     HelpToSaveStub.currentUserIsEnrolled()
     HelpToSaveStub.accountExists(balance, nino)
+  }
+
+  private def loginWithBalanceAndBonusTerms(
+    balance:                   BigDecimal,
+    nino:                      Nino,
+    firstPeriodBonusEstimate:  BigDecimal,
+    firstPeriodBonusPaid:      BigDecimal,
+    firstPeriodEndDate:        LocalDate,
+    secondPeriodBonusEstimate: BigDecimal,
+    secondPeriodEndDate:       LocalDate) = {
+    wireMockServer.resetAll()
+    AuthStub.userIsLoggedIn(nino)
+    HelpToSaveStub.currentUserIsEnrolled()
+    HelpToSaveStub.accountExistsSpecifyBonusTerms(
+      balance,
+      nino,
+      firstPeriodBonusEstimate,
+      firstPeriodBonusPaid,
+      firstPeriodEndDate,
+      secondPeriodBonusEstimate,
+      secondPeriodEndDate)
   }
 }

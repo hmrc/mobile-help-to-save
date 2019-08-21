@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import java.time.LocalDate
+
 import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{EitherValues, Matchers, OneInstancePerTest, WordSpec}
+import play.libs.F
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, Milestone, MilestoneCheckResult, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.domain.{BonusTerm, ErrorInfo, MongoMilestone, MilestoneCheckResult, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
@@ -144,11 +147,13 @@ class SetSavingsGoalSpec
 
   private def fakeMilestoneService: MilestonesService[TestF] =
     new MilestonesService[TestF] {
-      override def setMilestone(milestone:     Milestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
-      override def getMilestones(nino:         Nino)(implicit hc:      HeaderCarrier): TestF[List[Milestone]] = ???
+      override def setMilestone(milestone:     MongoMilestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
+      override def getMilestones(nino:         Nino)(implicit hc:      HeaderCarrier): TestF[List[MongoMilestone]] = ???
       override def markAsSeen(nino:            Nino, milestoneId:      String)(implicit hc: HeaderCarrier): TestF[Unit] = ???
       override def balanceMilestoneCheck(nino: Nino, currentBalance:   BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
         ???
+
+      override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] = ???
     }
 
   private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =
