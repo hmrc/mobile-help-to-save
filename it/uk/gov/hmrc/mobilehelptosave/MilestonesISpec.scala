@@ -302,7 +302,7 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -318,7 +318,7 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(10, nino, 0, 0, LocalDate.now().minusDays(90), 0, LocalDate.now().plusYears(2))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -334,7 +334,7 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(0, nino, 0, 0, LocalDate.now().minusYears(2), 0, LocalDate.now().plusDays(20))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -350,7 +350,7 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(0, nino, 0, 0, LocalDate.now().minusYears(2), 250, LocalDate.now().plusDays(20))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -366,7 +366,7 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(1350, nino, 0, 0, LocalDate.now().minusYears(2), 0, LocalDate.now().plusDays(20))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -382,7 +382,7 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(1350, nino, 0, 0, LocalDate.now().minusYears(2), 600, LocalDate.now().plusDays(20))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -398,11 +398,11 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
-      val markedAsSeen:              WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BonusPeriod/seen?journeyId=$journeyId").put(""))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino/milestones/BonusPeriod/seen?journeyId=$journeyId").put(""))
 
       loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
-      val accountWithNonZeroBalanceAgain: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -418,13 +418,13 @@ class MilestonesISpec
       val nino = generator.nextNino
 
       loginWithBalance(0, nino)
-      val accountWithZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       loginWithBalance(1, nino)
-      val accountWithStartedSavingBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
-      val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
@@ -452,7 +452,7 @@ class MilestonesISpec
   }
 
   "PUT /savings-account/:nino/milestones/:milestoneType/seen" should {
-    "mark milestones of a certain type as seen using the nino and milestone type" in {
+    "mark milestones of a BalanceReached type as seen using the nino and milestone type" in {
       val nino = generator.nextNino
 
       loginWithBalance(0, nino)
@@ -462,6 +462,24 @@ class MilestonesISpec
       val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=$journeyId").put(""))
+      val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status shouldBe 204
+
+      milestones.status                                                       shouldBe 200
+      (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
+    }
+
+    "mark milestones of a BonusPeriod type as seen using the nino and milestone type" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BonusPeriod/seen?journeyId=$journeyId").put(""))
       val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 204

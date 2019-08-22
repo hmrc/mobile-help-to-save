@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -100,12 +99,12 @@ class HtsMilestonesService[F[_]](
   override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(
     implicit hc:                               HeaderCarrier): F[MilestoneCheckResult] = {
 
-    val endOfFirstBonusPeriod              = bonusTerms(0).endDate
+    val endOfFirstBonusPeriod              = bonusTerms.head.endDate
     val endOfSecondBonusPeriod             = bonusTerms(1).endDate
-    val firstPeriodBonusEstimate           = bonusTerms(0).bonusEstimate
+    val firstPeriodBonusEstimate           = bonusTerms.head.bonusEstimate
     val secondPeriodBonusEstimate          = bonusTerms(1).bonusEstimate
-    val firstPeriodBonusPaid               = bonusTerms(0).bonusPaid
-    val firstPeriodBonusPaidOnOrAfterDate  = bonusTerms(0).bonusPaidOnOrAfterDate
+    val firstPeriodBonusPaid               = bonusTerms.head.bonusPaid
+    val firstPeriodBonusPaidOnOrAfterDate  = bonusTerms.head.bonusPaidOnOrAfterDate
     val secondPeriodBonusPaidOnOrAfterDate = bonusTerms(1).bonusPaidOnOrAfterDate
 
     checkBonusPeriods(
@@ -142,7 +141,7 @@ class HtsMilestonesService[F[_]](
     val hasSecondBonusEstimate             = secondPeriodBonusEstimate > 0
     val firstPeriodBonusPaid               = firstPeriodBonus > 0
     val within20DaysOfFirstPeriodEndDate   = currentDateInDuration(endOfFirstBonusPeriod, 20)
-    val under90DaysSinceFirstPeriodEndDate = currentDateInDuration(endOfFirstBonusPeriod.plusDays(90), 90)
+    val under90DaysSinceFirstPeriodEndDate = currentDateInDuration(endOfFirstBonusPeriod.plusDays(91), 90)
     val within20DaysOfFinalEndDate         = currentDateInDuration(endOfSecondBonusPeriod, 20)
     val dateFormat                         = DateTimeFormatter.ofPattern("d-MMM-yyyy")
 
