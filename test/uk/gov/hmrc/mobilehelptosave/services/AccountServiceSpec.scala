@@ -45,7 +45,7 @@ class AccountServiceSpec
   private val generator            = new Generator(0)
   private val nino                 = generator.nextNino
   private val testConfig           = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
-  private val testMilestonesConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true)
+  private val testMilestonesConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 

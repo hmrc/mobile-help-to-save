@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 import cats.MonadError
@@ -56,13 +58,25 @@ class HtsMilestonesService[F[_]](
       .flatMap(grouped => grouped._2.filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering)))
       .toList
 
+  protected def filterMilestonesByPriority(milestones: List[MongoMilestone]): List[MongoMilestone] = {
+    val priority1 = BonusPeriod
+
+    if (milestones.size > 1)
+      milestones.filter(milestone => milestone.milestoneType == priority1)
+    else
+      milestones
+  }
+
   override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]] =
     milestonesRepo.getMilestones(nino).map { milestones =>
-      val filteredMilestones = filterDuplicateMilestoneTypes(milestones)
-
-      config.balanceMilestoneCheckEnabled match {
-        case true => filteredMilestones
-        case _    => filteredMilestones.filter(_.milestoneType != BalanceReached)
+      val filteredMilestonesByType = filterDuplicateMilestoneTypes(milestones)
+      val filteredMilestones       = filterMilestonesByPriority(filteredMilestonesByType)
+      (config.balanceMilestoneCheckEnabled, config.bonusPeriodMilestoneCheckEnabled) match {
+        case (false, false) =>
+          filteredMilestones.filter(milestone => milestone.milestoneType != BalanceReached && milestone.milestoneType != BalanceReached)
+        case (true, false) => filteredMilestones.filter(_.milestoneType != BonusPeriod)
+        case (false, true) => filteredMilestones.filter(_.milestoneType != BalanceReached)
+        case _             => filteredMilestones
       }
     }
 
@@ -130,13 +144,17 @@ class HtsMilestonesService[F[_]](
     val within20DaysOfFirstPeriodEndDate   = currentDateInDuration(endOfFirstBonusPeriod, 20)
     val under90DaysSinceFirstPeriodEndDate = currentDateInDuration(endOfFirstBonusPeriod.plusDays(90), 90)
     val within20DaysOfFinalEndDate         = currentDateInDuration(endOfSecondBonusPeriod, 20)
+    val dateFormat                         = DateTimeFormatter.ofPattern("d-MMM-yyyy")
 
     if (within20DaysOfFirstPeriodEndDate && hasFirstBonusEstimate)
       Some(
         createBonusPeriodMongoMilestone(
           nino,
           EndOfFirstBonusPeriodPositiveBonus,
-          Some(Map("bonusEstimate" -> firstPeriodBonusEstimate.toString(), "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.toString))
+          Some(
+            Map(
+              "bonusEstimate"          -> firstPeriodBonusEstimate.toString(),
+              "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
         ))
     else if (under90DaysSinceFirstPeriodEndDate && !hasFirstBonusEstimate && !hasSecondBonusEstimate && !firstPeriodBonusPaid)
       Some(
@@ -145,29 +163,14 @@ class HtsMilestonesService[F[_]](
           StartOfFinalBonusPeriodNoBonus
         ))
     else if (within20DaysOfFinalEndDate) {
-      if (currentBalance <= 0 && hasSecondBonusEstimate)
+      if (currentBalance <= 0 && !hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
             nino,
             EndOfFinalBonusPeriodZeroBalanceNoBonus,
-            Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.toString))
+            Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
           ))
-      else if (currentBalance <= 0 && !hasSecondBonusEstimate)
-        Some(
-          createBonusPeriodMongoMilestone(
-            nino,
-            EndOfFinalBonusPeriodZeroBalancePositiveBonus,
-            Some(
-              Map("bonusEstimate" -> secondPeriodBonusEstimate.toString(), "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.toString))
-          ))
-      else if (currentBalance > 0 && hasSecondBonusEstimate)
-        Some(
-          createBonusPeriodMongoMilestone(
-            nino,
-            EndOfFinalBonusPeriodPositiveBalanceNoBonus,
-            Some(Map("balance" -> currentBalance.toString(), "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.toString))
-          ))
-      else
+      else if (currentBalance <= 0 && hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
             nino,
@@ -175,7 +178,24 @@ class HtsMilestonesService[F[_]](
             Some(
               Map(
                 "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.toString,
+                "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
+          ))
+      else if (currentBalance > 0 && !hasSecondBonusEstimate)
+        Some(
+          createBonusPeriodMongoMilestone(
+            nino,
+            EndOfFinalBonusPeriodPositiveBalanceNoBonus,
+            Some(Map("balance" -> currentBalance.toString(), "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
+          ))
+      else
+        Some(
+          createBonusPeriodMongoMilestone(
+            nino,
+            EndOfFinalBonusPeriodPositiveBalancePositiveBonus,
+            Some(
+              Map(
+                "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
+                "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat),
                 "balance"                -> currentBalance.toString()
               ))
           )

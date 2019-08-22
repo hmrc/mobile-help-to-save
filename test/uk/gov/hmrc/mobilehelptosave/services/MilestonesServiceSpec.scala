@@ -43,7 +43,7 @@ class MilestonesServiceSpec
 
   private val generator  = new Generator(0)
   private val nino       = generator.nextNino
-  private val testConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true)
+  private val testConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
   private val baseBonusTerms = Seq(
     BonusTerm(
       bonusEstimate                 = BigDecimal("90.99"),

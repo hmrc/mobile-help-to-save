@@ -82,7 +82,7 @@ object Milestone {
       case Milestone(BalanceReached2400, _)                                => JsString("You have £2,400 in savings")
       case Milestone(EndOfFirstBonusPeriodPositiveBonus, _)                => JsString("It's nearly the end of year 2")
       case Milestone(StartOfFinalBonusPeriodNoBonus, _)                    => JsString("Your Help to Save account is 2 years old")
-      case Milestone(EndOfFinalBonusPeriodZeroBalanceNoBonus, _)           => JsString("It's almost the end of year 4")
+      case Milestone(EndOfFinalBonusPeriodZeroBalanceNoBonus, _)           => JsString("It's nearly the end of year 4")
       case Milestone(EndOfFinalBonusPeriodZeroBalancePositiveBonus, _)     => JsString("It's nearly the end of year 4")
       case Milestone(EndOfFinalBonusPeriodPositiveBalanceNoBonus, _)       => JsString("It's nearly the end of year 4")
       case Milestone(EndOfFinalBonusPeriodPositiveBalancePositiveBonus, _) => JsString("It's nearly the end of year 4")
@@ -109,7 +109,7 @@ object Milestone {
       case Milestone(EndOfFinalBonusPeriodZeroBalancePositiveBonus, values) =>
         JsString(s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodPositiveBalanceNoBonus, values) =>
-        JsString(s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+        JsString(s"Your savings of £${values get "balance"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodPositiveBalancePositiveBonus, values) =>
         JsString(
           s"Your savings of £${values get "balance"} and final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
