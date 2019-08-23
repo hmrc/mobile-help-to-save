@@ -57,19 +57,12 @@ class HtsMilestonesService[F[_]](
       .flatMap(grouped => grouped._2.filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering)))
       .toList
 
-  protected def filterMilestonesByPriority(milestones: List[MongoMilestone]): List[MongoMilestone] = {
-    val priority1 = BonusPeriod
-
-    if (milestones.size > 1)
-      milestones.filter(milestone => milestone.milestoneType == priority1)
-    else
-      milestones
-  }
+  protected def filterMilestonesByPriority(milestones: List[MongoMilestone]): List[MongoMilestone] = List(milestones.sorted.head)
 
   override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]] =
     milestonesRepo.getMilestones(nino).map { milestones =>
       val filteredMilestonesByType = filterDuplicateMilestoneTypes(milestones)
-      val filteredMilestones       = filterMilestonesByPriority(filteredMilestonesByType)
+      val filteredMilestones       = if (filteredMilestonesByType.size > 1) filterMilestonesByPriority(filteredMilestonesByType) else filteredMilestonesByType
       (config.balanceMilestoneCheckEnabled, config.bonusPeriodMilestoneCheckEnabled) match {
         case (false, false) =>
           filteredMilestones.filter(milestone => milestone.milestoneType != BalanceReached && milestone.milestoneType != BalanceReached)
@@ -124,7 +117,7 @@ class HtsMilestonesService[F[_]](
   }
 
   protected def checkBonusPeriods(
-    nino:                               Nino,
+    implicit nino:                      Nino,
     endOfFirstBonusPeriod:              LocalDate,
     endOfSecondBonusPeriod:             LocalDate,
     firstPeriodBonusEstimate:           BigDecimal,
@@ -148,7 +141,6 @@ class HtsMilestonesService[F[_]](
     if (within20DaysOfFirstPeriodEndDate && hasFirstBonusEstimate)
       Some(
         createBonusPeriodMongoMilestone(
-          nino,
           EndOfFirstBonusPeriodPositiveBonus,
           Some(
             Map(
@@ -158,21 +150,18 @@ class HtsMilestonesService[F[_]](
     else if (under90DaysSinceFirstPeriodEndDate && !hasFirstBonusEstimate && !hasSecondBonusEstimate && !firstPeriodBonusPaid)
       Some(
         createBonusPeriodMongoMilestone(
-          nino,
           StartOfFinalBonusPeriodNoBonus
         ))
     else if (within20DaysOfFinalEndDate) {
       if (currentBalance <= 0 && !hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
-            nino,
             EndOfFinalBonusPeriodZeroBalanceNoBonus,
             Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
           ))
       else if (currentBalance <= 0 && hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
-            nino,
             EndOfFinalBonusPeriodZeroBalancePositiveBonus,
             Some(
               Map(
@@ -182,14 +171,12 @@ class HtsMilestonesService[F[_]](
       else if (currentBalance > 0 && !hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
-            nino,
             EndOfFinalBonusPeriodPositiveBalanceNoBonus,
             Some(Map("balance" -> currentBalance.toString(), "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
           ))
       else
         Some(
           createBonusPeriodMongoMilestone(
-            nino,
             EndOfFinalBonusPeriodPositiveBalancePositiveBonus,
             Some(
               Map(
@@ -232,7 +219,8 @@ class HtsMilestonesService[F[_]](
     }
   }
 
-  private def createBonusPeriodMongoMilestone(nino: Nino, milestoneKey: MilestoneKey, values: Option[Map[String, String]] = None): MongoMilestone =
+  private def createBonusPeriodMongoMilestone(milestoneKey: MilestoneKey, values: Option[Map[String, String]] = None)(
+    implicit nino:                                          Nino): MongoMilestone =
     MongoMilestone(
       nino          = nino,
       milestoneType = BonusPeriod,

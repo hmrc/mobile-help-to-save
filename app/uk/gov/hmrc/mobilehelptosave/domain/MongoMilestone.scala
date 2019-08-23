@@ -26,10 +26,13 @@ case class MongoMilestone(
   milestone:     Milestone,
   isSeen:        Boolean = false,
   isRepeatable:  Boolean = true,
-  generatedDate: LocalDateTime = LocalDateTime.now())
+  generatedDate: LocalDateTime = LocalDateTime.now()) {
+  def compare(that: MilestoneType) = milestoneType.priority-that.priority
+}
 
 object MongoMilestone {
   implicit val format: OFormat[MongoMilestone] = Json.format
+  implicit def ordering[A <: MongoMilestone]: Ordering[A] = Ordering.by(_.milestoneType.priority)
 }
 
 case class Milestones(milestones: List[MongoMilestone])
@@ -48,12 +51,20 @@ object Milestones {
   implicit val format: OFormat[Milestones] = Json.format
 }
 
-sealed trait MilestoneType
+sealed trait MilestoneType extends Ordered[MilestoneType] {
+  val priority: Int
+  def compare(that: MilestoneType) = priority-that.priority
+}
 
-case object BalanceReached extends MilestoneType
-case object BonusPeriod extends MilestoneType
+case object BalanceReached extends MilestoneType {val priority = 2}
+case object BonusPeriod extends MilestoneType {val priority = 1}
+
+object BalancedReached {
+
+}
 
 object MilestoneType {
+  implicit def ordering[A <: MilestoneType]: Ordering[A] = Ordering.by(_.priority)
   implicit val format: Format[MilestoneType] = new Format[MilestoneType] {
     override def reads(json: JsValue): JsResult[MilestoneType] = json.as[String] match {
       case "BalanceReached" => JsSuccess(BalanceReached)

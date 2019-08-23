@@ -30,9 +30,10 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, MilestonesConfig}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.{MilestoneCheckResult, _}
 import uk.gov.hmrc.mobilehelptosave.repository._
 
+import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 trait AccountService[F[_]] {
@@ -68,15 +69,18 @@ class HtsAccountService[F[_]](
     }
 
   override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]] =
-    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
+    withHelpToSaveAccount(nino) { _ =>
+      trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
     }
 
   override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]] =
-    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
+    withHelpToSaveAccount(nino) { _ =>
+      trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
     }
 
   override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
-    withHelpToSaveAccount(nino) { _ => trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
+    withHelpToSaveAccount(nino) { _ =>
+      trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
     }
 
   override def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
@@ -84,17 +88,14 @@ class HtsAccountService[F[_]](
       case true =>
         EitherT(fetchAccountWithGoal(nino)).flatMap {
           case Some(account) =>
-            EitherT.liftF[F, ErrorInfo, Option[Account]](
-              if (milestonesConfig.balanceMilestoneCheckEnabled) {
-                for {
-                  balanceMilestoneCheckResult <- milestonesService.balanceMilestoneCheck(nino, account.balance)
-                  bonusPeriodMilestoneCheckResult <- milestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
-                }  yield Some(account)
-              }
-              else F.pure(Some(account)))
+            EitherT.liftF[F, ErrorInfo, Option[Account]](for {
+              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) milestonesService.balanceMilestoneCheck(nino, account.balance) else F.pure(())
+              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
+                    milestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
+                  else F.pure(())
+            } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
         }
-
       case false =>
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
