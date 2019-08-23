@@ -19,6 +19,7 @@ import java.time.LocalDateTime
 
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
+import scala.language.implicitConversions
 
 case class MongoMilestone(
   nino:          Nino,
@@ -31,13 +32,19 @@ case class MongoMilestone(
 }
 
 object MongoMilestone {
-  implicit val format: OFormat[MongoMilestone] = Json.format
-  implicit def ordering[A <: MongoMilestone]: Ordering[A] = Ordering.by(_.milestoneType.priority)
+  implicit val format:                        OFormat[MongoMilestone] = Json.format
+  implicit def ordering[A <: MongoMilestone]: Ordering[A]             = Ordering.by(_.milestoneType.priority)
 }
 
 case class Milestones(milestones: List[MongoMilestone])
 
 object Milestones {
+  class PriorityMilestones(milestones: List[MongoMilestone]) {
+    def highestPriority: List[MongoMilestone] = if (milestones.isEmpty) List.empty[MongoMilestone] else List(milestones.min)
+  }
+
+  implicit def prioritise(milestones: List[MongoMilestone]) = new PriorityMilestones(milestones)
+
   implicit val milestoneWrites: Writes[MongoMilestone] = new Writes[MongoMilestone] {
     override def writes(m: MongoMilestone): JsObject =
       Json.obj(
@@ -56,12 +63,10 @@ sealed trait MilestoneType extends Ordered[MilestoneType] {
   def compare(that: MilestoneType) = priority - that.priority
 }
 
-case object BalanceReached extends MilestoneType {val priority = 2}
-case object BonusPeriod extends MilestoneType {val priority = 1}
+case object BalanceReached extends MilestoneType { val priority = 2 }
+case object BonusPeriod extends MilestoneType { val priority    = 1 }
 
-object BalancedReached {
-
-}
+object BalancedReached {}
 
 object MilestoneType {
   implicit def ordering[A <: MilestoneType]: Ordering[A] = Ordering.by(_.priority)
@@ -112,13 +117,15 @@ object Milestone {
       case Milestone(BalanceReached2000, _) => JsString("You have £2,000 in savings now.")
       case Milestone(BalanceReached2400, _) => JsString("You have saved the most possible with Help to Save!")
       case Milestone(EndOfFirstBonusPeriodPositiveBonus, values) =>
-        JsString(s"Your first bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+        JsString(
+          s"Your first bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(StartOfFinalBonusPeriodNoBonus, _) =>
         JsString("There are still 2 years to use your account to save and earn a tax-free bonus from the government.")
       case Milestone(EndOfFinalBonusPeriodZeroBalanceNoBonus, values) =>
         JsString(s"Your Help to Save account will be closed from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodZeroBalancePositiveBonus, values) =>
-        JsString(s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+        JsString(
+          s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodPositiveBalanceNoBonus, values) =>
         JsString(s"Your savings of £${values get "balance"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodPositiveBalancePositiveBonus, values) =>
