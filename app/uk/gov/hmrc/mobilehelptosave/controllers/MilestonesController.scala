@@ -46,17 +46,19 @@ class MilestonesController(
 
   override def shuttering: Shuttering = config.shuttering
 
-  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-    verifyingMatchingNino(ninoString) { nino =>
-      milestonesService
-        .getMilestones(nino)
-        .map(milestones => Ok(Json.toJson(Milestones(milestones))))
-    }
+  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
+    implicit request: RequestWithIds[AnyContent] =>
+      verifyingMatchingNino(ninoString) { nino =>
+        milestonesService
+          .getMilestones(nino)
+          .map(milestones => Ok(Json.toJson(Milestones(milestones))))
+      }
   }
 
   override def markAsSeen(ninoString: String, milestoneType: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino => milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
+      verifyingMatchingNino(ninoString) { nino =>
+        milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
       }
   }
 

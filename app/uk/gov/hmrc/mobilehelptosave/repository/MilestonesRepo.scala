@@ -23,14 +23,14 @@ import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.Milestone
+import uk.gov.hmrc.mobilehelptosave.domain.MongoMilestone
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesRepo[F[_]] {
-  def setMilestone(milestone: Milestone): F[Unit]
+  def setMilestone(milestone: MongoMilestone): F[Unit]
 
-  def getMilestones(nino: Nino): F[List[Milestone]]
+  def getMilestones(nino: Nino): F[List[MongoMilestone]]
 
   def markAsSeen(nino: Nino, milestoneType: String): F[Unit]
 
@@ -39,20 +39,20 @@ trait MilestonesRepo[F[_]] {
 
 class MongoMilestonesRepo(
   mongo:       ReactiveMongoComponent
-)(implicit ec: ExecutionContext, mongoFormats: Format[Milestone])
-    extends IndexedMongoRepo[Nino, Milestone]("milestones", "nino", unique = false, mongo = mongo)
+)(implicit ec: ExecutionContext, mongoFormats: Format[MongoMilestone])
+    extends IndexedMongoRepo[Nino, MongoMilestone]("milestones", "nino", unique = false, mongo = mongo)
     with MilestonesRepo[Future] {
 
-  override def setMilestone(milestone: Milestone): Future[Unit] =
+  override def setMilestone(milestone: MongoMilestone): Future[Unit] =
     collection
-      .find(obj("nino" -> milestone.nino, "milestoneKey" -> milestone.milestoneKey), None)(JsObjectDocumentWriter, JsObjectDocumentWriter)
-      .one[Milestone]
+      .find(obj("nino" -> milestone.nino, "milestone" -> milestone.milestone), None)(JsObjectDocumentWriter, JsObjectDocumentWriter)
+      .one[MongoMilestone]
       .map {
         case Some(m) => if (m.isRepeatable) insert(milestone).void else ()
         case _       => insert(milestone).void
       }
 
-  override def getMilestones(nino: Nino): Future[List[Milestone]] =
+  override def getMilestones(nino: Nino): Future[List[MongoMilestone]] =
     find("nino" -> Json.toJson(nino), "isSeen" -> false)
 
   override def markAsSeen(nino: Nino, milestoneType: String): Future[Unit] =

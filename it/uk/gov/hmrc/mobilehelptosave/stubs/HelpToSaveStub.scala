@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.stubs
 
+import java.time.LocalDate
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.{status, _}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
@@ -114,6 +116,29 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         .willReturn(aResponse()
           .withStatus(200)
           .withBody(accountReturnedByHelpToSaveJsonString(balance))))
+
+  def accountExistsSpecifyBonusTerms(
+    balance:                   BigDecimal,
+    nino:                      Nino,
+    firstPeriodBonusEstimate:  BigDecimal,
+    firstPeriodBonusPaid:      BigDecimal,
+    firstPeriodEndDate:        LocalDate,
+    secondPeriodBonusEstimate: BigDecimal,
+    secondPeriodEndDate:       LocalDate)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(getAccountUrlPathPattern(nino))
+        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(
+              accountReturnedByHelpToSaveJsonString(
+                balance,
+                firstPeriodBonusEstimate,
+                firstPeriodBonusPaid,
+                firstPeriodEndDate,
+                secondPeriodBonusEstimate,
+                secondPeriodEndDate))))
 
   def accountExistsWithNoEmail(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(

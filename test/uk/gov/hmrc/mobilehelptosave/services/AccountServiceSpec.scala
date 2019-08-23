@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import java.time.LocalDate
+
 import cats.instances.either._
 import cats.syntax.applicativeError._
 import cats.syntax.functor._
@@ -43,7 +45,7 @@ class AccountServiceSpec
   private val generator            = new Generator(0)
   private val nino                 = generator.nextNino
   private val testConfig           = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
-  private val testMilestonesConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true)
+  private val testMilestonesConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -223,11 +225,13 @@ class AccountServiceSpec
 
   private def fakeMilestoneService: MilestonesService[TestF] =
     new MilestonesService[TestF] {
-      override def setMilestone(milestone:     Milestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
-      override def getMilestones(nino:         Nino)(implicit hc:      HeaderCarrier): TestF[List[Milestone]] = ???
-      override def markAsSeen(nino:            Nino, milestoneId:      String)(implicit hc: HeaderCarrier): TestF[Unit] = ???
-      override def balanceMilestoneCheck(nino: Nino, currentBalance:   BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
+      override def setMilestone(milestone:     MongoMilestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
+      override def getMilestones(nino:         Nino)(implicit hc:           HeaderCarrier): TestF[List[MongoMilestone]] = ???
+      override def markAsSeen(nino:            Nino, milestoneId:           String)(implicit hc: HeaderCarrier): TestF[Unit] = ???
+      override def balanceMilestoneCheck(nino: Nino, currentBalance:        BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
         F.pure(CouldNotCheck)
+      override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(
+        implicit hc:                               HeaderCarrier): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }
 
   private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =

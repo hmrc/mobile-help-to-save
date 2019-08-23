@@ -45,9 +45,9 @@ class MilestonesControllerSpec
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val generator             = new Generator(0)
+  private val nino                  = generator.nextNino
+  private val journeyId             = randomUUID().toString
   private val mockMilestonesService = mock[MilestonesService[Future]]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
@@ -63,7 +63,7 @@ class MilestonesControllerSpec
 
   "getMilestones" should {
     "return 200 and the list of milestones as JSON" in {
-      val milestones = List(Milestone(nino = nino, milestoneType = BalanceReached, milestoneKey = BalanceReached1, isRepeatable = false))
+      val milestones = List(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false))
 
       (mockMilestonesService
         .getMilestones(_: Nino)(_: HeaderCarrier))

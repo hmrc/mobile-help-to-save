@@ -24,4 +24,4 @@ case class TestUserServiceConfig(eligibilityCheckEnabled: Boolean) extends UserS
 case class TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled: Boolean, currentSavingsGoalRangeCountsEnabled: Boolean)
     extends ReportingServiceConfig
 
-case class TestMilestonesConfig(balanceMilestoneCheckEnabled: Boolean) extends MilestonesConfig
+case class TestMilestonesConfig(balanceMilestoneCheckEnabled: Boolean, bonusPeriodMilestoneCheckEnabled: Boolean) extends MilestonesConfig

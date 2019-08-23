@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.time.LocalDate
 import java.util.UUID.randomUUID
 
 import org.scalatest._
@@ -297,6 +298,149 @@ class MilestonesISpec
       (response.json \ "milestones" \ 1 \ "milestoneMessage").asOpt[String] shouldBe None
     }
 
+    "respond with 200 and the EndOfFirstBonusPeriodPositiveBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodPositiveBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 2"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Your first bonus of £200 will be paid into your bank account from 1-Jan-2020."
+    }
+
+    "respond with 200 and the StartOfFinalBonusPeriodNoBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(10, nino, 0, 0, LocalDate.now().minusDays(90), 0, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "StartOfFinalBonusPeriodNoBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "Your Help to Save account is 2 years old"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "There are still 2 years to use your account to save and earn a tax-free bonus from the government."
+    }
+
+    "respond with 200 and the EndOfFinalBonusPeriodZeroBalanceNoBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(0, nino, 0, 0, LocalDate.now().minusYears(2), 0, LocalDate.now().plusDays(20))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFinalBonusPeriodZeroBalanceNoBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Your Help to Save account will be closed from 1-Jan-2022."
+    }
+
+    "respond with 200 and the EndOfFinalBonusPeriodZeroBalancePositiveBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(0, nino, 0, 0, LocalDate.now().minusYears(2), 250, LocalDate.now().plusDays(20))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFinalBonusPeriodZeroBalancePositiveBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Your final bonus of £250 will be paid into your bank account from 1-Jan-2022."
+    }
+
+    "respond with 200 and the EndOfFinalBonusPeriodPositiveBalanceNoBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(1350, nino, 0, 0, LocalDate.now().minusYears(2), 0, LocalDate.now().plusDays(20))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFinalBonusPeriodPositiveBalanceNoBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Your savings of £1350 will be paid into your bank account from 1-Jan-2022."
+    }
+
+    "respond with 200 and the EndOfFinalBonusPeriodPositiveBalancePositiveBonus milestone in a list as JSON when the milestone is hit" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(1350, nino, 0, 0, LocalDate.now().minusYears(2), 600, LocalDate.now().plusDays(20))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFinalBonusPeriodPositiveBalancePositiveBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Your savings of £1350 and final bonus of £600 will be paid into your bank account from 1-Jan-2022."
+    }
+
+    "respond with 200 and an empty list when the same bonus period milestone has been hit twice" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+      await(wsUrl(s"/savings-account/$nino/milestones/BonusPeriod/seen?journeyId=$journeyId").put(""))
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                       shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (response.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
+
+    }
+
+    "respond with 200 and only the highest priority milestone in a list as JSON" in {
+      val nino = generator.nextNino
+
+      loginWithBalance(0, nino)
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      loginWithBalance(1, nino)
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodPositiveBonus"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 2"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Your first bonus of £200 will be paid into your bank account from 1-Jan-2020."
+
+      (response.json \ "milestones" \ 1 \ "milestoneType").asOpt[String]    shouldBe None
+      (response.json \ "milestones" \ 1 \ "milestoneKey").asOpt[String]     shouldBe None
+      (response.json \ "milestones" \ 1 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (response.json \ "milestones" \ 1 \ "milestoneMessage").asOpt[String] shouldBe None
+    }
+
     "return 400 when journeyId is not supplied" in {
       val nino = generator.nextNino
       AuthStub.userIsLoggedIn(nino)
@@ -308,7 +452,7 @@ class MilestonesISpec
   }
 
   "PUT /savings-account/:nino/milestones/:milestoneType/seen" should {
-    "mark milestones of a certain type as seen using the nino and milestone type" in {
+    "mark milestones of a BalanceReached type as seen using the nino and milestone type" in {
       val nino = generator.nextNino
 
       loginWithBalance(0, nino)
@@ -318,6 +462,24 @@ class MilestonesISpec
       val accountWithNonZeroBalance: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=$journeyId").put(""))
+      val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
+
+      response.status shouldBe 204
+
+      milestones.status                                                       shouldBe 200
+      (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneTitle").asOpt[String]   shouldBe None
+      (milestones.json \ "milestones" \ 0 \ "milestoneMessage").asOpt[String] shouldBe None
+    }
+
+    "mark milestones of a BonusPeriod type as seen using the nino and milestone type" in {
+      val nino = generator.nextNino
+
+      loginWithBalanceAndBonusTerms(10, nino, 200, 0, LocalDate.now().plusDays(20), 400, LocalDate.now().plusYears(2))
+      await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
+
+      val response:   WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BonusPeriod/seen?journeyId=$journeyId").put(""))
       val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 204
@@ -369,5 +531,26 @@ class MilestonesISpec
     AuthStub.userIsLoggedIn(nino)
     HelpToSaveStub.currentUserIsEnrolled()
     HelpToSaveStub.accountExists(balance, nino)
+  }
+
+  private def loginWithBalanceAndBonusTerms(
+    balance:                   BigDecimal,
+    nino:                      Nino,
+    firstPeriodBonusEstimate:  BigDecimal,
+    firstPeriodBonusPaid:      BigDecimal,
+    firstPeriodEndDate:        LocalDate,
+    secondPeriodBonusEstimate: BigDecimal,
+    secondPeriodEndDate:       LocalDate) = {
+    wireMockServer.resetAll()
+    AuthStub.userIsLoggedIn(nino)
+    HelpToSaveStub.currentUserIsEnrolled()
+    HelpToSaveStub.accountExistsSpecifyBonusTerms(
+      balance,
+      nino,
+      firstPeriodBonusEstimate,
+      firstPeriodBonusPaid,
+      firstPeriodEndDate,
+      secondPeriodBonusEstimate,
+      secondPeriodEndDate)
   }
 }
