@@ -45,9 +45,9 @@ class MilestonesControllerSpec
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val generator             = new Generator(0)
+  private val nino                  = generator.nextNino
+  private val journeyId             = randomUUID().toString
   private val mockMilestonesService = mock[MilestonesService[Future]]
 
   private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")

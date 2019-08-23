@@ -27,7 +27,7 @@ case class MongoMilestone(
   isSeen:        Boolean = false,
   isRepeatable:  Boolean = true,
   generatedDate: LocalDateTime = LocalDateTime.now()) {
-  def compare(that: MilestoneType) = milestoneType.priority-that.priority
+  def compare(that: MilestoneType) = milestoneType.priority - that.priority
 }
 
 object MongoMilestone {
@@ -53,7 +53,7 @@ object Milestones {
 
 sealed trait MilestoneType extends Ordered[MilestoneType] {
   val priority: Int
-  def compare(that: MilestoneType) = priority-that.priority
+  def compare(that: MilestoneType) = priority - that.priority
 }
 
 case object BalanceReached extends MilestoneType {val priority = 2}

@@ -57,12 +57,13 @@ class HtsMilestonesService[F[_]](
       .flatMap(grouped => grouped._2.filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering)))
       .toList
 
-  protected def filterMilestonesByPriority(milestones: List[MongoMilestone]): List[MongoMilestone] = List(milestones.sorted.head)
+  protected def filterMilestonesByPriority(milestones: List[MongoMilestone]): List[MongoMilestone] = List(milestones.min)
 
   override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]] =
     milestonesRepo.getMilestones(nino).map { milestones =>
       val filteredMilestonesByType = filterDuplicateMilestoneTypes(milestones)
-      val filteredMilestones       = if (filteredMilestonesByType.size > 1) filterMilestonesByPriority(filteredMilestonesByType) else filteredMilestonesByType
+      val filteredMilestones =
+        if (filteredMilestonesByType.size > 1) filterMilestonesByPriority(filteredMilestonesByType) else filteredMilestonesByType
       (config.balanceMilestoneCheckEnabled, config.bonusPeriodMilestoneCheckEnabled) match {
         case (false, false) =>
           filteredMilestones.filter(milestone => milestone.milestoneType != BalanceReached && milestone.milestoneType != BalanceReached)

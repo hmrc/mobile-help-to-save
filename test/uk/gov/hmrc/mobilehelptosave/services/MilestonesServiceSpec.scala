@@ -81,9 +81,10 @@ class MilestonesServiceSpec
       val milestone = MongoMilestone(
         nino          = nino,
         milestoneType = BalanceReached,
-        milestone  = Milestone(BalanceReached1),
+        milestone     = Milestone(BalanceReached1),
         isRepeatable  = false,
-        generatedDate = LocalDateTime.parse("2019-01-16T10:15:30"))
+        generatedDate = LocalDateTime.parse("2019-01-16T10:15:30")
+      )
 
       val milestones = List(
         milestone,
@@ -228,7 +229,9 @@ class MilestonesServiceSpec
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1), bonusEstimate = 0,bonusPaid = 0), baseBonusTerms(1).copy(bonusEstimate = 0))
+      val bonusTerms = Seq(
+        baseBonusTerms(0).copy(endDate       = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
+        baseBonusTerms(1).copy(bonusEstimate = 0))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
@@ -254,7 +257,8 @@ class MilestonesServiceSpec
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(20)))
+      val bonusTerms =
+        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(20)))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
