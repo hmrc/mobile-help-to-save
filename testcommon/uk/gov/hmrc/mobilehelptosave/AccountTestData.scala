@@ -61,17 +61,20 @@ trait AccountTestData {
     """.stripMargin
 
   protected def accountReturnedByHelpToSaveJsonString(
-    accountBalance:            BigDecimal,
-    firstPeriodBonusEstimate:  BigDecimal,
-    firstPeriodBonusPaid:      BigDecimal,
-    firstPeriodEndDate:        LocalDate,
-    secondPeriodBonusEstimate: BigDecimal,
-    secondPeriodEndDate:       LocalDate): String =
+    accountBalance:                     BigDecimal,
+    firstPeriodBonusEstimate:           BigDecimal,
+    firstPeriodBonusPaid:               BigDecimal,
+    firstPeriodEndDate:                 LocalDate,
+    firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
+    secondPeriodBonusEstimate:          BigDecimal,
+    secondPeriodEndDate:                LocalDate,
+    secondPeriodBonusPaidOnOrAfterDate: LocalDate,
+    isClosed:                           Boolean = false): String =
     s"""
        |{
        |  "openedYearMonth": "2018-01",
        |  "accountNumber": "1000000000001",
-       |  "isClosed": false,
+       |  "isClosed": $isClosed,
        |  "blocked": {
        |    "unspecified": false,
        |    "payments": false,
@@ -91,13 +94,13 @@ trait AccountTestData {
        |      "bonusEstimate": $firstPeriodBonusEstimate,
        |      "bonusPaid": $firstPeriodBonusPaid,
        |      "endDate": "$firstPeriodEndDate",
-       |      "bonusPaidOnOrAfterDate": "2020-01-01"
+       |      "bonusPaidOnOrAfterDate": "$firstPeriodBonusPaidOnOrAfterDate"
        |    },
        |    {
        |      "bonusEstimate": $secondPeriodBonusEstimate,
        |      "bonusPaid": 0,
        |      "endDate": "$secondPeriodEndDate",
-       |      "bonusPaidOnOrAfterDate": "2022-01-01"
+       |      "bonusPaidOnOrAfterDate": "$secondPeriodBonusPaidOnOrAfterDate"
        |    }
        |  ]
        |}

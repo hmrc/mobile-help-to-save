@@ -90,7 +90,7 @@ class HtsAccountService[F[_]](
           case Some(account) =>
             EitherT.liftF[F, ErrorInfo, Option[Account]](for {
               _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) milestonesService.balanceMilestoneCheck(nino, account.balance) else F.pure(())
-              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
+              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled && !account.isClosed)
                     milestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
                   else F.pure(())
             } yield Some(account))

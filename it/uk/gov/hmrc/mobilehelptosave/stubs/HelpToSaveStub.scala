@@ -124,7 +124,8 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
     firstPeriodBonusPaid:      BigDecimal,
     firstPeriodEndDate:        LocalDate,
     secondPeriodBonusEstimate: BigDecimal,
-    secondPeriodEndDate:       LocalDate)(implicit wireMockServer: WireMockServer): StubMapping =
+    secondPeriodEndDate:       LocalDate,
+    isClosed:                  Boolean = false)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
         .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
@@ -137,8 +138,11 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
                 firstPeriodBonusEstimate,
                 firstPeriodBonusPaid,
                 firstPeriodEndDate,
+                firstPeriodEndDate.plusDays(1),
                 secondPeriodBonusEstimate,
-                secondPeriodEndDate))))
+                secondPeriodEndDate,
+                secondPeriodEndDate.plusDays(1),
+                isClosed))))
 
   def accountExistsWithNoEmail(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
