@@ -61,7 +61,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -83,7 +84,8 @@ class AccountServiceSpec
             fakeEnrolmentStatus,
             fakeGetAccount,
             savingsGoalEventRepo,
-            fakeMilestoneService,
+            fakeBalanceMilestoneService,
+            fakeBonusPeriodMilestoneService,
             testMilestonesConfig)
 
         // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -103,7 +105,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -124,7 +127,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           ShouldNotBeCalledGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Right(None)
 
@@ -142,7 +146,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -168,7 +173,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -185,7 +191,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -201,7 +208,8 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -217,19 +225,21 @@ class AccountServiceSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
   }
 
-  private def fakeMilestoneService: MilestonesService[TestF] =
-    new MilestonesService[TestF] {
-      override def setMilestone(milestone:     MongoMilestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
-      override def getMilestones(nino:         Nino)(implicit hc:           HeaderCarrier): TestF[List[MongoMilestone]] = ???
-      override def markAsSeen(nino:            Nino, milestoneId:           String)(implicit hc: HeaderCarrier): TestF[Unit] = ???
+  private def fakeBalanceMilestoneService: BalanceMilestonesService[TestF] =
+    new BalanceMilestonesService[TestF] {
       override def balanceMilestoneCheck(nino: Nino, currentBalance:        BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
         F.pure(CouldNotCheck)
+    }
+
+  private def fakeBonusPeriodMilestoneService: BonusPeriodMilestonesService[TestF] =
+    new BonusPeriodMilestonesService[TestF] {
       override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(
         implicit hc:                               HeaderCarrier): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }

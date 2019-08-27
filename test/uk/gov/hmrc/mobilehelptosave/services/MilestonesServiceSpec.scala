@@ -30,7 +30,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
 import scala.concurrent.Future
 
-class MilestonesServiceSpec
+class MilestonessServiceSpec
     extends WordSpec
     with Matchers
     with GeneratorDrivenPropertyChecks
@@ -138,7 +138,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.balanceMilestoneCheck(nino, 0).unsafeGet
       result shouldBe CouldNotCheck
@@ -151,7 +151,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.balanceMilestoneCheck(nino, 0).unsafeGet
       result shouldBe MilestoneNotHit
@@ -164,7 +164,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.balanceMilestoneCheck(nino, 1).unsafeGet
       result shouldBe MilestoneHit
@@ -190,7 +190,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.bonusPeriodMilestoneCheck(nino, baseBonusTerms, 100).unsafeGet
       result shouldBe MilestoneHit
@@ -201,7 +201,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(bonusEstimate = 0), baseBonusTerms(1))
 
@@ -214,7 +214,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().plusDays(21)), baseBonusTerms(1))
 
@@ -227,7 +227,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(
         baseBonusTerms(0).copy(endDate       = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
@@ -242,7 +242,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
@@ -255,7 +255,7 @@ class MilestonesServiceSpec
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
       val service =
-        new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(20)))
