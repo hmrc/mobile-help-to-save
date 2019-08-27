@@ -49,14 +49,15 @@ trait AccountService[F[_]] {
 }
 
 class HtsAccountService[F[_]](
-  logger:                    LoggerLike,
-  config:                    AccountServiceConfig,
-  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[F],
-  helpToSaveGetAccount:      HelpToSaveGetAccount[F],
-  savingsGoalEventRepo:      SavingsGoalEventRepo[F],
-  milestonesService:         MilestonesService[F],
-  milestonesConfig:          MilestonesConfig
-)(implicit F:                MonadError[F, Throwable])
+  logger:                       LoggerLike,
+  config:                       AccountServiceConfig,
+  helpToSaveEnrolmentStatus:    HelpToSaveEnrolmentStatus[F],
+  helpToSaveGetAccount:         HelpToSaveGetAccount[F],
+  savingsGoalEventRepo:         SavingsGoalEventRepo[F],
+  balanceMilestonesService:     BalanceMilestonesService[F],
+  bonusPeriodMilestonesService: BonusPeriodMilestonesService[F],
+  milestonesConfig:             MilestonesConfig
+)(implicit F:                   MonadError[F, Throwable])
     extends AccountService[F] {
 
   override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
@@ -89,9 +90,10 @@ class HtsAccountService[F[_]](
         EitherT(fetchAccountWithGoal(nino)).flatMap {
           case Some(account) =>
             EitherT.liftF[F, ErrorInfo, Option[Account]](for {
-              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) milestonesService.balanceMilestoneCheck(nino, account.balance) else F.pure(())
-              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled && !account.isClosed)
-                    milestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
+              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
+                  else F.pure(())
+              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
+                    bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
                   else F.pure(())
             } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])

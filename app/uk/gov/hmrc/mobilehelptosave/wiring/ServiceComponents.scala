@@ -91,6 +91,8 @@ class ServiceComponents(context: Context)
   lazy val userService:       UserService               = wire[HtsUserService]
   lazy val accountService:    AccountService[Future]    = wire[HtsAccountService[Future]]
   lazy val milestonesService: MilestonesService[Future] = wire[HtsMilestonesService[Future]]
+  lazy val balanceMilestonesService: BalanceMilestonesService[Future] = wire[HtsBalanceMilestonesService[Future]]
+  lazy val bonusPeriodMilestonesService: BonusPeriodMilestonesService[Future] = wire[HtsBonusPeriodMilestonesService[Future]]
 
   lazy val mongo:               ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
   lazy val eventRepo:           SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
