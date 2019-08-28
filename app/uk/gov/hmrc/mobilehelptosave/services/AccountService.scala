@@ -90,8 +90,9 @@ class HtsAccountService[F[_]](
         EitherT(fetchAccountWithGoal(nino)).flatMap {
           case Some(account) =>
             EitherT.liftF[F, ErrorInfo, Option[Account]](for {
-              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) balanceMilestonesService.balanceMilestoneCheck(nino, account.balance) else F.pure(())
-              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
+              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
+                  else F.pure(())
+              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled && !account.isClosed)
                     bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
                   else F.pure(())
             } yield Some(account))
