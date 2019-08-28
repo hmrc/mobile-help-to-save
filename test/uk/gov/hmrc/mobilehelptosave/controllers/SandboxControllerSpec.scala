@@ -212,6 +212,30 @@ class SandboxControllerSpec
         .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
     }
   }
+
+  "Sandbox getMilestones" should {
+    "return the sandbox milestones data" in {
+
+      val response: Future[Result] = controller.getMilestones(nino.value, journeyId)(FakeRequest())
+
+      status(response) shouldBe OK
+      val json: JsValue = contentAsJson(response)
+
+      (json \ "milestones" \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (json \ "milestones" \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
+      (json \ "milestones" \ "milestoneTitle").as[String]   shouldBe "You've started saving"
+      (json \ "milestones" \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+    }
+
+    "return a shuttered response when the service is shuttered" in {
+
+      val response: Future[Result] = shutteredController.getMilestones(nino.value, journeyId)(FakeRequest())
+      status(response) shouldBe 521
+      contentAsJson(response)
+        .as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
+    }
+  }
+
 }
 
 object TestSandboxDataConfig extends SandboxDataConfig {

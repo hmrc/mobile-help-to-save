@@ -24,7 +24,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class SandboxController(
   val logger:                    LoggerLike,
@@ -34,27 +34,25 @@ class SandboxController(
 )(implicit val executionContext: ExecutionContext)
     extends BackendBaseController
     with ControllerChecks
-    with HelpToSaveActions {
+    with HelpToSaveActions
+    with MilestonesActions {
+  override def shuttering: Shuttering = config.shuttering
 
   override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
-    shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
-      withShuttering(shuttered) {
-        withValidNino(ninoString) { _ =>
-          Future successful Ok(
-            Json.toJson(
-              sandboxData.transactions
-            ))
-        }
+    withShuttering(config.shuttering) {
+      withValidNino(ninoString) { _ =>
+        Future successful Ok(
+          Json.toJson(
+            sandboxData.transactions
+          ))
       }
     }
   }
 
   override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
-    shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
-      withShuttering(shuttered) {
-        withValidNino(ninoString) { _ =>
-          Future successful Ok(Json.toJson(sandboxData.account))
-        }
+    withShuttering(config.shuttering) {
+      withValidNino(ninoString) { _ =>
+        Future successful Ok(Json.toJson(sandboxData.account))
       }
     }
   }
@@ -80,4 +78,20 @@ class SandboxController(
         }
       }
     }
+
+  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
+    withShuttering(config.shuttering) {
+      withValidNino(ninoString) { _ =>
+        Future successful Ok(Json.toJson(sandboxData.milestones))
+      }
+    }
+  }
+
+  override def markAsSeen(ninoString: String, milestoneId: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
+    withShuttering(config.shuttering) {
+      withValidNino(ninoString) { _ =>
+        Future.successful(NoContent)
+      }
+    }
+  }
 }
