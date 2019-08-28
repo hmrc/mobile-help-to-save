@@ -57,12 +57,12 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
           aResponse()
             .withStatus(Status.OK)
             .withBody(s"""{
-                          |"eligibilityCheckResult": {
-                                 |"result": "",
-                                 |"resultCode": ${if (isEligible) 1 else 2},
-                                 |"reason": "",
-                                 |"reasonCode": ${if (isEligible) 6 else 10}
-                          |}
+                         |"eligibilityCheckResult": {
+                         |"result": "",
+                         |"resultCode": ${if (isEligible) 1 else 2},
+                         |"reason": "",
+                         |"reasonCode": ${if (isEligible) 6 else 10}
+                         |}
                  }""".stripMargin)))
 
   def transactionsExistForUser(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
@@ -124,21 +124,25 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
     firstPeriodBonusPaid:      BigDecimal,
     firstPeriodEndDate:        LocalDate,
     secondPeriodBonusEstimate: BigDecimal,
-    secondPeriodEndDate:       LocalDate)(implicit wireMockServer: WireMockServer): StubMapping =
+    secondPeriodEndDate:       LocalDate,
+    isClosed:                  Boolean = false)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
         .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
-            .withBody(
-              accountReturnedByHelpToSaveJsonString(
-                balance,
-                firstPeriodBonusEstimate,
-                firstPeriodBonusPaid,
-                firstPeriodEndDate,
-                secondPeriodBonusEstimate,
-                secondPeriodEndDate))))
+            .withBody(accountReturnedByHelpToSaveJsonString(
+              balance,
+              firstPeriodBonusEstimate,
+              firstPeriodBonusPaid,
+              firstPeriodEndDate,
+              firstPeriodEndDate.plusDays(1),
+              secondPeriodBonusEstimate,
+              secondPeriodEndDate,
+              secondPeriodEndDate.plusDays(1),
+              isClosed
+            ))))
 
   def accountExistsWithNoEmail(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(

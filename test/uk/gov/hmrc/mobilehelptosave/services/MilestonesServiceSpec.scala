@@ -48,7 +48,7 @@ class MilestonesServiceSpec
     BonusTerm(
       bonusEstimate                 = BigDecimal("90.99"),
       bonusPaid                     = BigDecimal("90.99"),
-      endDate                       = LocalDate.now().plusDays(20),
+      endDate                       = LocalDate.now().plusDays(19),
       bonusPaidOnOrAfterDate        = LocalDate.now().plusDays(50),
       balanceMustBeMoreThanForBonus = 0
     ),
@@ -230,8 +230,8 @@ class MilestonesServiceSpec
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(
-        baseBonusTerms(0).copy(endDate       = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
-        baseBonusTerms(1).copy(bonusEstimate = 0))
+        baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
+        baseBonusTerms(1).copy(bonusEstimate          = 0))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
@@ -258,7 +258,7 @@ class MilestonesServiceSpec
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms =
-        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(20)))
+        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
