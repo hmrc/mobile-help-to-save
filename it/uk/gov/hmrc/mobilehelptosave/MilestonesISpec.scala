@@ -338,7 +338,7 @@ class MilestonesISpec
     "respond with 200 and the StartOfFinalBonusPeriodNoBonus milestone in a list as JSON when the milestone is hit" in {
       val nino = generator.nextNino
 
-      loginWithBalanceAndBonusTerms(10, nino, 0, 0, LocalDate.now().minusDays(90), 0, LocalDate.now().plusYears(2))
+      loginWithBalanceAndBonusTerms(10, nino, 0, 0, LocalDate.now().minusDays(89), 0, LocalDate.now().plusYears(2))
       await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
