@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.sandbox
 
-import java.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, LocalDateTime, YearMonth}
 import java.time.temporal.TemporalAdjusters
 
 import play.api.LoggerLike
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -62,7 +63,7 @@ case class SandboxData(
         closingBalance = None
       ),
       inAppPaymentsEnabled = config.inAppPaymentsEnabled,
-      savingsGoalsEnabled = true,
+      savingsGoalsEnabled  = true,
       logger,
       LocalDate.of(2018, 4, 30),
       savingsGoal = Some(SavingsGoal(25.0))
@@ -88,4 +89,7 @@ case class SandboxData(
         Transaction(Credit, BigDecimal(creditAmount), date, date, BigDecimal(balance))
     }
   })
+
+  val milestones = Milestones(List[MongoMilestone](MongoMilestone(nino = Nino("EM000001A"), BalanceReached, Milestone(BalanceReached1))))
+
 }

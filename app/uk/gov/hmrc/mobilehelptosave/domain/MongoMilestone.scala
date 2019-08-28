@@ -66,8 +66,6 @@ sealed trait MilestoneType extends Ordered[MilestoneType] {
 case object BalanceReached extends MilestoneType { val priority = 2 }
 case object BonusPeriod extends MilestoneType { val priority    = 1 }
 
-object BalancedReached {}
-
 object MilestoneType {
   implicit def ordering[A <: MilestoneType]: Ordering[A] = Ordering.by(_.priority)
   implicit val format: Format[MilestoneType] = new Format[MilestoneType] {
