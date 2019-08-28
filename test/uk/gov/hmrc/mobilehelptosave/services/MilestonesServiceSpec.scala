@@ -189,8 +189,6 @@ class MilestonesServiceSpec
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
-      println("Date = " + baseBonusTerms(0).endDate)
-
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 

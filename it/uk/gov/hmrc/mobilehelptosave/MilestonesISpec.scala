@@ -46,7 +46,7 @@ class MilestonesISpec
 
   private val generator  = new Generator(Random.nextInt())
   private val journeyId  = randomUUID().toString
-  private val dateFormat = DateTimeFormatter.ofPattern("d-MMMM-yyyy")
+  private val dateFormat = DateTimeFormatter.ofPattern("d MMMM yyyy")
 
   "GET /savings-account/:nino/milestones" should {
     "respond with 200 and empty list as JSON when there are no unseen milestones" in {

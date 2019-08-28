@@ -132,7 +132,7 @@ class HtsMilestonesService[F[_]](
     val within20DaysOfFirstPeriodEndDate   = currentDateInDuration(endOfFirstBonusPeriod, 19)
     val under90DaysSinceFirstPeriodEndDate = currentDateInDuration(firstPeriodBonusPaidOnOrAfterDate.plusDays(90), 89)
     val within20DaysOfFinalEndDate         = currentDateInDuration(endOfSecondBonusPeriod, 19)
-    val dateFormat                         = DateTimeFormatter.ofPattern("d-MMMM-yyyy")
+    val dateFormat                         = DateTimeFormatter.ofPattern("d MMMM yyyy")
 
     if (within20DaysOfFirstPeriodEndDate && hasFirstBonusEstimate)
       Some(
