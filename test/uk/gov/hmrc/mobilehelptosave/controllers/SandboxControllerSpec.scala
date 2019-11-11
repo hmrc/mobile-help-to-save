@@ -25,6 +25,7 @@ import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.libs.Json
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
@@ -221,10 +222,12 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      (json \ "milestones" \ "milestoneType").as[String]    shouldBe "BalanceReached"
-      (json \ "milestones" \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
-      (json \ "milestones" \ "milestoneTitle").as[String]   shouldBe "You've started saving"
-      (json \ "milestones" \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+      val milestone = (json \ "milestones")(0)
+
+      (milestone \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (milestone \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
+      (milestone \ "milestoneTitle").as[String]   shouldBe "You've started saving"
+      (milestone \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
     }
 
     "return a shuttered response when the service is shuttered" in {
