@@ -46,7 +46,7 @@ class ShutteringConnectorSpec extends WordSpec with Matchers with FutureAwaits w
     "Assume unshuttered for InternalServerException response" in {
       mockShutteringGet(Future.successful(new InternalServerException("")))
 
-      val result: Shuttering = await(connector.getShutteringStatus("journeyId"))
+      val result = await(connector.getShutteringStatus("journeyId"))
       result shouldBe Shuttering.shutteringDisabled
     }
 

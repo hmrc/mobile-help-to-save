@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.{CoreGet, HeaderCarrier, Upstream5xxResponse}
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
@@ -35,10 +34,8 @@ class ShutteringConnector @Inject()(http: CoreGet, config: ShutteringConnectorCo
     ex:                     ExecutionContext
   ): Future[Shuttering] =
     http
-      .GET[JsValue](s"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId")
-      .map { json =>
-        (json).as[Shuttering]
-      }
+      .GET[Shuttering](s"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId")
+      .map(s => s)
       .recover {
         case e: Upstream5xxResponse => {
           Logger.warn(s"Internal Server Error received from mobile-shuttering:\n $e \nAssuming unshuttered.")

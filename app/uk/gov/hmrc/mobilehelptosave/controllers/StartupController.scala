@@ -53,25 +53,14 @@ class StartupController(
                 userError        = userOrError.left.toOption
               )
             }
-          case _ => throw new IllegalStateException("oh no!")
+          case _ => throw new IllegalStateException("Unexpected state, Nino should exist")
         }
 
         responseF.map(response => Ok(Json.toJson(response)))
 
       } else {
-        val response =
-          StartupResponse(
-            shuttering       = request.shuttered,
-            infoUrl          = None,
-            infoUrlSso       = None,
-            accessAccountUrl = None,
-            accountPayInUrl  = None,
-            user             = None,
-            userError        = None
-          )
-        Future.successful(Ok(Json.toJson(response)))
+        Future.successful(Ok(Json.toJson(StartupResponse.shutteredResponse(request.shuttered))))
       }
     }
-
   }
 }
