@@ -19,56 +19,64 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{SavingsGoal, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.connectors.ShutteringConnector
+import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class SandboxController(
-  val logger:               LoggerLike,
-  config:                   HelpToSaveControllerConfig,
-  sandboxData:              SandboxData,
-  val controllerComponents: ControllerComponents
-) extends BackendBaseController
+  val logger:                    LoggerLike,
+  shutteringConnector:           ShutteringConnector,
+  sandboxData:                   SandboxData,
+  val controllerComponents:      ControllerComponents
+)(implicit val executionContext: ExecutionContext)
+    extends BackendBaseController
     with ControllerChecks
     with HelpToSaveActions {
-  override def shuttering: Shuttering = config.shuttering
 
-  override def getTransactions(ninoString: String, journeyId:String): Action[AnyContent] = Action.async { implicit request =>
-    withShuttering(config.shuttering) {
-      withValidNino(ninoString) { _ =>
-        Future successful Ok(
-          Json.toJson(
-            sandboxData.transactions
-          ))
-      }
-    }
-  }
-
-  override def getAccount(ninoString: String, journeyId:String): Action[AnyContent] = Action.async { implicit request =>
-    withShuttering(config.shuttering) {
-      withValidNino(ninoString) { _ =>
-        Future successful Ok(Json.toJson(sandboxData.account))
-      }
-    }
-  }
-
-  override def putSavingsGoal(ninoString: String, journeyId:String): Action[SavingsGoal] =
-    Action.async(parse.json[SavingsGoal]) { implicit request =>
-      withShuttering(config.shuttering) {
+  override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
+    shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      withShuttering(shuttered) {
         withValidNino(ninoString) { _ =>
-          Future.successful(NoContent)
+          Future successful Ok(
+            Json.toJson(
+              sandboxData.transactions
+            ))
+        }
+      }
+    }
+  }
+
+  override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
+    shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      withShuttering(shuttered) {
+        withValidNino(ninoString) { _ =>
+          Future successful Ok(Json.toJson(sandboxData.account))
+        }
+      }
+    }
+  }
+
+  override def putSavingsGoal(ninoString: String, journeyId: String): Action[SavingsGoal] =
+    Action.async(parse.json[SavingsGoal]) { implicit request =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          withValidNino(ninoString) { _ =>
+            Future.successful(NoContent)
+          }
         }
       }
     }
 
-  override def deleteSavingsGoal(ninoString: String, journeyId:String): Action[AnyContent] =
+  override def deleteSavingsGoal(ninoString: String, journeyId: String): Action[AnyContent] =
     Action.async { implicit request =>
-      withShuttering(config.shuttering) {
-        withValidNino(ninoString) { _ =>
-          Future.successful(NoContent)
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          withValidNino(ninoString) { _ =>
+            Future.successful(NoContent)
+          }
         }
       }
     }

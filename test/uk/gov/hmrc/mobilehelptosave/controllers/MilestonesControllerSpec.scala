@@ -25,7 +25,6 @@ import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.MilestonesControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
@@ -50,17 +49,6 @@ class MilestonesControllerSpec
   private val journeyId             = randomUUID().toString
   private val mockMilestonesService = mock[MilestonesService[Future]]
 
-  private val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
-  private val falseShuttering = Shuttering(shuttered = false, "", "")
-
-  case class TestMilestonesControllerConfig(
-    shuttering: Shuttering
-  ) extends MilestonesControllerConfig
-
-  private val config = TestMilestonesControllerConfig(
-    falseShuttering
-  )
-
   "getMilestones" should {
     "return 200 and the list of milestones as JSON" in {
       val milestones = List(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false))
@@ -71,7 +59,7 @@ class MilestonesControllerSpec
         .returning(Future.successful(milestones))
 
       val controller =
-        new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
+        new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), stubControllerComponents())
 
       val result = controller.getMilestones(nino.value, journeyId)(FakeRequest())
 
@@ -88,7 +76,7 @@ class MilestonesControllerSpec
         .returning(Future.successful(()))
 
       val controller =
-        new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
+        new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), stubControllerComponents())
 
       val result = controller.markAsSeen(nino.value, "BalancedReached", journeyId)(FakeRequest())
 

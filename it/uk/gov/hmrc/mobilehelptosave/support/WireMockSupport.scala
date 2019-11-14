@@ -53,9 +53,10 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with App
   }
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
-    "appName"                                 -> "mobile-help-to-save",
-    "auditing.enabled"                        -> false,
-    "microservice.services.auth.port"         -> wireMockPort,
-    "microservice.services.help-to-save.port" -> wireMockPort
+    "appName"                                      -> "mobile-help-to-save",
+    "auditing.enabled"                             -> false,
+    "microservice.services.auth.port"              -> wireMockPort,
+    "microservice.services.help-to-save.port"      -> wireMockPort,
+    "microservice.services.mobile-shuttering.port" -> wireMockPort
   )
 }

@@ -29,13 +29,16 @@ case class StartupResponse(
 )
 
 case class Shuttering(
-  shuttered: Boolean,
-  title:     String,
-  message:   String
-)
+                       shuttered: Boolean,
+                       title:     Option[String] = None,
+                       message:   Option[String] = None
+                     )
 
 case object Shuttering {
   implicit val format: OFormat[Shuttering] = Json.format[Shuttering]
+
+  def shutteringDisabled = this(false)
+
 }
 
 object StartupResponse {

@@ -20,12 +20,13 @@ import akka.stream.Materializer
 import play.api.mvc._
 import play.api.test.NoMaterializer
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AlwaysAuthorisedWithIds(nino: Nino) extends AuthorisedWithIds {
+class AlwaysAuthorisedWithIds(nino: Nino, shuttering: Shuttering = Shuttering.shutteringDisabled) extends AuthorisedWithIds {
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
-    Future successful Right(new RequestWithIds(nino, request))
+    Future successful Right(new RequestWithIds(request, Some(nino), shuttering))
 
   implicit val materializer:               Materializer           = NoMaterializer
   override def parser:                     BodyParser[AnyContent] = PlayBodyParsers().anyContent

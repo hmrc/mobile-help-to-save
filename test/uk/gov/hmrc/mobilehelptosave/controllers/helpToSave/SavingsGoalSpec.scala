@@ -23,7 +23,7 @@ import play.api.test.Helpers.status
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 //noinspection TypeAnnotation
@@ -39,7 +39,8 @@ class SavingsGoalSpec
     with MockFactory
     with LoggerStub
     with OneInstancePerTest
-    with TestSupport {
+    with TestSupport
+    with ShutteringMocking {
   "putSavingsGoal" when {
     "logged in user's NINO matches NINO in URL" should {
       "set the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
@@ -52,8 +53,7 @@ class SavingsGoalSpec
         status(resultF) shouldBe 204
       }
 
-      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario
-      with HelpToSaveMocking {
+      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
         val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
         val request = FakeRequest().withBody(SavingsGoal(amount))
 

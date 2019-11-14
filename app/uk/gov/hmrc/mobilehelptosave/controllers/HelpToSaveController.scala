@@ -19,10 +19,9 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.services.{AccountService, ReportingService}
+import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +38,6 @@ class HelpToSaveController(
   accountService:            AccountService[Future],
   helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
   authorisedWithIds:         AuthorisedWithIds,
-  config:                    HelpToSaveControllerConfig,
   val controllerComponents:  ControllerComponents
 )(
   implicit ec: ExecutionContext
@@ -47,14 +45,12 @@ class HelpToSaveController(
     with ControllerChecks
     with HelpToSaveActions {
 
-  override def shuttering: Shuttering = config.shuttering
-
   private def orAccountNotFound[T: Writes](o: Option[T]): Result =
     o.fold(AccountNotFound)(v => Ok(Json.toJson(v)))
 
   override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { verifiedUserNino =>
+      verifyingMatchingNino(ninoString, request.shuttered) { verifiedUserNino =>
         helpToSaveGetTransactions
           .getTransactions(verifiedUserNino)
           .map(handlingErrors(txs => Ok(Json.toJson(txs.reverse))))
@@ -63,7 +59,7 @@ class HelpToSaveController(
 
   override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino =>
+      verifyingMatchingNino(ninoString, request.shuttered) { nino =>
         //noinspection ConvertibleToMethodValue
         accountService.account(nino).map(handlingErrors(orAccountNotFound(_)))
       }
@@ -71,14 +67,14 @@ class HelpToSaveController(
 
   override def putSavingsGoal(ninoString: String, journeyId: String): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
-      verifyingMatchingNino(ninoString) { verifiedUserNino =>
+      verifyingMatchingNino(ninoString, request.shuttered) { verifiedUserNino =>
         accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
       }
     }
 
   override def deleteSavingsGoal(nino: String, journeyId: String): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(nino) { verifiedNino =>
+      verifyingMatchingNino(nino, request.shuttered) { verifiedNino =>
         accountService.deleteSavingsGoal(verifiedNino).map(handlingErrors(_ => NoContent))
       }
     }

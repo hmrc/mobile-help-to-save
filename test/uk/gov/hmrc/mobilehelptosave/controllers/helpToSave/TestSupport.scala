@@ -17,23 +17,21 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 package helpToSave
 
+import java.util.UUID.randomUUID
+
 import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Assertion, OneInstancePerTest}
 import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
-import java.util.UUID.randomUUID
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
-case class TestHelpToSaveControllerConfig(shuttering: Shuttering) extends HelpToSaveControllerConfig
 
 //noinspection TypeAnnotation
 trait TestSupport {
@@ -44,30 +42,24 @@ trait TestSupport {
   val nino      = generator.nextNino
   val otherNino = generator.nextNino
   val journeyId = randomUUID().toString
-  val trueShuttering  = Shuttering(shuttered = true, "Shuttered", "HTS is currently not available")
-  val falseShuttering = Shuttering(shuttered = false, "", "")
-
-  val config = TestHelpToSaveControllerConfig(falseShuttering)
 
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
     val controller =
-      new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, config, stubControllerComponents())
+      new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, stubControllerComponents())
     authorisedActionForNino(controller)
   }
 
   trait AuthorisedTestScenario {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
-
     val controller: HelpToSaveController =
       new HelpToSaveController(
         logger,
         accountService,
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
-        config,
         stubControllerComponents()
       )
   }

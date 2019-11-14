@@ -28,14 +28,14 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
-import uk.gov.hmrc.mobilehelptosave.controllers.helpToSave.TestHelpToSaveControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.FixedFakeClock
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, NumberVerification, TransactionTestData}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SandboxControllerSpec
@@ -49,23 +49,16 @@ class SandboxControllerSpec
     with TransactionTestData
     with AccountTestData
     with DefaultAwaitTimeout
-    with NumberVerification {
+    with NumberVerification
+    with ShutteringMocking {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val generator           = new Generator(0)
-  private val nino                = generator.nextNino
-  private val shuttering          = Shuttering(shuttered = false, "", "")
-  private val shutteredShuttering = Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
-  private val config              = TestHelpToSaveControllerConfig(shuttering)
-  private val currentTime         = LocalDateTime.of(2018, 9, 29, 12, 30)
-  private val fixedClock          = new FixedFakeClock(currentTime)
+  private val generator   = new Generator(0)
+  private val nino        = generator.nextNino
+  private val currentTime = LocalDateTime.of(2018, 9, 29, 12, 30)
+  private val fixedClock  = new FixedFakeClock(currentTime)
   private val controller: SandboxController =
-    new SandboxController(logger, config, SandboxData(logger, fixedClock, TestSandboxDataConfig), stubControllerComponents())
-  private val shutteredController: SandboxController = new SandboxController(
-    logger,
-    config.copy(shuttering = shutteredShuttering),
-    SandboxData(logger, fixedClock, TestSandboxDataConfig),
-    stubControllerComponents())
+    new SandboxController(logger, shutteringConnector, SandboxData(logger, fixedClock, TestSandboxDataConfig), stubControllerComponents())
   private val journeyId = randomUUID().toString
 
   implicit class TransactionJson(json: JsValue) {
@@ -83,7 +76,7 @@ class SandboxControllerSpec
 
   "Sandbox getTransactions" should {
     "return the sandbox transaction data" in {
-
+      shutteringDisabled
       val response: Future[Result] = controller.getTransactions(nino.value, journeyId)(FakeRequest())
 
       status(response) shouldBe OK
@@ -170,17 +163,17 @@ class SandboxControllerSpec
     }
 
     "return a shuttered response when the service is shuttered" in {
-
-      val response: Future[Result] = shutteredController.getTransactions(nino.value, journeyId)(FakeRequest())
+      shutteringEnabled
+      val response: Future[Result] = controller.getTransactions(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
+        .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
     }
   }
 
   "Sandbox getAccount" should {
     "return the sandbox account data" in {
-
+      shutteringDisabled
       val response: Future[Result] = controller.getAccount(nino.value, journeyId)(FakeRequest())
 
       status(response) shouldBe OK
@@ -212,11 +205,11 @@ class SandboxControllerSpec
     }
 
     "return a shuttered response when the service is shuttered" in {
-
-      val response: Future[Result] = shutteredController.getAccount(nino.value, journeyId)(FakeRequest())
+      shutteringEnabled
+      val response: Future[Result] = controller.getAccount(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
+        .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
     }
   }
 }

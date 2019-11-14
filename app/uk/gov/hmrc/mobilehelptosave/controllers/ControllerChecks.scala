@@ -33,8 +33,6 @@ trait ControllerChecks extends Results {
 
   def logger: LoggerLike
 
-  def shuttering: Shuttering
-
   def withShuttering(shuttering: Shuttering)(fn: => Future[Result]): Future[Result] =
     if (shuttering.shuttered) successful(WebServerIsDown(Json.toJson(shuttering))) else fn
 
@@ -49,13 +47,14 @@ trait ControllerChecks extends Results {
     }
 
   def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] =
-    if (nino == request.nino) fn(nino)
+    if (request.nino.contains(nino)) fn(nino)
     else {
-      logger.warn(s"Attempt by ${request.nino} to access ${nino.value}'s data")
+      logger.warn(s"Attempt by ${request.nino.getOrElse("")} to access ${nino.value}'s data")
       successful(Forbidden)
     }
 
-  def verifyingMatchingNino(ninoString: String)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] =
+  def verifyingMatchingNino(ninoString: String, shuttering: Shuttering)(fn: Nino => Future[Result])(
+    implicit request:                   RequestWithIds[_]): Future[Result] =
     withShuttering(shuttering) {
       withValidNino(ninoString) { validNino =>
         withMatchingNinos(validNino) { verifiedUserNino =>

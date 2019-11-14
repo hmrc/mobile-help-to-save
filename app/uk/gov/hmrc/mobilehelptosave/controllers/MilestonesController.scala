@@ -19,8 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.mobilehelptosave.config.MilestonesControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Milestones, Shuttering}
+import uk.gov.hmrc.mobilehelptosave.domain.Milestones
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
@@ -36,7 +35,6 @@ class MilestonesController(
   val logger:               LoggerLike,
   milestonesService:        MilestonesService[Future],
   authorisedWithIds:        AuthorisedWithIds,
-  config:                   MilestonesControllerConfig,
   val controllerComponents: ControllerComponents
 )(
   implicit ec: ExecutionContext
@@ -44,11 +42,9 @@ class MilestonesController(
     with ControllerChecks
     with MilestonesActions {
 
-  override def shuttering: Shuttering = config.shuttering
-
   override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino =>
+      verifyingMatchingNino(ninoString, request.shuttered) { nino =>
         milestonesService
           .getMilestones(nino)
           .map(milestones => Ok(Json.toJson(Milestones(milestones))))
@@ -57,7 +53,7 @@ class MilestonesController(
 
   override def markAsSeen(ninoString: String, milestoneType: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString) { nino =>
+      verifyingMatchingNino(ninoString, request.shuttered) { nino =>
         milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
       }
   }

@@ -26,7 +26,7 @@ import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpTo
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +45,8 @@ class GetTransactionsSpec
     with MockFactory
     with LoggerStub
     with OneInstancePerTest
-    with TestSupport {
+    with TestSupport
+    with ShutteringMocking {
 
   "getTransactions" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
@@ -128,13 +129,11 @@ class GetTransactionsSpec
       """return 521 "shuttered": true""" in {
         val accountService            = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
-
         val controller = new HelpToSaveController(
           logger,
           accountService,
           helpToSaveGetTransactions,
-          new AlwaysAuthorisedWithIds(nino),
-          config.copy(shuttering = trueShuttering),
+          new AlwaysAuthorisedWithIds(nino, trueShuttering),
           stubControllerComponents()
         )
 
