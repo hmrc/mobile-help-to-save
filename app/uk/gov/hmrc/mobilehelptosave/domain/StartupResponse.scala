@@ -20,24 +20,29 @@ import play.api.libs.json._
 
 case class StartupResponse(
   shuttering:       Shuttering,
-  infoUrl:          Option[String],
-  infoUrlSso:       Option[String],
-  accessAccountUrl: Option[String],
-  accountPayInUrl:  Option[String],
-  user:             Option[UserDetails],
-  userError:        Option[ErrorInfo]
+  infoUrl:          Option[String] = None,
+  infoUrlSso:       Option[String] = None,
+  accessAccountUrl: Option[String] = None,
+  accountPayInUrl:  Option[String] = None,
+  user:             Option[UserDetails] = None,
+  userError:        Option[ErrorInfo] = None
 )
+
+object StartupResponse {
+  implicit val enabledWrites: Writes[StartupResponse] = Json.writes[StartupResponse]
+
+  def shutteredResponse(shuttering: Shuttering) = this(shuttering)
+}
 
 case class Shuttering(
   shuttered: Boolean,
-  title:     String,
-  message:   String
+  title:     Option[String] = None,
+  message:   Option[String] = None
 )
 
 case object Shuttering {
   implicit val format: OFormat[Shuttering] = Json.format[Shuttering]
-}
 
-object StartupResponse {
-  implicit val enabledWrites: Writes[StartupResponse] = Json.writes[StartupResponse]
+  def shutteringDisabled = this(false)
+
 }

@@ -26,7 +26,7 @@ import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpTo
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +45,8 @@ class GetAccountSpec
     with MockFactory
     with LoggerStub
     with OneInstancePerTest
-    with TestSupport {
+    with TestSupport
+    with ShutteringMocking {
 
   "getAccount" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
@@ -59,7 +60,6 @@ class GetAccountSpec
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
       with HelpToSaveMocking {
-
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
         val accountData = controller.getAccount(nino.value, journeyId)(FakeRequest())
@@ -151,8 +151,7 @@ class GetAccountSpec
           logger,
           accountService,
           helpToSaveGetTransactions,
-          new AlwaysAuthorisedWithIds(nino),
-          config.copy(shuttering = trueShuttering),
+          new AlwaysAuthorisedWithIds(nino, trueShuttering),
           stubControllerComponents()
         )
 

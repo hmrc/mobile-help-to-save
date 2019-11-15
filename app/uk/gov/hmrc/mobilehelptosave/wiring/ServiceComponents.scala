@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.wiring
 
-import cats.instances.future._
 import com.kenshoo.play.metrics._
 import com.softwaremill.macwire.wire
 import controllers.AssetsComponents
@@ -28,7 +27,7 @@ import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponen
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveConnectorImpl
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveConnectorImpl, ShutteringConnector}
 import uk.gov.hmrc.mobilehelptosave.controllers._
 import uk.gov.hmrc.mobilehelptosave.controllers.test.TestController
 import uk.gov.hmrc.mobilehelptosave.repository._
@@ -38,6 +37,7 @@ import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config._
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.health.HealthController
+import cats.implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -84,6 +84,7 @@ class ServiceComponents(context: Context)
   lazy val helpToSaveConfig: MobileHelpToSaveConfig = wire[MobileHelpToSaveConfig]
 
   lazy val helpToSaveConnector: HelpToSaveConnectorImpl = wire[HelpToSaveConnectorImpl]
+  lazy val shutteringConnector: ShutteringConnector     = wire[ShutteringConnector]
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 

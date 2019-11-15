@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave.config
 import java.net.URL
 
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.collection.JavaConverters._
@@ -31,8 +30,7 @@ case class MobileHelpToSaveConfig(
 ) extends AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
-    with HelpToSaveControllerConfig
-    with MilestonesControllerConfig
+    with ShutteringConnectorConfig
     with SandboxDataConfig
     with StartupControllerConfig
     with UserServiceConfig
@@ -41,12 +39,7 @@ case class MobileHelpToSaveConfig(
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
-
-  override val shuttering: Shuttering = Shuttering(
-    shuttered = configBoolean("helpToSave.shuttering.shuttered"),
-    title     = configBase64String("helpToSave.shuttering.title"),
-    message   = configBase64String("helpToSave.shuttering.message")
-  )
+  override val shutteringBaseUrl: URL = configBaseUrl("mobile-shuttering")
 
   override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
@@ -113,17 +106,12 @@ trait HelpToSaveConnectorConfig {
 }
 
 trait StartupControllerConfig {
-  def shuttering:                 Shuttering
   def helpToSaveInfoUrl:          String
   def helpToSaveInfoUrlSso:       String
   def helpToSaveAccessAccountUrl: String
   def helpToSaveAccountPayInUrl:  String
 }
 
-trait HelpToSaveControllerConfig {
-  def shuttering: Shuttering
-}
-
-trait MilestonesControllerConfig {
-  def shuttering: Shuttering
+trait ShutteringConnectorConfig {
+  def shutteringBaseUrl: URL
 }

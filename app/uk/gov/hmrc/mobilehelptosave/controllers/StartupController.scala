@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
@@ -33,36 +34,33 @@ class StartupController(
 )(implicit ec:              ExecutionContext)
     extends BackendBaseController {
 
-  val startup: Action[AnyContent] = if (!config.shuttering.shuttered) {
-    authorisedWithIds.async { implicit request =>
-      val responseF = userService.userDetails(request.nino).map { userOrError =>
-        StartupResponse(
-          shuttering       = config.shuttering,
-          infoUrl          = Some(config.helpToSaveInfoUrl),
-          infoUrlSso       = Some(config.helpToSaveInfoUrlSso),
-          accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
-          accountPayInUrl  = Some(config.helpToSaveAccountPayInUrl),
-          user             = userOrError.right.toOption,
-          userError        = userOrError.left.toOption
-        )
-      }
-      responseF.map(response => Ok(Json.toJson(response)))
-    }
-  } else {
-    Action { implicit request =>
-      val response =
-        StartupResponse(
-          shuttering       = config.shuttering,
-          infoUrl          = None,
-          infoUrlSso       = None,
-          accessAccountUrl = None,
-          accountPayInUrl  = None,
-          user             = None,
-          userError        = None
-        )
+  implicit val hc: HeaderCarrier = new HeaderCarrier
 
-      Ok(Json.toJson(response))
+  val startup: Action[AnyContent] = {
+    authorisedWithIds.async { implicit request =>
+      if (!request.shuttered.shuttered) {
+
+        val responseF = request.nino match {
+          case Some(nino) =>
+            userService.userDetails(nino).map { userOrError =>
+              StartupResponse(
+                shuttering       = request.shuttered,
+                infoUrl          = Some(config.helpToSaveInfoUrl),
+                infoUrlSso       = Some(config.helpToSaveInfoUrlSso),
+                accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
+                accountPayInUrl  = Some(config.helpToSaveAccountPayInUrl),
+                user             = userOrError.right.toOption,
+                userError        = userOrError.left.toOption
+              )
+            }
+          case _ => throw new IllegalStateException("Unexpected state, Nino should exist")
+        }
+
+        responseF.map(response => Ok(Json.toJson(response)))
+
+      } else {
+        Future.successful(Ok(Json.toJson(StartupResponse.shutteredResponse(request.shuttered))))
+      }
     }
   }
-
 }

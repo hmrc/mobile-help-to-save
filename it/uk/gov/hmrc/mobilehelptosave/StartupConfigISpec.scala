@@ -26,8 +26,8 @@ import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, JsonMatchers, WireMockSupport, WithTestServer}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
+import uk.gov.hmrc.mobilehelptosave.support._
 
 /**
   * Tests that the startup endpoint uses configuration values correctly
@@ -51,16 +51,11 @@ class StartupConfigISpec
 
   "GET /mobile-help-to-save/startup" should {
     "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServer(
-      appBuilder
-        .configure(
-          "helpToSave.shuttering.shuttered" -> true,
-          "helpToSave.shuttering.title"     -> base64Encode("Shuttered"),
-          "helpToSave.shuttering.message"   -> base64Encode("HTS is currently not available")
-        )
-        .build()) { (app: Application, portNumber: PortNumber) =>
+      appBuilder.build()) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient:           WSClient   = components.wsClient
 
+      ShutteringStub.stubForShutteringEnabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
 
