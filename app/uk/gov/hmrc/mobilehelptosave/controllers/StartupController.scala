@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.UserService
@@ -33,8 +32,6 @@ class StartupController(
   val controllerComponents: ControllerComponents
 )(implicit ec:              ExecutionContext)
     extends BackendBaseController {
-
-  implicit val hc: HeaderCarrier = new HeaderCarrier
 
   val startup: Action[AnyContent] = {
     authorisedWithIds.async { implicit request =>
