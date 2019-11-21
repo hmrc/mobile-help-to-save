@@ -25,7 +25,6 @@ import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import play.libs.Json
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
@@ -61,6 +60,7 @@ class SandboxControllerSpec
   private val controller: SandboxController =
     new SandboxController(logger, shutteringConnector, SandboxData(logger, fixedClock, TestSandboxDataConfig), stubControllerComponents())
   private val journeyId = randomUUID().toString
+  private val shuttered = Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions")(transactionIndex) \ "operation").as[String]
@@ -168,7 +168,7 @@ class SandboxControllerSpec
       val response: Future[Result] = controller.getTransactions(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
+        .as[Shuttering] shouldBe shuttered
     }
   }
 
@@ -210,13 +210,13 @@ class SandboxControllerSpec
       val response: Future[Result] = controller.getAccount(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
+        .as[Shuttering] shouldBe shuttered
     }
   }
 
   "Sandbox getMilestones" should {
     "return the sandbox milestones data" in {
-
+      shutteringDisabled
       val response: Future[Result] = controller.getMilestones(nino.value, journeyId)(FakeRequest())
 
       status(response) shouldBe OK
@@ -231,11 +231,11 @@ class SandboxControllerSpec
     }
 
     "return a shuttered response when the service is shuttered" in {
-
-      val response: Future[Result] = shutteredController.getMilestones(nino.value, journeyId)(FakeRequest())
+      shutteringEnabled
+      val response: Future[Result] = controller.getMilestones(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, "Gad Dangit!", "This service is shuttered")
+        .as[Shuttering] shouldBe shuttered
     }
   }
 
