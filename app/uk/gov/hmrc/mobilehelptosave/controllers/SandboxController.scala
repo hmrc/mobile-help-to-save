@@ -34,30 +34,33 @@ class SandboxController(
 )(implicit val executionContext: ExecutionContext)
     extends BackendBaseController
     with ControllerChecks
-    with HelpToSaveActions {
+    with HelpToSaveActions
+    with MilestonesActions {
 
-  override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
-    shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
-      withShuttering(shuttered) {
-        withValidNino(ninoString) { _ =>
-          Future successful Ok(
-            Json.toJson(
-              sandboxData.transactions
-            ))
+  override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          withValidNino(ninoString) { _ =>
+            Future successful Ok(
+              Json.toJson(
+                sandboxData.transactions
+              ))
+          }
         }
       }
     }
-  }
 
-  override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] = Action.async { implicit request =>
-    shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
-      withShuttering(shuttered) {
-        withValidNino(ninoString) { _ =>
-          Future successful Ok(Json.toJson(sandboxData.account))
+  override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          withValidNino(ninoString) { _ =>
+            Future successful Ok(Json.toJson(sandboxData.account))
+          }
         }
       }
     }
-  }
 
   override def putSavingsGoal(ninoString: String, journeyId: String): Action[SavingsGoal] =
     Action.async(parse.json[SavingsGoal]) { implicit request =>
@@ -71,6 +74,28 @@ class SandboxController(
     }
 
   override def deleteSavingsGoal(ninoString: String, journeyId: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          withValidNino(ninoString) { _ =>
+            Future.successful(NoContent)
+          }
+        }
+      }
+    }
+
+  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          withValidNino(ninoString) { _ =>
+            Future successful Ok(Json.toJson(sandboxData.milestones))
+          }
+        }
+      }
+    }
+
+  override def markAsSeen(ninoString: String, milestoneId: String, journeyId: String): Action[AnyContent] =
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
         withShuttering(shuttered) {

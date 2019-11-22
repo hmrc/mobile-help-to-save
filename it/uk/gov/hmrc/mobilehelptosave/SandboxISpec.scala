@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, SavingsGoal, Transactions}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -42,7 +42,7 @@ class SandboxISpec
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
   private val generator            = new Generator(0)
   private val nino                 = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val journeyId            = randomUUID().toString
 
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {
@@ -97,6 +97,38 @@ class SandboxISpec
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
         await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).delete())
+      response.status shouldBe 400
+    }
+  }
+
+  "PUT /savings-account/:nino/milestones/:milestoneType/seen with sandbox header" should {
+    "Return a No Content response" in {
+      val milestoneType = BalanceReached
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).put(""))
+      response.status shouldBe Status.NO_CONTENT
+    }
+    "Return 400 when journeyId not supplied" in {
+      val milestoneType = BalanceReached
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen").addHttpHeaders(sandboxRoutingHeader).put(""))
+      response.status shouldBe 400
+    }
+  }
+
+  "GET /savings-account/:nino/milestones with sandbox header" should {
+    "Return OK response containing valid milestones JSON including an achieved milestone" in {
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe Status.OK
+
+      response.status                                                    shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+    }
+    "Return 400 when journeyId not supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/milestones").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe 400
     }
   }

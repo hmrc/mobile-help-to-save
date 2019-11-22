@@ -61,15 +61,15 @@ trait AccountTestData {
     """.stripMargin
 
   protected def accountReturnedByHelpToSaveJsonString(
-                                                       accountBalance:                     BigDecimal,
-                                                       firstPeriodBonusEstimate:           BigDecimal,
-                                                       firstPeriodBonusPaid:               BigDecimal,
-                                                       firstPeriodEndDate:                 LocalDate,
-                                                       firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
-                                                       secondPeriodBonusEstimate:          BigDecimal,
-                                                       secondPeriodEndDate:                LocalDate,
-                                                       secondPeriodBonusPaidOnOrAfterDate: LocalDate,
-                                                       isClosed:                           Boolean = false): String =
+    accountBalance:                     BigDecimal,
+    firstPeriodBonusEstimate:           BigDecimal,
+    firstPeriodBonusPaid:               BigDecimal,
+    firstPeriodEndDate:                 LocalDate,
+    firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
+    secondPeriodBonusEstimate:          BigDecimal,
+    secondPeriodEndDate:                LocalDate,
+    secondPeriodBonusPaidOnOrAfterDate: LocalDate,
+    isClosed:                           Boolean = false): String =
     s"""
        |{
        |  "openedYearMonth": "2018-01",
@@ -420,4 +420,3 @@ trait AccountTestData {
       |}
     """.stripMargin
 }
-

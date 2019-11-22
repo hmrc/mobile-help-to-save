@@ -27,7 +27,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
-import uk.gov.hmrc.mobilehelptosave.domain.{BonusTerm, ErrorInfo, MongoMilestone, MilestoneCheckResult, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.domain.{BonusTerm, CouldNotCheck, ErrorInfo, MilestoneCheckResult, MongoMilestone, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
@@ -62,7 +62,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           fakeGoalsRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet shouldBe Right(())
@@ -80,7 +81,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(0.99)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
@@ -98,7 +100,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service
@@ -120,7 +123,8 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
@@ -138,22 +142,24 @@ class SetSavingsGoalSpec
           fakeEnrolmentStatus,
           fakeGetAccount,
           savingsGoalEventRepo,
-          fakeMilestoneService,
+          fakeBalanceMilestoneService,
+          fakeBonusPeriodMilestoneService,
           testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.General
     }
   }
 
-  private def fakeMilestoneService: MilestonesService[TestF] =
-    new MilestonesService[TestF] {
-      override def setMilestone(milestone:     MongoMilestone)(implicit hc: HeaderCarrier): TestF[Unit] = ???
-      override def getMilestones(nino:         Nino)(implicit hc:      HeaderCarrier): TestF[List[MongoMilestone]] = ???
-      override def markAsSeen(nino:            Nino, milestoneId:      String)(implicit hc: HeaderCarrier): TestF[Unit] = ???
-      override def balanceMilestoneCheck(nino: Nino, currentBalance:   BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
-        ???
+  private def fakeBalanceMilestoneService: BalanceMilestonesService[TestF] =
+    new BalanceMilestonesService[TestF] {
+      override def balanceMilestoneCheck(nino: Nino, currentBalance:        BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] =
+        F.pure(CouldNotCheck)
+    }
 
-      override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(implicit hc: HeaderCarrier): TestF[MilestoneCheckResult] = ???
+  private def fakeBonusPeriodMilestoneService: BonusPeriodMilestonesService[TestF] =
+    new BonusPeriodMilestonesService[TestF] {
+      override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(
+        implicit hc:                               HeaderCarrier): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }
 
   private def fakeHelpToSaveEnrolmentStatus(expectedNino: Nino, enrolledOrError: Either[ErrorInfo, Boolean]): HelpToSaveEnrolmentStatus[TestF] =

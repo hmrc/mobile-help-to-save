@@ -60,6 +60,7 @@ class SandboxControllerSpec
   private val controller: SandboxController =
     new SandboxController(logger, shutteringConnector, SandboxData(logger, fixedClock, TestSandboxDataConfig), stubControllerComponents())
   private val journeyId = randomUUID().toString
+  private val shuttered = Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions")(transactionIndex) \ "operation").as[String]
@@ -167,7 +168,7 @@ class SandboxControllerSpec
       val response: Future[Result] = controller.getTransactions(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
+        .as[Shuttering] shouldBe shuttered
     }
   }
 
@@ -209,9 +210,35 @@ class SandboxControllerSpec
       val response: Future[Result] = controller.getAccount(nino.value, journeyId)(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
-        .as[Shuttering] shouldBe Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
+        .as[Shuttering] shouldBe shuttered
     }
   }
+
+  "Sandbox getMilestones" should {
+    "return the sandbox milestones data" in {
+      shutteringDisabled
+      val response: Future[Result] = controller.getMilestones(nino.value, journeyId)(FakeRequest())
+
+      status(response) shouldBe OK
+      val json: JsValue = contentAsJson(response)
+
+      val milestone = (json \ "milestones")(0)
+
+      (milestone \ "milestoneType").as[String]    shouldBe "BalanceReached"
+      (milestone \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
+      (milestone \ "milestoneTitle").as[String]   shouldBe "You've started saving"
+      (milestone \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+    }
+
+    "return a shuttered response when the service is shuttered" in {
+      shutteringEnabled
+      val response: Future[Result] = controller.getMilestones(nino.value, journeyId)(FakeRequest())
+      status(response) shouldBe 521
+      contentAsJson(response)
+        .as[Shuttering] shouldBe shuttered
+    }
+  }
+
 }
 
 object TestSandboxDataConfig extends SandboxDataConfig {
