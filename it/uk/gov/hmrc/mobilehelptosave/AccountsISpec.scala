@@ -326,5 +326,11 @@ class AccountsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
       response.status shouldBe 400
     }
+
+    "return 400 when invalid NINO supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse = await(wsUrl(s"/savings-account/AA123123123?journeyId=$journeyId").get())
+      response.status shouldBe 400
+    }
   }
 }

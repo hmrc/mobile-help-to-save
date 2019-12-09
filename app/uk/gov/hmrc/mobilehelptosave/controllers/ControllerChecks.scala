@@ -25,7 +25,6 @@ import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Shuttering}
 
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
-import scala.util.{Failure, Success, Try}
 
 trait ControllerChecks extends Results {
 
@@ -36,16 +35,6 @@ trait ControllerChecks extends Results {
   def withShuttering(shuttering: Shuttering)(fn: => Future[Result]): Future[Result] =
     if (shuttering.shuttered) successful(WebServerIsDown(Json.toJson(shuttering))) else fn
 
-  def withValidNino(nino: String)(fn: Nino => Future[Result]): Future[Result] =
-    HmrcNinoDefinition.regex.findFirstIn(nino) map (n => Right(Try(Nino(n)))) getOrElse {
-      Left(s""""$nino" does not match NINO validation regex""")
-    } match {
-      case Right(Success(parsedNino)) => fn(parsedNino)
-      case Right(Failure(exception)) =>
-        successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", exception.getMessage))))
-      case Left(validationError) => successful(BadRequest(Json.toJson(ErrorBody("NINO_INVALID", validationError))))
-    }
-
   def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] =
     if (request.nino.contains(nino)) fn(nino)
     else {
@@ -53,13 +42,10 @@ trait ControllerChecks extends Results {
       successful(Forbidden)
     }
 
-  def verifyingMatchingNino(ninoString: String, shuttering: Shuttering)(fn: Nino => Future[Result])(
-    implicit request:                   RequestWithIds[_]): Future[Result] =
+  def verifyingMatchingNino(nino: Nino, shuttering: Shuttering)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] =
     withShuttering(shuttering) {
-      withValidNino(ninoString) { validNino =>
-        withMatchingNinos(validNino) { verifiedUserNino =>
-          fn(verifiedUserNino)
-        }
+      withMatchingNinos(nino) { verifiedUserNino =>
+        fn(verifiedUserNino)
       }
     }
 

@@ -127,6 +127,12 @@ class TransactionsISpec
       val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
       response.status shouldBe 400
     }
+
+    "return 400 when invalid NINO supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response = await(wsUrl(s"/savings-account/AA123123123/transactions?journeyId=$journeyId").get())
+      response.status shouldBe 400
+    }
   }
 
   private def checkTransactionsResponseInvariants(response: WSResponse): Assertion =

@@ -1,11 +1,11 @@
 # microservice specific routes
 
-GET           /savings-account/:nino/transactions                          uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino:String, journeyId:String)
+GET           /savings-account/:nino/transactions                          uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getTransactions(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 
-GET           /savings-account/:nino                                       uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino:String, journeyId:String)
+GET           /savings-account/:nino                                       uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 
-PUT           /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino:String, journeyId:String)
-DELETE        /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino:String, journeyId:String)
+PUT           /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
+DELETE        /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 
-GET           /savings-account/:nino/milestones                            uk.gov.hmrc.mobilehelptosave.controllers.MilestonesController.getMilestones(nino:String, journeyId:String)
-PUT           /savings-account/:nino/milestones/:milestoneType/seen        uk.gov.hmrc.mobilehelptosave.controllers.MilestonesController.markAsSeen(nino:String, milestoneType:String, journeyId:String)
+GET           /savings-account/:nino/milestones                            uk.gov.hmrc.mobilehelptosave.controllers.MilestonesController.getMilestones(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
+PUT           /savings-account/:nino/milestones/:milestoneType/seen        uk.gov.hmrc.mobilehelptosave.controllers.MilestonesController.markAsSeen(nino: uk.gov.hmrc.domain.Nino, milestoneType:String, journeyId: JourneyId)

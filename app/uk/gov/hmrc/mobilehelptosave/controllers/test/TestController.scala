@@ -38,8 +38,9 @@ class TestController(
     }
   }
 
-  def getGoalEvents(nino: String): Action[AnyContent] = Action.async { implicit request =>
-    savingsGoalEventRepo.getEvents(Nino(nino)).map { events => Ok(Json.toJson(events))
+  def getGoalEvents(nino: Nino): Action[AnyContent] = Action.async { implicit request =>
+    savingsGoalEventRepo.getEvents(nino).map { events =>
+      Ok(Json.toJson(events))
     }
   }
 

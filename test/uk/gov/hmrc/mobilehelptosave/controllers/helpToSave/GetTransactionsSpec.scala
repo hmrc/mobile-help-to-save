@@ -31,6 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import eu.timepit.refined.auto._
 
 //noinspection TypeAnnotation
 class GetTransactionsSpec
@@ -51,7 +52,7 @@ class GetTransactionsSpec
   "getTransactions" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       isForbiddenIfNotAuthorisedForUser { controller =>
-        status(controller.getTransactions(nino.value, journeyId)(FakeRequest())) shouldBe FORBIDDEN
+        status(controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())) shouldBe FORBIDDEN
       }
     }
   }
@@ -62,7 +63,7 @@ class GetTransactionsSpec
 
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 
-        val resultF = controller.getTransactions(nino.value, journeyId)(FakeRequest())
+        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         jsonBody shouldBe Json.toJson(transactionsSortedInMobileHelpToSaveOrder)
@@ -74,7 +75,7 @@ class GetTransactionsSpec
 
         helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo.AccountNotFound))
 
-        val resultF = controller.getTransactions(nino.value, journeyId)(FakeRequest())
+        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String]    shouldBe "ACCOUNT_NOT_FOUND"
@@ -87,7 +88,7 @@ class GetTransactionsSpec
 
         helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo.General))
 
-        val resultF = controller.getTransactions(nino.value, journeyId)(FakeRequest())
+        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
@@ -97,31 +98,9 @@ class GetTransactionsSpec
     "the NINO in the URL does not match the logged in user's NINO" should {
       "return 403" in new AuthorisedTestScenario {
 
-        val resultF = controller.getTransactions(otherNino.value, journeyId)(FakeRequest())
+        val resultF = controller.getTransactions(otherNino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 403
-        (slf4jLoggerStub.warn(_: String)) verify s"Attempt by ${nino.value} to access ${otherNino.value}'s data"
-      }
-    }
-
-    "the NINO is not in the correct format" should {
-      "return 400 NINO_INVALID" in new AuthorisedTestScenario {
-
-        val resultF = controller.getTransactions("invalidNino", journeyId)(FakeRequest())
-        status(resultF) shouldBe 400
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String]    shouldBe "NINO_INVALID"
-        (jsonBody \ "message").as[String] shouldBe """"invalidNino" does not match NINO validation regex"""
-      }
-    }
-
-    "the NINO in the URL contains spaces" should {
-      "return 400 NINO_INVALID" in new AuthorisedTestScenario {
-
-        val resultF = controller.getTransactions("AA 00 00 03 D", journeyId)(FakeRequest())
-        status(resultF) shouldBe 400
-        val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "code").as[String]    shouldBe "NINO_INVALID"
-        (jsonBody \ "message").as[String] shouldBe """"AA 00 00 03 D" does not match NINO validation regex"""
+        (slf4jLoggerStub.warn(_: String)) verify s"Attempt by $nino to access $otherNino's data"
       }
     }
 
@@ -137,7 +116,7 @@ class GetTransactionsSpec
           stubControllerComponents()
         )
 
-        val resultF = controller.getTransactions(nino.value, journeyId)(FakeRequest())
+        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true

@@ -19,16 +19,18 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Milestones
+import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesActions {
-  def getMilestones(ninoString: String, journeyId: String): Action[AnyContent]
+  def getMilestones(nino: Nino, journeyId: JourneyId): Action[AnyContent]
 
-  def markAsSeen(ninoString: String, milestoneId: String, journeyId: String): Action[AnyContent]
+  def markAsSeen(nino: Nino, milestoneId: String, journeyId: JourneyId): Action[AnyContent]
 }
 
 class MilestonesController(
@@ -42,18 +44,18 @@ class MilestonesController(
     with ControllerChecks
     with MilestonesActions {
 
-  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
+  override def getMilestones(nino: Nino, journeyId: JourneyId): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString, request.shuttered) { nino =>
+      verifyingMatchingNino(nino, request.shuttered) { nino =>
         milestonesService
           .getMilestones(nino)
           .map(milestones => Ok(Json.toJson(Milestones(milestones))))
       }
   }
 
-  override def markAsSeen(ninoString: String, milestoneType: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
+  override def markAsSeen(nino: Nino, milestoneType: String, journeyId: JourneyId): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString, request.shuttered) { nino =>
+      verifyingMatchingNino(nino, request.shuttered) { nino =>
         milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
       }
   }

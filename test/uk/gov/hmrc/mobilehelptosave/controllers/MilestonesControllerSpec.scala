@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import java.util.UUID.randomUUID
-
+import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
@@ -46,7 +45,6 @@ class MilestonesControllerSpec
 
   private val generator             = new Generator(0)
   private val nino                  = generator.nextNino
-  private val journeyId             = randomUUID().toString
   private val mockMilestonesService = mock[MilestonesService[Future]]
 
   "getMilestones" should {
@@ -61,7 +59,7 @@ class MilestonesControllerSpec
       val controller =
         new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), stubControllerComponents())
 
-      val result = controller.getMilestones(nino.value, journeyId)(FakeRequest())
+      val result = controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
 
       status(result)        shouldBe 200
       contentAsJson(result) shouldBe Json.toJson(Milestones(milestones))
@@ -78,7 +76,7 @@ class MilestonesControllerSpec
       val controller =
         new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), stubControllerComponents())
 
-      val result = controller.markAsSeen(nino.value, "BalancedReached", journeyId)(FakeRequest())
+      val result = controller.markAsSeen(nino, "BalancedReached", "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
 
       status(result) shouldBe 204
     }

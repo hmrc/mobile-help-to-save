@@ -19,8 +19,10 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.ShutteringConnector
 import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
@@ -37,72 +39,61 @@ class SandboxController(
     with HelpToSaveActions
     with MilestonesActions {
 
-  override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] =
+  override def getTransactions(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          withValidNino(ninoString) { _ =>
-            Future successful Ok(
-              Json.toJson(
-                sandboxData.transactions
-              ))
-          }
+          Future successful Ok(
+            Json.toJson(
+              sandboxData.transactions
+            ))
         }
       }
     }
 
-  override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] =
+  override def getAccount(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          withValidNino(ninoString) { _ =>
-            Future successful Ok(Json.toJson(sandboxData.account))
-          }
+          Future successful Ok(Json.toJson(sandboxData.account))
         }
       }
     }
 
-  override def putSavingsGoal(ninoString: String, journeyId: String): Action[SavingsGoal] =
+  override def putSavingsGoal(nino: Nino, journeyId: JourneyId): Action[SavingsGoal] =
     Action.async(parse.json[SavingsGoal]) { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          withValidNino(ninoString) { _ =>
-            Future.successful(NoContent)
-          }
+          Future.successful(NoContent)
         }
       }
     }
 
-  override def deleteSavingsGoal(ninoString: String, journeyId: String): Action[AnyContent] =
+  override def deleteSavingsGoal(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          withValidNino(ninoString) { _ =>
-            Future.successful(NoContent)
-          }
+          Future.successful(NoContent)
         }
       }
     }
 
-  override def getMilestones(ninoString: String, journeyId: String): Action[AnyContent] =
+  override def getMilestones(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          withValidNino(ninoString) { _ =>
-            Future successful Ok(Json.toJson(sandboxData.milestones))
-          }
+          Future successful Ok(Json.toJson(sandboxData.milestones))
         }
       }
     }
 
-  override def markAsSeen(ninoString: String, milestoneId: String, journeyId: String): Action[AnyContent] =
+  override def markAsSeen(nino: Nino, milestoneId: String, journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          withValidNino(ninoString) { _ =>
-            Future.successful(NoContent)
-          }
+          Future.successful(NoContent)
         }
       }
     }
+
 }

@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.mobilehelptosave.controllers
+package uk.gov.hmrc.mobilehelptosave.binders
 
-import scala.util.matching.Regex
+import play.api.mvc.PathBindable
+import uk.gov.hmrc.domain.Nino
 
-object HmrcNinoDefinition {
-  // CTO's HMRC-wide NINO regex
-  final val regex: Regex =
-    "^((?!(BG|GB|KN|NK|NT|TN|ZZ)|(D|F|I|Q|U|V)[A-Z]|[A-Z](D|F|I|O|Q|U|V))[A-Z]{2})[0-9]{6}[A-D]?$".r
+object Binders {
+  implicit def ninoBinder(implicit stringBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
+
+    def unbind(key: String, nino: Nino): String = stringBinder.unbind(key, nino.value)
+
+    def bind(key: String, value: String): Either[String, Nino] =
+      if (Nino.isValid(value)) Right(Nino(value))
+      else Left("ERROR_NINO_INVALID")
+  }
 }

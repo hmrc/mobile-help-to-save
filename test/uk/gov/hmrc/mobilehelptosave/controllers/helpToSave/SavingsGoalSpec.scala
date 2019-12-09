@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
+import eu.timepit.refined.auto._
 import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
@@ -48,7 +49,7 @@ class SavingsGoalSpec
         val request = FakeRequest().withBody(SavingsGoal(amount))
 
         setSavingsGoalReturns(nino, amount, ().asRight)
-        val resultF = controller.putSavingsGoal(nino.value, journeyId)(request)
+        val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
 
         status(resultF) shouldBe 204
       }
@@ -59,7 +60,7 @@ class SavingsGoalSpec
 
         setSavingsGoalReturns(nino, amount, ErrorInfo.ValidationError("error message").asLeft)
 
-        val resultF = controller.putSavingsGoal(nino.value, journeyId)(request)
+        val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
 
         status(resultF) shouldBe 422
       }
@@ -71,7 +72,7 @@ class SavingsGoalSpec
       "delete the goal value from the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
         deleteSavingsGoalExpects(nino)
 
-        val resultF = controller.deleteSavingsGoal(nino.value, journeyId)(FakeRequest())
+        val resultF = controller.deleteSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 204
       }
     }

@@ -566,6 +566,12 @@ class MilestonesISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen").put(""))
       response.status shouldBe 400
     }
+
+    "return 400 when invalid NINO supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse = await(wsUrl(s"/savings-account/AA123123123/milestones?journeyId=$journeyId").get())
+      response.status shouldBe 400
+    }
   }
 
   private def loginWithBalance(balance: BigDecimal, nino: Nino) = {
