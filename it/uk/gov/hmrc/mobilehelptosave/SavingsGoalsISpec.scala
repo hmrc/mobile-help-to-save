@@ -56,7 +56,7 @@ class SavingsGoalsISpec
   private val validGoalJson  = toJson(savingsGoal1)
   private val savingsGoal2   = SavingsGoal(30)
   private val validGoalJson2 = toJson(savingsGoal2)
-  private val journeyId = randomUUID().toString
+  private val journeyId      = randomUUID().toString
 
   private def setSavingsGoal(nino: Nino, json: JsValue) =
     await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=$journeyId").put(json))
@@ -184,5 +184,12 @@ class SavingsGoalsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal").delete())
       response.status shouldBe 400
     }
+
+    "return 400 when invalid NINO supplied" in new LoggedInUserScenario {
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/AA123123123/goals/current-goal?journeyId=$journeyId").delete())
+      response.status shouldBe 400
+    }
+
   }
 }

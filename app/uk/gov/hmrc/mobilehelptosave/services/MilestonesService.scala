@@ -30,6 +30,7 @@ import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 import uk.gov.hmrc.mobilehelptosave.domain.Milestones._
+
 trait MilestonesService[F[_]] {
   def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): F[Unit]
 

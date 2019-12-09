@@ -10,7 +10,7 @@ lazy val scoverageSettings = {
   Seq(
     // Semicolon-separated list of regexs matching classes to exclude
     ScoverageKeys.coverageExcludedPackages := """uk\.gov\.hmrc\.BuildInfo;.*\.Routes;.*\.RoutesPrefix;.*\.Reverse[^.]*""",
-    ScoverageKeys.coverageMinimum := 85.00,
+    ScoverageKeys.coverageMinimum := 90,
     ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true,
     parallelExecution in Test := false
@@ -67,6 +67,14 @@ lazy val microservice = Project(appName, file("."))
     addTestReportOption(IntegrationTest, "int-test-reports"),
     testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
     parallelExecution in IntegrationTest := false
+  )
+  .settings(
+    routesImport ++= Seq(
+      "uk.gov.hmrc.domain._",
+      "uk.gov.hmrc.mobilehelptosave.binders.Binders._",
+      "uk.gov.hmrc.mobilehelptosave.domain.types._",
+      "uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes._"
+    )
   )
   .settings(
     resolvers ++= Seq(

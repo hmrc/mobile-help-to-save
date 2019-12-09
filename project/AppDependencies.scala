@@ -23,7 +23,8 @@ object AppDependencies {
     "uk.gov.hmrc"              %% "play-hmrc-api"        % "3.4.0-play-26",
     "uk.gov.hmrc"              %% "simple-reactivemongo" % reactiveMongoVersion,
     "com.beachape"             %% "enumeratum-play-json" % enumeratumVersion,
-    "com.softwaremill.macwire" %% "macros"               % "2.3.1"
+    "com.softwaremill.macwire" %% "macros"               % "2.3.1",
+    "eu.timepit"               %% "refined"              % "0.9.4"
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(

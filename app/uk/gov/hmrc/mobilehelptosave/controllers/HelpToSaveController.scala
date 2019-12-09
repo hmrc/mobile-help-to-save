@@ -19,18 +19,20 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilehelptosave.services.AccountService
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HelpToSaveActions {
-  def getTransactions(ninoString:   String, journeyId: String): Action[AnyContent]
-  def getAccount(ninoString:        String, journeyId: String): Action[AnyContent]
-  def putSavingsGoal(ninoString:    String, journeyId: String): Action[SavingsGoal]
-  def deleteSavingsGoal(ninoString: String, journeyId: String): Action[AnyContent]
+  def getTransactions(nino:   Nino, journeyId: JourneyId): Action[AnyContent]
+  def getAccount(nino:        Nino, journeyId: JourneyId): Action[AnyContent]
+  def putSavingsGoal(nino:    Nino, journeyId: JourneyId): Action[SavingsGoal]
+  def deleteSavingsGoal(nino: Nino, journeyId: JourneyId): Action[AnyContent]
 }
 
 class HelpToSaveController(
@@ -48,31 +50,31 @@ class HelpToSaveController(
   private def orAccountNotFound[T: Writes](o: Option[T]): Result =
     o.fold(AccountNotFound)(v => Ok(Json.toJson(v)))
 
-  override def getTransactions(ninoString: String, journeyId: String): Action[AnyContent] =
+  override def getTransactions(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString, request.shuttered) { verifiedUserNino =>
+      verifyingMatchingNino(nino, request.shuttered) { verifiedUserNino =>
         helpToSaveGetTransactions
           .getTransactions(verifiedUserNino)
           .map(handlingErrors(txs => Ok(Json.toJson(txs.reverse))))
       }
     }
 
-  override def getAccount(ninoString: String, journeyId: String): Action[AnyContent] = authorisedWithIds.async {
+  override def getAccount(nino: Nino, journeyId: JourneyId): Action[AnyContent] = authorisedWithIds.async {
     implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(ninoString, request.shuttered) { nino =>
+      verifyingMatchingNino(nino, request.shuttered) { nino =>
         //noinspection ConvertibleToMethodValue
         accountService.account(nino).map(handlingErrors(orAccountNotFound(_)))
       }
   }
 
-  override def putSavingsGoal(ninoString: String, journeyId: String): Action[SavingsGoal] =
+  override def putSavingsGoal(nino: Nino, journeyId: JourneyId): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
-      verifyingMatchingNino(ninoString, request.shuttered) { verifiedUserNino =>
+      verifyingMatchingNino(nino, request.shuttered) { verifiedUserNino =>
         accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
       }
     }
 
-  override def deleteSavingsGoal(nino: String, journeyId: String): Action[AnyContent] =
+  override def deleteSavingsGoal(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
       verifyingMatchingNino(nino, request.shuttered) { verifiedNino =>
         accountService.deleteSavingsGoal(verifiedNino).map(handlingErrors(_ => NoContent))
