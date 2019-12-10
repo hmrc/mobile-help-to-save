@@ -155,6 +155,13 @@ class SavingsGoalsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal").put(validGoalJson))
       response.status shouldBe 400
     }
+
+    "return 400 when invalid journeyId is supplied" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").put(validGoalJson))
+      response.status shouldBe 400
+    }
   }
 
   "DELETE /savings-account/{nino}/goals/current-goal" should {
@@ -188,6 +195,12 @@ class SavingsGoalsISpec
     "return 400 when invalid NINO supplied" in new LoggedInUserScenario {
 
       val response: WSResponse = await(wsUrl(s"/savings-account/AA123123123/goals/current-goal?journeyId=$journeyId").delete())
+      response.status shouldBe 400
+    }
+
+    "return 400 when invalid journeyId is supplied" in new LoggedInUserScenario {
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").delete())
       response.status shouldBe 400
     }
 

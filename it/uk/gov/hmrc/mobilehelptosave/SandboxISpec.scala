@@ -56,6 +56,11 @@ class SandboxISpec
         await(wsUrl(s"/savings-account/$nino/transactions").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe 400
     }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/transactions?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe 400
+    }
   }
 
   "GET /savings-account/{nino} with sandbox header" should {
@@ -69,6 +74,11 @@ class SandboxISpec
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
         await(wsUrl(s"/savings-account/$nino").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe 400
+    }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe 400
     }
   }
@@ -86,6 +96,11 @@ class SandboxISpec
         await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
       response.status shouldBe 400
     }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).put(""))
+      response.status shouldBe 400
+    }
   }
 
   "DELETE /savings-account/:nino/goals/current-goal with sandbox header" should {
@@ -99,18 +114,30 @@ class SandboxISpec
         await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).delete())
       response.status shouldBe 400
     }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).delete())
+      response.status shouldBe 400
+    }
   }
 
   "PUT /savings-account/:nino/milestones/:milestoneType/seen with sandbox header" should {
+    val milestoneType = BalanceReached
     "Return a No Content response" in {
-      val milestoneType = BalanceReached
       val response: WSResponse =
         await(wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).put(""))
       response.status shouldBe Status.NO_CONTENT
     }
     "Return 400 when journeyId not supplied" in {
-      val milestoneType = BalanceReached
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen").addHttpHeaders(sandboxRoutingHeader).put(""))
+      response.status shouldBe 400
+    }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(
+          wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen?journeyId=ThisIsAnInvalidJourneyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .put(""))
       response.status shouldBe 400
     }
   }
@@ -129,6 +156,11 @@ class SandboxISpec
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
         await(wsUrl(s"/savings-account/$nino/milestones").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe 400
+    }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino/milestones?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe 400
     }
   }
