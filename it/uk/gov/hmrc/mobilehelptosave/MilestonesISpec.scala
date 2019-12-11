@@ -567,6 +567,14 @@ class MilestonesISpec
       response.status shouldBe 400
     }
 
+    "return 400 when invalid journeyId is supplied" in {
+      val nino = generator.nextNino
+      AuthStub.userIsLoggedIn(nino)
+
+      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/BalanceReached/seen?journeyId=ThisIsAnInvalidJourneyId").put(""))
+      response.status shouldBe 400
+    }
+
     "return 400 when invalid NINO supplied" in {
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse = await(wsUrl(s"/savings-account/AA123123123/milestones?journeyId=$journeyId").get())
