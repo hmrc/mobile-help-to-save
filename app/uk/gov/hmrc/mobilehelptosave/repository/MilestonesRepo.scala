@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,10 +57,11 @@ class MongoMilestonesRepo(
 
   override def markAsSeen(nino: Nino, milestoneType: String): Future[Unit] =
     collection
-      .update(
-        selector = obj("nino" -> nino, "milestoneType" -> milestoneType, "isSeen" -> false),
-        update   = obj("$set" -> Json.obj("isSeen" -> true)),
-        multi    = true
+      .update(ordered = false)
+      .one(
+        q     = obj("nino" -> nino, "milestoneType" -> milestoneType, "isSeen" -> false),
+        u     = obj("$set" -> Json.obj("isSeen" -> true)),
+        multi = true
       )
       .void
 
