@@ -25,7 +25,7 @@ Response format:
   "accessAccountUrl": "/mobile-help-to-save/access-account",
   // User-specific Help to Save data
   "user": {
-    // user state, can be NotEnrolled, Enrolled. See <confluence>/display/NGC/Help+to+Save+User+States
+    // user state, can be "NotEnrolled", "NotEnrolledButEligible", or "Enrolled". See <confluence>/display/NGC/Help+to+Save+User+States
     "state": "Enrolled"
   }
 }
