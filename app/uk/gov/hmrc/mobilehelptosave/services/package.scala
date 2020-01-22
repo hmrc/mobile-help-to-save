@@ -19,7 +19,12 @@ package uk.gov.hmrc.mobilehelptosave
 import java.time.LocalDateTime
 
 package object services {
+
   val localDateTimeOrdering: Ordering[LocalDateTime] = new Ordering[LocalDateTime] {
-    override def compare(x: LocalDateTime, y: LocalDateTime): Int = x.compareTo(y)
+
+    override def compare(
+      x: LocalDateTime,
+      y: LocalDateTime
+    ): Int = x.compareTo(y)
   }
 }

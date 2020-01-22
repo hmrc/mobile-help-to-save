@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.util.Base64
-
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.play.components.WithApplicationComponents
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
@@ -45,13 +43,13 @@ class StartupConfigISpec
     with ComponentSupport
     with WithApplicationComponents {
 
-  private val generator     = new Generator(0)
-  private val nino          = generator.nextNino
-  private val base64Encoder = Base64.getEncoder
+  private val generator = new Generator(0)
+  private val nino      = generator.nextNino
 
   "GET /mobile-help-to-save/startup" should {
     "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServer(
-      appBuilder.build()) { (app: Application, portNumber: PortNumber) =>
+      appBuilder.build()
+    ) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient:           WSClient   = components.wsClient
 
@@ -73,7 +71,8 @@ class StartupConfigISpec
 
     "include feature flag and URL settings when their configuration is not overridden" in withTestServer(
       appBuilder
-        .build()) { (app: Application, portNumber: PortNumber) =>
+        .build()
+    ) { (app: Application, portNumber: PortNumber) =>
       implicit val implicitPortNumber: PortNumber = portNumber
       implicit val wsClient:           WSClient   = components.wsClient
 
@@ -81,11 +80,12 @@ class StartupConfigISpec
       HelpToSaveStub.currentUserIsNotEnrolled()
 
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
-      response.status                                 shouldBe 200
-      (response.json \ "infoUrl").as[String]          shouldBe "https://www.gov.uk/get-help-savings-low-income"
-      (response.json \ "infoUrlSso").as[String]       shouldBe "http://localhost:8249/mobile-help-to-save/info"
-      (response.json \ "accessAccountUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
-      (response.json \ "accountPayInUrl").as[String]  shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
+      response.status                           shouldBe 200
+      (response.json \ "infoUrl").as[String]    shouldBe "https://www.gov.uk/get-help-savings-low-income"
+      (response.json \ "infoUrlSso").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/info"
+      (response.json \ "accessAccountUrl")
+        .as[String]                                  shouldBe "http://localhost:8249/mobile-help-to-save/access-account"
+      (response.json \ "accountPayInUrl").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/pay-in"
     }
 
     "allow feature flag and URL settings to be overridden in configuration" in {
@@ -100,7 +100,8 @@ class StartupConfigISpec
             "helpToSave.accessAccountUrl" -> "/access-account",
             "helpToSave.accountPayInUrl"  -> "/pay-in"
           )
-          .build()) { (app: Application, portNumber: PortNumber) =>
+          .build()
+      ) { (app: Application, portNumber: PortNumber) =>
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
@@ -113,7 +114,4 @@ class StartupConfigISpec
       }
     }
   }
-
-  private def base64Encode(s: String): String =
-    base64Encoder.encodeToString(s.getBytes("UTF-8"))
 }

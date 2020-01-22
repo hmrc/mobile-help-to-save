@@ -26,8 +26,8 @@ import scala.collection.JavaConverters._
 case class MobileHelpToSaveConfig(
   environment:    Environment,
   configuration:  Configuration,
-  servicesConfig: ServicesConfig
-) extends AccountServiceConfig
+  servicesConfig: ServicesConfig)
+    extends AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
     with ShutteringConnectorConfig
@@ -45,11 +45,17 @@ case class MobileHelpToSaveConfig(
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
 
-  override def penceInCurrentSavingsGoalsEnabled:    Boolean = configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
-  override def currentSavingsGoalRangeCountsEnabled: Boolean = configBoolean("helpToSave.reporting.currentSavingsGoalRangeCountsEnabled")
+  override def penceInCurrentSavingsGoalsEnabled: Boolean =
+    configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
 
-  override def balanceMilestoneCheckEnabled:     Boolean = configBoolean("helpToSave.milestones.balanceMilestoneCheckEnabled")
-  override def bonusPeriodMilestoneCheckEnabled: Boolean = configBoolean("helpToSave.milestones.bonusPeriodMilestoneCheckEnabled")
+  override def currentSavingsGoalRangeCountsEnabled: Boolean =
+    configBoolean("helpToSave.reporting.currentSavingsGoalRangeCountsEnabled")
+
+  override def balanceMilestoneCheckEnabled: Boolean =
+    configBoolean("helpToSave.milestones.balanceMilestoneCheckEnabled")
+
+  override def bonusPeriodMilestoneCheckEnabled: Boolean =
+    configBoolean("helpToSave.milestones.bonusPeriodMilestoneCheckEnabled")
 
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")

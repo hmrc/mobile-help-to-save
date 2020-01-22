@@ -22,9 +22,7 @@ object UserState extends Enumeration {
   val NotEnrolled, NotEnrolledButEligible, Enrolled = Value
 }
 
-case class UserDetails(
-  state: UserState.Value
-)
+case class UserDetails(state: UserState.Value)
 
 object UserDetails {
   implicit val writes: Writes[UserDetails] = Json.writes[UserDetails]

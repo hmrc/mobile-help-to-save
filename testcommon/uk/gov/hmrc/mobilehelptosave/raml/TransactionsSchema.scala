@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.raml
 
+import com.eclipsesource.schema.drafts.Version7._
 import com.eclipsesource.schema.SchemaType
 import uk.gov.hmrc.mobilehelptosave.json.JsonResource.loadResourceJson
 import uk.gov.hmrc.mobilehelptosave.json.Schema.banAdditionalProperties

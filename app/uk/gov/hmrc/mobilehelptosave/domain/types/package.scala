@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import eu.timepit.refined.api.{RefType, Refined, Validate}
-import eu.timepit.refined.refineV
-import play.api.libs.json.{JsError, JsSuccess, Reads, Writes}
+import eu.timepit.refined.api.{RefType, Validate}
 import play.api.mvc.QueryStringBindable
 
 package object types {

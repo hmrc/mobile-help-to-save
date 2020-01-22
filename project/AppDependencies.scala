@@ -7,19 +7,19 @@ object AppDependencies {
   def appDependencies: Seq[Setting[_]] = Seq(
     libraryDependencies ++= compile ++ test ++ integrationTest,
     dependencyOverrides := overrides(),
-    resolvers += "emueller-bintray" at "http://dl.bintray.com/emueller/maven"
+    resolvers += "emueller-bintray" at "https://dl.bintray.com/emueller/maven"
   )
 
-  private val reactiveMongoVersion = "7.22.0-play-26"
-  private val bootstrapVersion     = "0.36.0"
-  private val domainVersion        = "5.6.0-play-26"
-  private val catsCoreVersion      = "1.6.0"
-  private val catsParVersion       = "0.2.0"
-  private val scalaUriVersion      = "1.4.1"
-  private val playHmrcVersion      = "3.4.0-play-26"
-  private val enumeratumVersion    = "1.5.15"
-  private val macrosVersion        = "2.3.1"
-  private val refinedVersion       = "0.9.4"
+  private val simpleReactiveMongoVersion = "7.22.0-play-26"
+  private val bootstrapVersion           = "1.3.0"
+  private val domainVersion              = "5.6.0-play-26"
+  private val catsCoreVersion            = "1.6.0"
+  private val catsParVersion             = "1.0.0-RC2"
+  private val scalaUriVersion            = "1.5.1"
+  private val playHmrcVersion            = "4.1.0-play-26"
+  private val enumeratumVersion          = "1.5.15"
+  private val macrosVersion              = "2.3.3"
+  private val refinedVersion             = "0.9.4"
 
   private val scalaMockVersion = "4.1.0"
   private val scalaTestVersion = "3.0.5"
@@ -29,7 +29,7 @@ object AppDependencies {
 
   private val scalaCheckVersion              = "1.14.0"
   private val pegdownVersion                 = "1.6.0"
-  private val playJsonSchemaValidatorVersion = "0.9.4"
+  private val playJsonSchemaValidatorVersion = "0.9.5"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"              %% "bootstrap-play-26"    % bootstrapVersion withSources (),
@@ -38,21 +38,21 @@ object AppDependencies {
     "io.chrisdavenport"        %% "cats-par"             % catsParVersion,
     "io.lemonlabs"             %% "scala-uri"            % scalaUriVersion,
     "uk.gov.hmrc"              %% "play-hmrc-api"        % playHmrcVersion,
-    "uk.gov.hmrc"              %% "simple-reactivemongo" % reactiveMongoVersion,
+    "uk.gov.hmrc"              %% "simple-reactivemongo" % simpleReactiveMongoVersion,
     "com.beachape"             %% "enumeratum-play-json" % enumeratumVersion,
     "com.softwaremill.macwire" %% "macros"               % macrosVersion,
     "eu.timepit"               %% "refined"              % refinedVersion
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(
-    "org.scalamock" %% "scalamock" % scalaMockVersion % "test",
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-  )
+      "org.scalamock" %% "scalamock" % scalaMockVersion % "test",
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+    )
 
   val integrationTest: Seq[ModuleID] = testCommon("it") ++ Seq(
-    "com.github.tomakehurst" % "wiremock"            % wiremockVersion      % "it",
-    "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "it"
-  )
+      "com.github.tomakehurst" % "wiremock"            % wiremockVersion      % "it",
+      "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % "it"
+    )
 
   def testCommon(scope: String): Seq[ModuleID] = Seq(
     "org.scalacheck"    %% "scalacheck"                 % scalaCheckVersion              % scope,
@@ -68,7 +68,8 @@ object AppDependencies {
   // compatible with wiremock, so we need to pin the jetty stuff to the older version.
   // see https://groups.google.com/forum/#!topic/play-framework/HAIM1ukUCnI
   val jettyVersion = "9.2.13.v20150730"
-  def overrides(): Set[ModuleID] = Set(
+
+  def overrides(): Seq[ModuleID] = Seq(
     "org.eclipse.jetty"           % "jetty-server"       % jettyVersion,
     "org.eclipse.jetty"           % "jetty-servlet"      % jettyVersion,
     "org.eclipse.jetty"           % "jetty-security"     % jettyVersion,

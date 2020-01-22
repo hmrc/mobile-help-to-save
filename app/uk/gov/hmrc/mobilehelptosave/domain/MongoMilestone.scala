@@ -19,6 +19,7 @@ import java.time.LocalDateTime
 
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
+
 import scala.language.implicitConversions
 
 case class MongoMilestone(
@@ -39,13 +40,17 @@ object MongoMilestone {
 case class Milestones(milestones: List[MongoMilestone])
 
 object Milestones {
+
   class PriorityMilestones(milestones: List[MongoMilestone]) {
-    def highestPriority: List[MongoMilestone] = if (milestones.isEmpty) List.empty[MongoMilestone] else List(milestones.min)
+
+    def highestPriority: List[MongoMilestone] =
+      if (milestones.isEmpty) List.empty[MongoMilestone] else List(milestones.min)
   }
 
   implicit def prioritise(milestones: List[MongoMilestone]) = new PriorityMilestones(milestones)
 
   implicit val milestoneWrites: Writes[MongoMilestone] = new Writes[MongoMilestone] {
+
     override def writes(m: MongoMilestone): JsObject =
       Json.obj(
         "milestoneType"    -> m.milestoneType,
@@ -68,7 +73,9 @@ case object BonusPeriod extends MilestoneType { val priority    = 1 }
 
 object MilestoneType {
   implicit def ordering[A <: MilestoneType]: Ordering[A] = Ordering.by(_.priority)
+
   implicit val format: Format[MilestoneType] = new Format[MilestoneType] {
+
     override def reads(json: JsValue): JsResult[MilestoneType] = json.as[String] match {
       case "BalanceReached" => JsSuccess(BalanceReached)
       case "BonusPeriod"    => JsSuccess(BonusPeriod)
@@ -78,12 +85,15 @@ object MilestoneType {
   }
 }
 
-case class Milestone(key: MilestoneKey, values: Option[Map[String, String]] = None)
+case class Milestone(
+  key:    MilestoneKey,
+  values: Option[Map[String, String]] = None)
 
 object Milestone {
   implicit val format: Format[Milestone] = Json.format[Milestone]
 
   val milestoneToTitleWrites: Writes[Milestone] = new Writes[Milestone] {
+
     override def writes(milestone: Milestone): JsString = milestone match {
       case Milestone(BalanceReached1, _)                                   => JsString("You've started saving")
       case Milestone(BalanceReached100, _)                                 => JsString("You have saved your first £100")
@@ -104,6 +114,7 @@ object Milestone {
   }
 
   val milestoneToMessageWrites: Writes[Milestone] = new Writes[Milestone] {
+
     override def writes(milestone: Milestone): JsString = milestone match {
       case Milestone(BalanceReached1, _)    => JsString("Well done for making your first payment.")
       case Milestone(BalanceReached100, _)  => JsString("That's great!")
@@ -116,19 +127,24 @@ object Milestone {
       case Milestone(BalanceReached2400, _) => JsString("You have saved the most possible with Help to Save!")
       case Milestone(EndOfFirstBonusPeriodPositiveBonus, values) =>
         JsString(
-          s"Your first bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+          s"Your first bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+        )
       case Milestone(StartOfFinalBonusPeriodNoBonus, _) =>
         JsString("There are still 2 years to use your account to save and earn a tax-free bonus from the government.")
       case Milestone(EndOfFinalBonusPeriodZeroBalanceNoBonus, values) =>
         JsString(s"Your Help to Save account will be closed from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodZeroBalancePositiveBonus, values) =>
         JsString(
-          s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+          s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+        )
       case Milestone(EndOfFinalBonusPeriodPositiveBalanceNoBonus, values) =>
-        JsString(s"Your savings of £${values get "balance"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+        JsString(
+          s"Your savings of £${values get "balance"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+        )
       case Milestone(EndOfFinalBonusPeriodPositiveBalancePositiveBonus, values) =>
         JsString(
-          s"Your savings of £${values get "balance"} and final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}.")
+          s"Your savings of £${values get "balance"} and final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+        )
     }
   }
 }
@@ -152,24 +168,27 @@ case object EndOfFinalBonusPeriodPositiveBalanceNoBonus extends MilestoneKey
 case object EndOfFinalBonusPeriodPositiveBalancePositiveBonus extends MilestoneKey
 
 object MilestoneKey {
+
   implicit val format: Format[MilestoneKey] = new Format[MilestoneKey] {
+
     override def reads(json: JsValue): JsResult[MilestoneKey] = json.as[String] match {
-      case "BalanceReached1"                                   => JsSuccess(BalanceReached1)
-      case "BalanceReached100"                                 => JsSuccess(BalanceReached100)
-      case "BalanceReached200"                                 => JsSuccess(BalanceReached200)
-      case "BalanceReached500"                                 => JsSuccess(BalanceReached500)
-      case "BalanceReached750"                                 => JsSuccess(BalanceReached750)
-      case "BalanceReached1000"                                => JsSuccess(BalanceReached1000)
-      case "BalanceReached1500"                                => JsSuccess(BalanceReached1500)
-      case "BalanceReached2000"                                => JsSuccess(BalanceReached2000)
-      case "BalanceReached2400"                                => JsSuccess(BalanceReached2400)
-      case "EndOfFirstBonusPeriodPositiveBonus"                => JsSuccess(EndOfFirstBonusPeriodPositiveBonus)
-      case "StartOfFinalBonusPeriodNoBonus"                    => JsSuccess(StartOfFinalBonusPeriodNoBonus)
-      case "EndOfFinalBonusPeriodZeroBalanceNoBonus"           => JsSuccess(EndOfFinalBonusPeriodZeroBalanceNoBonus)
-      case "EndOfFinalBonusPeriodZeroBalancePositiveBonus"     => JsSuccess(EndOfFinalBonusPeriodZeroBalancePositiveBonus)
-      case "EndOfFinalBonusPeriodPositiveBalanceNoBonus"       => JsSuccess(EndOfFinalBonusPeriodPositiveBalanceNoBonus)
-      case "EndOfFinalBonusPeriodPositiveBalancePositiveBonus" => JsSuccess(EndOfFinalBonusPeriodPositiveBalancePositiveBonus)
-      case _                                                   => JsError("Invalid milestone key")
+      case "BalanceReached1"                               => JsSuccess(BalanceReached1)
+      case "BalanceReached100"                             => JsSuccess(BalanceReached100)
+      case "BalanceReached200"                             => JsSuccess(BalanceReached200)
+      case "BalanceReached500"                             => JsSuccess(BalanceReached500)
+      case "BalanceReached750"                             => JsSuccess(BalanceReached750)
+      case "BalanceReached1000"                            => JsSuccess(BalanceReached1000)
+      case "BalanceReached1500"                            => JsSuccess(BalanceReached1500)
+      case "BalanceReached2000"                            => JsSuccess(BalanceReached2000)
+      case "BalanceReached2400"                            => JsSuccess(BalanceReached2400)
+      case "EndOfFirstBonusPeriodPositiveBonus"            => JsSuccess(EndOfFirstBonusPeriodPositiveBonus)
+      case "StartOfFinalBonusPeriodNoBonus"                => JsSuccess(StartOfFinalBonusPeriodNoBonus)
+      case "EndOfFinalBonusPeriodZeroBalanceNoBonus"       => JsSuccess(EndOfFinalBonusPeriodZeroBalanceNoBonus)
+      case "EndOfFinalBonusPeriodZeroBalancePositiveBonus" => JsSuccess(EndOfFinalBonusPeriodZeroBalancePositiveBonus)
+      case "EndOfFinalBonusPeriodPositiveBalanceNoBonus"   => JsSuccess(EndOfFinalBonusPeriodPositiveBalanceNoBonus)
+      case "EndOfFinalBonusPeriodPositiveBalancePositiveBonus" =>
+        JsSuccess(EndOfFinalBonusPeriodPositiveBalancePositiveBonus)
+      case _ => JsError("Invalid milestone key")
     }
 
     override def writes(milestoneKey: MilestoneKey): JsValue =

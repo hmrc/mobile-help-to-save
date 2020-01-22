@@ -22,6 +22,7 @@ import cats.Eq
 import play.api.libs.json._
 
 sealed trait Operation {
+
   def stringValue: String = this match {
     case Credit => "credit"
     case Debit  => "debit"
@@ -32,11 +33,13 @@ case object Debit extends Operation
 
 object Operation {
   implicit val eqOperation: Eq[Operation] = Eq.fromUniversalEquals
+
   implicit val writes: Writes[Operation] = new Writes[Operation] {
     override def writes(o: Operation): JsValue = JsString(o.stringValue)
   }
 
   implicit val reads: Reads[Operation] = new Reads[Operation] {
+
     override def reads(json: JsValue): JsResult[Operation] = json match {
       case JsString("credit") => JsSuccess(Credit)
       case JsString("debit")  => JsSuccess(Debit)
@@ -51,8 +54,7 @@ case class Transaction(
   amount:          BigDecimal,
   transactionDate: LocalDate,
   accountingDate:  LocalDate,
-  balanceAfter:    BigDecimal
-)
+  balanceAfter:    BigDecimal)
 
 object Transaction {
   implicit val format: OFormat[Transaction] = Json.format[Transaction]

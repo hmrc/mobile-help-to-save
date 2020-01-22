@@ -22,6 +22,7 @@ import java.time.format.DateTimeParseException
 import play.api.libs.json._
 
 object Formats {
+
   implicit object YearMonthFormat extends Format[YearMonth] {
     def writes(yearMonth: YearMonth): JsValue = JsString(yearMonth.toString)
 

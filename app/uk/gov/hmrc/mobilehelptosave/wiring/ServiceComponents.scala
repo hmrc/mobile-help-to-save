@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.wiring
 
+import cats.implicits._
 import com.kenshoo.play.metrics._
 import com.softwaremill.macwire.wire
 import controllers.AssetsComponents
@@ -37,7 +38,6 @@ import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config._
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.health.HealthController
-import cats.implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -88,11 +88,13 @@ class ServiceComponents(context: Context)
 
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
-  lazy val userService:       UserService               = wire[HtsUserService]
-  lazy val accountService:    AccountService[Future]    = wire[HtsAccountService[Future]]
-  lazy val milestonesService: MilestonesService[Future] = wire[HtsMilestonesService[Future]]
+  lazy val userService:              UserService                      = wire[HtsUserService]
+  lazy val accountService:           AccountService[Future]           = wire[HtsAccountService[Future]]
+  lazy val milestonesService:        MilestonesService[Future]        = wire[HtsMilestonesService[Future]]
   lazy val balanceMilestonesService: BalanceMilestonesService[Future] = wire[HtsBalanceMilestonesService[Future]]
-  lazy val bonusPeriodMilestonesService: BonusPeriodMilestonesService[Future] = wire[HtsBonusPeriodMilestonesService[Future]]
+
+  lazy val bonusPeriodMilestonesService: BonusPeriodMilestonesService[Future] =
+    wire[HtsBonusPeriodMilestonesService[Future]]
 
   lazy val mongo:               ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
   lazy val eventRepo:           SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]

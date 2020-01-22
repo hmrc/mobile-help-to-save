@@ -54,12 +54,11 @@ class HelpToSaveConnectorSpec
   private val nino       = Nino(ninoString)
 
   private def isAccountUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
-    case AbsoluteUrl(
-        "http",
-        Authority(_, Host("help-to-save-service"), None),
-        AbsolutePath(Vector("help-to-save", this.ninoString, "account")),
-        query,
-        _) if query.param("systemId").contains("MDTP-MOBILE") =>
+    case AbsoluteUrl("http",
+                     Authority(_, Host("help-to-save-service"), None),
+                     AbsolutePath(Vector("help-to-save", this.ninoString, "account")),
+                     query,
+                     _) if query.param("systemId").contains("MDTP-MOBILE") =>
       true
     case _ =>
       info(s"URL failed to match: $urlString")
@@ -67,24 +66,37 @@ class HelpToSaveConnectorSpec
   }
 
   private def isTransactionsUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
-    case AbsoluteUrl(
-        "http",
-        Authority(_, Host("help-to-save-service"), None),
-        AbsolutePath(Vector("help-to-save", this.ninoString, "account", "transactions")),
-        query,
-        _) if query.param("systemId").contains("MDTP-MOBILE") =>
+    case AbsoluteUrl("http",
+                     Authority(_, Host("help-to-save-service"), None),
+                     AbsolutePath(Vector("help-to-save", this.ninoString, "account", "transactions")),
+                     query,
+                     _) if query.param("systemId").contains("MDTP-MOBILE") =>
       true
     case _ =>
       info(s"URL failed to match: $urlString")
       false
   }
 
-  private def httpGet(path: String, response: Future[HttpResponse]) =
+  private def httpGet(
+    path:     String,
+    response: Future[HttpResponse]
+  ) =
     FakeHttpGet(s"$baseUrl/help-to-save/$path", response)
-  private def httpGet(path: String, response: HttpResponse) = FakeHttpGet(s"$baseUrl/help-to-save/$path", response)
 
-  private def httpGet(predicate: String => Boolean, response: Future[HttpResponse]) = FakeHttpGet(predicate, response)
-  private def httpGet(predicate: String => Boolean, response: HttpResponse)         = FakeHttpGet(predicate, response)
+  private def httpGet(
+    path:     String,
+    response: HttpResponse
+  ) = FakeHttpGet(s"$baseUrl/help-to-save/$path", response)
+
+  private def httpGet(
+    predicate: String => Boolean,
+    response:  Future[HttpResponse]
+  ) = FakeHttpGet(predicate, response)
+
+  private def httpGet(
+    predicate: String => Boolean,
+    response:  HttpResponse
+  ) = FakeHttpGet(predicate, response)
 
   private val config: HelpToSaveConnectorConfig = new HelpToSaveConnectorConfig {
     override val helpToSaveBaseUrl: URL = new URL(baseUrl)
@@ -97,7 +109,8 @@ class HelpToSaveConnectorSpec
     "return a Right (with Account) when the help-to-save service returns a 2xx response" in {
 
       val okResponse =
-        httpGet(isAccountUrlForNino _, HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveJsonString(123.45)))))
+        httpGet(isAccountUrlForNino _,
+                HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveJsonString(123.45)))))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
@@ -107,8 +120,8 @@ class HelpToSaveConnectorSpec
     "return a Right (with Account) when the help-to-save service returns a 2xx response with optional fields omitted" in {
 
       val accountReturnedByHelpToSaveJson = Json
-        .parse(accountReturnedByHelpToSaveJsonString(123.45))
-        .as[JsObject] - "accountHolderEmail"
+          .parse(accountReturnedByHelpToSaveJsonString(123.45))
+          .as[JsObject] - "accountHolderEmail"
       val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, Some(accountReturnedByHelpToSaveJson)))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
@@ -127,11 +140,16 @@ class HelpToSaveConnectorSpec
 
     "return a Left when there is an error connecting to the help-to-save service" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, failed(new ConnectException("Connection refused"))))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet(isAccountUrlForNino _, failed(new ConnectException("Connection refused"))))
 
       await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
 
-      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify (errorMessage, throwableWithMessageContaining("Connection refused"))
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify (errorMessage, throwableWithMessageContaining(
+        "Connection refused"
+      ))
     }
 
     "return a Left when the help-to-save service returns a 4xx error" in {
@@ -153,7 +171,9 @@ class HelpToSaveConnectorSpec
     }
 
     "return a Left[ErrorInfo] when help-to-save returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
-      val invalidJsonHttp = FakeHttpGet(isAccountUrlForNino _, HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveInvalidJsonString))))
+      val invalidJsonHttp =
+        FakeHttpGet(isAccountUrlForNino _,
+                    HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveInvalidJsonString))))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, invalidJsonHttp)
 
@@ -173,11 +193,16 @@ class HelpToSaveConnectorSpec
     "return a Left when there is an error connecting to the help-to-save service" in {
 
       val connector =
-        new HelpToSaveConnectorImpl(logger, config, httpGet(isTransactionsUrlForNino _, failed(new ConnectException("Connection refused"))))
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet(isTransactionsUrlForNino _,
+                                            failed(new ConnectException("Connection refused"))))
 
       await(connector.getTransactions(nino)) shouldBe Left(ErrorInfo.General)
 
-      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify (errorMessage, throwableWithMessageContaining("Connection refused"))
+      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify (errorMessage, throwableWithMessageContaining(
+        "Connection refused"
+      ))
     }
 
     "return a Left when the help-to-save service returns a 4xx error" in {
@@ -202,7 +227,8 @@ class HelpToSaveConnectorSpec
 
     "return a Right (with Transactions) when the help-to-save service returns a 2xx response" in {
 
-      val okResponse = httpGet(isTransactionsUrlForNino _, HttpResponse(200, Some(Json.parse(transactionsReturnedByHelpToSaveJsonString))))
+      val okResponse = httpGet(isTransactionsUrlForNino _,
+                               HttpResponse(200, Some(Json.parse(transactionsReturnedByHelpToSaveJsonString))))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
@@ -224,13 +250,17 @@ class HelpToSaveConnectorSpec
 
     "return a Left when there is an error connecting to the help-to-save service" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("enrolment-status", failed(new ConnectException("Connection refused"))))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet("enrolment-status", failed(new ConnectException("Connection refused"))))
 
       await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub
         .warn(_: String, _: Throwable)) verify ("""Couldn't get enrolment status from help-to-save service""", throwableWithMessageContaining(
-        "Connection refused"))
+        "Connection refused"
+      ))
     }
 
     "return a Left when the help-to-save service returns a 4xx error" in {
@@ -240,7 +270,9 @@ class HelpToSaveConnectorSpec
       await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub
-        .warn(_: String, _: Throwable)) verify ("""Couldn't get enrolment status from help-to-save service""", throwableWithMessageContaining("429"))
+        .warn(_: String, _: Throwable)) verify ("""Couldn't get enrolment status from help-to-save service""", throwableWithMessageContaining(
+        "429"
+      ))
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
@@ -268,13 +300,17 @@ class HelpToSaveConnectorSpec
 
     "return a Left when there is an error connecting to the help-to-save service" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("eligibility-check", failed(new ConnectException("Connection refused"))))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet("eligibility-check", failed(new ConnectException("Connection refused"))))
 
       await(connector.checkEligibility()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub
         .warn(_: String, _: Throwable)) verify ("""Couldn't get eligibility from help-to-save service""", throwableWithMessageContaining(
-        "Connection refused"))
+        "Connection refused"
+      ))
     }
 
     "return a Left when the help-to-save service returns a 4xx error" in {
@@ -284,7 +320,9 @@ class HelpToSaveConnectorSpec
       await(connector.checkEligibility()) shouldBe Left(ErrorInfo.General)
 
       (slf4jLoggerStub
-        .warn(_: String, _: Throwable)) verify ("""Couldn't get eligibility from help-to-save service""", throwableWithMessageContaining("429"))
+        .warn(_: String, _: Throwable)) verify ("""Couldn't get eligibility from help-to-save service""", throwableWithMessageContaining(
+        "429"
+      ))
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
@@ -306,19 +344,20 @@ class HelpToSaveConnectorSpec
         HttpResponse(
           200,
           Some(Json.parse(s"""{
-                              |"eligibilityCheckResult": {
-                                      |"result": "",
-                                      |"resultCode": 1,
-                                      |"reason": "",
-                                      |"reasonCode": 6
-                              |}
+                             |"eligibilityCheckResult": {
+                             |"result": "",
+                             |"resultCode": 1,
+                             |"reason": "",
+                             |"reasonCode": 6
+                             |}
                  }""".stripMargin))
         )
       )
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
       await(connector.checkEligibility()) shouldBe Right(
-        EligibilityCheckResponse(EligibilityCheckResult(result = "", resultCode = 1, reason = "", reasonCode = 6), None))
+        EligibilityCheckResponse(EligibilityCheckResult(result = "", resultCode = 1, reason = "", reasonCode = 6), None)
+      )
     }
   }
 

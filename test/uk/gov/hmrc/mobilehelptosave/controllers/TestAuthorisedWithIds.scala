@@ -24,7 +24,11 @@ import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AlwaysAuthorisedWithIds(nino: Nino, shuttering: Shuttering = Shuttering.shutteringDisabled) extends AuthorisedWithIds {
+class AlwaysAuthorisedWithIds(
+  nino:       Nino,
+  shuttering: Shuttering = Shuttering.shutteringDisabled)
+    extends AuthorisedWithIds {
+
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
     Future successful Right(new RequestWithIds(request, Some(nino), shuttering))
 
@@ -34,6 +38,7 @@ class AlwaysAuthorisedWithIds(nino: Nino, shuttering: Shuttering = Shuttering.sh
 }
 
 object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {
+
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
     Future successful Left(Forbidden)
 
@@ -43,6 +48,7 @@ object NeverAuthorisedWithIds extends AuthorisedWithIds with Results {
 }
 
 object ShouldNotBeCalledAuthorisedWithIds extends AuthorisedWithIds with Results {
+
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] =
     Future failed new RuntimeException("AuthorisedWithIds should not be called in this situation")
 

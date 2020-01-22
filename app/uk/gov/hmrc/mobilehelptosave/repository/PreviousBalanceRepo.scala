@@ -29,7 +29,11 @@ import uk.gov.hmrc.domain.Nino
 import scala.concurrent.{ExecutionContext, Future}
 
 trait PreviousBalanceRepo[F[_]] {
-  def setPreviousBalance(nino: Nino, previousBalance: BigDecimal): F[Unit]
+
+  def setPreviousBalance(
+    nino:            Nino,
+    previousBalance: BigDecimal
+  ): F[Unit]
 
   def getPreviousBalance(nino: Nino): F[Option[PreviousBalance]]
 
@@ -37,16 +41,19 @@ trait PreviousBalanceRepo[F[_]] {
 }
 
 class MongoPreviousBalanceRepo(
-  mongo:       ReactiveMongoComponent
-)(implicit ec: ExecutionContext, mongoFormats: Format[PreviousBalance])
+  mongo:        ReactiveMongoComponent
+)(implicit ec:  ExecutionContext,
+  mongoFormats: Format[PreviousBalance])
     extends IndexedMongoRepo[Nino, PreviousBalance]("previousBalance", "nino", unique = false, mongo = mongo)
     with PreviousBalanceRepo[Future] {
 
-  override def setPreviousBalance(nino: Nino, previousBalance: BigDecimal): Future[Unit] =
-    findAndUpdate(
-      query  = obj(indexFieldName -> Json.toJson(nino)),
-      update = obj("$set" -> Json.toJson(PreviousBalance(nino, previousBalance, LocalDateTime.now()))),
-      upsert = true).void
+  override def setPreviousBalance(
+    nino:            Nino,
+    previousBalance: BigDecimal
+  ): Future[Unit] =
+    findAndUpdate(query  = obj(indexFieldName -> Json.toJson(nino)),
+                  update = obj("$set" -> Json.toJson(PreviousBalance(nino, previousBalance, LocalDateTime.now()))),
+                  upsert = true).void
 
   override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] =
     collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).one[PreviousBalance]
@@ -55,7 +62,10 @@ class MongoPreviousBalanceRepo(
     removeAll().void
 }
 
-case class PreviousBalance(nino: Nino, previousBalance: BigDecimal, date: LocalDateTime)
+case class PreviousBalance(
+  nino:            Nino,
+  previousBalance: BigDecimal,
+  date:            LocalDateTime)
 
 object PreviousBalance {
   implicit val formats: OFormat[PreviousBalance] = Json.format

@@ -39,7 +39,9 @@ class YearMonthJsonSpec extends WordSpec with Matchers {
     }
 
     "reject badly formatted strings with an error.expected.yearmonth.format error" in {
-      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(JsonValidationError("error.expected.yearmonth.format"))
+      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(
+        JsonValidationError("error.expected.yearmonth.format")
+      )
     }
   }
 }

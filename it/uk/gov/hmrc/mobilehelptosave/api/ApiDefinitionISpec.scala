@@ -33,9 +33,8 @@ class ApiDefinitionISpec
     with ComponentSupport {
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
-    "api.access.white-list.applicationIds" -> Seq(
-      "00010002-0003-0004-0005-000600070008",
-      "00090002-0003-0004-0005-000600070008"),
+    "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008",
+                                                  "00090002-0003-0004-0005-000600070008"),
     "api.access.type" -> "TEST_ACCESS_TYPE"
   )
 

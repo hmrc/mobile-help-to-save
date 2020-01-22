@@ -20,11 +20,18 @@ import play.api.mvc.PathBindable
 import uk.gov.hmrc.domain.Nino
 
 object Binders {
+
   implicit def ninoBinder(implicit stringBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
 
-    def unbind(key: String, nino: Nino): String = stringBinder.unbind(key, nino.value)
+    def unbind(
+      key:  String,
+      nino: Nino
+    ): String = stringBinder.unbind(key, nino.value)
 
-    def bind(key: String, value: String): Either[String, Nino] =
+    def bind(
+      key:   String,
+      value: String
+    ): Either[String, Nino] =
       if (Nino.isValid(value)) Right(Nino(value))
       else Left("ERROR_NINO_INVALID")
   }

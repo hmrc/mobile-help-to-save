@@ -29,8 +29,9 @@ class TestController(
   savingsGoalEventRepo:     SavingsGoalEventRepo[Future],
   milestonesRepo:           MilestonesRepo[Future],
   previousBalanceRepo:      PreviousBalanceRepo[Future],
-  val controllerComponents: ControllerComponents
-) extends BackendBaseController {
+  val controllerComponents: ControllerComponents)
+    extends BackendBaseController {
+
   def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")

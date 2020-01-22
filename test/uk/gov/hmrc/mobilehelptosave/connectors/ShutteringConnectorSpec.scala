@@ -21,15 +21,22 @@ import java.net.URL
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.http.{BadGatewayException, CoreGet, HeaderCarrier, HttpReads, InternalServerException}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class ShutteringConnectorSpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout with MockFactory with OneInstancePerTest {
+class ShutteringConnectorSpec
+    extends WordSpec
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with MockFactory
+    with OneInstancePerTest {
   val mockCoreGet: CoreGet = mock[CoreGet]
+
   private val config: ShutteringConnectorConfig = new ShutteringConnectorConfig {
     override val shutteringBaseUrl: URL = new URL("http:///")
   }

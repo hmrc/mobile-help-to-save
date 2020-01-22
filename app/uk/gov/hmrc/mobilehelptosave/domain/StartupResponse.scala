@@ -25,8 +25,7 @@ case class StartupResponse(
   accessAccountUrl: Option[String] = None,
   accountPayInUrl:  Option[String] = None,
   user:             Option[UserDetails] = None,
-  userError:        Option[ErrorInfo] = None
-)
+  userError:        Option[ErrorInfo] = None)
 
 object StartupResponse {
   implicit val enabledWrites: Writes[StartupResponse] = Json.writes[StartupResponse]
@@ -37,8 +36,7 @@ object StartupResponse {
 case class Shuttering(
   shuttered: Boolean,
   title:     Option[String] = None,
-  message:   Option[String] = None
-)
+  message:   Option[String] = None)
 
 case object Shuttering {
   implicit val format: OFormat[Shuttering] = Json.format[Shuttering]

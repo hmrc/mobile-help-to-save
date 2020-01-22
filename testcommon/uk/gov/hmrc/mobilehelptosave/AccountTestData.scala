@@ -69,7 +69,8 @@ trait AccountTestData {
     secondPeriodBonusEstimate:          BigDecimal,
     secondPeriodEndDate:                LocalDate,
     secondPeriodBonusPaidOnOrAfterDate: LocalDate,
-    isClosed:                           Boolean = false): String =
+    isClosed:                           Boolean = false
+  ): String =
     s"""
        |{
        |  "openedYearMonth": "2018-01",

@@ -21,7 +21,11 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
-case class EligibilityCheckResult(result: String, resultCode: Int, reason: String, reasonCode: Int)
+case class EligibilityCheckResult(
+  result:     String,
+  resultCode: Int,
+  reason:     String,
+  reasonCode: Int)
 
 object EligibilityCheckResult {
 
@@ -29,7 +33,9 @@ object EligibilityCheckResult {
 
 }
 
-case class EligibilityCheckResponse(eligibilityCheckResult: EligibilityCheckResult, threshold: Option[Double])
+case class EligibilityCheckResponse(
+  eligibilityCheckResult: EligibilityCheckResult,
+  threshold:              Option[Double])
 
 object EligibilityCheckResponse {
 
@@ -37,7 +43,10 @@ object EligibilityCheckResponse {
 
 }
 
-case class Eligibility(nino: Nino, eligible: Boolean, expireAt: DateTime)
+case class Eligibility(
+  nino:     Nino,
+  eligible: Boolean,
+  expireAt: DateTime)
 
 object Eligibility {
 

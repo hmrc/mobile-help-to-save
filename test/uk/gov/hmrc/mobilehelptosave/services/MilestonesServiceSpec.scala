@@ -41,9 +41,12 @@ class MilestonessServiceSpec
     with LoggerStub
     with TestF {
 
-  private val generator  = new Generator(0)
-  private val nino       = generator.nextNino
-  private val testConfig = TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
+  private val generator = new Generator(0)
+  private val nino      = generator.nextNino
+
+  private val testConfig =
+    TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
+
   private val baseBonusTerms = Seq(
     BonusTerm(
       bonusEstimate                 = BigDecimal("90.99"),
@@ -65,7 +68,12 @@ class MilestonessServiceSpec
 
   "getMilestones" should {
     "retrieve a list of unseen milestones including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to true" in {
-      val milestones = List(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false))
+      val milestones = List(
+        MongoMilestone(nino          = nino,
+                       milestoneType = BalanceReached,
+                       milestone     = Milestone(BalanceReached1),
+                       isRepeatable  = false)
+      )
 
       val milestonesRepo      = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
@@ -102,13 +110,21 @@ class MilestonessServiceSpec
     }
 
     "retrieve a list of unseen milestones not including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to false" in {
-      val milestones = List(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false))
+      val milestones = List(
+        MongoMilestone(nino          = nino,
+                       milestoneType = BalanceReached,
+                       milestone     = Milestone(BalanceReached1),
+                       isRepeatable  = false)
+      )
 
       val milestonesRepo      = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
-        new HtsMilestonesService(logger, testConfig.copy(balanceMilestoneCheckEnabled = false), milestonesRepo, previousBalanceRepo)
+        new HtsMilestonesService(logger,
+                                 testConfig.copy(balanceMilestoneCheckEnabled = false),
+                                 milestonesRepo,
+                                 previousBalanceRepo)
 
       val result = service.getMilestones(nino).unsafeGet
       result shouldBe List.empty
@@ -117,7 +133,10 @@ class MilestonessServiceSpec
 
   "setMilestone" should {
     "store the milestone that has been hit by the user" in {
-      val milestone = MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
+      val milestone = MongoMilestone(nino = nino,
+                                     milestoneType = BalanceReached,
+                                     milestone     = Milestone(BalanceReached1),
+                                     isRepeatable  = false)
 
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
@@ -132,8 +151,6 @@ class MilestonessServiceSpec
 
   "balanceMilestoneCheck" should {
     "check if the user's previous balance has been set before and if not, set it and return CouldNotCheck" in {
-      val milestone = MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
-
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
@@ -145,8 +162,6 @@ class MilestonessServiceSpec
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneNotHit if the BalanceReached1 milestone has not been hit" in {
-      val milestone = MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
-
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
@@ -158,8 +173,6 @@ class MilestonessServiceSpec
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneHit if the BalanceReached1 milestone has been hit" in {
-      val milestone = MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
-
       val milestonesRepo      = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
 
@@ -231,7 +244,8 @@ class MilestonessServiceSpec
 
       val bonusTerms = Seq(
         baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
-        baseBonusTerms(1).copy(bonusEstimate          = 0))
+        baseBonusTerms(1).copy(bonusEstimate          = 0)
+      )
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
@@ -258,7 +272,8 @@ class MilestonessServiceSpec
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms =
-        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
+        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)),
+            baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
@@ -266,16 +281,25 @@ class MilestonessServiceSpec
   }
 
   private def fakeMilestonesRepo(milestones: List[MongoMilestone] = List.empty) = new MilestonesRepo[TestF] {
-    override def setMilestone(milestone: MongoMilestone): TestF[Unit] = F.unit
-    override def getMilestones(nino:     Nino): TestF[List[MongoMilestone]] = F.pure(milestones)
-    override def markAsSeen(nino:        Nino, milestoneId: String): TestF[Unit] = F.unit
+    override def setMilestone(milestone: MongoMilestone): TestF[Unit]                 = F.unit
+    override def getMilestones(nino:     Nino):           TestF[List[MongoMilestone]] = F.pure(milestones)
+
+    override def markAsSeen(
+      nino:        Nino,
+      milestoneId: String
+    ):                              TestF[Unit] = F.unit
     override def clearMilestones(): TestF[Unit] = ???
   }
 
-  private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) = new PreviousBalanceRepo[TestF] {
-    override def setPreviousBalance(nino: Nino, previousBalance: BigDecimal): TestF[Unit] = F.unit
-    override def getPreviousBalance(nino: Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
-    override def clearPreviousBalance(): Future[Unit] = ???
-  }
+  private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) =
+    new PreviousBalanceRepo[TestF] {
+
+      override def setPreviousBalance(
+        nino:            Nino,
+        previousBalance: BigDecimal
+      ): TestF[Unit] = F.unit
+      override def getPreviousBalance(nino: Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
+      override def clearPreviousBalance(): Future[Unit] = ???
+    }
 
 }

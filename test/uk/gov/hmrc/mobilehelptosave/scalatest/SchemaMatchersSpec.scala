@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.scalatest
 
+import com.eclipsesource.schema.drafts.Version7._
 import com.eclipsesource.schema.SchemaType
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.{JsValue, Json}
@@ -49,8 +50,8 @@ class SchemaMatchersSpec extends WordSpec with Matchers {
 
       badJsonResult.matches shouldBe false
       badJsonResult.failureMessage should (startWith("JSON was not valid against schema")
-        and include("Property line1 missing")
-        and include("Property line3 missing"))
+      and include("Property line1 missing")
+      and include("Property line3 missing"))
 
       badJsonResult.negatedFailureMessage shouldBe "JSON was valid against schema"
     }

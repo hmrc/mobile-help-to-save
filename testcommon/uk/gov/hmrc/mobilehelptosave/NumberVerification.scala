@@ -22,9 +22,12 @@ import play.api.libs.json.JsLookupResult
 
 trait NumberVerification {
 
-  def shouldBeBigDecimal(jsLookupResult: JsLookupResult, expectedValue: BigDecimal): Assertion = {
+  def shouldBeBigDecimal(
+    jsLookupResult: JsLookupResult,
+    expectedValue:  BigDecimal
+  ): Assertion = {
     // asOpt[String] is used to check numbers are formatted like "balance": 123.45 not "balance": "123.45"
-    jsLookupResult.asOpt[String] shouldBe None
+    jsLookupResult.asOpt[String]  shouldBe None
     jsLookupResult.as[BigDecimal] shouldBe expectedValue
   }
 }

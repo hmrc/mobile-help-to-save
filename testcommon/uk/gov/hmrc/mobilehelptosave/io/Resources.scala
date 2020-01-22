@@ -19,15 +19,21 @@ package uk.gov.hmrc.mobilehelptosave.io
 import java.io.InputStream
 
 object Resources {
-  def withResource[R](resourceName: String, clazz: Class[_] = getClass)(f: InputStream => R): R = {
+
+  def withResource[R](
+    resourceName: String,
+    clazz:        Class[_] = getClass
+  )(f:            InputStream => R
+  ): R = {
     val inputStreamIfExists = Option(clazz.getResourceAsStream(resourceName))
-    inputStreamIfExists.map { inputStream =>
-      try {
-        f(inputStream)
+    inputStreamIfExists
+      .map { inputStream =>
+        try {
+          f(inputStream)
+        } finally {
+          inputStream.close()
+        }
       }
-      finally {
-        inputStream.close()
-      }
-    }.getOrElse(sys.error(s"Could not find resource $resourceName"))
+      .getOrElse(sys.error(s"Could not find resource $resourceName"))
   }
 }

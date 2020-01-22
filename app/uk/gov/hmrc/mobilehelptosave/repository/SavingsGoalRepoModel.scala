@@ -22,7 +22,10 @@ import enumeratum.{Enum, EnumEntry, PlayLowercaseJsonEnum}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 
-case class SavingsGoalRepoModel(nino: Nino, amount: Double, createdAt: LocalDateTime)
+case class SavingsGoalRepoModel(
+  nino:      Nino,
+  amount:    Double,
+  createdAt: LocalDateTime)
 
 object SavingsGoalRepoModel {
   implicit val reads:  Reads[SavingsGoalRepoModel]   = Json.reads[SavingsGoalRepoModel]
@@ -46,8 +49,17 @@ sealed trait SavingsGoalEvent {
   def nino: Nino
   def date: LocalDateTime
 }
-case class SavingsGoalSetEvent(nino:    Nino, amount: Double, date: LocalDateTime) extends SavingsGoalEvent
-case class SavingsGoalDeleteEvent(nino: Nino, date:   LocalDateTime) extends SavingsGoalEvent
+
+case class SavingsGoalSetEvent(
+  nino:   Nino,
+  amount: Double,
+  date:   LocalDateTime)
+    extends SavingsGoalEvent
+
+case class SavingsGoalDeleteEvent(
+  nino: Nino,
+  date: LocalDateTime)
+    extends SavingsGoalEvent
 
 object SavingsGoalEvent {
   val setEventFormat:    OFormat[SavingsGoalSetEvent]    = Json.format
@@ -56,6 +68,7 @@ object SavingsGoalEvent {
   val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
 
   implicit val format: OFormat[SavingsGoalEvent] = new OFormat[SavingsGoalEvent] {
+
     override def writes(o: SavingsGoalEvent): JsObject = o match {
       case ev: SavingsGoalSetEvent => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
       case ev: SavingsGoalDeleteEvent =>
@@ -68,7 +81,10 @@ object SavingsGoalEvent {
         case error: JsError => error
       }
 
-    private def readEvent(ev: SavingsGoalEventType, json: JsValue): JsResult[SavingsGoalEvent] = ev match {
+    private def readEvent(
+      ev:   SavingsGoalEventType,
+      json: JsValue
+    ): JsResult[SavingsGoalEvent] = ev match {
       case SavingsGoalEventType.Set    => setEventFormat.reads(json)
       case SavingsGoalEventType.Delete => deleteEventFormat.reads(json)
     }

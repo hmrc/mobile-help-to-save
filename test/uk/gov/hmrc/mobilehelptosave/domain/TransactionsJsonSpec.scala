@@ -28,7 +28,8 @@ class TransactionsJsonSpec extends WordSpec with Matchers with SchemaMatchers wi
     "there is a typical list of transactions" should {
       "be a valid instance of the schema used in the RAML" in {
         Json.toJson(transactionsSortedInMobileHelpToSaveOrder) should validateAgainstSchema(
-          strictRamlTransactionsSchema)
+          strictRamlTransactionsSchema
+        )
       }
     }
 

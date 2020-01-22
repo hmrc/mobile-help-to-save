@@ -30,7 +30,11 @@ import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import scala.concurrent.{ExecutionContext, Future}
 
 trait SavingsGoalEventRepo[F[_]] {
-  def setGoal(nino:    Nino, amount: Double): F[Unit]
+
+  def setGoal(
+    nino:   Nino,
+    amount: Double
+  ): F[Unit]
   def deleteGoal(nino: Nino): F[Unit]
   def getGoal(nino:    Nino): F[Option[SavingsGoal]]
   def getEvents(nino:  Nino): F[List[SavingsGoalEvent]]
@@ -40,12 +44,16 @@ trait SavingsGoalEventRepo[F[_]] {
 }
 
 class MongoSavingsGoalEventRepo(
-  mongo:       ReactiveMongoComponent
-)(implicit ec: ExecutionContext, mongoFormats: Format[SavingsGoalEvent])
+  mongo:        ReactiveMongoComponent
+)(implicit ec:  ExecutionContext,
+  mongoFormats: Format[SavingsGoalEvent])
     extends IndexedMongoRepo[Nino, SavingsGoalEvent]("savingsGoalEvents", "nino", unique = false, mongo = mongo)
     with SavingsGoalEventRepo[Future] {
 
-  override def setGoal(nino: Nino, amount: Double): Future[Unit] =
+  override def setGoal(
+    nino:   Nino,
+    amount: Double
+  ): Future[Unit] =
     insert(SavingsGoalSetEvent(nino, amount, LocalDateTime.now)).void
 
   override def deleteGoal(nino: Nino): Future[Unit] =
@@ -60,7 +68,8 @@ class MongoSavingsGoalEventRepo(
     find("nino" -> Json.toJson(nino))
 
   override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = {
-    val query = collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).sort(obj("date" -> -1))
+    val query =
+      collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).sort(obj("date" -> -1))
     val result: Future[Option[SavingsGoalEvent]] = query.one[SavingsGoalEvent]
     result.map {
       case None => None
@@ -76,5 +85,5 @@ class MongoSavingsGoalEventRepo(
         case _ => throw new IllegalStateException("Event must be a set event")
       }
     )
-  
+
 }

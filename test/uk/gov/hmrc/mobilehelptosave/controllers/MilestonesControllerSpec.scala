@@ -49,7 +49,12 @@ class MilestonesControllerSpec
 
   "getMilestones" should {
     "return 200 and the list of milestones as JSON" in {
-      val milestones = List(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false))
+      val milestones = List(
+        MongoMilestone(nino          = nino,
+                       milestoneType = BalanceReached,
+                       milestone     = Milestone(BalanceReached1),
+                       isRepeatable  = false)
+      )
 
       (mockMilestonesService
         .getMilestones(_: Nino)(_: HeaderCarrier))
@@ -57,7 +62,10 @@ class MilestonesControllerSpec
         .returning(Future.successful(milestones))
 
       val controller =
-        new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), stubControllerComponents())
+        new MilestonesController(logger,
+                                 mockMilestonesService,
+                                 new AlwaysAuthorisedWithIds(nino),
+                                 stubControllerComponents())
 
       val result = controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
 
@@ -74,7 +82,10 @@ class MilestonesControllerSpec
         .returning(Future.successful(()))
 
       val controller =
-        new MilestonesController(logger, mockMilestonesService, new AlwaysAuthorisedWithIds(nino), stubControllerComponents())
+        new MilestonesController(logger,
+                                 mockMilestonesService,
+                                 new AlwaysAuthorisedWithIds(nino),
+                                 stubControllerComponents())
 
       val result = controller.markAsSeen(nino, "BalancedReached", "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
 

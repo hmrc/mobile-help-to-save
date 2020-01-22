@@ -32,13 +32,13 @@ object Schema {
     */
   def banAdditionalProperties(schema: JsValue): JsValue = {
     val augmented: JsValue = schema match {
-      case o@JsObject(_) if (schema \ "type").asOpt[String].contains("object") =>
+      case o @ JsObject(_) if (schema \ "type").asOpt[String].contains("object") =>
         o + ("additionalProperties" -> JsBoolean(false))
       case v => v
     }
 
     augmented match {
-      case o@JsObject(_) =>
+      case o @ JsObject(_) =>
         JsObject(o.fields.map { case (k, v) => (k, banAdditionalProperties(v)) })
       case v => v
     }
