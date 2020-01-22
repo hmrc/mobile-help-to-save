@@ -30,10 +30,9 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, MilestonesConfig}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
-import uk.gov.hmrc.mobilehelptosave.domain.{MilestoneCheckResult, _}
+import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
-import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 trait AccountService[F[_]] {
@@ -41,7 +40,11 @@ trait AccountService[F[_]] {
 
   def account(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]]
 
-  def setSavingsGoal(nino:    Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]]
+  def setSavingsGoal(
+    nino:        Nino,
+    savingsGoal: SavingsGoal
+  )(implicit hc: HeaderCarrier
+  ): F[Result[Unit]]
   def getSavingsGoal(nino:    Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]]
   def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]]
 
@@ -60,11 +63,16 @@ class HtsAccountService[F[_]](
 )(implicit F:                   MonadError[F, Throwable])
     extends AccountService[F] {
 
-  override def setSavingsGoal(nino: Nino, savingsGoal: SavingsGoal)(implicit hc: HeaderCarrier): F[Result[Unit]] =
+  override def setSavingsGoal(
+    nino:        Nino,
+    savingsGoal: SavingsGoal
+  )(implicit hc: HeaderCarrier
+  ): F[Result[Unit]] =
     withValidSavingsAmount(savingsGoal.goalAmount) {
       withHelpToSaveAccount(nino) { acc =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
-          trappingRepoExceptions("error writing savings goal to repo", savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
+          trappingRepoExceptions("error writing savings goal to repo",
+                                 savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
         }
       }
     }
@@ -90,7 +98,8 @@ class HtsAccountService[F[_]](
         EitherT(fetchAccountWithGoal(nino)).flatMap {
           case Some(account) =>
             EitherT.liftF[F, ErrorInfo, Option[Account]](for {
-              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled) balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
+              _ <- if (milestonesConfig.balanceMilestoneCheckEnabled)
+                    balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
                   else F.pure(())
               _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled && !account.isClosed)
                     bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
@@ -108,7 +117,12 @@ class HtsAccountService[F[_]](
     else
       fn
 
-  protected def withEnoughSavingsHeadroom[T](goal: Double, acc: HelpToSaveAccount)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] = {
+  protected def withEnoughSavingsHeadroom[T](
+    goal:        Double,
+    acc:         HelpToSaveAccount
+  )(fn:          => F[Result[T]]
+  )(implicit hc: HeaderCarrier
+  ): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     if (goal > maxGoal)
       F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
@@ -120,14 +134,21 @@ class HtsAccountService[F[_]](
     * Check if the nino has an NS&I help-to-save account associated with it. If so, run the supplied function on it,
     * otherwise map to an appropriate ErrorInfo value.
     */
-  protected def withHelpToSaveAccount[T](nino: Nino)(f: HelpToSaveAccount => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
+  protected def withHelpToSaveAccount[T](
+    nino:        Nino
+  )(f:           HelpToSaveAccount => F[Result[T]]
+  )(implicit hc: HeaderCarrier
+  ): F[Result[T]] =
     helpToSaveGetAccount.getAccount(nino).flatMap {
       case Right(Some(account)) => f(account)
       case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
       case Left(errorInfo)      => F.pure(errorInfo.asLeft)
     }
 
-  protected def trappingRepoExceptions[T](msg: String, f: => F[T]): F[Result[T]] =
+  protected def trappingRepoExceptions[T](
+    msg: String,
+    f:   => F[T]
+  ): F[Result[T]] =
     f.map(_.asRight[ErrorInfo]).recover {
       case NonFatal(t) =>
         logger.error(msg, t)
@@ -148,19 +169,21 @@ class HtsAccountService[F[_]](
     ).mapN {
       case (Right(Some(account)), Right(goal)) =>
         Some(
-          Account(
-            account,
-            inAppPaymentsEnabled = config.inAppPaymentsEnabled,
-            savingsGoalsEnabled  = config.savingsGoalsEnabled,
-            logger,
-            LocalDate.now(),
-            goal)).asRight
+          Account(account,
+                  inAppPaymentsEnabled = config.inAppPaymentsEnabled,
+                  savingsGoalsEnabled  = config.savingsGoalsEnabled,
+                  logger,
+                  LocalDate.now(),
+                  goal)
+        ).asRight
 
       case (Left(errorInfo), _) => errorInfo.asLeft
       case (_, Left(errorInfo)) => errorInfo.asLeft
 
       case (Right(None), _) =>
-        logger.warn(s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+        logger.warn(
+          s"$nino was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
+        )
         None.asRight
     }
 

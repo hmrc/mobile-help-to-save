@@ -28,9 +28,17 @@ import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesActions {
-  def getMilestones(nino: Nino, journeyId: JourneyId): Action[AnyContent]
 
-  def markAsSeen(nino: Nino, milestoneId: String, journeyId: JourneyId): Action[AnyContent]
+  def getMilestones(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[AnyContent]
+
+  def markAsSeen(
+    nino:        Nino,
+    milestoneId: String,
+    journeyId:   JourneyId
+  ): Action[AnyContent]
 }
 
 class MilestonesController(
@@ -38,26 +46,30 @@ class MilestonesController(
   milestonesService:        MilestonesService[Future],
   authorisedWithIds:        AuthorisedWithIds,
   val controllerComponents: ControllerComponents
-)(
-  implicit ec: ExecutionContext
-) extends BackendBaseController
+)(implicit ec:              ExecutionContext)
+    extends BackendBaseController
     with ControllerChecks
     with MilestonesActions {
 
-  override def getMilestones(nino: Nino, journeyId: JourneyId): Action[AnyContent] = authorisedWithIds.async {
-    implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(nino, request.shuttered) { nino =>
-        milestonesService
-          .getMilestones(nino)
-          .map(milestones => Ok(Json.toJson(Milestones(milestones))))
-      }
+  override def getMilestones(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+    verifyingMatchingNino(nino, request.shuttered) { nino =>
+      milestonesService
+        .getMilestones(nino)
+        .map(milestones => Ok(Json.toJson(Milestones(milestones))))
+    }
   }
 
-  override def markAsSeen(nino: Nino, milestoneType: String, journeyId: JourneyId): Action[AnyContent] = authorisedWithIds.async {
-    implicit request: RequestWithIds[AnyContent] =>
-      verifyingMatchingNino(nino, request.shuttered) { nino =>
-        milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
-      }
+  override def markAsSeen(
+    nino:          Nino,
+    milestoneType: String,
+    journeyId:     JourneyId
+  ): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+    verifyingMatchingNino(nino, request.shuttered) { nino =>
+      milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)
+    }
   }
 
 }

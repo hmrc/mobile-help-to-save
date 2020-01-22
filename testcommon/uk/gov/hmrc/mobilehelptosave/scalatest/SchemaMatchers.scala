@@ -28,7 +28,7 @@ trait SchemaMatchers {
 
     override def toString(): String = """validateAgainstSchema (<schema>)"""
 
-    override def apply(left: JsValue): MatchResult = {
+    override def apply(left: JsValue): MatchResult =
       schemaValidator.validate(schema, left) match {
         case JsSuccess(_, _) =>
           MatchResult(
@@ -36,7 +36,7 @@ trait SchemaMatchers {
             "JSON was not valid against schema",
             "JSON was valid against schema"
           )
-        case error@JsError(_) =>
+        case error @ JsError(_) =>
           MatchResult(
             matches = false,
             "JSON was not valid against schema, errors: {0}",
@@ -44,7 +44,6 @@ trait SchemaMatchers {
             IndexedSeq(error.errors)
           )
       }
-    }
   }
 
 }

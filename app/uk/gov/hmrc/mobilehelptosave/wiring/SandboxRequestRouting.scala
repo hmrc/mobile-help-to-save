@@ -21,6 +21,12 @@ import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 
 trait SandboxRequestRouting {
   self: BuiltInComponents =>
+
   override lazy val httpRequestHandler: HttpRequestHandler =
-    new RoutingHttpRequestHandler(router, httpErrorHandler, httpConfiguration, new DefaultHttpFilters(httpFilters: _*), environment, configuration)
+    new RoutingHttpRequestHandler(router,
+                                  httpErrorHandler,
+                                  httpConfiguration,
+                                  new DefaultHttpFilters(httpFilters: _*),
+                                  environment,
+                                  configuration)
 }

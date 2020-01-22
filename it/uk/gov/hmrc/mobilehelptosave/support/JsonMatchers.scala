@@ -20,7 +20,9 @@ import org.scalatest.matchers.{MatchResult, Matcher}
 import play.api.libs.json.{JsError, JsResult, JsSuccess}
 
 trait JsonMatchers {
+
   val beJsSuccess: Matcher[JsResult[_]] = new Matcher[JsResult[_]] {
+
     override def apply(left: JsResult[_]): MatchResult = left match {
       case JsSuccess(_, _) => MatchResult(matches = true, "JsResult was an error", "JsResult was successful")
       case JsError(errors) => MatchResult(matches = false, s"JsResult was an error: $errors", "JsResult was successful")

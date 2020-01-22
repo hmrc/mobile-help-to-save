@@ -33,7 +33,9 @@ object ShutteringStub {
                          |  "title":     "",
                          |  "message":    ""
                          |}
-          """.stripMargin)))
+          """.stripMargin)
+        )
+    )
 
   def stubForShutteringEnabled()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
@@ -47,6 +49,8 @@ object ShutteringStub {
                          |  "title":     "Shuttered",
                          |  "message":   "HTS is currently not available"
                          |}
-          """.stripMargin)))
+          """.stripMargin)
+        )
+    )
 
 }

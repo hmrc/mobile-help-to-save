@@ -32,20 +32,25 @@ trait MilestonesRepo[F[_]] {
 
   def getMilestones(nino: Nino): F[List[MongoMilestone]]
 
-  def markAsSeen(nino: Nino, milestoneType: String): F[Unit]
+  def markAsSeen(
+    nino:          Nino,
+    milestoneType: String
+  ): F[Unit]
 
   def clearMilestones(): F[Unit]
 }
 
 class MongoMilestonesRepo(
-  mongo:       ReactiveMongoComponent
-)(implicit ec: ExecutionContext, mongoFormats: Format[MongoMilestone])
+  mongo:        ReactiveMongoComponent
+)(implicit ec:  ExecutionContext,
+  mongoFormats: Format[MongoMilestone])
     extends IndexedMongoRepo[Nino, MongoMilestone]("milestones", "nino", unique = false, mongo = mongo)
     with MilestonesRepo[Future] {
 
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
     collection
-      .find(obj("nino" -> milestone.nino, "milestone" -> milestone.milestone), None)(JsObjectDocumentWriter, JsObjectDocumentWriter)
+      .find(obj("nino" -> milestone.nino, "milestone" -> milestone.milestone), None)(JsObjectDocumentWriter,
+                                                                                     JsObjectDocumentWriter)
       .one[MongoMilestone]
       .map {
         case Some(m) => if (m.isRepeatable) insert(milestone).void else ()
@@ -55,7 +60,10 @@ class MongoMilestonesRepo(
   override def getMilestones(nino: Nino): Future[List[MongoMilestone]] =
     find("nino" -> Json.toJson(nino), "isSeen" -> false)
 
-  override def markAsSeen(nino: Nino, milestoneType: String): Future[Unit] =
+  override def markAsSeen(
+    nino:          Nino,
+    milestoneType: String
+  ): Future[Unit] =
     collection
       .update(ordered = false)
       .one(

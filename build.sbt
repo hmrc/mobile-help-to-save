@@ -1,5 +1,5 @@
 import TestPhases.oneForkedJvmPerTest
-import sbt.CrossVersion
+import sbt.{CrossVersion, Resolver}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
@@ -26,7 +26,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(AppDependencies.appDependencies: _*)
   .settings(
     majorVersion := 0,
-    scalaVersion := "2.11.12",
+    scalaVersion := "2.12.8",
     unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
     // based on https://tpolecat.github.io/2017/04/25/scalac-flags.html but cut down for scala 2.11
@@ -45,7 +45,7 @@ lazy val microservice = Project(appName, file("."))
       "-Ywarn-nullary-unit",
       "-Ywarn-numeric-widen",
       //"-Ywarn-unused-import", - does not work well with fatal-warnings because of play-generated sources
-      "-Xfatal-warnings",
+      //"-Xfatal-warnings",
       "-Xlint"
     ),
     addCommandAlias("testAll", ";reload;test;it:test")
@@ -55,12 +55,12 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(
-      base =>
-        Seq(
-          base / "it",
-          base / "testcommon"
-      )).value: _*
+    unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base =>
+      Seq(
+        base / "it",
+        base / "testcommon"
+      )
+    ).value: _*
   )
   .settings(
     Keys.fork in IntegrationTest := false,
@@ -77,10 +77,7 @@ lazy val microservice = Project(appName, file("."))
     )
   )
   .settings(
-    resolvers ++= Seq(
-      Resolver.bintrayRepo("hmrc", "releases"),
-      Resolver.jcenterRepo
-    ),
+    resolvers ++= Seq(Resolver.jcenterRepo),
     addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.9"),
     addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.2.4"),
     addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.1" cross CrossVersion.full)

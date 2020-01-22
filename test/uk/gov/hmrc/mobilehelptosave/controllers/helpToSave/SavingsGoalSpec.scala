@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
-import eu.timepit.refined.auto._
 import cats.syntax.either._
+import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.test.Helpers.status
@@ -54,7 +54,8 @@ class SavingsGoalSpec
         status(resultF) shouldBe 204
       }
 
-      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
         val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
         val request = FakeRequest().withBody(SavingsGoal(amount))
 

@@ -49,21 +49,24 @@ trait HelpToSaveEligibility[F[_]] {
 }
 
 class HelpToSaveConnectorImpl(
-  logger: LoggerLike,
-  config: HelpToSaveConnectorConfig,
-  http:   CoreGet
-)(
-  implicit ec: ExecutionContext
-) extends HelpToSaveGetTransactions[Future]
+  logger:      LoggerLike,
+  config:      HelpToSaveConnectorConfig,
+  http:        CoreGet
+)(implicit ec: ExecutionContext)
+    extends HelpToSaveGetTransactions[Future]
     with HelpToSaveGetAccount[Future]
     with HelpToSaveEnrolmentStatus[Future]
     with HelpToSaveEligibility[Future] {
 
   override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
-    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue => Right((json \ "enrolled").as[Boolean])
+    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
+      Right((json \ "enrolled").as[Boolean])
     } recover handleEnrolmentStatusHttpErrors
 
-  override def getAccount(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+  override def getAccount(
+    nino:        Nino
+  )(implicit hc: HeaderCarrier
+  ): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
     val string = accountUrl(nino).toString
     http.GET[HelpToSaveAccount](string) map (account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
   }
@@ -87,7 +90,8 @@ class HelpToSaveConnectorImpl(
     case _: NotFoundException =>
       Left(ErrorInfo.AccountNotFound)
 
-    case e @ (_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException | _: JsonParseException) =>
+    case e @ (_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException |
+        _: JsonParseException) =>
       logger.warn(s"Couldn't get $dataDescription from help-to-save service", e)
       Left(ErrorInfo.General)
   }
@@ -100,10 +104,12 @@ class HelpToSaveConnectorImpl(
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
 
   private def accountUrl(nino: Nino): URL =
-    new URL(config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account" ? ("systemId" -> SystemId))
+    new URL(config.helpToSaveBaseUrl,
+            s"/help-to-save/${encodePathSegment(nino.value)}/account" ? ("systemId" -> SystemId))
 
   private def transactionsUrl(nino: Nino): URL =
-    new URL(config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
+    new URL(config.helpToSaveBaseUrl,
+            s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
 
   private def eligibilityUrl: URL =
     new URL(config.helpToSaveBaseUrl, s"/help-to-save/eligibility-check")
@@ -114,8 +120,7 @@ case class HelpToSaveBonusTerm(
   bonusEstimate:          BigDecimal,
   bonusPaid:              BigDecimal,
   endDate:                LocalDate,
-  bonusPaidOnOrAfterDate: LocalDate
-)
+  bonusPaidOnOrAfterDate: LocalDate)
 
 object HelpToSaveBonusTerm {
   implicit val reads: Reads[HelpToSaveBonusTerm] = Json.reads[HelpToSaveBonusTerm]
@@ -137,8 +142,7 @@ case class HelpToSaveAccount(
   accountHolderEmail:     Option[String],
   bonusTerms:             Seq[HelpToSaveBonusTerm],
   closureDate:            Option[LocalDate],
-  closingBalance:         Option[BigDecimal]
-)
+  closingBalance:         Option[BigDecimal])
 
 object HelpToSaveAccount {
   implicit val yearMonthFormat: Format[YearMonth]        = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat

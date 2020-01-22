@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
+import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.libs.json.Json
@@ -31,7 +32,6 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import eu.timepit.refined.auto._
 
 //noinspection TypeAnnotation
 class GetTransactionsSpec
@@ -59,7 +59,8 @@ class GetTransactionsSpec
 
   "getTransactions" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "return 200 with transactions obtained by passing NINO to the HelpToSaveConnector" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
 
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 

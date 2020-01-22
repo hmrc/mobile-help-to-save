@@ -27,6 +27,7 @@ trait ApplicationBuilder {
 
 class ComponentApplicationBuilder(context: Context = ApplicationLoader.createContext(Environment.simple()))
     extends ApplicationBuilder {
+
   override def build(): Application =
     new ServiceComponents(context).application
 

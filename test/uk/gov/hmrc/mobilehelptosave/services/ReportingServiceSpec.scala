@@ -40,7 +40,8 @@ class ReportingServiceSpec
     with FutureAwaits
     with DefaultAwaitTimeout {
 
-  private val testConfig = TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = true, currentSavingsGoalRangeCountsEnabled = true)
+  private val testConfig =
+    TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = true, currentSavingsGoalRangeCountsEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -115,14 +116,19 @@ class ReportingServiceSpec
     }
   }
 
-  private def fakeSavingsGoalEventsRepo(goalSetEvents: List[SavingsGoalSetEvent]): SavingsGoalEventRepo[Future] = new SavingsGoalEventRepo[Future] {
-    override def setGoal(nino:    Nino, amount: Double): Future[Unit] = ???
-    override def getEvents(nino:  Nino): Future[List[SavingsGoalEvent]] = ???
-    override def deleteGoal(nino: Nino): Future[Unit] = ???
-    override def clearGoalEvents(): Future[Boolean] = ???
-    override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
+  private def fakeSavingsGoalEventsRepo(goalSetEvents: List[SavingsGoalSetEvent]): SavingsGoalEventRepo[Future] =
+    new SavingsGoalEventRepo[Future] {
 
-    override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
-  }
+      override def setGoal(
+        nino:   Nino,
+        amount: Double
+      ): Future[Unit] = ???
+      override def getEvents(nino:  Nino): Future[List[SavingsGoalEvent]] = ???
+      override def deleteGoal(nino: Nino): Future[Unit]                   = ???
+      override def clearGoalEvents(): Future[Boolean] = ???
+      override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
+
+      override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
+    }
 
 }

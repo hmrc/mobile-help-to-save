@@ -47,7 +47,9 @@ class SandboxISpec
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
+        await(
+          wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get()
+        )
       response.status                      shouldBe Status.OK
       response.json.validate[Transactions] shouldBe 'success
     }
@@ -58,14 +60,19 @@ class SandboxISpec
     }
     "Return 400 when invalid journeyId is supplied" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/transactions?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get())
+        await(
+          wsUrl(s"/savings-account/$nino/transactions?journeyId=ThisIsAnInvalidJourneyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .get()
+        )
       response.status shouldBe 400
     }
   }
 
   "GET /savings-account/{nino} with sandbox header" should {
     "Return OK response containing valid Account JSON including a savings goal" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
+      val response: WSResponse =
+        await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe Status.OK
       val accountV = response.json.validate[Account]
       accountV                                          shouldBe 'success
@@ -78,7 +85,9 @@ class SandboxISpec
     }
     "Return 400 when invalid journeyId is supplied" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get())
+        await(
+          wsUrl(s"/savings-account/$nino?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get()
+        )
       response.status shouldBe 400
     }
   }
@@ -87,18 +96,30 @@ class SandboxISpec
     "Return a No Content response" in {
       val goal = SavingsGoal(35.0)
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
+        await(
+          wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .put(Json.toJson(goal))
+        )
       response.status shouldBe Status.NO_CONTENT
     }
     "Return 400 when journeyId not supplied" in {
       val goal = SavingsGoal(35.0)
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/current-goal").addHttpHeaders(sandboxRoutingHeader).put(Json.toJson(goal)))
+        await(
+          wsUrl(s"/savings-account/$nino/goals/current-goal")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .put(Json.toJson(goal))
+        )
       response.status shouldBe 400
     }
     "Return 400 when invalid journeyId is supplied" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).put(""))
+        await(
+          wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .put("")
+        )
       response.status shouldBe 400
     }
   }
@@ -106,7 +127,11 @@ class SandboxISpec
   "DELETE /savings-account/:nino/goals/current-goal with sandbox header" should {
     "Return a No Content response" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).delete())
+        await(
+          wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .delete()
+        )
       response.status shouldBe Status.NO_CONTENT
     }
     "Return 400 when journeyId not supplied" in {
@@ -116,7 +141,11 @@ class SandboxISpec
     }
     "Return 400 when invalid journeyId is supplied" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).delete())
+        await(
+          wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .delete()
+        )
       response.status shouldBe 400
     }
   }
@@ -125,11 +154,17 @@ class SandboxISpec
     val milestoneType = BalanceReached
     "Return a No Content response" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).put(""))
+        await(
+          wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen?journeyId=$journeyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .put("")
+        )
       response.status shouldBe Status.NO_CONTENT
     }
     "Return 400 when journeyId not supplied" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen").addHttpHeaders(sandboxRoutingHeader).put(""))
+      val response: WSResponse = await(
+        wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen").addHttpHeaders(sandboxRoutingHeader).put("")
+      )
       response.status shouldBe 400
     }
     "Return 400 when invalid journeyId is supplied" in {
@@ -137,21 +172,25 @@ class SandboxISpec
         await(
           wsUrl(s"/savings-account/$nino/milestones/$milestoneType/seen?journeyId=ThisIsAnInvalidJourneyId")
             .addHttpHeaders(sandboxRoutingHeader)
-            .put(""))
+            .put("")
+        )
       response.status shouldBe 400
     }
   }
 
   "GET /savings-account/:nino/milestones with sandbox header" should {
     "Return OK response containing valid milestones JSON including an achieved milestone" in {
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
+      val response: WSResponse = await(
+        wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get()
+      )
       response.status shouldBe Status.OK
 
-      response.status                                                    shouldBe 200
-      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]    shouldBe "BalanceReached"
-      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
-      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String]   shouldBe "You've started saving"
-      (response.json \ "milestones" \ 0 \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+      response.status                                                  shouldBe 200
+      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BalanceReached"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "BalanceReached1"
+      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "You've started saving"
+      (response.json \ "milestones" \ 0 \ "milestoneMessage")
+        .as[String] shouldBe "Well done for making your first payment."
     }
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
@@ -160,7 +199,11 @@ class SandboxISpec
     }
     "Return 400 when invalid journeyId is supplied" in {
       val response: WSResponse =
-        await(wsUrl(s"/savings-account/$nino/milestones?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get())
+        await(
+          wsUrl(s"/savings-account/$nino/milestones?journeyId=ThisIsAnInvalidJourneyId")
+            .addHttpHeaders(sandboxRoutingHeader)
+            .get()
+        )
       response.status shouldBe 400
     }
   }

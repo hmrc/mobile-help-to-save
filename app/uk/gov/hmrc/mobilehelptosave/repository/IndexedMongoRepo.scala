@@ -43,7 +43,9 @@ class IndexedMongoRepo[I, V: Manifest](
   val indexFieldName: String,
   unique:             Boolean,
   mongo:              ReactiveMongoComponent
-)(implicit ec:        ExecutionContext, iFormat: Format[I], tFormat: Format[V])
+)(implicit ec:        ExecutionContext,
+  iFormat:            Format[I],
+  tFormat:            Format[V])
     extends ReactiveRepository[V, BSONObjectID](collectionName, mongo.mongoConnector.db, tFormat) {
 
   override def indexes: Seq[Index] = Seq(

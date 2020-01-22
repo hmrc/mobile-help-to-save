@@ -37,18 +37,29 @@ trait EligibilityRepo[F[_]] {
 }
 
 class MongoEligibilityRepo(
-  mongo:       ReactiveMongoComponent
-)(implicit ec: ExecutionContext, mongoFormats: Format[Eligibility])
-    extends ReactiveRepository[Eligibility, Nino]("eligibility", mongo.mongoConnector.db, domainFormat = mongoFormats, implicitly[Format[Nino]])
+  mongo:        ReactiveMongoComponent
+)(implicit ec:  ExecutionContext,
+  mongoFormats: Format[Eligibility])
+    extends ReactiveRepository[Eligibility, Nino]("eligibility",
+                                                  mongo.mongoConnector.db,
+                                                  domainFormat = mongoFormats,
+                                                  implicitly[Format[Nino]])
     with EligibilityRepo[Future] {
 
-  override def ensureIndexes(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[scala.Seq[scala.Boolean]] =
+  override def ensureIndexes(
+    implicit ec: scala.concurrent.ExecutionContext
+  ): scala.concurrent.Future[scala.Seq[scala.Boolean]] =
     Future.sequence(
       Seq(
         collection.indexesManager.ensure(
-          Index(Seq("expireAt"                            -> IndexType.Descending), name = Some("expireAtIdx"), options = BSONDocument("expireAfterSeconds" -> 0))),
-        collection.indexesManager.ensure(Index(Seq("nino" -> IndexType.Text), name       = Some("ninoIdx"), unique      = true, sparse = true))
-      ))
+          Index(Seq("expireAt" -> IndexType.Descending),
+                name    = Some("expireAtIdx"),
+                options = BSONDocument("expireAfterSeconds" -> 0))
+        ),
+        collection.indexesManager
+          .ensure(Index(Seq("nino" -> IndexType.Text), name = Some("ninoIdx"), unique = true, sparse = true))
+      )
+    )
 
   override def setEligibility(eligibility: Eligibility): Future[Unit] =
     insert(eligibility).void

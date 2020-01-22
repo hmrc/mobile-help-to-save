@@ -48,8 +48,8 @@ class UserServiceSpec
   private class UserServiceWithTestDefaults(
     helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
     helpToSaveEligibility:     HelpToSaveEligibility[Future],
-    eligibilityStatusRepo:     EligibilityRepo[Future]
-  ) extends HtsUserService(
+    eligibilityStatusRepo:     EligibilityRepo[Future])
+      extends HtsUserService(
         logger,
         testConfig,
         helpToSaveEnrolmentStatus,
@@ -138,6 +138,7 @@ class UserServiceSpec
 
   private def fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) =
     new HelpToSaveEnrolmentStatus[Future] {
+
       override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         hc shouldBe passedHc
 
@@ -147,7 +148,10 @@ class UserServiceSpec
 
   private def fakeHelpToSaveEligibility(userIsEligibleForHelpToSave: Either[ErrorInfo, EligibilityCheckResponse]) =
     new HelpToSaveEligibility[Future] {
-      override def checkEligibility()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
+
+      override def checkEligibility(
+      )(implicit hc: HeaderCarrier
+      ): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
         hc shouldBe passedHc
 
         Future successful userIsEligibleForHelpToSave

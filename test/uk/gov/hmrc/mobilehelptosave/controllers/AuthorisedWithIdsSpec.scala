@@ -25,7 +25,8 @@ import play.api.test.Helpers.{contentAsString, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
+import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
@@ -56,7 +57,8 @@ class AuthorisedWithIdsSpec
 
       val authConnectorStub = authConnectorStubThatWillReturn(Some(testNino.value))
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
+      val authorised =
+        new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
       var capturedNino: Option[Nino] = None
       val action = authorised { request =>
@@ -71,7 +73,8 @@ class AuthorisedWithIdsSpec
     "return 403 when no NINO can be retrieved" in {
       val authConnectorStub = authConnectorStubThatWillReturn(None)
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
+      val authorised =
+        new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok
@@ -83,7 +86,8 @@ class AuthorisedWithIdsSpec
     "return 401 when AuthConnector throws NoActiveSession" in {
       val authConnectorStub = authConnectorStubThatWillReturn(Future failed new NoActiveSession("not logged in") {})
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
+      val authorised =
+        new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok
@@ -96,7 +100,8 @@ class AuthorisedWithIdsSpec
       val authConnectorStub =
         authConnectorStubThatWillReturn(Future failed new AuthorisationException("not authorised") {})
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
+      val authorised =
+        new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok
@@ -106,9 +111,12 @@ class AuthorisedWithIdsSpec
     }
 
     "return 403 Forbidden and log a warning when AuthConnector throws InsufficientConfidenceLevel" in {
-      val authConnectorStub = authConnectorStubThatWillReturn(Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {})
+      val authConnectorStub = authConnectorStubThatWillReturn(
+        Future failed new InsufficientConfidenceLevel("Insufficient ConfidenceLevel") {}
+      )
 
-      val authorised = new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
+      val authorised =
+        new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
       val action = authorised { _ =>
         Ok

@@ -25,16 +25,19 @@ import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutteringConnector @Inject()(http: CoreGet, config: ShutteringConnectorConfig) {
+class ShutteringConnector @Inject() (
+  http:   CoreGet,
+  config: ShutteringConnectorConfig) {
 
   def getShutteringStatus(
-    journeyId: String
-  )(
-    implicit headerCarrier: HeaderCarrier,
+    journeyId:              String
+  )(implicit headerCarrier: HeaderCarrier,
     ex:                     ExecutionContext
   ): Future[Shuttering] =
     http
-      .GET[Shuttering](s"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId")
+      .GET[Shuttering](
+        s"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId"
+      )
       .map(s => s)
       .recover {
         case e: Upstream5xxResponse => {

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.domain.types
 
 import eu.timepit.refined._
-import eu.timepit.refined.api.{Refined, Validate}
+import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.MatchesRegex
 
 object ModelTypes {

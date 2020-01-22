@@ -60,7 +60,7 @@ class GetAccountSpec
   "getAccount" when {
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
-      with HelpToSaveMocking {
+        with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
         val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())

@@ -60,7 +60,7 @@ class StartupISpec
       (response.json \ "user" \ "state").asOpt[String]  shouldBe None
       (response.json \ "userError" \ "code").as[String] shouldBe "GENERAL"
       // check that only the user field has been omitted, not all fields
-      (response.json \ "infoUrl").asOpt[String]             should not be None
+      (response.json \ "infoUrl").asOpt[String] should not be None
     }
 
     "return 401 when the user is not logged in" in {

@@ -70,7 +70,8 @@ class StartupControllerSpec
     }
 
     "check permissions using AuthorisedWithIds" in {
-      val controller = new StartupController(mockUserService, NeverAuthorisedWithIds, config, stubControllerComponents())
+      val controller =
+        new StartupController(mockUserService, NeverAuthorisedWithIds, config, stubControllerComponents())
 
       status(controller.startup()(FakeRequest())) shouldBe 403
     }
@@ -137,7 +138,10 @@ class StartupControllerSpec
 
     "helpToSaveShuttered = true" should {
       val controller =
-        new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino, trueShuttering), config, stubControllerComponents())
+        new StartupController(mockUserService,
+                              new AlwaysAuthorisedWithIds(nino, trueShuttering),
+                              config,
+                              stubControllerComponents())
 
       "omit URLs and user from response" in {
         val resultF = controller.startup(FakeRequest())
@@ -162,7 +166,6 @@ class StartupControllerSpec
       "continue to include feature flags because some of them take priority over shuttering" in {
         val resultF = controller.startup(FakeRequest())
         status(resultF) shouldBe 200
-        val jsonBody = contentAsJson(resultF)
       }
     }
   }
@@ -172,5 +175,5 @@ case class TestStartupControllerConfig(
   helpToSaveInfoUrl:          String,
   helpToSaveInfoUrlSso:       String,
   helpToSaveAccessAccountUrl: String,
-  helpToSaveAccountPayInUrl:  String
-) extends StartupControllerConfig
+  helpToSaveAccountPayInUrl:  String)
+    extends StartupControllerConfig

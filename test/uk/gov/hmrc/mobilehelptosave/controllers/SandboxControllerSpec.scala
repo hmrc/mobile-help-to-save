@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
+import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.{JsArray, JsValue}
@@ -37,7 +38,6 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, NumberVerification, Transa
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import eu.timepit.refined.auto._
 
 class SandboxControllerSpec
     extends WordSpec
@@ -58,19 +58,26 @@ class SandboxControllerSpec
   private val nino        = generator.nextNino
   private val currentTime = LocalDateTime.of(2018, 9, 29, 12, 30)
   private val fixedClock  = new FixedFakeClock(currentTime)
+
   private val controller: SandboxController =
-    new SandboxController(logger, shutteringConnector, SandboxData(logger, fixedClock, TestSandboxDataConfig), stubControllerComponents())
-  private val journeyId = randomUUID().toString
+    new SandboxController(logger,
+                          shutteringConnector,
+                          SandboxData(logger, fixedClock, TestSandboxDataConfig),
+                          stubControllerComponents())
   private val shuttered = Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
 
   implicit class TransactionJson(json: JsValue) {
     def operation(transactionIndex: Int): String = ((json \ "transactions")(transactionIndex) \ "operation").as[String]
-    def amount(transactionIndex:    Int): BigDecimal =
+
+    def amount(transactionIndex: Int): BigDecimal =
       ((json \ "transactions")(transactionIndex) \ "amount").as[BigDecimal]
+
     def transactionDate(transactionIndex: Int): String =
       ((json \ "transactions")(transactionIndex) \ "transactionDate").as[String]
+
     def accountingDate(transactionIndex: Int): String =
       ((json \ "transactions")(transactionIndex) \ "accountingDate").as[String]
+
     def balanceAfter(transactionIndex: Int): BigDecimal =
       ((json \ "transactions")(transactionIndex) \ "balanceAfter").as[BigDecimal]
     def transactionCount(): Int = (json \ "transactions").as[JsArray].value.length
@@ -79,7 +86,8 @@ class SandboxControllerSpec
   "Sandbox getTransactions" should {
     "return the sandbox transaction data" in {
       shutteringDisabled
-      val response: Future[Result] = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      val response: Future[Result] =
+        controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
 
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
@@ -166,7 +174,8 @@ class SandboxControllerSpec
 
     "return a shuttered response when the service is shuttered" in {
       shutteringEnabled
-      val response: Future[Result] = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      val response: Future[Result] =
+        controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
         .as[Shuttering] shouldBe shuttered
@@ -218,7 +227,8 @@ class SandboxControllerSpec
   "Sandbox getMilestones" should {
     "return the sandbox milestones data" in {
       shutteringDisabled
-      val response: Future[Result] = controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      val response: Future[Result] =
+        controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
 
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
@@ -233,7 +243,8 @@ class SandboxControllerSpec
 
     "return a shuttered response when the service is shuttered" in {
       shutteringEnabled
-      val response: Future[Result] = controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      val response: Future[Result] =
+        controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
         .as[Shuttering] shouldBe shuttered

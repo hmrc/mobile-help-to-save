@@ -25,26 +25,36 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
+
 trait BalanceMilestonesService[F[_]] {
 
-  def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[MilestoneCheckResult]
+  def balanceMilestoneCheck(
+    nino:           Nino,
+    currentBalance: BigDecimal
+  )(implicit hc:    HeaderCarrier
+  ): F[MilestoneCheckResult]
 
 }
 
 class HtsBalanceMilestonesService[F[_]](
-                                             logger:              LoggerLike,
-                                             config:              MilestonesConfig,
-                                             milestonesRepo:      MilestonesRepo[F],
-                                             previousBalanceRepo: PreviousBalanceRepo[F]
-                                           )(implicit F:          MonadError[F, Throwable])
-  extends HtsMilestonesService[F](
-    logger:              LoggerLike,
-    config:              MilestonesConfig,
-    milestonesRepo:      MilestonesRepo[F],
-    previousBalanceRepo: PreviousBalanceRepo[F]
-  ) with BalanceMilestonesService[F] {
+  logger:              LoggerLike,
+  config:              MilestonesConfig,
+  milestonesRepo:      MilestonesRepo[F],
+  previousBalanceRepo: PreviousBalanceRepo[F]
+)(implicit F:          MonadError[F, Throwable])
+    extends HtsMilestonesService[F](
+      logger:              LoggerLike,
+      config:              MilestonesConfig,
+      milestonesRepo:      MilestonesRepo[F],
+      previousBalanceRepo: PreviousBalanceRepo[F]
+    )
+    with BalanceMilestonesService[F] {
 
-  override def balanceMilestoneCheck(nino: Nino, currentBalance: BigDecimal)(implicit hc: HeaderCarrier): F[MilestoneCheckResult] =
+  override def balanceMilestoneCheck(
+    nino:           Nino,
+    currentBalance: BigDecimal
+  )(implicit hc:    HeaderCarrier
+  ): F[MilestoneCheckResult] =
     previousBalanceRepo.getPreviousBalance(nino) flatMap {
       case Some(pb) =>
         previousBalanceRepo
@@ -53,12 +63,20 @@ class HtsBalanceMilestonesService[F[_]](
             compareBalances(nino, pb.previousBalance, currentBalance) match {
               case Some(milestone) => setMilestone(milestone).map(_ => MilestoneHit)
               case _               => F.pure(MilestoneNotHit)
-            })
+            }
+          )
       case _ => previousBalanceRepo.setPreviousBalance(nino, currentBalance).map(_ => CouldNotCheck)
     }
 
-  protected def compareBalances(nino: Nino, previousBalance: BigDecimal, currentBalance: BigDecimal): Option[MongoMilestone] = {
-    def inRange(min: BigDecimal, max: BigDecimal): Boolean =
+  protected def compareBalances(
+    nino:            Nino,
+    previousBalance: BigDecimal,
+    currentBalance:  BigDecimal
+  ): Option[MongoMilestone] = {
+    def inRange(
+      min: BigDecimal,
+      max: BigDecimal
+    ): Boolean =
       previousBalance < min && currentBalance >= min && currentBalance < max
 
     def reached(value: BigDecimal): Boolean =
@@ -66,7 +84,12 @@ class HtsBalanceMilestonesService[F[_]](
 
     (previousBalance, currentBalance) match {
       case (_, _) if inRange(1, 100) =>
-        Some(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false))
+        Some(
+          MongoMilestone(nino          = nino,
+                         milestoneType = BalanceReached,
+                         milestone     = Milestone(BalanceReached1),
+                         isRepeatable  = false)
+        )
       case (_, _) if inRange(100, 200) =>
         Some(MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached100)))
       case (_, _) if inRange(200, 500) =>

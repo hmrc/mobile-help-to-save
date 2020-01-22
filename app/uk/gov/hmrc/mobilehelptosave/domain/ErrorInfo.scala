@@ -23,12 +23,14 @@ sealed abstract class ErrorInfo(val code: String)
 
 object ErrorInfo {
   object General extends ErrorInfo("GENERAL")
+
   object AccountNotFound extends ErrorInfo("ACCOUNT_NOT_FOUND") {
     val message: String = "No Help to Save account exists for the specified NINO"
   }
   case class ValidationError(message: String) extends ErrorInfo("VALIDATION_ERROR")
 
   implicit val writes: OWrites[ErrorInfo] = new OWrites[ErrorInfo] {
+
     override def writes(o: ErrorInfo): JsObject = o match {
       case General                  => obj("code" -> o.code)
       case AccountNotFound          => obj("code" -> o.code)

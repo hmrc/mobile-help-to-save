@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.mobilehelptosave.controllers
+
 package helpToSave
 
 import java.util.UUID.randomUUID
@@ -47,13 +48,18 @@ trait TestSupport {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
     val controller =
-      new HelpToSaveController(logger, accountService, helpToSaveGetTransactions, NeverAuthorisedWithIds, stubControllerComponents())
+      new HelpToSaveController(logger,
+                               accountService,
+                               helpToSaveGetTransactions,
+                               NeverAuthorisedWithIds,
+                               stubControllerComponents())
     authorisedActionForNino(controller)
   }
 
   trait AuthorisedTestScenario {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
+
     val controller: HelpToSaveController =
       new HelpToSaveController(
         logger,
@@ -79,7 +85,11 @@ trait TestSupport {
         .expects(nino, *)
         .returning(stubbedResponse)
 
-    def setSavingsGoalReturns(expectedNino: Nino, expectedAmount: Double, stubbedResponse: Either[ErrorInfo, Unit]) =
+    def setSavingsGoalReturns(
+      expectedNino:    Nino,
+      expectedAmount:  Double,
+      stubbedResponse: Either[ErrorInfo, Unit]
+    ) =
       (accountService
         .setSavingsGoal(_: Nino, _: SavingsGoal)(_: HeaderCarrier))
         .expects(where { (nino, amount, _) =>

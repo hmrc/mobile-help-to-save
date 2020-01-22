@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import java.time.{LocalDate, YearMonth}
 
+import com.eclipsesource.schema.drafts.Version7._
 import com.eclipsesource.schema.SchemaType
 import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.Json
@@ -40,7 +41,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     0,
     0,
     0,
-    thisMonthEndDate          =  LocalDate.of(2020, 12, 31),
+    thisMonthEndDate          = LocalDate.of(2020, 12, 31),
     nextPaymentMonthStartDate = Some(LocalDate.of(2021, 1, 1)),
     accountHolderName         = "Testfore Testsur",
     accountHolderEmail        = Some("testemail@example.com"),
@@ -74,7 +75,9 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
 
     "account is blocked" should {
       "be a valid instance of the schema used in the RAML" in {
-        val blockedAccount = testAccount.copy(blocked = Blocking(unspecified = true, payments = false, withdrawals = false, bonuses = false))
+        val blockedAccount = testAccount.copy(blocked =
+          Blocking(unspecified = true, payments = false, withdrawals = false, bonuses = false)
+        )
         Json.toJson(blockedAccount) should validateAgainstSchema(strictRamlAccountSchema)
       }
     }

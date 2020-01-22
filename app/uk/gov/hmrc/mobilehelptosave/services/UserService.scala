@@ -66,9 +66,13 @@ class HtsUserService(
               case (1, 7) => true
               case (1, 8) => true
               case _      => false
-          })
+            }
+          )
           .flatMap(e =>
-            EitherT.liftF[Future, ErrorInfo, Boolean](eligibilityStatusRepo.setEligibility(Eligibility(nino, e, firstDayOfNextMonth)).map(_ => e)))
+            EitherT.liftF[Future, ErrorInfo, Boolean](
+              eligibilityStatusRepo.setEligibility(Eligibility(nino, e, firstDayOfNextMonth)).map(_ => e)
+            )
+          )
           .value
     }
 

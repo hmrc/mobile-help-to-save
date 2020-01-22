@@ -39,19 +39,26 @@ class SandboxController(
     with HelpToSaveActions
     with MilestonesActions {
 
-  override def getTransactions(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
+  override def getTransactions(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[AnyContent] =
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future successful Ok(
             Json.toJson(
               sandboxData.transactions
-            ))
+            )
+          )
         }
       }
     }
 
-  override def getAccount(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
+  override def getAccount(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[AnyContent] =
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
@@ -60,7 +67,10 @@ class SandboxController(
       }
     }
 
-  override def putSavingsGoal(nino: Nino, journeyId: JourneyId): Action[SavingsGoal] =
+  override def putSavingsGoal(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[SavingsGoal] =
     Action.async(parse.json[SavingsGoal]) { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
@@ -69,7 +79,10 @@ class SandboxController(
       }
     }
 
-  override def deleteSavingsGoal(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
+  override def deleteSavingsGoal(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[AnyContent] =
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
@@ -78,7 +91,10 @@ class SandboxController(
       }
     }
 
-  override def getMilestones(nino: Nino, journeyId: JourneyId): Action[AnyContent] =
+  override def getMilestones(
+    nino:      Nino,
+    journeyId: JourneyId
+  ): Action[AnyContent] =
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
@@ -87,7 +103,11 @@ class SandboxController(
       }
     }
 
-  override def markAsSeen(nino: Nino, milestoneId: String, journeyId: JourneyId): Action[AnyContent] =
+  override def markAsSeen(
+    nino:        Nino,
+    milestoneId: String,
+    journeyId:   JourneyId
+  ): Action[AnyContent] =
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {

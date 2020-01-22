@@ -16,27 +16,26 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-
 import cats.MonadError
-import cats.syntax.flatMap._
 import cats.syntax.functor._
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
+import uk.gov.hmrc.mobilehelptosave.domain.Milestones._
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
-import uk.gov.hmrc.mobilehelptosave.domain.Milestones._
 
 trait MilestonesService[F[_]] {
   def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): F[Unit]
 
   def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]]
 
-  def markAsSeen(nino: Nino, milestoneId: String)(implicit hc: HeaderCarrier): F[Unit]
+  def markAsSeen(
+    nino:        Nino,
+    milestoneId: String
+  )(implicit hc: HeaderCarrier
+  ): F[Unit]
 }
 
 class HtsMilestonesService[F[_]](
@@ -50,7 +49,10 @@ class HtsMilestonesService[F[_]](
   protected def filterDuplicateMilestoneTypes(milestones: List[MongoMilestone]): List[MongoMilestone] =
     milestones
       .groupBy(_.milestoneType)
-      .flatMap(grouped => grouped._2.filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering)))
+      .flatMap(grouped =>
+        grouped._2
+          .filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering))
+      )
       .toList
 
   override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]] =
@@ -64,8 +66,13 @@ class HtsMilestonesService[F[_]](
       }
     }
 
-  override def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.setMilestone(milestone)
+  override def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): F[Unit] =
+    milestonesRepo.setMilestone(milestone)
 
-  override def markAsSeen(nino: Nino, milestoneType: String)(implicit hc: HeaderCarrier): F[Unit] = milestonesRepo.markAsSeen(nino, milestoneType)
+  override def markAsSeen(
+    nino:          Nino,
+    milestoneType: String
+  )(implicit hc:   HeaderCarrier
+  ): F[Unit] = milestonesRepo.markAsSeen(nino, milestoneType)
 
 }

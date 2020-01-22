@@ -27,6 +27,7 @@ trait LoggerStub { this: MockFactory with OneInstancePerTest =>
   protected val slf4jLoggerStub: Logger = stub[Logger]
   (slf4jLoggerStub.isWarnEnabled: () => Boolean).when().returning(true)
   (slf4jLoggerStub.isInfoEnabled: () => Boolean).when().returning(true)
+
   protected val logger: LoggerLike = new LoggerLike {
     override val logger: Logger = slf4jLoggerStub
   }

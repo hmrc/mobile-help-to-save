@@ -28,8 +28,7 @@ case class BonusTerm(
   bonusPaid:                     BigDecimal,
   endDate:                       LocalDate,
   bonusPaidOnOrAfterDate:        LocalDate,
-  balanceMustBeMoreThanForBonus: BigDecimal
-)
+  balanceMustBeMoreThanForBonus: BigDecimal)
 
 object BonusTerm {
   implicit val format: OFormat[BonusTerm] = Json.format[BonusTerm]
@@ -39,8 +38,7 @@ case class Blocking(
   unspecified: Boolean,
   payments:    Boolean,
   withdrawals: Boolean,
-  bonuses:     Boolean
-)
+  bonuses:     Boolean)
 
 object Blocking {
   implicit val format: OFormat[Blocking] = Json.format[Blocking]
@@ -75,8 +73,7 @@ case class Account(
   savingsGoalsEnabled: Boolean = false,
   // This field is populated from the mongo repository
   savingsGoal:          Option[SavingsGoal] = None,
-  daysRemainingInMonth: Long
-)
+  daysRemainingInMonth: Long)
 
 object Account {
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
@@ -88,7 +85,8 @@ object Account {
     savingsGoalsEnabled:  Boolean,
     logger:               LoggerLike,
     now:                  LocalDate,
-    savingsGoal:          Option[SavingsGoal]): Account = Account(
+    savingsGoal:          Option[SavingsGoal]
+  ): Account = Account(
     number                    = h.accountNumber,
     openedYearMonth           = h.openedYearMonth,
     isClosed                  = h.isClosed,
@@ -122,7 +120,10 @@ object Account {
     * @return - calculated number of days between now and the end of month, plus one (so if the supplied date is today
     *         the result will be 1)
     */
-  private def calculateDaysRemainingInMonth(now: LocalDate, h: HelpToSaveAccount): Long =
+  private def calculateDaysRemainingInMonth(
+    now: LocalDate,
+    h:   HelpToSaveAccount
+  ): Long =
     ChronoUnit.DAYS.between(now, h.thisMonthEndDate) + 1
 
   private def nextPaymentMonthStartDate(h: HelpToSaveAccount) =
@@ -141,9 +142,15 @@ object Account {
       CurrentBonusTerm.First
     }
 
-  private def bonusTerms(h: HelpToSaveAccount, logger: LoggerLike): Seq[BonusTerm] = {
+  private def bonusTerms(
+    h:      HelpToSaveAccount,
+    logger: LoggerLike
+  ): Seq[BonusTerm] = {
 
-    def bonusTerm(htsTerm: HelpToSaveBonusTerm, balanceMustBeMoreThanForBonus: BigDecimal) = BonusTerm(
+    def bonusTerm(
+      htsTerm:                       HelpToSaveBonusTerm,
+      balanceMustBeMoreThanForBonus: BigDecimal
+    ) = BonusTerm(
       bonusEstimate                 = htsTerm.bonusEstimate,
       bonusPaid                     = htsTerm.bonusPaid,
       endDate                       = htsTerm.endDate,
@@ -152,7 +159,9 @@ object Account {
     )
 
     if (h.bonusTerms.size > 2) {
-      logger.warn(s"Account contained ${h.bonusTerms.size} bonus terms, which is more than the expected 2 - discarding all but the first 2 terms")
+      logger.warn(
+        s"Account contained ${h.bonusTerms.size} bonus terms, which is more than the expected 2 - discarding all but the first 2 terms"
+      )
     }
 
     h.bonusTerms.take(2).foldLeft(Vector.empty[BonusTerm]) { (acc, htsTerm) =>

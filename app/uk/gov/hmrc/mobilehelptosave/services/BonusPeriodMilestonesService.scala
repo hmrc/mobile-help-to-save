@@ -28,10 +28,15 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
+
 trait BonusPeriodMilestonesService[F[_]] {
 
-  def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(
-    implicit hc:                      HeaderCarrier): F[MilestoneCheckResult]
+  def bonusPeriodMilestoneCheck(
+    nino:           Nino,
+    bonusTerms:     Seq[BonusTerm],
+    currentBalance: BigDecimal
+  )(implicit hc:    HeaderCarrier
+  ): F[MilestoneCheckResult]
 }
 
 class HtsBonusPeriodMilestonesService[F[_]](
@@ -48,8 +53,12 @@ class HtsBonusPeriodMilestonesService[F[_]](
     )
     with BonusPeriodMilestonesService[F] {
 
-  override def bonusPeriodMilestoneCheck(nino: Nino, bonusTerms: Seq[BonusTerm], currentBalance: BigDecimal)(
-    implicit hc:                               HeaderCarrier): F[MilestoneCheckResult] = {
+  override def bonusPeriodMilestoneCheck(
+    nino:           Nino,
+    bonusTerms:     Seq[BonusTerm],
+    currentBalance: BigDecimal
+  )(implicit hc:    HeaderCarrier
+  ): F[MilestoneCheckResult] = {
 
     val endOfFirstBonusPeriod              = bonusTerms.head.endDate
     val endOfSecondBonusPeriod             = bonusTerms(1).endDate
@@ -84,9 +93,13 @@ class HtsBonusPeriodMilestonesService[F[_]](
     firstPeriodBonus:                   BigDecimal,
     currentBalance:                     BigDecimal,
     firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
-    secondPeriodBonusPaidOnOrAfterDate: LocalDate): Option[MongoMilestone] = {
+    secondPeriodBonusPaidOnOrAfterDate: LocalDate
+  ): Option[MongoMilestone] = {
 
-    def currentDateInDuration(date: LocalDate, duration: Int): Boolean =
+    def currentDateInDuration(
+      date:     LocalDate,
+      duration: Int
+    ): Boolean =
       (0 to duration).contains(LocalDate.now().until(date, ChronoUnit.DAYS))
 
     val hasFirstBonusEstimate              = firstPeriodBonusEstimate > 0
@@ -102,37 +115,45 @@ class HtsBonusPeriodMilestonesService[F[_]](
         createBonusPeriodMongoMilestone(
           EndOfFirstBonusPeriodPositiveBonus,
           Some(
-            Map(
-              "bonusEstimate"          -> firstPeriodBonusEstimate.toString(),
-              "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
-        ))
+            Map("bonusEstimate"          -> firstPeriodBonusEstimate.toString(),
+                "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+          )
+        )
+      )
     else if (under90DaysSinceFirstPeriodEndDate && !hasFirstBonusEstimate && !hasSecondBonusEstimate && !firstPeriodBonusPaid)
       Some(
         createBonusPeriodMongoMilestone(
           StartOfFinalBonusPeriodNoBonus
-        ))
+        )
+      )
     else if (within20DaysOfFinalEndDate) {
       if (currentBalance <= 0 && !hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
             EndOfFinalBonusPeriodZeroBalanceNoBonus,
             Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
-          ))
+          )
+        )
       else if (currentBalance <= 0 && hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
             EndOfFinalBonusPeriodZeroBalancePositiveBonus,
             Some(
-              Map(
-                "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
-          ))
+              Map("bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
+                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+            )
+          )
+        )
       else if (currentBalance > 0 && !hasSecondBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
             EndOfFinalBonusPeriodPositiveBalanceNoBonus,
-            Some(Map("balance" -> currentBalance.toString(), "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
-          ))
+            Some(
+              Map("balance"                -> currentBalance.toString(),
+                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+            )
+          )
+        )
       else
         Some(
           createBonusPeriodMongoMilestone(
@@ -142,14 +163,18 @@ class HtsBonusPeriodMilestonesService[F[_]](
                 "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
                 "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat),
                 "balance"                -> currentBalance.toString()
-              ))
+              )
+            )
           )
         )
     } else None
   }
 
-  private def createBonusPeriodMongoMilestone(milestoneKey: MilestoneKey, values: Option[Map[String, String]] = None)(
-    implicit nino:                                          Nino): MongoMilestone =
+  private def createBonusPeriodMongoMilestone(
+    milestoneKey:  MilestoneKey,
+    values:        Option[Map[String, String]] = None
+  )(implicit nino: Nino
+  ): MongoMilestone =
     MongoMilestone(
       nino          = nino,
       milestoneType = BonusPeriod,

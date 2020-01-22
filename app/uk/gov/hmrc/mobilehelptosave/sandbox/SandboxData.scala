@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.sandbox
 
-import java.time.{LocalDate, LocalDateTime, YearMonth}
 import java.time.temporal.TemporalAdjusters
+import java.time.{LocalDate, YearMonth}
 
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
@@ -29,8 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.services.Clock
 case class SandboxData(
   logger: LoggerLike,
   clock:  Clock,
-  config: SandboxDataConfig
-) {
+  config: SandboxDataConfig) {
 
   private def today:             LocalDate = clock.now().toLocalDate
   private def openedDate:        LocalDate = today.minusMonths(7)
@@ -90,6 +89,8 @@ case class SandboxData(
     }
   })
 
-  val milestones = Milestones(List[MongoMilestone](MongoMilestone(nino = Nino("EM000001A"), BalanceReached, Milestone(BalanceReached1))))
+  val milestones = Milestones(
+    List[MongoMilestone](MongoMilestone(nino = Nino("EM000001A"), BalanceReached, Milestone(BalanceReached1)))
+  )
 
 }
