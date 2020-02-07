@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, SavingsGoal, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, Transactions}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -185,12 +185,8 @@ class SandboxISpec
       )
       response.status shouldBe Status.OK
 
-      response.status                                                  shouldBe 200
-      (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BalanceReached"
-      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "BalanceReached1"
-      (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "You've started saving"
-      (response.json \ "milestones" \ 0 \ "milestoneMessage")
-        .as[String] shouldBe "Well done for making your first payment."
+      response.status shouldBe 200
+      (response.json \ "milestones").as[List[MongoMilestone]]  shouldBe List.empty[MongoMilestone]
     }
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =

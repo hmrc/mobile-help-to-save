@@ -194,9 +194,9 @@ class SandboxControllerSpec
       (json \ "openedYearMonth").as[String]            shouldBe "2018-02"
       (json \ "isClosed").as[Boolean]                  shouldBe false
       (json \ "blocked" \ "unspecified").as[Boolean]   shouldBe false
-      (json \ "balance").as[BigDecimal]                shouldBe BigDecimal(220.5)
-      (json \ "paidInThisMonth").as[BigDecimal]        shouldBe BigDecimal(20.5)
-      (json \ "canPayInThisMonth").as[BigDecimal]      shouldBe BigDecimal(29.5)
+      (json \ "balance").as[BigDecimal]                shouldBe BigDecimal(230)
+      (json \ "paidInThisMonth").as[BigDecimal]        shouldBe BigDecimal(30.0)
+      (json \ "canPayInThisMonth").as[BigDecimal]      shouldBe BigDecimal(20.0)
       (json \ "maximumPaidInThisMonth").as[BigDecimal] shouldBe BigDecimal(50)
       (json \ "thisMonthEndDate").as[String]           shouldBe "2018-09-30"
 
@@ -233,12 +233,7 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      val milestone = (json \ "milestones")(0)
-
-      (milestone \ "milestoneType").as[String]    shouldBe "BalanceReached"
-      (milestone \ "milestoneKey").as[String]     shouldBe "BalanceReached1"
-      (milestone \ "milestoneTitle").as[String]   shouldBe "You've started saving"
-      (milestone \ "milestoneMessage").as[String] shouldBe "Well done for making your first payment."
+      val milestone = (json \ "milestones").isEmpty
     }
 
     "return a shuttered response when the service is shuttered" in {
