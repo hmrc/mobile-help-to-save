@@ -46,9 +46,9 @@ case class SandboxData(
         openedYearMonth        = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
         isClosed               = false,
         blocked                = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
-        balance                = BigDecimal("220.50"),
-        paidInThisMonth        = BigDecimal("20.50"),
-        canPayInThisMonth      = BigDecimal("29.50"),
+        balance                = BigDecimal("230.00"),
+        paidInThisMonth        = BigDecimal("30.00"),
+        canPayInThisMonth      = BigDecimal("20.00"),
         maximumPaidInThisMonth = BigDecimal("50.00"),
         thisMonthEndDate       = endOfMonth,
         accountHolderForename  = "Testfore",
@@ -90,7 +90,7 @@ case class SandboxData(
   })
 
   val milestones = Milestones(
-    List[MongoMilestone](MongoMilestone(nino = Nino("EM000001A"), BalanceReached, Milestone(BalanceReached1)))
+    List[MongoMilestone]()
   )
 
 }
