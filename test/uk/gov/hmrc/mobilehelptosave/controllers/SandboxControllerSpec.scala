@@ -96,10 +96,10 @@ class SandboxControllerSpec
 
       var atIndex = 0
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(20.5)
+      json amount atIndex          shouldBe BigDecimal(30)
       json transactionDate atIndex shouldBe "2018-09-29"
       json accountingDate atIndex  shouldBe "2018-09-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(220.5)
+      json balanceAfter atIndex    shouldBe BigDecimal(230)
 
       atIndex = 1
       json operation atIndex       shouldBe "credit"
@@ -201,7 +201,7 @@ class SandboxControllerSpec
       (json \ "thisMonthEndDate").as[String]           shouldBe "2018-09-30"
 
       val firstBonusTermJson = (json \ "bonusTerms")(0)
-      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("110.25"))
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("115"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("0"))
       (firstBonusTermJson \ "endDate").as[String]                shouldBe "2020-01-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-02-01"
