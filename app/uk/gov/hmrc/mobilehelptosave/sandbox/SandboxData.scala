@@ -55,7 +55,7 @@ case class SandboxData(
         accountHolderSurname   = "Testsur",
         accountHolderEmail     = Some("testemail@example.com"),
         bonusTerms = List(
-          HelpToSaveBonusTerm(BigDecimal("110.25"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
+          HelpToSaveBonusTerm(BigDecimal("115.00"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
           HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
         ),
         closureDate    = None,
@@ -71,7 +71,7 @@ case class SandboxData(
 
   val transactions = Transactions({
     Seq(
-      (0L, 20.50, 220.50),
+      (0L, 30.00, 230.00),
       (1L, 20.00, 200.00),
       (1L, 18.20, 180.00),
       (2L, 10.40, 161.80),
