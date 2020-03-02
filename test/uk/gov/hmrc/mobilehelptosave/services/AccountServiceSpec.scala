@@ -289,8 +289,8 @@ class AccountServiceSpec
       override def setGoal(
         nino:   Nino,
         amount: Double,
-        name: Option[String] = None
-                          ): TestF[Unit] = {
+        name:   Option[String] = None
+      ): TestF[Unit] = {
         nino shouldBe expectedNino
         F.unit
       }
@@ -316,7 +316,7 @@ class AccountServiceSpec
             F.pure {
               events.sortBy(_.date)(localDateTimeOrdering.reverse).headOption.flatMap {
                 case SavingsGoalSetEvent(_, amount, _, name) => Some(SavingsGoal(amount))
-                case _                                 => None
+                case _                                       => None
               }
             }
           case Left(t) => F.raiseError(t)

@@ -209,7 +209,7 @@ class SetSavingsGoalSpec
     override def setGoal(
       nino:   Nino,
       amount: Double,
-      name: Option[String] = None
+      name:   Option[String] = None
     ): TestF[Unit] = {
       nino shouldBe expectedNino
       setGoalResponse match {

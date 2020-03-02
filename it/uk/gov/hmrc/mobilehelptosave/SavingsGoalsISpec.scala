@@ -52,11 +52,11 @@ class SavingsGoalsISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val savingsGoal1   = SavingsGoal(20)
-  private val validGoalJson  = toJson(savingsGoal1)
-  private val savingsGoal2   = SavingsGoal(goalAmount = 30, goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home"))
+  private val savingsGoal1          = SavingsGoal(20)
+  private val validGoalJson         = toJson(savingsGoal1)
+  private val savingsGoal2          = SavingsGoal(goalAmount = 30, goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home"))
   private val validGoalJsonWithName = toJson(savingsGoal2)
-  private val journeyId      = randomUUID().toString
+  private val journeyId             = randomUUID().toString
 
   private def setSavingsGoal(
     nino: Nino,
@@ -125,7 +125,7 @@ class SavingsGoalsISpec
       response.status shouldBe 200
       val account: Account = parse(response.body).as[Account]
       account.savingsGoal.value.goalAmount shouldBe savingsGoal2.goalAmount
-      account.savingsGoal.value.goalName shouldBe savingsGoal2.goalName
+      account.savingsGoal.value.goalName   shouldBe savingsGoal2.goalName
     }
 
     "respond with 404 and account not found when user is not enrolled" in {

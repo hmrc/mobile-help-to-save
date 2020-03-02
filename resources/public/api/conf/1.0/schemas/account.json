@@ -21,28 +21,28 @@
       "type": "object",
       "description": "Actions that are blocked for this account",
       "properties": {
-        "unspecified" : {
+        "unspecified": {
           "type": "boolean",
           "description": "Some unspecified action(s) is/are blocked. More specific blocking flags may be added in a future version of the API.",
           "examples": [
             "false"
           ]
         },
-        "payments" : {
+        "payments": {
           "type": "boolean",
           "description": "Payments to this account are blocked.",
           "examples": [
             "false"
           ]
         },
-        "withdrawals" : {
+        "withdrawals": {
           "type": "boolean",
           "description": "Withdrawals from this account are blocked.",
           "examples": [
             "false"
           ]
         },
-        "bonuses" : {
+        "bonuses": {
           "type": "boolean",
           "description": "Bonuses to this account are blocked.",
           "examples": [
@@ -228,7 +228,8 @@
           "description": "The amount the user would like to save each month."
         }
       }
-    },"daysRemainingInMonth": {
+    },
+    "daysRemainingInMonth": {
       "type": "number",
       "description": "The number of days the user has left in the month if they want to make a payment, adjusted so that if today is the last day of the month then the value is 1.",
       "examples": [
