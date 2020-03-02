@@ -33,7 +33,8 @@ trait SavingsGoalEventRepo[F[_]] {
 
   def setGoal(
     nino:   Nino,
-    amount: Double
+    amount: Double,
+    name:   Option[String]
   ): F[Unit]
   def deleteGoal(nino: Nino): F[Unit]
   def getGoal(nino:    Nino): F[Option[SavingsGoal]]
@@ -52,9 +53,10 @@ class MongoSavingsGoalEventRepo(
 
   override def setGoal(
     nino:   Nino,
-    amount: Double
+    amount: Double,
+    name:   Option[String]
   ): Future[Unit] =
-    insert(SavingsGoalSetEvent(nino, amount, LocalDateTime.now)).void
+    insert(SavingsGoalSetEvent(nino = nino, amount = amount, name = name, date = LocalDateTime.now)).void
 
   override def deleteGoal(nino: Nino): Future[Unit] =
     insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now)).void
@@ -74,7 +76,7 @@ class MongoSavingsGoalEventRepo(
     result.map {
       case None => None
       case Some(_: SavingsGoalDeleteEvent) => None
-      case Some(SavingsGoalSetEvent(_, amount, _)) => Some(SavingsGoal(amount))
+      case Some(SavingsGoalSetEvent(_, amount, _, name)) => Some(SavingsGoal(goalName = name, goalAmount = amount))
     }
   }
 

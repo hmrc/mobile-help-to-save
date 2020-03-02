@@ -185,8 +185,8 @@ class SandboxISpec
       )
       response.status shouldBe Status.OK
 
-      response.status shouldBe 200
-      (response.json \ "milestones").as[List[MongoMilestone]]  shouldBe List.empty[MongoMilestone]
+      response.status                                         shouldBe 200
+      (response.json \ "milestones").as[List[MongoMilestone]] shouldBe List.empty[MongoMilestone]
     }
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =

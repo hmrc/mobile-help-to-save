@@ -52,16 +52,16 @@ class SavingsGoalsISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val savingsGoal1   = SavingsGoal(20)
-  private val validGoalJson  = toJson(savingsGoal1)
-  private val savingsGoal2   = SavingsGoal(30)
-  private val validGoalJson2 = toJson(savingsGoal2)
-  private val journeyId      = randomUUID().toString
+  private val savingsGoal1          = SavingsGoal(20)
+  private val validGoalJson         = toJson(savingsGoal1)
+  private val savingsGoal2          = SavingsGoal(goalAmount = 30, goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home"))
+  private val validGoalJsonWithName = toJson(savingsGoal2)
+  private val journeyId             = randomUUID().toString
 
   private def setSavingsGoal(
     nino: Nino,
     json: JsValue
-  ) =
+  ): WSResponse =
     await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=$journeyId").put(json))
 
   trait LoggedInUserScenario {
@@ -108,23 +108,24 @@ class SavingsGoalsISpec
       }
 
       response.status shouldBe 200
-      val account = parse(response.body).as[Account]
+      val account: Account = parse(response.body).as[Account]
       account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
     }
 
-    "update the goal when called a second time" in new LoggedInUserScenario {
+    "update the goal when called a second time (with name)" in new LoggedInUserScenario {
 
       val response: WSResponse = await {
         for {
           _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
-          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson2)
+          _    <- wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJsonWithName)
           resp <- wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
       }
 
       response.status shouldBe 200
-      val account = parse(response.body).as[Account]
+      val account: Account = parse(response.body).as[Account]
       account.savingsGoal.value.goalAmount shouldBe savingsGoal2.goalAmount
+      account.savingsGoal.value.goalName   shouldBe savingsGoal2.goalName
     }
 
     "respond with 404 and account not found when user is not enrolled" in {
@@ -190,7 +191,7 @@ class SavingsGoalsISpec
       }
 
       response.status shouldBe 200
-      val account = parse(response.body).as[Account]
+      val account: Account = parse(response.body).as[Account]
       account.savingsGoal shouldBe None
     }
 

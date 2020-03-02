@@ -121,7 +121,8 @@ class ReportingServiceSpec
 
       override def setGoal(
         nino:   Nino,
-        amount: Double
+        amount: Double,
+        name:   Option[String] = None
       ): Future[Unit] = ???
       override def getEvents(nino:  Nino): Future[List[SavingsGoalEvent]] = ???
       override def deleteGoal(nino: Nino): Future[Unit]                   = ???
