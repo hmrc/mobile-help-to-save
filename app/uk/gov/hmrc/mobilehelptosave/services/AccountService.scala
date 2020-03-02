@@ -72,7 +72,7 @@ class HtsAccountService[F[_]](
       withHelpToSaveAccount(nino) { acc =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
           trappingRepoExceptions("error writing savings goal to repo",
-                                 savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount))
+                                 savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount, savingsGoal.goalName))
         }
       }
     }

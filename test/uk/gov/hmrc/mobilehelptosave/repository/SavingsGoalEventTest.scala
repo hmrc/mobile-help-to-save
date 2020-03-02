@@ -41,7 +41,14 @@ class SavingsGoalEventTest extends FreeSpecLike with Matchers with GeneratorDriv
     nino   <- genNino
     amount <- arbDouble.arbitrary
     date   <- genDateTime
-  } yield SavingsGoalSetEvent(nino, amount, date)
+    name   <- arbString.arbitrary
+  } yield SavingsGoalSetEvent(nino, amount, date, Some(name))
+
+  val genSetEventWithNoName: Gen[SavingsGoalSetEvent] = for {
+    nino   <- genNino
+    amount <- arbDouble.arbitrary
+    date   <- genDateTime
+  } yield SavingsGoalSetEvent(nino, amount, date, None)
 
   val genDeleteEvent: Gen[SavingsGoalDeleteEvent] = for {
     nino <- genNino
@@ -49,7 +56,7 @@ class SavingsGoalEventTest extends FreeSpecLike with Matchers with GeneratorDriv
   } yield SavingsGoalDeleteEvent(nino, date)
 
   val genEvent: Gen[SavingsGoalEvent] =
-    Gen.oneOf(genSetEvent, genDeleteEvent)
+    Gen.oneOf(genSetEvent, genSetEventWithNoName, genDeleteEvent)
 
   implicit val arbEvent: Arbitrary[SavingsGoalEvent] =
     Arbitrary(genEvent)

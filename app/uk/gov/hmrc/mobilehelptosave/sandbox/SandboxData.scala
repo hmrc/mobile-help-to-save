@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.sandbox
 
+import java.net.URLDecoder
 import java.time.temporal.TemporalAdjusters
 import java.time.{LocalDate, YearMonth}
 
@@ -65,7 +66,7 @@ case class SandboxData(
       savingsGoalsEnabled  = true,
       logger,
       LocalDate.of(2018, 4, 30),
-      savingsGoal = Some(SavingsGoal(25.0))
+      savingsGoal = Some(SavingsGoal(goalAmount = 25.0,goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home")))
     )
   }
 
