@@ -76,7 +76,7 @@ class SandboxISpec
       response.status shouldBe Status.OK
       val accountV = response.json.validate[Account]
       accountV                                          shouldBe 'success
-      accountV.asOpt.value.savingsGoal.value.goalAmount shouldBe 25.0
+      accountV.asOpt.value.savingsGoal.value.goalAmount shouldBe Some(25.0)
     }
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
@@ -94,7 +94,7 @@ class SandboxISpec
 
   "PUT /savings-account/:nino/goals/current-goal with sandbox header" should {
     "Return a No Content response" in {
-      val goal = SavingsGoal(35.0)
+      val goal = SavingsGoal(Some(35.0))
       val response: WSResponse =
         await(
           wsUrl(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
@@ -104,7 +104,7 @@ class SandboxISpec
       response.status shouldBe Status.NO_CONTENT
     }
     "Return 400 when journeyId not supplied" in {
-      val goal = SavingsGoal(35.0)
+      val goal = SavingsGoal(Some(35.0))
       val response: WSResponse =
         await(
           wsUrl(s"/savings-account/$nino/goals/current-goal")

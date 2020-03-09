@@ -51,7 +51,8 @@ class ReportingService(
 
   def getPenceInCurrentSavingsGoals(): Future[JsObject] =
     getCurrentSavingsGoalsEvents()
-      .map(_.filter(!_.amount.isWhole()).map(_.amount))
+      .map(goal => goal.flatMap(goal => goal.amount))
+      .map((listOfGoals: List[Double]) => listOfGoals.filter(!_.isWhole()))
       .map(p =>
         Json.obj(
           "count"  -> p.size,
@@ -60,15 +61,15 @@ class ReportingService(
       )
 
   def getCurrentSavingsGoalRangeCounts(): Future[JsObject] =
-    getCurrentSavingsGoalsEvents().map(events =>
+    getCurrentSavingsGoalsEvents().map { events =>
       Json.obj(
-        "1.00 - 10.00"  -> events.count(event => event.amount > 1 && event.amount <= 10),
-        "10.01 - 20.00" -> events.count(event => event.amount > 10 && event.amount <= 20),
-        "20.01 - 30.00" -> events.count(event => event.amount > 20 && event.amount <= 30),
-        "30.01 - 40.00" -> events.count(event => event.amount > 30 && event.amount <= 40),
-        "40.01 - 50.00" -> events.count(event => event.amount > 40 && event.amount <= 50)
+        "1.00 - 10.00"  -> events.flatMap(event => event.amount).count(goal => goal > 1 && goal <= 10),
+        "10.01 - 20.00" -> events.flatMap(event => event.amount).count(goal => goal > 10 && goal <= 20),
+        "20.01 - 30.00" -> events.flatMap(event => event.amount).count(goal => goal > 20 && goal <= 30),
+        "30.01 - 40.00" -> events.flatMap(event => event.amount).count(goal => goal > 30 && goal <= 40),
+        "40.01 - 50.00" -> events.flatMap(event => event.amount).count(goal => goal > 40 && goal <= 50)
       )
-    )
+    }
 
   if (config.currentSavingsGoalRangeCountsEnabled) {
     getCurrentSavingsGoalRangeCounts().map(currentGoalRangeCounts =>

@@ -46,12 +46,12 @@ class ReportingServiceSpec
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   val savingsGoalSetEvents = List(
-    SavingsGoalSetEvent(Nino("AA000000B"), 50, LocalDateTime.parse("2019-01-16T10:15:30")),
-    SavingsGoalSetEvent(Nino("AA000000B"), 49.5, LocalDateTime.parse("2019-01-16T15:20:35")),
-    SavingsGoalSetEvent(Nino("AA000000C"), 20, LocalDateTime.parse("2019-02-13T15:15:30")),
-    SavingsGoalSetEvent(Nino("AA000000C"), 20.52, LocalDateTime.parse("2019-05-25T20:00:30")),
-    SavingsGoalSetEvent(Nino("AA000000D"), 15, LocalDateTime.parse("2019-05-05T10:00:00")),
-    SavingsGoalSetEvent(Nino("AA000000D"), 1.55, LocalDateTime.parse("2019-05-06T10:00:00"))
+    SavingsGoalSetEvent(Nino("AA000000B"), Some(50), LocalDateTime.parse("2019-01-16T10:15:30")),
+    SavingsGoalSetEvent(Nino("AA000000B"), Some(49.5), LocalDateTime.parse("2019-01-16T15:20:35")),
+    SavingsGoalSetEvent(Nino("AA000000C"), Some(20), LocalDateTime.parse("2019-02-13T15:15:30")),
+    SavingsGoalSetEvent(Nino("AA000000C"), Some(20.52), LocalDateTime.parse("2019-05-25T20:00:30")),
+    SavingsGoalSetEvent(Nino("AA000000D"), Some(15), LocalDateTime.parse("2019-05-05T10:00:00")),
+    SavingsGoalSetEvent(Nino("AA000000D"), Some(1.55), LocalDateTime.parse("2019-05-06T10:00:00"))
   )
 
   val penceInCurrentSavingsGoals =
@@ -77,9 +77,9 @@ class ReportingServiceSpec
         new ReportingService(logger, testConfig, fakeGoalsRepo)
 
       val expectedResult = List(
-        SavingsGoalSetEvent(Nino("AA000000C"), 20.52, LocalDateTime.parse("2019-05-25T20:00:30")),
-        SavingsGoalSetEvent(Nino("AA000000B"), 49.5, LocalDateTime.parse("2019-01-16T15:20:35")),
-        SavingsGoalSetEvent(Nino("AA000000D"), 1.55, LocalDateTime.parse("2019-05-06T10:00:00"))
+        SavingsGoalSetEvent(Nino("AA000000C"), Some(20.52), LocalDateTime.parse("2019-05-25T20:00:30")),
+        SavingsGoalSetEvent(Nino("AA000000B"), Some(49.5), LocalDateTime.parse("2019-01-16T15:20:35")),
+        SavingsGoalSetEvent(Nino("AA000000D"), Some(1.55), LocalDateTime.parse("2019-05-06T10:00:00"))
       )
 
       val result = await(service.getCurrentSavingsGoalsEvents())
@@ -121,7 +121,7 @@ class ReportingServiceSpec
 
       override def setGoal(
         nino:   Nino,
-        amount: Double,
+        amount: Option[Double] = None,
         name:   Option[String] = None
       ): Future[Unit] = ???
       override def getEvents(nino:  Nino): Future[List[SavingsGoalEvent]] = ???

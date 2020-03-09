@@ -64,7 +64,7 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet shouldBe Right(())
+      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet shouldBe Right(())
     }
 
     "return a ValidationError if the goal is < 1.0" in {
@@ -82,7 +82,7 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(0.99)).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
+      service.setSavingsGoal(nino, SavingsGoal(Some(0.99))).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
     }
 
     "return a ValidationError if the goal is > maximum for month" in {
@@ -101,7 +101,7 @@ class SetSavingsGoalSpec
                                      testMilestonesConfig)
 
       service
-        .setSavingsGoal(nino, SavingsGoal(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01))
+        .setSavingsGoal(nino, SavingsGoal(Some(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01)))
         .unsafeGet
         .left
         .value shouldBe a[ErrorInfo.ValidationError]
@@ -122,7 +122,7 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
+      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
     }
 
     "return a General error if the repo throws a Non-Fatal exception" in {
@@ -140,7 +140,7 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(1.0)).unsafeGet.left.value shouldBe ErrorInfo.General
+      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.General
     }
   }
 
@@ -208,7 +208,7 @@ class SetSavingsGoalSpec
 
     override def setGoal(
       nino:   Nino,
-      amount: Double,
+      amount: Option[Double] = None,
       name:   Option[String] = None
     ): TestF[Unit] = {
       nino shouldBe expectedNino

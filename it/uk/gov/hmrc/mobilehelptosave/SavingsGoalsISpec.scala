@@ -52,9 +52,11 @@ class SavingsGoalsISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
-  private val savingsGoal1          = SavingsGoal(20)
+  private val savingsGoal1          = SavingsGoal(Some(20))
+  private val savingsGoalBad          = SavingsGoal(Some(20))
   private val validGoalJson         = toJson(savingsGoal1)
-  private val savingsGoal2          = SavingsGoal(goalAmount = 30, goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home"))
+  private val inVaalidGoalJson         = toJson(savingsGoalBad)
+  private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home"))
   private val validGoalJsonWithName = toJson(savingsGoal2)
   private val journeyId             = randomUUID().toString
 
@@ -79,21 +81,21 @@ class SavingsGoalsISpec
 
     "respond with 422 when putting a value that is not a valid monetary amount" in new LoggedInUserScenario {
 
-      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(30.123)))
+      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(Some(30.123))))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
       response.body   should include("goal amount should be a valid monetary amount")
     }
 
     "respond with 422 when putting a value that is not a valid savings goal" in new LoggedInUserScenario {
 
-      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(0.10)))
+      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(Some(0.10))))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
       response.body   should include("goal amount should be a valid monetary amount")
     }
 
     "respond with 422 when putting a value that is greater than the monthly savings goal" in new LoggedInUserScenario {
 
-      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(51)))
+      val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(Some(51))))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
       response.body   should include("goal amount should be in range 1 to 50")
     }
@@ -111,6 +113,9 @@ class SavingsGoalsISpec
       val account: Account = parse(response.body).as[Account]
       account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
     }
+
+
+
 
     "update the goal when called a second time (with name)" in new LoggedInUserScenario {
 
@@ -167,6 +172,15 @@ class SavingsGoalsISpec
         await(
           wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
             .put(validGoalJson)
+        )
+      response.status shouldBe 400
+    }
+    "return 400 when neither name or amount specified" in {
+      AuthStub.userIsNotLoggedIn()
+      val response: WSResponse =
+        await(
+          wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
+            .put(inVaalidGoalJson)
         )
       response.status shouldBe 400
     }

@@ -288,7 +288,7 @@ class AccountServiceSpec
 
       override def setGoal(
         nino:   Nino,
-        amount: Double,
+        amount: Option[Double] = None,
         name:   Option[String] = None
       ): TestF[Unit] = {
         nino shouldBe expectedNino

@@ -39,14 +39,14 @@ class SavingsGoalEventTest extends FreeSpecLike with Matchers with GeneratorDriv
 
   val genSetEvent: Gen[SavingsGoalSetEvent] = for {
     nino   <- genNino
-    amount <- arbDouble.arbitrary
+    amount <- arbOption[Double].arbitrary
     date   <- genDateTime
     name   <- arbString.arbitrary
   } yield SavingsGoalSetEvent(nino, amount, date, Some(name))
 
   val genSetEventWithNoName: Gen[SavingsGoalSetEvent] = for {
     nino   <- genNino
-    amount <- arbDouble.arbitrary
+    amount <- arbOption[Double].arbitrary
     date   <- genDateTime
   } yield SavingsGoalSetEvent(nino, amount, date, None)
 
