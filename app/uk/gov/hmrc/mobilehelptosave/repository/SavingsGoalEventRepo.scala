@@ -33,7 +33,7 @@ trait SavingsGoalEventRepo[F[_]] {
 
   def setGoal(
     nino:   Nino,
-    amount: Double,
+    amount: Option[Double],
     name:   Option[String]
   ): F[Unit]
   def deleteGoal(nino: Nino): F[Unit]
@@ -53,7 +53,7 @@ class MongoSavingsGoalEventRepo(
 
   override def setGoal(
     nino:   Nino,
-    amount: Double,
+    amount: Option[Double],
     name:   Option[String]
   ): Future[Unit] =
     insert(SavingsGoalSetEvent(nino = nino, amount = amount, name = name, date = LocalDateTime.now)).void

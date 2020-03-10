@@ -111,23 +111,23 @@ class HtsAccountService[F[_]](
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
 
-  protected def withValidSavingsAmount[T](goal: Double)(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
-    if (goal < 1.0 || BigDecimal(goal).scale > 2)
-      F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
-    else
-      fn
+  protected def withValidSavingsAmount[T](goal: Option[Double])(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
+    goal match {
+      case Some(goal) if goal < 1.0 || BigDecimal(goal).scale > 2=> F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
+      case _ => fn
+    }
 
   protected def withEnoughSavingsHeadroom[T](
-    goal:        Double,
+    goal:       Option[Double],
     acc:         HelpToSaveAccount
   )(fn:          => F[Result[T]]
   )(implicit hc: HeaderCarrier
   ): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
-    if (goal > maxGoal)
-      F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
-    else
-      fn
+    goal match {
+      case Some(goal) if (goal > maxGoal)=> F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
+      case _ => fn
+    }
   }
 
   /**

@@ -93,7 +93,10 @@ class HelpToSaveController(
   ): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
       verifyingMatchingNino(nino, request.shuttered) { verifiedUserNino =>
-        accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
+        request.body match {
+          case SavingsGoal(None, None) => Future.successful(BadRequest("Invalid savings goal combination"))
+          case _ => accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
+        }
       }
     }
 

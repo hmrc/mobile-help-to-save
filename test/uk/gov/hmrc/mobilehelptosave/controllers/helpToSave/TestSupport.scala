@@ -87,7 +87,7 @@ trait TestSupport {
 
     def setSavingsGoalReturns(
       expectedNino:    Nino,
-      expectedAmount:  Double,
+      expectedAmount:  Option[Double],
       stubbedResponse: Either[ErrorInfo, Unit]
     ) =
       (accountService

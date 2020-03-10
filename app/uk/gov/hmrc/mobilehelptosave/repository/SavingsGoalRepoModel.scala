@@ -52,7 +52,7 @@ sealed trait SavingsGoalEvent {
 
 case class SavingsGoalSetEvent(
   nino:   Nino,
-  amount: Double,
+  amount: Option[Double] = None,
   date:   LocalDateTime,
   name:   Option[String] = None)
     extends SavingsGoalEvent

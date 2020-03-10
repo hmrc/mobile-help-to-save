@@ -20,7 +20,7 @@ import cats.syntax.either._
 import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
-import play.api.test.Helpers.status
+import play.api.test.Helpers.{status, contentAsString}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
@@ -46,20 +46,30 @@ class SavingsGoalSpec
     "logged in user's NINO matches NINO in URL" should {
       "set the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
         val amount  = 21.50
-        val request = FakeRequest().withBody(SavingsGoal(amount))
+        val request = FakeRequest().withBody(SavingsGoal(Some(amount)))
 
-        setSavingsGoalReturns(nino, amount, ().asRight)
+        setSavingsGoalReturns(nino, Some(amount), ().asRight)
         val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
 
         status(resultF) shouldBe 204
       }
 
+      "set the goal Bad Request if both amount and name are missing" in new AuthorisedTestScenario with HelpToSaveMocking {
+        val amount  = 21.50
+        val request = FakeRequest().withBody(SavingsGoal())
+
+        val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
+
+        status(resultF) shouldBe 400
+        contentAsString(resultF) shouldBe "Invalid savings goal combination"
+      }
+
       "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario
         with HelpToSaveMocking {
         val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
-        val request = FakeRequest().withBody(SavingsGoal(amount))
+        val request = FakeRequest().withBody(SavingsGoal(Some(amount)))
 
-        setSavingsGoalReturns(nino, amount, ErrorInfo.ValidationError("error message").asLeft)
+        setSavingsGoalReturns(nino, Some(amount), ErrorInfo.ValidationError("error message").asLeft)
 
         val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
 
