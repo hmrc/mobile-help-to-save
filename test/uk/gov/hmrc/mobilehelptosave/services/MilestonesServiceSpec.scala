@@ -258,7 +258,8 @@ class MilestonessServiceSpec
       val service =
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
+      val bonusTerms =
+        Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneNotHit
@@ -277,6 +278,100 @@ class MilestonessServiceSpec
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
       result shouldBe MilestoneHit
+    }
+
+    "check if the current term is after the first and if a first term bonus was paid then return MilestoneHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
+
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "check if the current term is after the first and if a first term bonus was not paid then return MilestoneNotHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
+
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0).unsafeGet
+      result shouldBe MilestoneNotHit
+    }
+
+    "check if the current term is before the first and if a first term bonus was paid then return MilestoneNotHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(baseBonusTerms(0).copy(bonusEstimate = 0, bonusPaid = 100, endDate = LocalDate.now().plusDays(1)),
+            baseBonusTerms(1))
+
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0).unsafeGet
+      result shouldBe MilestoneNotHit
+    }
+
+    "check if the current term is after the second and if a final term bonus was paid then return MilestoneHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms(0).copy(bonusPaid = 0, endDate      = LocalDate.now().minusYears(1)),
+          baseBonusTerms(1).copy(bonusPaid = 100.00, endDate = LocalDate.now().minusDays(1))
+        )
+
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "check if the current term is after the second and if a final term bonus was not paid then return MilestoneNotHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusYears(1)),
+          baseBonusTerms(1).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1))
+        )
+
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0).unsafeGet
+      result shouldBe MilestoneNotHit
+    }
+
+    "check if the current term is before the second and if a final term bonus was paid then return MilestoneNotHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms(0).copy(bonusPaid     = 0, endDate   = LocalDate.now().minusYears(1)),
+          baseBonusTerms(1).copy(bonusEstimate = 0, bonusPaid = 1000, endDate = LocalDate.now().plusDays(21))
+        )
+
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0).unsafeGet
+      result shouldBe MilestoneNotHit
     }
   }
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.stubs
 import java.time.LocalDate
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{status, _}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
 import uk.gov.hmrc.domain.Nino
@@ -135,7 +135,8 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def accountExists(
     balance:                 BigDecimal,
-    nino:                    Nino
+    nino:                    Nino,
+    firstTermBonusPaid:      BigDecimal = 90.99
   )(implicit wireMockServer: WireMockServer
   ): StubMapping =
     wireMockServer.stubFor(
@@ -144,7 +145,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         .willReturn(
           aResponse()
             .withStatus(200)
-            .withBody(accountReturnedByHelpToSaveJsonString(balance))
+            .withBody(accountReturnedByHelpToSaveJsonString(balance, firstTermBonusPaid))
         )
     )
 
@@ -155,6 +156,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
     firstPeriodBonusPaid:      BigDecimal,
     firstPeriodEndDate:        LocalDate,
     secondPeriodBonusEstimate: BigDecimal,
+    secondPeriodBonusPaid:     BigDecimal,
     secondPeriodEndDate:       LocalDate,
     isClosed:                  Boolean = false
   )(implicit wireMockServer:   WireMockServer
@@ -173,6 +175,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
                 firstPeriodEndDate,
                 firstPeriodEndDate.plusDays(1),
                 secondPeriodBonusEstimate,
+                secondPeriodBonusPaid,
                 secondPeriodEndDate,
                 secondPeriodEndDate.plusDays(1),
                 isClosed
