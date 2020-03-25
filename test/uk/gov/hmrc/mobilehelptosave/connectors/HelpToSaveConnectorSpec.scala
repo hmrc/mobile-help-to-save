@@ -110,7 +110,7 @@ class HelpToSaveConnectorSpec
 
       val okResponse =
         httpGet(isAccountUrlForNino _,
-                HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveJsonString(123.45)))))
+                HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99)))))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
@@ -120,7 +120,7 @@ class HelpToSaveConnectorSpec
     "return a Right (with Account) when the help-to-save service returns a 2xx response with optional fields omitted" in {
 
       val accountReturnedByHelpToSaveJson = Json
-          .parse(accountReturnedByHelpToSaveJsonString(123.45))
+          .parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99))
           .as[JsObject] - "accountHolderEmail"
       val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, Some(accountReturnedByHelpToSaveJson)))
 

@@ -23,7 +23,10 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 
 trait AccountTestData {
 
-  protected def accountReturnedByHelpToSaveJsonString(accountBalance: BigDecimal): String =
+  protected def accountReturnedByHelpToSaveJsonString(
+    accountBalance:     BigDecimal,
+    firstTermBonusPaid: BigDecimal
+  ): String =
     s"""
        |{
        |  "openedYearMonth": "2018-01",
@@ -46,7 +49,7 @@ trait AccountTestData {
        |  "bonusTerms": [
        |    {
        |      "bonusEstimate": 90.99,
-       |      "bonusPaid": 90.99,
+       |      "bonusPaid": $firstTermBonusPaid,
        |      "endDate": "2019-12-31",
        |      "bonusPaidOnOrAfterDate": "2020-01-01"
        |    },
@@ -67,6 +70,7 @@ trait AccountTestData {
     firstPeriodEndDate:                 LocalDate,
     firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
     secondPeriodBonusEstimate:          BigDecimal,
+    secondPeriodBonusPaid:              BigDecimal,
     secondPeriodEndDate:                LocalDate,
     secondPeriodBonusPaidOnOrAfterDate: LocalDate,
     isClosed:                           Boolean = false
@@ -99,7 +103,7 @@ trait AccountTestData {
        |    },
        |    {
        |      "bonusEstimate": $secondPeriodBonusEstimate,
-       |      "bonusPaid": 0,
+       |      "bonusPaid": $secondPeriodBonusPaid,
        |      "endDate": "$secondPeriodEndDate",
        |      "bonusPaidOnOrAfterDate": "$secondPeriodBonusPaidOnOrAfterDate"
        |    }
