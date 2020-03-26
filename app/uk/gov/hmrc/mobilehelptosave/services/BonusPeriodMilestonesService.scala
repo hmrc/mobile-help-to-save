@@ -32,10 +32,11 @@ import uk.gov.hmrc.mobilehelptosave.repository._
 trait BonusPeriodMilestonesService[F[_]] {
 
   def bonusPeriodMilestoneCheck(
-    nino:           Nino,
-    bonusTerms:     Seq[BonusTerm],
-    currentBalance: BigDecimal
-  )(implicit hc:    HeaderCarrier
+    nino:             Nino,
+    bonusTerms:       Seq[BonusTerm],
+    currentBalance:   BigDecimal,
+    currentBonusTerm: CurrentBonusTerm.Value
+  )(implicit hc:      HeaderCarrier
   ): F[MilestoneCheckResult]
 }
 
@@ -54,10 +55,11 @@ class HtsBonusPeriodMilestonesService[F[_]](
     with BonusPeriodMilestonesService[F] {
 
   override def bonusPeriodMilestoneCheck(
-    nino:           Nino,
-    bonusTerms:     Seq[BonusTerm],
-    currentBalance: BigDecimal
-  )(implicit hc:    HeaderCarrier
+    nino:             Nino,
+    bonusTerms:       Seq[BonusTerm],
+    currentBalance:   BigDecimal,
+    currentBonusTerm: CurrentBonusTerm.Value
+  )(implicit hc:      HeaderCarrier
   ): F[MilestoneCheckResult] = {
 
     val endOfFirstBonusPeriod              = bonusTerms.head.endDate
@@ -79,7 +81,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
       currentBalance,
       firstPeriodBonusPaidOnOrAfterDate,
       secondPeriodBonusPaidOnOrAfterDate,
-      secondPeriodBonusPaid
+      secondPeriodBonusPaid,
+      currentBonusTerm
     ) match {
       case Some(milestone) => super.setMilestone(milestone).map(_ => MilestoneHit)
       case _               => F.pure(MilestoneNotHit)
@@ -96,7 +99,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     currentBalance:                     BigDecimal,
     firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
     secondPeriodBonusPaidOnOrAfterDate: LocalDate,
-    secondPeriodBonus:                  BigDecimal
+    secondPeriodBonus:                  BigDecimal,
+    currentBonusTerm:                   CurrentBonusTerm.Value
   ): Option[MongoMilestone] = {
 
     def currentDateInDuration(
@@ -114,8 +118,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     val within20DaysOfFinalEndDate         = currentDateInDuration(endOfSecondBonusPeriod, 19)
     val dateFormat                         = DateTimeFormatter.ofPattern("d MMMM yyyy")
     val maxBonus                           = 600
-    val isAfterFirstPeriod                 = LocalDate.now().isAfter(endOfFirstBonusPeriod)
-    val isAfterSecondPeriod                = LocalDate.now().isAfter(endOfSecondBonusPeriod)
+//    val isAfterFirstPeriod                 = LocalDate.now().isAfter(endOfFirstBonusPeriod)
+//    val isAfterSecondPeriod                = LocalDate.now().isAfter(endOfSecondBonusPeriod)
 
     if (within20DaysOfFirstPeriodEndDate && hasFirstBonusEstimate)
       Some(
@@ -133,18 +137,18 @@ class HtsBonusPeriodMilestonesService[F[_]](
           StartOfFinalBonusPeriodNoBonus
         )
       )
-    else if (firstPeriodBonusPaid && isAfterFirstPeriod) {
+    else if (firstPeriodBonusPaid && currentBonusTerm != CurrentBonusTerm.First) {
       if (firstPeriodBonus == maxBonus)
         Some(
           createBonusPeriodMongoMilestone(
-            EndOfFirstBonusPeriodMaximumBonusPaid,
+            FirstBonusEarnedMaximum,
             Some(Map("bonusPaid" -> firstPeriodBonus.toString()))
           )
         )
       else
         Some(
           createBonusPeriodMongoMilestone(
-            EndOfFirstBonusPeriodBonusPaid,
+            FirstBonusEarned,
             Some(Map("bonusPaid" -> firstPeriodBonus.toString()))
           )
         )
@@ -189,18 +193,18 @@ class HtsBonusPeriodMilestonesService[F[_]](
             )
           )
         )
-    } else if (secondPeriodBonusPaid && isAfterSecondPeriod) {
+    } else if (secondPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.AfterFinalTerm) {
       if (secondPeriodBonus == maxBonus)
         Some(
           createBonusPeriodMongoMilestone(
-            EndOfFinalBonusPeriodMaximumBonusPaid,
+            FinalBonusEarnedMaximum,
             Some(Map("bonusPaid" -> secondPeriodBonus.toString()))
           )
         )
       else
         Some(
           createBonusPeriodMongoMilestone(
-            EndOfFinalBonusPeriodBonusPaid,
+            FinalBonusEarned,
             Some(Map("bonusPaid" -> secondPeriodBonus.toString()))
           )
         )

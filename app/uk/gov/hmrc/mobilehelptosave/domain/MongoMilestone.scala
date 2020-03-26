@@ -110,10 +110,10 @@ object Milestone {
       case Milestone(EndOfFinalBonusPeriodZeroBalancePositiveBonus, _)     => JsString("It's nearly the end of year 4")
       case Milestone(EndOfFinalBonusPeriodPositiveBalanceNoBonus, _)       => JsString("It's nearly the end of year 4")
       case Milestone(EndOfFinalBonusPeriodPositiveBalancePositiveBonus, _) => JsString("It's nearly the end of year 4")
-      case Milestone(EndOfFirstBonusPeriodMaximumBonusPaid, _)             => JsString("Congratulations")
-      case Milestone(EndOfFirstBonusPeriodBonusPaid, _)                    => JsString("Congratulations")
-      case Milestone(EndOfFinalBonusPeriodMaximumBonusPaid, _)             => JsString("Congratulations")
-      case Milestone(EndOfFinalBonusPeriodBonusPaid, _)                    => JsString("Congratulations")
+      case Milestone(FirstBonusEarnedMaximum, _)                           => JsString("Congratulations")
+      case Milestone(FirstBonusEarned, _)                                  => JsString("Congratulations")
+      case Milestone(FinalBonusEarnedMaximum, _)                           => JsString("Congratulations")
+      case Milestone(FinalBonusEarned, _)                                  => JsString("Congratulations")
     }
   }
 
@@ -149,13 +149,13 @@ object Milestone {
         JsString(
           s"Your savings of £${values get "balance"} and final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
         )
-      case Milestone(EndOfFirstBonusPeriodMaximumBonusPaid, values) =>
+      case Milestone(FirstBonusEarnedMaximum, values) =>
         JsString(s"You earned the maximum first bonus of £${values get "bonusPaid"}.")
-      case Milestone(EndOfFirstBonusPeriodBonusPaid, values) =>
+      case Milestone(FirstBonusEarned, values) =>
         JsString(s"You earned a £${values get "bonusPaid"} first bonus.")
-      case Milestone(EndOfFinalBonusPeriodMaximumBonusPaid, values) =>
+      case Milestone(FinalBonusEarnedMaximum, values) =>
         JsString(s"You earned the maximum final bonus of £${values get "bonusPaid"}.")
-      case Milestone(EndOfFinalBonusPeriodBonusPaid, values) =>
+      case Milestone(FinalBonusEarned, values) =>
         JsString(s"You earned a £${values get "bonusPaid"} final bonus.")
     }
   }
@@ -178,10 +178,10 @@ case object EndOfFinalBonusPeriodZeroBalanceNoBonus extends MilestoneKey
 case object EndOfFinalBonusPeriodZeroBalancePositiveBonus extends MilestoneKey
 case object EndOfFinalBonusPeriodPositiveBalanceNoBonus extends MilestoneKey
 case object EndOfFinalBonusPeriodPositiveBalancePositiveBonus extends MilestoneKey
-case object EndOfFirstBonusPeriodMaximumBonusPaid extends MilestoneKey
-case object EndOfFirstBonusPeriodBonusPaid extends MilestoneKey
-case object EndOfFinalBonusPeriodMaximumBonusPaid extends MilestoneKey
-case object EndOfFinalBonusPeriodBonusPaid extends MilestoneKey
+case object FirstBonusEarnedMaximum extends MilestoneKey
+case object FirstBonusEarned extends MilestoneKey
+case object FinalBonusEarnedMaximum extends MilestoneKey
+case object FinalBonusEarned extends MilestoneKey
 
 object MilestoneKey {
 
@@ -204,11 +204,11 @@ object MilestoneKey {
       case "EndOfFinalBonusPeriodPositiveBalanceNoBonus"   => JsSuccess(EndOfFinalBonusPeriodPositiveBalanceNoBonus)
       case "EndOfFinalBonusPeriodPositiveBalancePositiveBonus" =>
         JsSuccess(EndOfFinalBonusPeriodPositiveBalancePositiveBonus)
-      case "EndOfFirstBonusPeriodMaximumBonusPaid" => JsSuccess(EndOfFirstBonusPeriodMaximumBonusPaid)
-      case "EndOfFirstBonusPeriodBonusPaid"        => JsSuccess(EndOfFirstBonusPeriodBonusPaid)
-      case "EndOfFinalBonusPeriodMaximumBonusPaid" => JsSuccess(EndOfFinalBonusPeriodMaximumBonusPaid)
-      case "EndOfFinalBonusPeriodBonusPaid"        => JsSuccess(EndOfFinalBonusPeriodBonusPaid)
-      case _                                       => JsError("Invalid milestone key")
+      case "FirstBonusEarnedMaximum" => JsSuccess(FirstBonusEarnedMaximum)
+      case "FirstBonusEarned"        => JsSuccess(FirstBonusEarned)
+      case "FinalBonusEarnedMaximum" => JsSuccess(FinalBonusEarnedMaximum)
+      case "FinalBonusEarned"        => JsSuccess(FinalBonusEarned)
+      case _                         => JsError("Invalid milestone key")
     }
 
     override def writes(milestoneKey: MilestoneKey): JsValue =
