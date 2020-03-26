@@ -159,10 +159,11 @@ class SetSavingsGoalSpec
     new BonusPeriodMilestonesService[TestF] {
 
       override def bonusPeriodMilestoneCheck(
-        nino:           Nino,
-        bonusTerms:     Seq[BonusTerm],
-        currentBalance: BigDecimal
-      )(implicit hc:    HeaderCarrier
+        nino:             Nino,
+        bonusTerms:       Seq[BonusTerm],
+        currentBalance:   BigDecimal,
+        currentBonusTerm: CurrentBonusTerm.Value
+      )(implicit hc:      HeaderCarrier
       ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }
 

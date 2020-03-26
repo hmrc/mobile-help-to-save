@@ -102,7 +102,10 @@ class HtsAccountService[F[_]](
                     balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
                   else F.pure(())
               _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled && !account.isClosed)
-                    bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino, account.bonusTerms, account.balance)
+                    bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino,
+                                                                           account.bonusTerms,
+                                                                           account.balance,
+                                                                           account.currentBonusTerm)
                   else F.pure(())
             } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
@@ -111,21 +114,27 @@ class HtsAccountService[F[_]](
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
 
-  protected def withValidSavingsAmount[T](goal: Option[Double])(fn: => F[Result[T]])(implicit hc: HeaderCarrier): F[Result[T]] =
+  protected def withValidSavingsAmount[T](
+    goal:        Option[Double]
+  )(fn:          => F[Result[T]]
+  )(implicit hc: HeaderCarrier
+  ): F[Result[T]] =
     goal match {
-      case Some(goal) if goal < 1.0 || BigDecimal(goal).scale > 2=> F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
+      case Some(goal) if goal < 1.0 || BigDecimal(goal).scale > 2 =>
+        F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
       case _ => fn
     }
 
   protected def withEnoughSavingsHeadroom[T](
-    goal:       Option[Double],
+    goal:        Option[Double],
     acc:         HelpToSaveAccount
   )(fn:          => F[Result[T]]
   )(implicit hc: HeaderCarrier
   ): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     goal match {
-      case Some(goal) if (goal > maxGoal)=> F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
+      case Some(goal) if (goal > maxGoal) =>
+        F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
       case _ => fn
     }
   }

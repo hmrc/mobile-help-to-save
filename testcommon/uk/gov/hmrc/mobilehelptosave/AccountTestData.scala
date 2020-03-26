@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import java.time.temporal.TemporalAdjusters
 import java.time.{LocalDate, YearMonth}
 
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
@@ -90,7 +91,7 @@ trait AccountTestData {
        |  "paidInThisMonth": 27.88,
        |  "canPayInThisMonth": 22.12,
        |  "maximumPaidInThisMonth": 50,
-       |  "thisMonthEndDate": "2018-04-30",
+       |  "thisMonthEndDate": "${LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())}",
        |  "accountHolderForename": "Testfore",
        |  "accountHolderSurname": "Testsur",
        |  "accountHolderEmail": "testemail@example.com",
@@ -101,7 +102,7 @@ trait AccountTestData {
        |      "endDate": "$firstPeriodEndDate",
        |      "bonusPaidOnOrAfterDate": "$firstPeriodBonusPaidOnOrAfterDate"
        |    },
-       |    {
+       |    { 
        |      "bonusEstimate": $secondPeriodBonusEstimate,
        |      "bonusPaid": $secondPeriodBonusPaid,
        |      "endDate": "$secondPeriodEndDate",

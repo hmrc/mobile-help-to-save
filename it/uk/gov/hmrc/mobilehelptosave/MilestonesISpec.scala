@@ -373,7 +373,7 @@ class MilestonesISpec
         .as[String] shouldBe "There are still 2 years to use your account to save and earn a tax-free bonus from the government."
     }
 
-    "respond with 200 and the EndOfFirstBonusPeriodMaximumBonusPaid milestone in a list as JSON when the milestone is hit" in {
+    "respond with 200 and the FirstBonusEarnedMaximum milestone in a list as JSON when the milestone is hit" in {
       val nino         = generator.nextNino
       val firstEndDate = LocalDate.now().minusDays(1)
       ShutteringStub.stubForShutteringDisabled()
@@ -385,13 +385,13 @@ class MilestonesISpec
 
       response.status                                                  shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
-      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodMaximumBonusPaid"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "FirstBonusEarnedMaximum"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "Congratulations"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
         .as[String] shouldBe "You earned the maximum first bonus of £600."
     }
 
-    "respond with 200 and the EndOfFirstBonusPeriodBonusPaid milestone in a list as JSON when the milestone is hit" in {
+    "respond with 200 and the FirstBonusEarned milestone in a list as JSON when the milestone is hit" in {
       val nino         = generator.nextNino
       val firstEndDate = LocalDate.now().minusDays(1)
       ShutteringStub.stubForShutteringDisabled()
@@ -403,7 +403,7 @@ class MilestonesISpec
 
       response.status                                                  shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String]  shouldBe "BonusPeriod"
-      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodBonusPaid"
+      (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "FirstBonusEarned"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "Congratulations"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
         .as[String] shouldBe "You earned a £350.75 first bonus."
@@ -484,7 +484,7 @@ class MilestonesISpec
         .as[String] shouldBe s"Your savings of £1350 and final bonus of £600 will be paid into your bank account from ${secondEndDate.plusDays(1).format(dateFormat)}."
     }
 
-    "respond with 200 and the EndOfFinalBonusPeriodMaximumBonusPaid milestone in a list as JSON when the milestone is hit" in {
+    "respond with 200 and the FinalBonusEarnedMaximum milestone in a list as JSON when the milestone is hit" in {
       val nino          = generator.nextNino
       val secondEndDate = LocalDate.now().minusDays(1)
       ShutteringStub.stubForShutteringDisabled()
@@ -504,13 +504,13 @@ class MilestonesISpec
       response.status                                                 shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String] shouldBe "BonusPeriod"
       (response.json \ "milestones" \ 0 \ "milestoneKey")
-        .as[String]                                                    shouldBe "EndOfFinalBonusPeriodMaximumBonusPaid"
+        .as[String]                                                    shouldBe "FinalBonusEarnedMaximum"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "Congratulations"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
         .as[String] shouldBe "You earned the maximum final bonus of £600."
     }
 
-    "respond with 200 and the EndOfFinalBonusPeriodBonusPaid milestone in a list as JSON when the milestone is hit" in {
+    "respond with 200 and the FinalBonusEarned milestone in a list as JSON when the milestone is hit" in {
       val nino          = generator.nextNino
       val secondEndDate = LocalDate.now().minusDays(1)
       ShutteringStub.stubForShutteringDisabled()
@@ -530,7 +530,7 @@ class MilestonesISpec
       response.status                                                 shouldBe 200
       (response.json \ "milestones" \ 0 \ "milestoneType").as[String] shouldBe "BonusPeriod"
       (response.json \ "milestones" \ 0 \ "milestoneKey")
-        .as[String]                                                    shouldBe "EndOfFinalBonusPeriodBonusPaid"
+        .as[String]                                                    shouldBe "FinalBonusEarned"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "Congratulations"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
         .as[String] shouldBe "You earned a £350.75 final bonus."
