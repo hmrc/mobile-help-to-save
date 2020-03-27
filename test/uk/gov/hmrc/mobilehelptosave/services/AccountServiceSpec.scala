@@ -245,7 +245,8 @@ class AccountServiceSpec
         nino:             Nino,
         bonusTerms:       Seq[BonusTerm],
         currentBalance:   BigDecimal,
-        currentBonusTerm: CurrentBonusTerm.Value
+        currentBonusTerm: CurrentBonusTerm.Value,
+        accountClosed:    Boolean
       )(implicit hc:      HeaderCarrier
       ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }

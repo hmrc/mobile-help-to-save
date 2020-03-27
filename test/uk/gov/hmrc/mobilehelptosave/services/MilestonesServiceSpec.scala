@@ -205,7 +205,7 @@ class MilestonessServiceSpec
       val service =
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.bonusPeriodMilestoneCheck(nino, baseBonusTerms, 100, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, baseBonusTerms, 100, CurrentBonusTerm.First, false).unsafeGet
       result shouldBe MilestoneHit
     }
 
@@ -218,7 +218,7 @@ class MilestonessServiceSpec
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(bonusEstimate = 0), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 200, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 200, CurrentBonusTerm.First, false).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -231,7 +231,7 @@ class MilestonessServiceSpec
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().plusDays(21)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.First, false).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -247,7 +247,7 @@ class MilestonessServiceSpec
         baseBonusTerms(1).copy(bonusEstimate          = 0)
       )
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
       result shouldBe MilestoneHit
     }
 
@@ -261,7 +261,7 @@ class MilestonessServiceSpec
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -276,7 +276,7 @@ class MilestonessServiceSpec
         Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)),
             baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
       result shouldBe MilestoneHit
     }
 
@@ -290,7 +290,7 @@ class MilestonessServiceSpec
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
       result shouldBe MilestoneHit
     }
 
@@ -304,7 +304,7 @@ class MilestonessServiceSpec
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -319,7 +319,7 @@ class MilestonessServiceSpec
         Seq(baseBonusTerms(0).copy(bonusEstimate = 0, bonusPaid = 100, endDate = LocalDate.now().plusDays(1)),
             baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.First, false).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -336,7 +336,8 @@ class MilestonessServiceSpec
           baseBonusTerms(1).copy(bonusPaid = 100.00, endDate = LocalDate.now().minusDays(1))
         )
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.AfterFinalTerm).unsafeGet
+      val result =
+        service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.AfterFinalTerm, true).unsafeGet
       result shouldBe MilestoneHit
     }
 
@@ -353,7 +354,8 @@ class MilestonessServiceSpec
           baseBonusTerms(1).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1))
         )
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.AfterFinalTerm).unsafeGet
+      val result =
+        service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.AfterFinalTerm, true).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -370,7 +372,7 @@ class MilestonessServiceSpec
           baseBonusTerms(1).copy(bonusEstimate = 0, bonusPaid = 1000, endDate = LocalDate.now().plusDays(21))
         )
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
       result shouldBe MilestoneNotHit
     }
   }

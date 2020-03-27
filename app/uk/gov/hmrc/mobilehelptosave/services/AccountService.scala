@@ -101,11 +101,12 @@ class HtsAccountService[F[_]](
               _ <- if (milestonesConfig.balanceMilestoneCheckEnabled)
                     balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
                   else F.pure(())
-              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled && !account.isClosed)
+              _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
                     bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino,
                                                                            account.bonusTerms,
                                                                            account.balance,
-                                                                           account.currentBonusTerm)
+                                                                           account.currentBonusTerm,
+                                                                           account.isClosed)
                   else F.pure(())
             } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])

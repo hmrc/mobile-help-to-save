@@ -35,7 +35,8 @@ trait BonusPeriodMilestonesService[F[_]] {
     nino:             Nino,
     bonusTerms:       Seq[BonusTerm],
     currentBalance:   BigDecimal,
-    currentBonusTerm: CurrentBonusTerm.Value
+    currentBonusTerm: CurrentBonusTerm.Value,
+    accountClosed:    Boolean
   )(implicit hc:      HeaderCarrier
   ): F[MilestoneCheckResult]
 }
@@ -58,7 +59,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     nino:             Nino,
     bonusTerms:       Seq[BonusTerm],
     currentBalance:   BigDecimal,
-    currentBonusTerm: CurrentBonusTerm.Value
+    currentBonusTerm: CurrentBonusTerm.Value,
+    accountClosed:    Boolean
   )(implicit hc:      HeaderCarrier
   ): F[MilestoneCheckResult] = {
 
@@ -82,7 +84,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
       firstPeriodBonusPaidOnOrAfterDate,
       secondPeriodBonusPaidOnOrAfterDate,
       secondPeriodBonusPaid,
-      currentBonusTerm
+      currentBonusTerm,
+      accountClosed
     ) match {
       case Some(milestone) => super.setMilestone(milestone).map(_ => MilestoneHit)
       case _               => F.pure(MilestoneNotHit)
@@ -100,7 +103,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
     secondPeriodBonusPaidOnOrAfterDate: LocalDate,
     secondPeriodBonus:                  BigDecimal,
-    currentBonusTerm:                   CurrentBonusTerm.Value
+    currentBonusTerm:                   CurrentBonusTerm.Value,
+    accountClosed:                      Boolean
   ): Option[MongoMilestone] = {
 
     def currentDateInDuration(
@@ -119,94 +123,99 @@ class HtsBonusPeriodMilestonesService[F[_]](
     val dateFormat                         = DateTimeFormatter.ofPattern("d MMMM yyyy")
     val maxBonus                           = 600
 
-    if (within20DaysOfFirstPeriodEndDate && hasFirstBonusEstimate)
-      Some(
-        createBonusPeriodMongoMilestone(
-          EndOfFirstBonusPeriodPositiveBonus,
+    if (accountClosed) {
+      if (secondPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.AfterFinalTerm) {
+        if (secondPeriodBonus == maxBonus)
           Some(
-            Map("bonusEstimate"          -> firstPeriodBonusEstimate.toString(),
-                "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+            createBonusPeriodMongoMilestone(
+              FinalBonusEarnedMaximum,
+              Some(Map("bonusPaid" -> secondPeriodBonus.toString()))
+            )
           )
-        )
-      )
-    else if (under90DaysSinceFirstPeriodEndDate && !hasFirstBonusEstimate && !hasSecondBonusEstimate && !firstPeriodBonusPaid)
-      Some(
-        createBonusPeriodMongoMilestone(
-          StartOfFinalBonusPeriodNoBonus
-        )
-      )
-    else if (firstPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.Second) {
-      if (firstPeriodBonus == maxBonus)
+        else
+          Some(
+            createBonusPeriodMongoMilestone(
+              FinalBonusEarned,
+              Some(Map("bonusPaid" -> secondPeriodBonus.toString()))
+            )
+          )
+      } else None
+    } else {
+
+      if (within20DaysOfFirstPeriodEndDate && hasFirstBonusEstimate)
         Some(
           createBonusPeriodMongoMilestone(
-            FirstBonusEarnedMaximum,
-            Some(Map("bonusPaid" -> firstPeriodBonus.toString()))
-          )
-        )
-      else
-        Some(
-          createBonusPeriodMongoMilestone(
-            FirstBonusEarned,
-            Some(Map("bonusPaid" -> firstPeriodBonus.toString()))
-          )
-        )
-    } else if (within20DaysOfFinalEndDate) {
-      if (currentBalance <= 0 && !hasSecondBonusEstimate)
-        Some(
-          createBonusPeriodMongoMilestone(
-            EndOfFinalBonusPeriodZeroBalanceNoBonus,
-            Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
-          )
-        )
-      else if (currentBalance <= 0 && hasSecondBonusEstimate)
-        Some(
-          createBonusPeriodMongoMilestone(
-            EndOfFinalBonusPeriodZeroBalancePositiveBonus,
+            EndOfFirstBonusPeriodPositiveBonus,
             Some(
-              Map("bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+              Map("bonusEstimate"          -> firstPeriodBonusEstimate.toString(),
+                  "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.format(dateFormat))
             )
           )
         )
-      else if (currentBalance > 0 && !hasSecondBonusEstimate)
+      else if (under90DaysSinceFirstPeriodEndDate && !hasFirstBonusEstimate && !hasSecondBonusEstimate && !firstPeriodBonusPaid)
         Some(
           createBonusPeriodMongoMilestone(
-            EndOfFinalBonusPeriodPositiveBalanceNoBonus,
-            Some(
-              Map("balance"                -> currentBalance.toString(),
-                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
-            )
+            StartOfFinalBonusPeriodNoBonus
           )
         )
-      else
-        Some(
-          createBonusPeriodMongoMilestone(
-            EndOfFinalBonusPeriodPositiveBalancePositiveBonus,
-            Some(
-              Map(
-                "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat),
-                "balance"                -> currentBalance.toString()
+      else if (firstPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.Second) {
+        if (firstPeriodBonus == maxBonus)
+          Some(
+            createBonusPeriodMongoMilestone(
+              FirstBonusEarnedMaximum,
+              Some(Map("bonusPaid" -> firstPeriodBonus.toString()))
+            )
+          )
+        else
+          Some(
+            createBonusPeriodMongoMilestone(
+              FirstBonusEarned,
+              Some(Map("bonusPaid" -> firstPeriodBonus.toString()))
+            )
+          )
+      } else if (within20DaysOfFinalEndDate) {
+        if (currentBalance <= 0 && !hasSecondBonusEstimate)
+          Some(
+            createBonusPeriodMongoMilestone(
+              EndOfFinalBonusPeriodZeroBalanceNoBonus,
+              Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
+            )
+          )
+        else if (currentBalance <= 0 && hasSecondBonusEstimate)
+          Some(
+            createBonusPeriodMongoMilestone(
+              EndOfFinalBonusPeriodZeroBalancePositiveBonus,
+              Some(
+                Map("bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
+                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
               )
             )
           )
-        )
-    } else if (secondPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.AfterFinalTerm) {
-      if (secondPeriodBonus == maxBonus)
-        Some(
-          createBonusPeriodMongoMilestone(
-            FinalBonusEarnedMaximum,
-            Some(Map("bonusPaid" -> secondPeriodBonus.toString()))
+        else if (currentBalance > 0 && !hasSecondBonusEstimate)
+          Some(
+            createBonusPeriodMongoMilestone(
+              EndOfFinalBonusPeriodPositiveBalanceNoBonus,
+              Some(
+                Map("balance"                -> currentBalance.toString(),
+                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+              )
+            )
           )
-        )
-      else
-        Some(
-          createBonusPeriodMongoMilestone(
-            FinalBonusEarned,
-            Some(Map("bonusPaid" -> secondPeriodBonus.toString()))
+        else
+          Some(
+            createBonusPeriodMongoMilestone(
+              EndOfFinalBonusPeriodPositiveBalancePositiveBonus,
+              Some(
+                Map(
+                  "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
+                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat),
+                  "balance"                -> currentBalance.toString()
+                )
+              )
+            )
           )
-        )
-    } else None
+      } else None
+    }
   }
 
   private def createBonusPeriodMongoMilestone(
