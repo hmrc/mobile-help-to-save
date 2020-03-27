@@ -496,6 +496,7 @@ class MilestonesISpec
                                     LocalDate.now().minusYears(2),
                                     600,
                                     secondEndDate,
+                                    isClosed              = true,
                                     secondPeriodBonusPaid = 600)
       await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
@@ -522,6 +523,7 @@ class MilestonesISpec
                                     LocalDate.now().minusYears(2),
                                     350.75,
                                     secondEndDate,
+                                    isClosed              = true,
                                     secondPeriodBonusPaid = 350.75)
       await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
