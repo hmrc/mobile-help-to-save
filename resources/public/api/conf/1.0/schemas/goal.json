@@ -13,10 +13,10 @@
     },
     "goalName": {
       "type": "string",
-      "description": "The name of the savings goal (Decoded to UTF-8)",
+      "description": "The name of the savings goal (Decoded to UTF-16)",
       "examples": [
         "Savings Goal",
-        "\\xF0\\x9F\\x8F\\xA1 New home"
+        "\\uD83C\\uDFE1 New home"
       ]
     }
   }
