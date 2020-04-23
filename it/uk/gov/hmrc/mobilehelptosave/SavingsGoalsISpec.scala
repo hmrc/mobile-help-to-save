@@ -53,10 +53,10 @@ class SavingsGoalsISpec
   private val nino      = generator.nextNino
 
   private val savingsGoal1          = SavingsGoal(Some(20))
-  private val savingsGoalBad          = SavingsGoal(Some(20))
+  private val savingsGoalBad        = SavingsGoal(Some(20))
   private val validGoalJson         = toJson(savingsGoal1)
-  private val inVaalidGoalJson         = toJson(savingsGoalBad)
-  private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\\xF0\\x9F\\x8F\\xA1 New home"))
+  private val inVaalidGoalJson      = toJson(savingsGoalBad)
+  private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\\uD83C\\uDFE1 New home"))
   private val validGoalJsonWithName = toJson(savingsGoal2)
   private val journeyId             = randomUUID().toString
 
@@ -113,9 +113,6 @@ class SavingsGoalsISpec
       val account: Account = parse(response.body).as[Account]
       account.savingsGoal.value.goalAmount shouldBe savingsGoal1.goalAmount
     }
-
-
-
 
     "update the goal when called a second time (with name)" in new LoggedInUserScenario {
 
