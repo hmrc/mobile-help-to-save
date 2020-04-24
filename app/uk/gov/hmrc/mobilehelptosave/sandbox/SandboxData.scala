@@ -66,7 +66,8 @@ case class SandboxData(
       savingsGoalsEnabled  = true,
       logger,
       LocalDate.of(2018, 4, 30),
-      savingsGoal = Some(SavingsGoal(goalAmount = Some(25.0), goalName = Some("\\uD83C\\uDFE1 New home")))
+      savingsGoal = Some(SavingsGoal(goalAmount = Some(25.0), goalName = Some("\uD83C\uDFE1 New home")))
+
     )
   }
 
