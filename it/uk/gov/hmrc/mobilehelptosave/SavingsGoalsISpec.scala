@@ -56,7 +56,7 @@ class SavingsGoalsISpec
   private val savingsGoalBad        = SavingsGoal(Some(20))
   private val validGoalJson         = toJson(savingsGoal1)
   private val inVaalidGoalJson      = toJson(savingsGoalBad)
-  private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\\uD83C\\uDFE1 New home"))
+  private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\uD83C\uDFE1 New home"))
   private val validGoalJsonWithName = toJson(savingsGoal2)
   private val journeyId             = randomUUID().toString
 

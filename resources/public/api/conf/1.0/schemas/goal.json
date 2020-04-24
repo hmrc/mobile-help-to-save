@@ -16,7 +16,7 @@
       "description": "The name of the savings goal (Decoded to UTF-16)",
       "examples": [
         "Savings Goal",
-        "\\uD83C\\uDFE1 New home"
+        "\uD83C\uDFE1 New home"
       ]
     }
   }
