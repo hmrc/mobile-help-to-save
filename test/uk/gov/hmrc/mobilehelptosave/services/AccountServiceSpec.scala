@@ -43,7 +43,9 @@ class AccountServiceSpec
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
 
   private val testMilestonesConfig =
-    TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
+    TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
+                         bonusPeriodMilestoneCheckEnabled  = true,
+                         bonusReachedMilestoneCheckEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -60,6 +62,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -82,6 +85,7 @@ class AccountServiceSpec
                                        savingsGoalEventRepo,
                                        fakeBalanceMilestoneService,
                                        fakeBonusPeriodMilestoneService,
+                                       fakeBonusReachedMilestoneService,
                                        testMilestonesConfig)
 
         // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -102,6 +106,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -126,6 +131,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Right(None)
 
@@ -144,6 +150,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -173,6 +180,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -190,6 +198,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -206,6 +215,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -222,6 +232,7 @@ class AccountServiceSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -247,6 +258,17 @@ class AccountServiceSpec
         currentBalance:   BigDecimal,
         currentBonusTerm: CurrentBonusTerm.Value,
         accountClosed:    Boolean
+      )(implicit hc:      HeaderCarrier
+      ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
+    }
+
+  private def fakeBonusReachedMilestoneService: BonusReachedMilestonesService[TestF] =
+    new BonusReachedMilestonesService[TestF] {
+
+      override def bonusReachedMilestoneCheck(
+        nino:             Nino,
+        bonusTerms:       Seq[BonusTerm],
+        currentBonusTerm: CurrentBonusTerm.Value
       )(implicit hc:      HeaderCarrier
       ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }

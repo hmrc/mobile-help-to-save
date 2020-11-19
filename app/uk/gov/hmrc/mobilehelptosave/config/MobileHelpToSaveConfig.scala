@@ -57,6 +57,9 @@ case class MobileHelpToSaveConfig(
   override def bonusPeriodMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.bonusPeriodMilestoneCheckEnabled")
 
+  override def bonusReachedMilestoneCheckEnabled: Boolean =
+    configBoolean("helpToSave.milestones.bonusReachedMilestoneCheckEnabled")
+
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
@@ -94,8 +97,9 @@ trait ReportingServiceConfig {
 }
 
 trait MilestonesConfig {
-  def balanceMilestoneCheckEnabled:     Boolean
-  def bonusPeriodMilestoneCheckEnabled: Boolean
+  def balanceMilestoneCheckEnabled:      Boolean
+  def bonusPeriodMilestoneCheckEnabled:  Boolean
+  def bonusReachedMilestoneCheckEnabled: Boolean
 }
 
 trait SandboxDataConfig {
