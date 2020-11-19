@@ -52,15 +52,16 @@ trait AccountService[F[_]] {
 }
 
 class HtsAccountService[F[_]](
-  logger:                       LoggerLike,
-  config:                       AccountServiceConfig,
-  helpToSaveEnrolmentStatus:    HelpToSaveEnrolmentStatus[F],
-  helpToSaveGetAccount:         HelpToSaveGetAccount[F],
-  savingsGoalEventRepo:         SavingsGoalEventRepo[F],
-  balanceMilestonesService:     BalanceMilestonesService[F],
-  bonusPeriodMilestonesService: BonusPeriodMilestonesService[F],
-  milestonesConfig:             MilestonesConfig
-)(implicit F:                   MonadError[F, Throwable])
+  logger:                        LoggerLike,
+  config:                        AccountServiceConfig,
+  helpToSaveEnrolmentStatus:     HelpToSaveEnrolmentStatus[F],
+  helpToSaveGetAccount:          HelpToSaveGetAccount[F],
+  savingsGoalEventRepo:          SavingsGoalEventRepo[F],
+  balanceMilestonesService:      BalanceMilestonesService[F],
+  bonusPeriodMilestonesService:  BonusPeriodMilestonesService[F],
+  bonusReachedMilestonesService: BonusReachedMilestonesService[F],
+  milestonesConfig:              MilestonesConfig
+)(implicit F:                    MonadError[F, Throwable])
     extends AccountService[F] {
 
   override def setSavingsGoal(
@@ -107,6 +108,11 @@ class HtsAccountService[F[_]](
                                                                            account.balance,
                                                                            account.currentBonusTerm,
                                                                            account.isClosed)
+                  else F.pure(())
+              _ <- if (milestonesConfig.bonusReachedMilestoneCheckEnabled)
+                    bonusReachedMilestonesService.bonusReachedMilestoneCheck(nino,
+                                                                             account.bonusTerms,
+                                                                             account.currentBonusTerm)
                   else F.pure(())
             } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])

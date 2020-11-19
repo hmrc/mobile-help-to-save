@@ -68,8 +68,9 @@ sealed trait MilestoneType extends Ordered[MilestoneType] {
   def compare(that: MilestoneType) = priority - that.priority
 }
 
-case object BalanceReached extends MilestoneType { val priority = 2 }
 case object BonusPeriod extends MilestoneType { val priority    = 1 }
+case object BonusReached extends MilestoneType { val priority   = 2 }
+case object BalanceReached extends MilestoneType { val priority = 3 }
 
 object MilestoneType {
   implicit def ordering[A <: MilestoneType]: Ordering[A] = Ordering.by(_.priority)
@@ -79,6 +80,7 @@ object MilestoneType {
     override def reads(json: JsValue): JsResult[MilestoneType] = json.as[String] match {
       case "BalanceReached" => JsSuccess(BalanceReached)
       case "BonusPeriod"    => JsSuccess(BonusPeriod)
+      case "BonusReached"   => JsSuccess(BonusReached)
       case _                => JsError("Invalid milestone type")
     }
     override def writes(milestoneType: MilestoneType): JsString = JsString(milestoneType.toString)
@@ -114,6 +116,13 @@ object Milestone {
       case Milestone(FirstBonusEarned, _)                                  => JsString("Congratulations")
       case Milestone(FinalBonusEarnedMaximum, _)                           => JsString("Congratulations")
       case Milestone(FinalBonusEarned, _)                                  => JsString("Congratulations")
+      case Milestone(FirstBonusReached150, _)                              => JsString("Well done!")
+      case Milestone(FirstBonusReached300, _)                              => JsString("Your first bonus will be at least £300")
+      case Milestone(FirstBonusReached600, _)                              => JsString("Congratulations! Maximum first bonus reached")
+      case Milestone(FinalBonusReached75, _)                               => JsString("Great progress toward your final bonus")
+      case Milestone(FinalBonusReached200, _)                              => JsString("You have earned £200 toward your final bonus")
+      case Milestone(FinalBonusReached300, _)                              => JsString("Well done!")
+      case Milestone(FinalBonusReached500, _)                              => JsString("Congratulations! You’ve reached a £500 bonus")
     }
   }
 
@@ -157,6 +166,13 @@ object Milestone {
         JsString(s"You earned the maximum final bonus of £${values get "bonusPaid"}.")
       case Milestone(FinalBonusEarned, values) =>
         JsString(s"You earned a £${values get "bonusPaid"} final bonus.")
+      case Milestone(FirstBonusReached150, _) => JsString("Your first bonus will be at least £150.")
+      case Milestone(FirstBonusReached300, _) => JsString("Keep saving to increase your bonus!")
+      case Milestone(FirstBonusReached600, _) => JsString("You have earned the whole £600 for your first bonus!")
+      case Milestone(FinalBonusReached75, _)  => JsString("Your final bonus will be at least £75. Keep saving!")
+      case Milestone(FinalBonusReached200, _) => JsString("That’s great!")
+      case Milestone(FinalBonusReached300, _) => JsString("Your final bonus will be at least £300")
+      case Milestone(FinalBonusReached500, _) => JsString("Keep saving to increase your final bonus!")
     }
   }
 }
@@ -182,6 +198,13 @@ case object FirstBonusEarnedMaximum extends MilestoneKey
 case object FirstBonusEarned extends MilestoneKey
 case object FinalBonusEarnedMaximum extends MilestoneKey
 case object FinalBonusEarned extends MilestoneKey
+case object FirstBonusReached150 extends MilestoneKey
+case object FirstBonusReached300 extends MilestoneKey
+case object FirstBonusReached600 extends MilestoneKey
+case object FinalBonusReached75 extends MilestoneKey
+case object FinalBonusReached200 extends MilestoneKey
+case object FinalBonusReached300 extends MilestoneKey
+case object FinalBonusReached500 extends MilestoneKey
 
 object MilestoneKey {
 
@@ -208,6 +231,13 @@ object MilestoneKey {
       case "FirstBonusEarned"        => JsSuccess(FirstBonusEarned)
       case "FinalBonusEarnedMaximum" => JsSuccess(FinalBonusEarnedMaximum)
       case "FinalBonusEarned"        => JsSuccess(FinalBonusEarned)
+      case "FirstBonusReached150"    => JsSuccess(FirstBonusReached150)
+      case "FirstBonusReached300"    => JsSuccess(FirstBonusReached300)
+      case "FirstBonusReached600"    => JsSuccess(FirstBonusReached600)
+      case "FinalBonusReached75"     => JsSuccess(FinalBonusReached75)
+      case "FinalBonusReached200"    => JsSuccess(FinalBonusReached200)
+      case "FinalBonusReached300"    => JsSuccess(FinalBonusReached300)
+      case "FinalBonusReached500"    => JsSuccess(FinalBonusReached500)
       case _                         => JsError("Invalid milestone key")
     }
 

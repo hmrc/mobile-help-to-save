@@ -58,11 +58,17 @@ class HtsMilestonesService[F[_]](
   override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]] =
     milestonesRepo.getMilestones(nino).map { milestones =>
       val filteredMilestones = filterDuplicateMilestoneTypes(milestones)
-      (config.balanceMilestoneCheckEnabled, config.bonusPeriodMilestoneCheckEnabled) match {
-        case (false, false) => List.empty
-        case (true, false)  => filteredMilestones.filter(_.milestoneType != BonusPeriod).highestPriority
-        case (false, true)  => filteredMilestones.filter(_.milestoneType != BalanceReached).highestPriority
-        case _              => filteredMilestones.highestPriority
+      (config.balanceMilestoneCheckEnabled,
+       config.bonusPeriodMilestoneCheckEnabled,
+       config.bonusReachedMilestoneCheckEnabled) match {
+        case (false, false, false) => List.empty
+        case (false, true, true)   => filteredMilestones.filter(_.milestoneType != BalanceReached).highestPriority
+        case (true, false, true)   => filteredMilestones.filter(_.milestoneType != BonusPeriod).highestPriority
+        case (true, true, false)   => filteredMilestones.filter(_.milestoneType != BonusReached).highestPriority
+        case (true, false, false)  => filteredMilestones.filter(_.milestoneType == BalanceReached).highestPriority
+        case (false, true, false)  => filteredMilestones.filter(_.milestoneType == BonusPeriod).highestPriority
+        case (false, false, true)  => filteredMilestones.filter(_.milestoneType == BonusReached).highestPriority
+        case _                     => filteredMilestones.highestPriority
       }
     }
 

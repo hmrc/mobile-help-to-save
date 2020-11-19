@@ -45,7 +45,9 @@ class MilestonessServiceSpec
   private val nino      = generator.nextNino
 
   private val testConfig =
-    TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
+    TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
+                         bonusPeriodMilestoneCheckEnabled  = true,
+                         bonusReachedMilestoneCheckEnabled = true)
 
   private val baseBonusTerms = Seq(
     BonusTerm(
@@ -373,6 +375,172 @@ class MilestonessServiceSpec
         )
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
+      result shouldBe MilestoneNotHit
+    }
+  }
+
+  "bonusReachedMilestoneCheck" should {
+    "If in the first bonus period check the user's estimated first bonus and return MilestoneNotHit if the BalanceReached150 milestone has not been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val result = service.bonusReachedMilestoneCheck(nino, baseBonusTerms, CurrentBonusTerm.First).unsafeGet
+      result shouldBe MilestoneNotHit
+    }
+
+    "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached150 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(150)),
+          baseBonusTerms(1)
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached300 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(300)),
+          baseBonusTerms(1)
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached600 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1)
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the second bonus period check the user's estimated second bonus and return MilestoneNotHit if a milestone has not been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1)
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      result shouldBe MilestoneNotHit
+    }
+
+    "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached75 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(75))
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached200 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(200))
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached300 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(300))
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached500 milestone has been hit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(500))
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      result shouldBe MilestoneHit
+    }
+
+    "If in the after final term period return MilestoneNotHit" in {
+      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, LocalDateTime.now())))
+
+      val service =
+        new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
+
+      val bonusTerms =
+        Seq(
+          baseBonusTerms.head.copy(bonusEstimate = BigDecimal(600)),
+          baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(500))
+        )
+
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.AfterFinalTerm).unsafeGet
       result shouldBe MilestoneNotHit
     }
   }

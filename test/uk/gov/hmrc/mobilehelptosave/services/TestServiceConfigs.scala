@@ -30,6 +30,7 @@ case class TestReportingServiceConfig(
     extends ReportingServiceConfig
 
 case class TestMilestonesConfig(
-  balanceMilestoneCheckEnabled:     Boolean,
-  bonusPeriodMilestoneCheckEnabled: Boolean)
+  balanceMilestoneCheckEnabled:      Boolean,
+  bonusPeriodMilestoneCheckEnabled:  Boolean,
+  bonusReachedMilestoneCheckEnabled: Boolean)
     extends MilestonesConfig

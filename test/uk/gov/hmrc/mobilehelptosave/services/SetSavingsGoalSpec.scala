@@ -44,7 +44,9 @@ class SetSavingsGoalSpec
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
 
   private val testMilestonesConfig =
-    TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true)
+    TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
+                         bonusPeriodMilestoneCheckEnabled  = true,
+                         bonusReachedMilestoneCheckEnabled = true)
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
@@ -62,6 +64,7 @@ class SetSavingsGoalSpec
                                      fakeGoalsRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet shouldBe Right(())
@@ -80,6 +83,7 @@ class SetSavingsGoalSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(0.99))).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
@@ -98,6 +102,7 @@ class SetSavingsGoalSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service
@@ -120,6 +125,7 @@ class SetSavingsGoalSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
@@ -138,6 +144,7 @@ class SetSavingsGoalSpec
                                      savingsGoalEventRepo,
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.General
@@ -164,6 +171,17 @@ class SetSavingsGoalSpec
         currentBalance:   BigDecimal,
         currentBonusTerm: CurrentBonusTerm.Value,
         accountClosed:    Boolean
+      )(implicit hc:      HeaderCarrier
+      ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
+    }
+
+  private def fakeBonusReachedMilestoneService: BonusReachedMilestonesService[TestF] =
+    new BonusReachedMilestonesService[TestF] {
+
+      override def bonusReachedMilestoneCheck(
+        nino:             Nino,
+        bonusTerms:       Seq[BonusTerm],
+        currentBonusTerm: CurrentBonusTerm.Value
       )(implicit hc:      HeaderCarrier
       ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
     }
