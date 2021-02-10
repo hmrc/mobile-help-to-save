@@ -77,7 +77,7 @@ lazy val microservice = Project(appName, file("."))
     )
   )
   .settings(
-    resolvers ++= Seq(Resolver.jcenterRepo),
+    resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hmrc-mobile", "mobile-releases")),
     addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.9"),
     addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.2.4"),
     addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.1" cross CrossVersion.full)

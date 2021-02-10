@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -360,7 +360,12 @@ trait TransactionTestData {
                   BigDecimal(50),
                   LocalDate.parse("2018-04-10"),
                   LocalDate.parse("2018-04-10"),
-                  BigDecimal("60.49"))
+                  BigDecimal("60.49")),
+      Transaction(Credit,
+                  BigDecimal("1.11"),
+                  LocalDate.parse("2021-01-27"),
+                  LocalDate.parse("2021-02-04"),
+                  BigDecimal("10.49"))
     )
   )
 

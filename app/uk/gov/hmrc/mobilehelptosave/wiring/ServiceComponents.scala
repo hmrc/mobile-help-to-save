@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,6 +89,7 @@ class ServiceComponents(context: Context)
   lazy val authConnector: AuthConnector = wire[DefaultAuthConnector]
 
   lazy val userService:              UserService                      = wire[HtsUserService]
+  lazy val savingsUpdateService:     SavingsUpdateService             = wire[HtsSavingsUpdateService]
   lazy val accountService:           AccountService[Future]           = wire[HtsAccountService[Future]]
   lazy val milestonesService:        MilestonesService[Future]        = wire[HtsMilestonesService[Future]]
   lazy val balanceMilestonesService: BalanceMilestonesService[Future] = wire[HtsBalanceMilestonesService[Future]]

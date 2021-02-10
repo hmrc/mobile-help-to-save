@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 package helpToSave
 
 import java.util.UUID.randomUUID
-
 import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Assertion, OneInstancePerTest}
@@ -28,7 +27,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.services.AccountService
+import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService, SavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -52,6 +51,7 @@ trait TestSupport {
                                accountService,
                                helpToSaveGetTransactions,
                                NeverAuthorisedWithIds,
+                               new HtsSavingsUpdateService,
                                stubControllerComponents())
     authorisedActionForNino(controller)
   }
@@ -66,6 +66,7 @@ trait TestSupport {
         accountService,
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
+        new HtsSavingsUpdateService,
         stubControllerComponents()
       )
   }
