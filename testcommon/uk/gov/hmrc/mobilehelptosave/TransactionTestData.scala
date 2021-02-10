@@ -360,12 +360,7 @@ trait TransactionTestData {
                   BigDecimal(50),
                   LocalDate.parse("2018-04-10"),
                   LocalDate.parse("2018-04-10"),
-                  BigDecimal("60.49")),
-      Transaction(Credit,
-                  BigDecimal("1.11"),
-                  LocalDate.parse("2021-01-27"),
-                  LocalDate.parse("2021-02-04"),
-                  BigDecimal("10.49"))
+                  BigDecimal("60.49"))
     )
   )
 
