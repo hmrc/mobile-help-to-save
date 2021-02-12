@@ -27,6 +27,7 @@ import uk.gov.hmrc.mobilehelptosave.services.{AccountService, SavingsUpdateServi
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.tools.nsc.interactive.Pickler.TildeDecorator
 
 trait HelpToSaveActions {
 
@@ -125,21 +126,22 @@ class HelpToSaveController(
                              helpToSaveGetTransactions.getTransactions(request.nino.getOrElse(Nino("")))
                            else Future successful Left(AccountNotFound)
           } yield {
-            if (transactions.isLeft)
-              if (account == Left(ErrorInfo.AccountNotFound) || (account.isRight && !accountExists)) AccountNotFound
-              else InternalServerError(Json.toJson(ErrorInfo.General))
-            else {
-              val foundTransactions = transactions.toOption.getOrElse(Transactions(Seq.empty))
-              account.toOption.flatten match {
-                case Some(accountFound) =>
-                  Ok(
-                    Json.toJson(
-                      savingsUpdateService
-                        .getSavingsUpdateResponse(accountFound, foundTransactions)
+            (account, transactions, accountExists) match {
+              case (Left(ErrorInfo.AccountNotFound), _, _) => AccountNotFound
+              case (Right(_), _, false)                    => AccountNotFound
+              case (Right(_), Right(_), true) =>
+                val foundTransactions = transactions.toOption.getOrElse(Transactions(Seq.empty))
+                account.toOption.flatten match {
+                  case Some(accountFound) =>
+                    Ok(
+                      Json.toJson(
+                        savingsUpdateService
+                          .getSavingsUpdateResponse(accountFound, foundTransactions)
+                      )
                     )
-                  )
-                case None => AccountNotFound
-              }
+                  case None => AccountNotFound
+                }
+              case (_, _, _) => InternalServerError(Json.toJson(ErrorInfo.General))
             }
           }
         }

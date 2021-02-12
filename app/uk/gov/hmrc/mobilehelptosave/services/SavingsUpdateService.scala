@@ -38,7 +38,6 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     account:      Account,
     transactions: Transactions
   ): SavingsUpdateResponse = {
-    //val kalc: CalculatorResponse = Calculator.INSTANCE.run(10.0)
     val reportStartDate = calculateReportStartDate(account.openedYearMonth)
     val reportEndDate   = LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
 

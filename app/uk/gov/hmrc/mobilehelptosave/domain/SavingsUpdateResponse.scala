@@ -43,7 +43,7 @@ object SavingsUpdate {
 case class BonusUpdate(
   currentBonusTerm:            CurrentBonusTerm.Value,
   monthsUntilBonus:            Option[Int],
-  currentBonus:                Option[Double], //MAY NOT BE NEEDED
+  currentBonus:                Option[Double],
   highestBalance:              Option[Double],
   potentialBonusAtCurrentRate: Option[Double],
   potentialBonusWithFiveMore:  Option[Double],
