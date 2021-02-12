@@ -105,8 +105,6 @@ class GetSavingsUpdateSpec
           .as[LocalDate]                           shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
         (jsonBody \ "reportEndDate").as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
         (jsonBody \ "savingsUpdate").isEmpty       shouldBe true
-
-        println(Json.prettyPrint(contentAsJson(savingsUpdate)))
       }
     }
 
