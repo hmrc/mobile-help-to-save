@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.stubs
 
-import java.time.LocalDate
-
+import java.time.{LocalDate, YearMonth}
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
@@ -78,13 +77,17 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         )
     )
 
-  def transactionsExistForUser(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+  def transactionsExistForUser(
+    nino:                    Nino,
+    jsonToReturn:            String = transactionsReturnedByHelpToSaveJsonString
+  )(implicit wireMockServer: WireMockServer
+  ): StubMapping =
     wireMockServer.stubFor(
       get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
-            .withBody(transactionsReturnedByHelpToSaveJsonString)
+            .withBody(jsonToReturn)
         )
     )
 
@@ -127,6 +130,15 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         )
     )
 
+  def userAccountNotFound(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.NOT_FOUND)
+        )
+    )
+
   private def getAccountUrlPathPattern(nino: Nino) =
     urlPathEqualTo(s"/help-to-save/$nino/account")
 
@@ -136,7 +148,8 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def accountExists(
     balance:                 BigDecimal,
     nino:                    Nino,
-    firstTermBonusPaid:      BigDecimal = 90.99
+    firstTermBonusPaid:      BigDecimal = 90.99,
+    openedYearMonth:         YearMonth = YearMonth.of(2018, 1)
   )(implicit wireMockServer: WireMockServer
   ): StubMapping =
     wireMockServer.stubFor(
@@ -145,7 +158,9 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         .willReturn(
           aResponse()
             .withStatus(200)
-            .withBody(accountReturnedByHelpToSaveJsonString(balance, firstTermBonusPaid))
+            .withBody(
+              accountReturnedByHelpToSaveJsonString(balance, firstTermBonusPaid, openedYearMonth = openedYearMonth)
+            )
         )
     )
 

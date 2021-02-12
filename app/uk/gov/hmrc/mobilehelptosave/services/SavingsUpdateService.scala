@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import uk.gov.hmrc.helptosavecalculator.Calculator
-import uk.gov.hmrc.helptosavecalculator.models.CalculatorResponse
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, CurrentBonusTerm, ErrorInfo, GoalsReached, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, CurrentBonusTerm, Debit, ErrorInfo, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
 
 import java.time.temporal.ChronoUnit.MONTHS
 import java.time.{LocalDate, YearMonth}
@@ -28,7 +26,7 @@ import scala.annotation.tailrec
 trait SavingsUpdateService {
   type Result[T] = Either[ErrorInfo, T]
 
-  def getHTSTaxKalcResults(
+  def getSavingsUpdateResponse(
     account:      Account,
     transactions: Transactions
   ): SavingsUpdateResponse
@@ -36,7 +34,7 @@ trait SavingsUpdateService {
 
 class HtsSavingsUpdateService extends SavingsUpdateService {
 
-  def getHTSTaxKalcResults(
+  def getSavingsUpdateResponse(
     account:      Account,
     transactions: Transactions
   ): SavingsUpdateResponse = {
@@ -54,7 +52,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       reportStartDate,
       reportEndDate,
       getSavingsUpdate(reportTransactions),
-      getBonusUpdate
+      getBonusUpdate(account.currentBonusTerm)
     )
   }
 
@@ -67,9 +65,14 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
   private def getSavingsUpdate(transactions: Seq[Transaction]): Option[SavingsUpdate] =
     if (transactions.isEmpty) None
-    else Some(SavingsUpdate(Some(100.00), Some(4), Some(GoalsReached(25.00, 2)), Some(50.00)))
+    else Some(SavingsUpdate(calculateTotalSaved(transactions), None, None, None))
 
-  private def getBonusUpdate: BonusUpdate =
-    BonusUpdate(CurrentBonusTerm.First, Some(8), Some(75.00), Some(200.00), Some(300.00), Some(500.00), Some(600.00))
+  private def getBonusUpdate(currentBonusTerm: CurrentBonusTerm.Value): BonusUpdate =
+    BonusUpdate(currentBonusTerm, None, None, None, None, None, None)
+
+  private def calculateTotalSaved(transactions: Seq[Transaction]): Option[BigDecimal] = {
+    val totalSaved = transactions.filter(t => t.operation == Debit).map(_.amount).sum
+    if (totalSaved > BigDecimal(0)) Some(totalSaved) else None
+  }
 
 }

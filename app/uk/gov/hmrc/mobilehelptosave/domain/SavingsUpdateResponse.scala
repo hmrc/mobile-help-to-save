@@ -31,7 +31,7 @@ object SavingsUpdateResponse {
 }
 
 case class SavingsUpdate(
-  savedInPeriod:            Option[Double],
+  savedInPeriod:            Option[BigDecimal],
   monthsSaved:              Option[Int],
   goalsReached:             Option[GoalsReached],
   amountEarnedTowardsBonus: Option[Double])

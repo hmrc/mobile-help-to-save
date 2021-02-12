@@ -32,20 +32,20 @@ class TestController(
   val controllerComponents: ControllerComponents)
     extends BackendBaseController {
 
-  def clearGoalEvents(): Action[AnyContent] = Action.async { implicit request =>
+  def clearGoalEvents(): Action[AnyContent] = Action.async {
     savingsGoalEventRepo.clearGoalEvents().map {
       case true => Ok("Successfully cleared goal events")
       case _    => InternalServerError("Failed to clear goal events")
     }
   }
 
-  def getGoalEvents(nino: Nino): Action[AnyContent] = Action.async { implicit request =>
+  def getGoalEvents(nino: Nino): Action[AnyContent] = Action.async {
     savingsGoalEventRepo.getEvents(nino).map { events =>
       Ok(Json.toJson(events))
     }
   }
 
-  def clearMilestoneData(): Action[AnyContent] = Action.async { implicit request =>
+  def clearMilestoneData(): Action[AnyContent] = Action.async {
     for {
       _ <- previousBalanceRepo.clearPreviousBalance()
       _ <- milestonesRepo.clearMilestones()

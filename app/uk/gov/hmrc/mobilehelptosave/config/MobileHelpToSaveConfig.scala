@@ -74,12 +74,6 @@ case class MobileHelpToSaveConfig(
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
 
   private def configString(path: String): String = configuration.underlying.getString(path)
-  private def configDouble(path: String): Double = configuration.underlying.getDouble(path)
-
-  private def configBase64String(path: String): String = {
-    val encoded = configuration.underlying.getString(path)
-    Base64.decode(encoded)
-  }
 }
 
 trait AccountServiceConfig {

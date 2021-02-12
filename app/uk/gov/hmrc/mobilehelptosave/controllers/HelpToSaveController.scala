@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import cats.data.EitherT
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo.General
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, SavingsUpdateService}
@@ -128,7 +126,7 @@ class HelpToSaveController(
                            else Future successful Left(AccountNotFound)
           } yield {
             if (transactions.isLeft)
-              if (account.isRight && !accountExists) AccountNotFound
+              if (account == Left(ErrorInfo.AccountNotFound) || (account.isRight && !accountExists)) AccountNotFound
               else InternalServerError(Json.toJson(ErrorInfo.General))
             else {
               val foundTransactions = transactions.toOption.getOrElse(Transactions(Seq.empty))
@@ -137,7 +135,7 @@ class HelpToSaveController(
                   Ok(
                     Json.toJson(
                       savingsUpdateService
-                        .getHTSTaxKalcResults(accountFound, foundTransactions)
+                        .getSavingsUpdateResponse(accountFound, foundTransactions)
                     )
                   )
                 case None => AccountNotFound

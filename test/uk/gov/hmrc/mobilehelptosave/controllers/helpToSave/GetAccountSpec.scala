@@ -62,18 +62,11 @@ class GetAccountSpec
       "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
         with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 
         val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
         jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount)
-
-        accountReturns(Right(Some(mobileHelpToSaveAccount)))
-
-        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-        status(savingsUpdate) shouldBe OK
-        println(Json.prettyPrint(contentAsJson(savingsUpdate)))
       }
     }
 

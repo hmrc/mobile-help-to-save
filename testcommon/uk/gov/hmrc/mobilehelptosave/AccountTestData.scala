@@ -26,11 +26,12 @@ trait AccountTestData {
 
   protected def accountReturnedByHelpToSaveJsonString(
     accountBalance:     BigDecimal,
-    firstTermBonusPaid: BigDecimal
+    firstTermBonusPaid: BigDecimal,
+    openedYearMonth:    YearMonth
   ): String =
     s"""
        |{
-       |  "openedYearMonth": "2018-01",
+       |  "openedYearMonth": "$openedYearMonth",
        |  "accountNumber": "1000000000001",
        |  "isClosed": false,
        |  "blocked": {
