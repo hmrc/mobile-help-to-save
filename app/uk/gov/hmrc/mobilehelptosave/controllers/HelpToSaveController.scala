@@ -129,9 +129,8 @@ class HelpToSaveController(
             (account, transactions, accountExists) match {
               case (Left(ErrorInfo.AccountNotFound), _, _) => AccountNotFound
               case (Right(_), _, false)                    => AccountNotFound
-              case (Right(_), Right(_), true) =>
-                val foundTransactions = transactions.toOption.getOrElse(Transactions(Seq.empty))
-                account.toOption.flatten match {
+              case (Right(accountResult), Right(foundTransactions), true) =>
+                accountResult match {
                   case Some(accountFound) =>
                     Ok(
                       Json.toJson(
