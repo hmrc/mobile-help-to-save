@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
+import org.joda.time.Months
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.libs.json.Json
@@ -24,17 +25,21 @@ import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
+import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService, SavingsUpdateService}
+import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
+import java.time.{LocalDate, YearMonth}
+import java.time.temporal.ChronoUnit._
+import java.time.temporal.{TemporalAdjuster, TemporalAdjusters}
+import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 //noinspection TypeAnnotation
-class GetAccountSpec
+class GetSavingsUpdateSpec
     extends WordSpec
     with Matchers
     with SchemaMatchers
@@ -49,34 +54,57 @@ class GetAccountSpec
     with TestSupport
     with ShutteringMocking {
 
-  "getAccount" should {
+  "getSavingsUpdate" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
-      isForbiddenIfNotAuthorisedForUser { controller =>
-        status(controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())) shouldBe FORBIDDEN
-      }
+      if (MONTHS.between(YearMonth.of(2020, 2), YearMonth.now()) > 12)
+        isForbiddenIfNotAuthorisedForUser { controller =>
+          status(controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())) shouldBe FORBIDDEN
+        }
     }
   }
 
-  "getAccount" when {
+  "getSavingsUpdate" when {
     "logged in user's NINO matches NINO in URL" should {
-      "return 200 with the users account information obtained by passing NINO to AccountService" in new AuthorisedTestScenario
+      "return 200 with the users savings update" in new AuthorisedTestScenario with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount)))
+        helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
+
+        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        status(savingsUpdate) shouldBe OK
+        val jsonBody = contentAsJson(savingsUpdate)
+        (jsonBody \ "reportStartDate").as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
+        (jsonBody \ "reportEndDate").as[LocalDate]   shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "savingsUpdate").isDefined       shouldBe true
+        (jsonBody \ "bonusUpdate").isDefined         shouldBe true
+      }
+
+      "calculate amount saved in reporting period correctly in savings update" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
+        helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
+
+        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        status(savingsUpdate) shouldBe OK
+        val jsonBody = contentAsJson(savingsUpdate)
+        (jsonBody \ "reportStartDate")
+          .as[LocalDate]                                              shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
+        (jsonBody \ "reportEndDate").as[LocalDate]                    shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "savingsUpdate").isDefined                        shouldBe true
+        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(127.62)
+      }
+
+      "do not return savings update section if no transactions found for reporting period" in new AuthorisedTestScenario
         with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
+        helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInMobileHelpToSaveOrder))
 
-        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-        status(accountData) shouldBe OK
-        val jsonBody = contentAsJson(accountData)
-        jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount)
-      }
-    }
-
-    "there is a savings goal associated with the NINO" should {
-      "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
-        accountReturns(Right(Some(mobileHelpToSaveAccount)))
-
-        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-        status(accountData) shouldBe OK
-        val account = contentAsJson(accountData).validate[Account]
+        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        status(savingsUpdate) shouldBe OK
+        val jsonBody = contentAsJson(savingsUpdate)
+        (jsonBody \ "reportStartDate")
+          .as[LocalDate]                           shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
+        (jsonBody \ "reportEndDate").as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "savingsUpdate").isEmpty       shouldBe true
       }
     }
 
@@ -85,7 +113,7 @@ class GetAccountSpec
 
         accountReturns(Right(None))
 
-        val resultF = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
@@ -101,20 +129,10 @@ class GetAccountSpec
 
         accountReturns(Left(ErrorInfo.General))
 
-        val resultF = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
-      }
-    }
-
-    "the NINO in the URL does not match the logged in user's NINO" should {
-      "return 403" in new AuthorisedTestScenario {
-
-        val resultF = controller.getAccount(otherNino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-        status(resultF) shouldBe 403
-        (slf4jLoggerStub
-          .warn(_: String)) verify s"Attempt by $nino to access $otherNino's data"
       }
     }
 
@@ -131,7 +149,7 @@ class GetAccountSpec
           stubControllerComponents()
         )
 
-        val resultF = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true

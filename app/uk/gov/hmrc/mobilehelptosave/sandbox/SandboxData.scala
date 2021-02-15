@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.sandbox
 
-import java.net.URLDecoder
 import java.time.temporal.TemporalAdjusters
 import java.time.{LocalDate, YearMonth}
 
 import play.api.LoggerLike
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -67,7 +65,6 @@ case class SandboxData(
       logger,
       LocalDate.of(2018, 4, 30),
       savingsGoal = Some(SavingsGoal(goalAmount = Some(25.0), goalName = Some("\uD83C\uDFE1 New home")))
-
     )
   }
 

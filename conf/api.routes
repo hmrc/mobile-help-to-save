@@ -4,6 +4,8 @@ GET           /savings-account/:nino/transactions                          uk.go
 
 GET           /savings-account/:nino                                       uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getAccount(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 
+GET           /savings-update                                              uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.getSavingsUpdate(journeyId: JourneyId)
+
 PUT           /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.putSavingsGoal(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 DELETE        /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.HelpToSaveController.deleteSavingsGoal(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 

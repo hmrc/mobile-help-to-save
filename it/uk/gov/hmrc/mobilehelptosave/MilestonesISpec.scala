@@ -19,9 +19,9 @@ package uk.gov.hmrc.mobilehelptosave
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID.randomUUID
-
 import org.scalatest._
 import play.api.Application
+import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -542,11 +542,11 @@ class MilestonesISpec
       val nino = generator.nextNino
       ShutteringStub.stubForShutteringDisabled()
 
-      loginWithBalanceAndBonusTerms(10, nino, 100, 0, LocalDate.now().plusDays(19), 400, LocalDate.now().plusYears(2))
+      loginWithBalanceAndBonusTerms(10, nino, 100, 0, LocalDate.now().plusMonths(1), 400, LocalDate.now().plusYears(2))
       await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       await(wsUrl(s"/savings-account/$nino/milestones/BonusPeriod/seen?journeyId=$journeyId").put(""))
 
-      loginWithBalanceAndBonusTerms(10, nino, 100, 0, LocalDate.now().plusDays(19), 400, LocalDate.now().plusYears(2))
+      loginWithBalanceAndBonusTerms(10, nino, 100, 0, LocalDate.now().plusMonths(1), 400, LocalDate.now().plusYears(2))
       await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
@@ -596,7 +596,7 @@ class MilestonesISpec
                                     nino,
                                     100,
                                     0,
-                                    LocalDate.now().plusDays(19),
+                                    LocalDate.now().plusMonths(1),
                                     50,
                                     LocalDate.now().plusYears(2),
                                     true)
@@ -614,7 +614,7 @@ class MilestonesISpec
 
     "respond with 200 and the FirstBonusReached150 milestone in a list as JSON when the milestone is hit" in {
       val nino         = generator.nextNino
-      val firstEndDate = LocalDate.now().plusDays(21)
+      val firstEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 150, 0, firstEndDate, 400, LocalDate.now().plusYears(2))
@@ -632,7 +632,7 @@ class MilestonesISpec
 
     "respond with 200 and the FirstBonusReached300 milestone in a list as JSON when the milestone is hit" in {
       val nino         = generator.nextNino
-      val firstEndDate = LocalDate.now().plusDays(21)
+      val firstEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 300, 0, firstEndDate, 400, LocalDate.now().plusYears(2))
@@ -650,7 +650,7 @@ class MilestonesISpec
 
     "respond with 200 and the FirstBonusReached600 milestone in a list as JSON when the milestone is hit" in {
       val nino         = generator.nextNino
-      val firstEndDate = LocalDate.now().plusDays(21)
+      val firstEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 600, 0, firstEndDate, 400, LocalDate.now().plusYears(2))
@@ -669,7 +669,7 @@ class MilestonesISpec
 
     "respond with 200 and the FinalBonusReached75 milestone in a list as JSON when the milestone is hit" in {
       val nino          = generator.nextNino
-      val secondEndDate = LocalDate.now().plusDays(21)
+      val secondEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 600, 0, LocalDate.now().minusYears(2), 75, secondEndDate)
@@ -688,7 +688,7 @@ class MilestonesISpec
 
     "respond with 200 and the FinalBonusReached200 milestone in a list as JSON when the milestone is hit" in {
       val nino          = generator.nextNino
-      val secondEndDate = LocalDate.now().plusDays(21)
+      val secondEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 600, 0, LocalDate.now().minusYears(2), 200, secondEndDate)
@@ -707,7 +707,7 @@ class MilestonesISpec
 
     "respond with 200 and the FinalBonusReached300 milestone in a list as JSON when the milestone is hit" in {
       val nino          = generator.nextNino
-      val secondEndDate = LocalDate.now().plusDays(21)
+      val secondEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 600, 0, LocalDate.now().minusYears(2), 300, secondEndDate)
@@ -726,7 +726,7 @@ class MilestonesISpec
 
     "respond with 200 and the FinalBonusReached500 milestone in a list as JSON when the milestone is hit" in {
       val nino          = generator.nextNino
-      val secondEndDate = LocalDate.now().plusDays(21)
+      val secondEndDate = LocalDate.now().plusMonths(1)
       ShutteringStub.stubForShutteringDisabled()
 
       loginWithBalanceAndBonusTerms(10, nino, 600, 0, LocalDate.now().minusYears(2), 500, secondEndDate)
@@ -781,7 +781,7 @@ class MilestonesISpec
       val nino = generator.nextNino
       ShutteringStub.stubForShutteringDisabled()
 
-      loginWithBalanceAndBonusTerms(10, nino, 100, 0, LocalDate.now().plusDays(19), 400, LocalDate.now().plusYears(2))
+      loginWithBalanceAndBonusTerms(10, nino, 50, 0, LocalDate.now().plusDays(19), 50, LocalDate.now().plusYears(2))
       await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
 
       val response: WSResponse =
@@ -789,6 +789,8 @@ class MilestonesISpec
       val milestones: WSResponse = await(wsUrl(s"/savings-account/$nino/milestones?journeyId=$journeyId").get())
 
       response.status shouldBe 204
+
+      println(Json.prettyPrint(milestones.json))
 
       milestones.status                                                       shouldBe 200
       (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,11 +121,7 @@ class HtsAccountService[F[_]](
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
 
-  protected def withValidSavingsAmount[T](
-    goal:        Option[Double]
-  )(fn:          => F[Result[T]]
-  )(implicit hc: HeaderCarrier
-  ): F[Result[T]] =
+  protected def withValidSavingsAmount[T](goal: Option[Double])(fn: => F[Result[T]]): F[Result[T]] =
     goal match {
       case Some(goal) if goal < 1.0 || BigDecimal(goal).scale > 2 =>
         F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
@@ -133,10 +129,9 @@ class HtsAccountService[F[_]](
     }
 
   protected def withEnoughSavingsHeadroom[T](
-    goal:        Option[Double],
-    acc:         HelpToSaveAccount
-  )(fn:          => F[Result[T]]
-  )(implicit hc: HeaderCarrier
+    goal: Option[Double],
+    acc:  HelpToSaveAccount
+  )(fn:   => F[Result[T]]
   ): F[Result[T]] = {
     val maxGoal = acc.maximumPaidInThisMonth
     goal match {

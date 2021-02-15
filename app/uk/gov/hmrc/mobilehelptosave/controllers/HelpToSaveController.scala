@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,11 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
-import uk.gov.hmrc.mobilehelptosave.services.AccountService
+import uk.gov.hmrc.mobilehelptosave.services.{AccountService, SavingsUpdateService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.tools.nsc.interactive.Pickler.TildeDecorator
 
 trait HelpToSaveActions {
 
@@ -49,6 +50,8 @@ trait HelpToSaveActions {
     nino:      Nino,
     journeyId: JourneyId
   ): Action[AnyContent]
+
+  def getSavingsUpdate(journeyId: JourneyId): Action[AnyContent]
 }
 
 class HelpToSaveController(
@@ -56,6 +59,7 @@ class HelpToSaveController(
   accountService:            AccountService[Future],
   helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
   authorisedWithIds:         AuthorisedWithIds,
+  savingsUpdateService:      SavingsUpdateService,
   val controllerComponents:  ControllerComponents
 )(implicit ec:               ExecutionContext)
     extends BackendBaseController
@@ -95,7 +99,7 @@ class HelpToSaveController(
       verifyingMatchingNino(nino, request.shuttered) { verifiedUserNino =>
         request.body match {
           case SavingsGoal(None, None) => Future.successful(BadRequest("Invalid savings goal combination"))
-          case _ => accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
+          case _                       => accountService.setSavingsGoal(verifiedUserNino, request.body).map(handlingErrors(_ => NoContent))
         }
       }
     }
@@ -110,4 +114,36 @@ class HelpToSaveController(
       }
     }
 
+  override def getSavingsUpdate(journeyId: JourneyId): Action[AnyContent] =
+    authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
+      if (request.nino.isEmpty) Future successful Forbidden("NINO not found")
+      else {
+        withShuttering(request.shuttered) {
+          for {
+            account       <- accountService.account(request.nino.getOrElse(Nino("")))
+            accountExists <- Future successful account.toOption.map(_.getOrElse(None)).getOrElse(None) != None
+            transactions <- if (account.isRight && accountExists)
+                             helpToSaveGetTransactions.getTransactions(request.nino.getOrElse(Nino("")))
+                           else Future successful Left(AccountNotFound)
+          } yield {
+            (account, transactions, accountExists) match {
+              case (Left(ErrorInfo.AccountNotFound), _, _) => AccountNotFound
+              case (Right(_), _, false)                    => AccountNotFound
+              case (Right(accountResult), Right(foundTransactions), true) =>
+                accountResult match {
+                  case Some(accountFound) =>
+                    Ok(
+                      Json.toJson(
+                        savingsUpdateService
+                          .getSavingsUpdateResponse(accountFound, foundTransactions)
+                      )
+                    )
+                  case None => AccountNotFound
+                }
+              case (_, _, _) => InternalServerError(Json.toJson(ErrorInfo.General))
+            }
+          }
+        }
+      }
+    }
 }

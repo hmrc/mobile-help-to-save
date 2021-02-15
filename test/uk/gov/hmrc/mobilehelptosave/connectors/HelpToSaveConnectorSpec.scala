@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.{ConnectException, URL}
-
 import io.lemonlabs.uri._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
@@ -30,6 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.{EligibilityCheckResponse, Eligibilit
 import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
+import java.time.YearMonth
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future._
@@ -109,8 +109,15 @@ class HelpToSaveConnectorSpec
     "return a Right (with Account) when the help-to-save service returns a 2xx response" in {
 
       val okResponse =
-        httpGet(isAccountUrlForNino _,
-                HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99)))))
+        httpGet(
+          isAccountUrlForNino _,
+          HttpResponse(
+            200,
+            Some(
+              Json.parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99, openedYearMonth = YearMonth.of(2018, 1)))
+            )
+          )
+        )
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
@@ -120,7 +127,7 @@ class HelpToSaveConnectorSpec
     "return a Right (with Account) when the help-to-save service returns a 2xx response with optional fields omitted" in {
 
       val accountReturnedByHelpToSaveJson = Json
-          .parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99))
+          .parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99, openedYearMonth = YearMonth.of(2018, 1)))
           .as[JsObject] - "accountHolderEmail"
       val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, Some(accountReturnedByHelpToSaveJson)))
 

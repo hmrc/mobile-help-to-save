@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -333,6 +333,52 @@ trait TransactionTestData {
     """.stripMargin
   }
 
+  protected val dateDynamicTransactionsReturnedByHelpToSaveJsonString: String =
+    s"""
+       |{
+       |  "transactions" : [ {
+       |    "operation" : "credit",
+       |    "amount" : 11.5,
+       |    "transactionDate" : "${LocalDate.now().minusMonths(5)}",
+       |    "accountingDate" : "${LocalDate.now().minusMonths(5)}",
+       |    "description" : "Debit card online deposit",
+       |    "transactionReference" : "A1A11AA1A00A0034",
+       |    "balanceAfter" : 11.5
+       |  }, {
+       |    "operation" : "debit",
+       |    "amount" : 1.01,
+       |    "transactionDate" : "${LocalDate.now().minusMonths(4)}",
+       |    "accountingDate" : "${LocalDate.now().minusMonths(4)}",
+       |    "description" : "BACS payment",
+       |    "transactionReference" : "A1A11AA1A00A000I",
+       |    "balanceAfter" : 10.49
+       |  }, {
+       |    "operation" : "debit",
+       |    "amount" : 1.11,
+       |    "transactionDate" : "${LocalDate.now().minusMonths(3)}",
+       |    "accountingDate" : "${LocalDate.now().minusMonths(3)}",
+       |    "description" : "BACS payment",
+       |    "transactionReference" : "A1A11AA1A00A000G",
+       |    "balanceAfter" : 9.38
+       |  }, {
+       |    "operation" : "credit",
+       |    "amount" : 1.11,
+       |    "transactionDate" : "${LocalDate.now().minusMonths(2)}",
+       |    "accountingDate" : "${LocalDate.now().minusMonths(2)}",
+       |    "description" : "Reinstatement Adjustment",
+       |    "transactionReference" : "A1A11AA1A00A000G",
+       |    "balanceAfter" : 10.49
+       |  }, {
+       |    "operation" : "credit",
+       |    "amount" : 50,
+       |    "transactionDate" : "${LocalDate.now().minusMonths(1)}",
+       |    "accountingDate" : "${LocalDate.now().minusMonths(1)}",
+       |    "description" : "Debit card online deposit",
+       |    "transactionReference" : "A1A11AA1A00A0059",
+       |    "balanceAfter" : 60.49
+       |  } ]
+       |}""".stripMargin
+
   // help-to-save returns transactions earliest first, but mobile-help-to-save returns them latest-first because that is the order the apps need to display them in
   val transactionsSortedInHelpToSaveOrder: Transactions = Transactions(
     Seq(
@@ -391,6 +437,51 @@ trait TransactionTestData {
                   LocalDate.parse("2017-11-20"),
                   LocalDate.parse("2017-11-20"),
                   BigDecimal("11.50"))
+    )
+  )
+
+  val transactionsDateDynamic: Transactions = Transactions(
+    Seq(
+      Transaction(Credit,
+                  BigDecimal("11.50"),
+                  LocalDate.now().minusMonths(5),
+                  LocalDate.now().minusMonths(5),
+                  BigDecimal("11.50")),
+      Transaction(Debit,
+                  BigDecimal("1.01"),
+                  LocalDate.now().minusMonths(5),
+                  LocalDate.now().minusMonths(5),
+                  BigDecimal("10.49")),
+      Transaction(Debit,
+                  BigDecimal("1.11"),
+                  LocalDate.now().minusMonths(4),
+                  LocalDate.now().minusMonths(4),
+                  BigDecimal("9.38")),
+      Transaction(Credit,
+                  BigDecimal("1.11"),
+                  LocalDate.now().minusMonths(3),
+                  LocalDate.now().minusMonths(3),
+                  BigDecimal("10.49")),
+      Transaction(Credit,
+                  BigDecimal(50),
+                  LocalDate.now().minusMonths(2),
+                  LocalDate.now().minusMonths(2),
+                  BigDecimal("60.49")),
+      Transaction(Debit,
+                  BigDecimal(50),
+                  LocalDate.now().minusMonths(1),
+                  LocalDate.now().minusMonths(1),
+                  BigDecimal("110.49")),
+      Transaction(Credit,
+                  BigDecimal(75),
+                  LocalDate.now().minusDays(20),
+                  LocalDate.now().minusDays(20),
+                  BigDecimal("35.49")),
+      Transaction(Debit,
+                  BigDecimal(75.50),
+                  LocalDate.now().minusDays(5),
+                  LocalDate.now().minusDays(5),
+                  BigDecimal("110.99"))
     )
   )
 }

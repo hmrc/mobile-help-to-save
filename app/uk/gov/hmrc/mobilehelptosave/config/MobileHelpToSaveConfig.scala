@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,12 +74,6 @@ case class MobileHelpToSaveConfig(
   private def configBoolean(path: String): Boolean = configuration.underlying.getBoolean(path)
 
   private def configString(path: String): String = configuration.underlying.getString(path)
-  private def configDouble(path: String): Double = configuration.underlying.getDouble(path)
-
-  private def configBase64String(path: String): String = {
-    val encoded = configuration.underlying.getString(path)
-    Base64.decode(encoded)
-  }
 }
 
 trait AccountServiceConfig {

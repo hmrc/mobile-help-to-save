@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,12 @@ trait AccountTestData {
 
   protected def accountReturnedByHelpToSaveJsonString(
     accountBalance:     BigDecimal,
-    firstTermBonusPaid: BigDecimal
+    firstTermBonusPaid: BigDecimal,
+    openedYearMonth:    YearMonth
   ): String =
     s"""
        |{
-       |  "openedYearMonth": "2018-01",
+       |  "openedYearMonth": "$openedYearMonth",
        |  "accountNumber": "1000000000001",
        |  "isClosed": false,
        |  "blocked": {
