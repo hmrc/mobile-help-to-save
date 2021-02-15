@@ -64,9 +64,11 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                            shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "savingsUpdate").isDefined shouldBe true
-      (response.json \ "bonusUpdate").isDefined   shouldBe true
+        .as[LocalDate]                                                shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isDefined                     shouldBe true
+      (response.json \ "bonusUpdate").isDefined                       shouldBe true
+      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal] shouldBe BigDecimal(90.99)
     }
 
     "respond with 200 and savings update section if no transactions are found" in {
@@ -81,9 +83,11 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                          shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "savingsUpdate").isEmpty shouldBe true
-      (response.json \ "bonusUpdate").isDefined shouldBe true
+        .as[LocalDate]                                                shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isEmpty                       shouldBe true
+      (response.json \ "bonusUpdate").isDefined                       shouldBe true
+      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal] shouldBe BigDecimal(90.99)
     }
 
     "respond with a 404 if the user's account isn't found" in {

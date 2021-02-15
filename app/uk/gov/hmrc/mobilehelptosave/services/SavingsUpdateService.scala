@@ -50,8 +50,9 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     SavingsUpdateResponse(
       reportStartDate,
       reportEndDate,
+      account.openedYearMonth,
       getSavingsUpdate(reportTransactions),
-      getBonusUpdate(account.currentBonusTerm)
+      getBonusUpdate(account)
     )
   }
 
@@ -66,12 +67,19 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     if (transactions.isEmpty) None
     else Some(SavingsUpdate(calculateTotalSaved(transactions), None, None, None))
 
-  private def getBonusUpdate(currentBonusTerm: CurrentBonusTerm.Value): BonusUpdate =
-    BonusUpdate(currentBonusTerm, None, None, None, None, None, None)
+  private def getBonusUpdate(account: Account): BonusUpdate =
+    BonusUpdate(account.currentBonusTerm, None, getCurrentBonus(account), None, None, None, None)
 
   private def calculateTotalSaved(transactions: Seq[Transaction]): Option[BigDecimal] = {
     val totalSaved = transactions.filter(t => t.operation == Debit).map(_.amount).sum
     if (totalSaved > BigDecimal(0)) Some(totalSaved) else None
   }
+
+  private def getCurrentBonus(account: Account): Option[BigDecimal] =
+    if (account.currentBonusTerm == CurrentBonusTerm.First) {
+      account.bonusTerms.headOption.map(_.bonusEstimate)
+    } else {
+      account.bonusTerms.lastOption.map(_.bonusEstimate)
+    }
 
 }
