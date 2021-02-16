@@ -23,7 +23,6 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
@@ -64,11 +63,13 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                                                shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
-      (response.json \ "savingsUpdate").isDefined                     shouldBe true
-      (response.json \ "bonusUpdate").isDefined                       shouldBe true
-      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal] shouldBe BigDecimal(90.99)
+        .as[LocalDate]                                                   shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isDefined                        shouldBe true
+      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(2.12)
+      (response.json \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 2
+      (response.json \ "bonusUpdate").isDefined                          shouldBe true
+      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
     }
 
     "respond with 200 and savings update section if no transactions are found" in {
@@ -83,7 +84,7 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                                                shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+        .as[LocalDate]                                                shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
       (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
       (response.json \ "savingsUpdate").isEmpty                       shouldBe true
       (response.json \ "bonusUpdate").isDefined                       shouldBe true

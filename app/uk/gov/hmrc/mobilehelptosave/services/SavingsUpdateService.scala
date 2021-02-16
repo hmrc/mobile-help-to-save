@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, CurrentBonusTerm, Debit, ErrorInfo, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, CurrentBonusTerm, Debit, ErrorInfo, Operation, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
 
 import java.time.temporal.ChronoUnit.MONTHS
-import java.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, Month, YearMonth}
 import java.time.temporal.TemporalAdjusters
 import scala.annotation.tailrec
 
@@ -39,7 +39,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     transactions: Transactions
   ): SavingsUpdateResponse = {
     val reportStartDate = calculateReportStartDate(account.openedYearMonth)
-    val reportEndDate   = LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
+    val reportEndDate   = LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
 
     val reportTransactions: Seq[Transaction] = transactions.transactions.filter(transaction =>
       transaction.transactionDate.isAfter(reportStartDate.minusDays(1)) && transaction.transactionDate.isBefore(
@@ -65,7 +65,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
   private def getSavingsUpdate(transactions: Seq[Transaction]): Option[SavingsUpdate] =
     if (transactions.isEmpty) None
-    else Some(SavingsUpdate(calculateTotalSaved(transactions), None, None, None))
+    else Some(SavingsUpdate(calculateTotalSaved(transactions), getMonthsSaved(transactions), None, None))
 
   private def getBonusUpdate(account: Account): BonusUpdate =
     BonusUpdate(account.currentBonusTerm, None, getCurrentBonus(account), None, None, None, None)
@@ -73,6 +73,12 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
   private def calculateTotalSaved(transactions: Seq[Transaction]): Option[BigDecimal] = {
     val totalSaved = transactions.filter(t => t.operation == Debit).map(_.amount).sum
     if (totalSaved > BigDecimal(0)) Some(totalSaved) else None
+  }
+
+  private def getMonthsSaved(transactions: Seq[Transaction]): Option[Int] = {
+    val debitTransactionsByMonth: Map[Month, Seq[Transaction]] =
+      transactions.filter(t => t.operation == Debit).groupBy(i => i.transactionDate.getMonth)
+    if (debitTransactionsByMonth.nonEmpty) Some(debitTransactionsByMonth.size) else None
   }
 
   private def getCurrentBonus(account: Account): Option[BigDecimal] =
