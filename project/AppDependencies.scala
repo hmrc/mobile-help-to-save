@@ -10,9 +10,9 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "https://dl.bintray.com/emueller/maven"
   )
 
-  private val simpleReactiveMongoVersion = "7.30.0-play-26"
-  private val bootstrapVersion           = "1.3.0"
-  private val domainVersion              = "5.6.0-play-26"
+  private val simpleReactiveMongoVersion = "7.31.0-play-26"
+  private val bootstrapVersion           = "2.3.0"
+  private val domainVersion              = "5.10.0-play-26"
   private val catsCoreVersion            = "1.6.0"
   private val catsParVersion             = "1.0.0-RC2"
   private val scalaUriVersion            = "1.5.1"
@@ -20,7 +20,6 @@ object AppDependencies {
   private val enumeratumVersion          = "1.5.15"
   private val macrosVersion              = "2.3.3"
   private val refinedVersion             = "0.9.4"
-  private val htsKalcVersion             = "0.5.0"
 
   private val scalaMockVersion = "4.1.0"
   private val scalaTestVersion = "3.0.5"
@@ -33,17 +32,16 @@ object AppDependencies {
   private val playJsonSchemaValidatorVersion = "0.9.5"
 
   val compile: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"              %% "bootstrap-play-26"          % bootstrapVersion withSources (),
-    "uk.gov.hmrc"              %% "domain"                     % domainVersion,
-    "org.typelevel"            %% "cats-core"                  % catsCoreVersion,
-    "io.chrisdavenport"        %% "cats-par"                   % catsParVersion,
-    "io.lemonlabs"             %% "scala-uri"                  % scalaUriVersion,
-    "uk.gov.hmrc"              %% "play-hmrc-api"              % playHmrcVersion,
-    "uk.gov.hmrc"              %% "simple-reactivemongo"       % simpleReactiveMongoVersion,
-    "com.beachape"             %% "enumeratum-play-json"       % enumeratumVersion,
-    "com.softwaremill.macwire" %% "macros"                     % macrosVersion,
-    "eu.timepit"               %% "refined"                    % refinedVersion,
-    "uk.gov.hmrc"              % "help-to-save-kalculator-jvm" % htsKalcVersion
+    "uk.gov.hmrc"              %% "bootstrap-play-26"    % bootstrapVersion withSources (),
+    "uk.gov.hmrc"              %% "domain"               % domainVersion,
+    "org.typelevel"            %% "cats-core"            % catsCoreVersion,
+    "io.chrisdavenport"        %% "cats-par"             % catsParVersion,
+    "io.lemonlabs"             %% "scala-uri"            % scalaUriVersion,
+    "uk.gov.hmrc"              %% "play-hmrc-api"        % playHmrcVersion,
+    "uk.gov.hmrc"              %% "simple-reactivemongo" % simpleReactiveMongoVersion,
+    "com.beachape"             %% "enumeratum-play-json" % enumeratumVersion,
+    "com.softwaremill.macwire" %% "macros"               % macrosVersion,
+    "eu.timepit"               %% "refined"              % refinedVersion
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(

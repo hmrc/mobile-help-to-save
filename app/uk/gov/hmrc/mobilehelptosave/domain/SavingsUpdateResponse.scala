@@ -18,16 +18,18 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Format, Json}
 
-import java.time.LocalDate
+import java.time.{LocalDate, YearMonth}
 
 case class SavingsUpdateResponse(
-  reportStartDate: LocalDate,
-  reportEndDate:   LocalDate,
-  savingsUpdate:   Option[SavingsUpdate],
-  bonusUpdate:     BonusUpdate)
+  reportStartDate:        LocalDate,
+  reportEndDate:          LocalDate,
+  accountOpenedYearMonth: YearMonth,
+  savingsUpdate:          Option[SavingsUpdate],
+  bonusUpdate:            BonusUpdate)
 
 object SavingsUpdateResponse {
-  implicit val format: Format[SavingsUpdateResponse] = Json.format[SavingsUpdateResponse]
+  implicit val yearMonthFormat: Format[YearMonth]             = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
+  implicit val format:          Format[SavingsUpdateResponse] = Json.format[SavingsUpdateResponse]
 }
 
 case class SavingsUpdate(
@@ -43,7 +45,7 @@ object SavingsUpdate {
 case class BonusUpdate(
   currentBonusTerm:            CurrentBonusTerm.Value,
   monthsUntilBonus:            Option[Int],
-  currentBonus:                Option[Double],
+  currentBonus:                Option[BigDecimal],
   highestBalance:              Option[Double],
   potentialBonusAtCurrentRate: Option[Double],
   potentialBonusWithFiveMore:  Option[Double],

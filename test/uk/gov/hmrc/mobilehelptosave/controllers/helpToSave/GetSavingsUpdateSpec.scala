@@ -73,9 +73,11 @@ class GetSavingsUpdateSpec
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
         (jsonBody \ "reportStartDate").as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
-        (jsonBody \ "reportEndDate").as[LocalDate]   shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
-        (jsonBody \ "savingsUpdate").isDefined       shouldBe true
-        (jsonBody \ "bonusUpdate").isDefined         shouldBe true
+        (jsonBody \ "reportEndDate")
+          .as[LocalDate]                                 shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "accountOpenedYearMonth").as[String] shouldBe mobileHelpToSaveAccount.openedYearMonth.toString
+        (jsonBody \ "savingsUpdate").isDefined           shouldBe true
+        (jsonBody \ "bonusUpdate").isDefined             shouldBe true
       }
 
       "calculate amount saved in reporting period correctly in savings update" in new AuthorisedTestScenario
@@ -86,11 +88,20 @@ class GetSavingsUpdateSpec
         val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
-        (jsonBody \ "reportStartDate")
-          .as[LocalDate]                                              shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
-        (jsonBody \ "reportEndDate").as[LocalDate]                    shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
         (jsonBody \ "savingsUpdate").isDefined                        shouldBe true
         (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(127.62)
+      }
+
+      "calculate months saved in reporting period correctly in savings update" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
+        helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
+
+        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        status(savingsUpdate) shouldBe OK
+        val jsonBody = contentAsJson(savingsUpdate)
+        (jsonBody \ "savingsUpdate").isDefined               shouldBe true
+        (jsonBody \ "savingsUpdate" \ "monthsSaved").as[Int] shouldBe 4
       }
 
       "do not return savings update section if no transactions found for reporting period" in new AuthorisedTestScenario
@@ -102,10 +113,23 @@ class GetSavingsUpdateSpec
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
         (jsonBody \ "reportStartDate")
-          .as[LocalDate]                           shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
-        (jsonBody \ "reportEndDate").as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.lastDayOfMonth())
-        (jsonBody \ "savingsUpdate").isEmpty       shouldBe true
+          .as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
+        (jsonBody \ "reportEndDate")
+          .as[LocalDate]                                 shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "accountOpenedYearMonth").as[String] shouldBe mobileHelpToSaveAccount.openedYearMonth.toString
+        (jsonBody \ "savingsUpdate").isEmpty             shouldBe true
       }
+    }
+
+    "return current bonus estimate correctly" in new AuthorisedTestScenario with HelpToSaveMocking {
+      accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
+      helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
+
+      val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      status(savingsUpdate) shouldBe OK
+      val jsonBody = contentAsJson(savingsUpdate)
+      (jsonBody \ "bonusUpdate").isDefined                       shouldBe true
+      (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal] shouldBe BigDecimal(90.99)
     }
 
     "the user has no Help to Save account according to AccountService" should {

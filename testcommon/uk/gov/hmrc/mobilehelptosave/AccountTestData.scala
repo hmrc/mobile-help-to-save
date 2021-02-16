@@ -187,7 +187,7 @@ trait AccountTestData {
   /** An Account object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
   protected val mobileHelpToSaveAccount: Account = Account(
     number                    = "1000000000001",
-    openedYearMonth           = YearMonth.of(2018, 1),
+    openedYearMonth           = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1),
     isClosed                  = false,
     blocked                   = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
     balance                   = BigDecimal("123.45"),
@@ -195,22 +195,22 @@ trait AccountTestData {
     canPayInThisMonth         = BigDecimal("22.12"),
     maximumPaidInThisMonth    = 50,
     thisMonthEndDate          = monthEndDate,
-    nextPaymentMonthStartDate = Some(LocalDate.of(2018, 5, 1)),
+    nextPaymentMonthStartDate = Some(LocalDate.of(YearMonth.now().minusYears(3).getYear, 5, 1)),
     accountHolderName         = "Testfore Testsur",
     accountHolderEmail        = Some("testemail@example.com"),
     bonusTerms = Seq(
       BonusTerm(
         bonusEstimate                 = BigDecimal("90.99"),
         bonusPaid                     = BigDecimal("90.99"),
-        endDate                       = LocalDate.of(2019, 12, 31),
-        bonusPaidOnOrAfterDate        = LocalDate.of(2020, 1, 1),
+        endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(1).getYear, 1, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
         bonusEstimate                 = 12,
         bonusPaid                     = 0,
-        endDate                       = LocalDate.of(2021, 12, 31),
-        bonusPaidOnOrAfterDate        = LocalDate.of(2022, 1, 1),
+        endDate                       = LocalDate.of(YearMonth.now().getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("181.98")
       )
     ),
