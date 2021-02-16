@@ -1,0 +1,23 @@
+{
+  "reportStartDate" : "2021-02-01",
+  "reportEndDate" : "2021-06-30",
+  "accountOpenedYearMonth" : "2020-02",
+  "savingsUpdate" : {
+    "savedInPeriod" : 100,
+    "monthsSaved" : 4,
+    "goalsReached" : {
+      "currentAmount" : 25,
+      "numberOfTimesReached" : 2
+    },
+    "amountEarnedTowardsBonus" : 50
+  },
+  "bonusUpdate" : {
+    "currentBonusTerm" : "First",
+    "monthsUntilBonus" : 8,
+    "currentBonus" : 75,
+    "highestBalance" : 200,
+    "potentialBonusAtCurrentRate" : 300,
+    "potentialBonusWithFiveMore" : 500,
+    "maxBonus" : 600
+  }
+}
