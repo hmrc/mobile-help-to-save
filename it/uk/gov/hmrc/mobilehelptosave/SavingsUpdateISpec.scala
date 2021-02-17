@@ -70,6 +70,7 @@ class SavingsUpdateISpec
       (response.json \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 2
       (response.json \ "bonusUpdate").isDefined                          shouldBe true
       (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
+      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]  shouldBe BigDecimal(181.98)
     }
 
     "respond with 200 and savings update section if no transactions are found" in {
