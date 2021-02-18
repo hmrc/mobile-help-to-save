@@ -43,7 +43,7 @@ class SavingsUpdateServiceSpec
         service.getSavingsUpdateResponse(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)),
                                          transactionsDateDynamic)
       savingsUpdate.savingsUpdate.isDefined            shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.savedInPeriod) shouldBe Some(BigDecimal(127.62))
+      savingsUpdate.savingsUpdate.flatMap(_.savedInPeriod) shouldBe Some(BigDecimal(137.61))
     }
 
     "calculate months saved in reporting period correctly in savings update" in {

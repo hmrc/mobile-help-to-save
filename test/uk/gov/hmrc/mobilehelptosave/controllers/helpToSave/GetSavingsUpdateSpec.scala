@@ -77,7 +77,7 @@ class GetSavingsUpdateSpec
           .as[LocalDate]                                              shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
         (jsonBody \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
         (jsonBody \ "savingsUpdate").isDefined                        shouldBe true
-        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(127.62)
+        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(137.61)
         (jsonBody \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 4
         (jsonBody \ "bonusUpdate").isDefined                          shouldBe true
         (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)

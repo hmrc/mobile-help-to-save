@@ -66,14 +66,14 @@ class SavingsUpdateISpec
         .as[LocalDate]                                                   shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
       (response.json \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
       (response.json \ "savingsUpdate").isDefined                        shouldBe true
-      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(2.12)
-      (response.json \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 2
+      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(62.61)
+      (response.json \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 3
       (response.json \ "bonusUpdate").isDefined                          shouldBe true
       (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
       (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]  shouldBe BigDecimal(181.98)
     }
 
-    "respond with 200 and savings update section if no transactions are found" in {
+    "respond with 200 and no savings update section if no transactions are found" in {
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
@@ -89,7 +89,6 @@ class SavingsUpdateISpec
       (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
       (response.json \ "savingsUpdate").isEmpty                       shouldBe true
       (response.json \ "bonusUpdate").isDefined                       shouldBe true
-      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal] shouldBe BigDecimal(90.99)
     }
 
     "respond with a 404 if the user's account isn't found" in {
