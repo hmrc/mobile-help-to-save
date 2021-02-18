@@ -68,7 +68,13 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     else Some(SavingsUpdate(calculateTotalSaved(transactions), getMonthsSaved(transactions), None, None))
 
   private def getBonusUpdate(account: Account): BonusUpdate =
-    BonusUpdate(account.currentBonusTerm, None, getCurrentBonus(account), None, None, None, None)
+    BonusUpdate(account.currentBonusTerm,
+                None,
+                getCurrentBonus(account),
+                defCalculateHighestBalance(account),
+                None,
+                None,
+                None)
 
   private def calculateTotalSaved(transactions: Seq[Transaction]): Option[BigDecimal] = {
     val totalSaved = transactions.filter(t => t.operation == Debit).map(_.amount).sum
@@ -87,5 +93,17 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     } else {
       account.bonusTerms.lastOption.map(_.bonusEstimate)
     }
+
+  private def defCalculateHighestBalance(account: Account): Option[BigDecimal] = {
+    val finalBonusTerms = account.bonusTerms.last
+    if (account.currentBonusTerm == CurrentBonusTerm.First) {
+      val highestBalance = finalBonusTerms.balanceMustBeMoreThanForBonus
+      if (account.balance < highestBalance) Some(highestBalance) else None
+    } else {
+      val highestBalance = finalBonusTerms.balanceMustBeMoreThanForBonus + (finalBonusTerms.bonusEstimate * 2)
+      if (account.balance < highestBalance) Some(highestBalance) else None
+    }
+
+  }
 
 }

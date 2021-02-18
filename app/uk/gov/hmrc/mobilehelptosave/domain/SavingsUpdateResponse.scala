@@ -46,7 +46,7 @@ case class BonusUpdate(
   currentBonusTerm:            CurrentBonusTerm.Value,
   monthsUntilBonus:            Option[Int],
   currentBonus:                Option[BigDecimal],
-  highestBalance:              Option[Double],
+  highestBalance:              Option[BigDecimal],
   potentialBonusAtCurrentRate: Option[Double],
   potentialBonusWithFiveMore:  Option[Double],
   maxBonus:                    Option[Double])

@@ -25,7 +25,7 @@ import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
-import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
+import uk.gov.hmrc.mobilehelptosave.domain.{CurrentBonusTerm, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
@@ -66,42 +66,22 @@ class GetSavingsUpdateSpec
   "getSavingsUpdate" when {
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users savings update" in new AuthorisedTestScenario with HelpToSaveMocking {
-        accountReturns(Right(Some(mobileHelpToSaveAccount)))
-        helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
-
-        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-        status(savingsUpdate) shouldBe OK
-        val jsonBody = contentAsJson(savingsUpdate)
-        (jsonBody \ "reportStartDate").as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
-        (jsonBody \ "reportEndDate")
-          .as[LocalDate]                                 shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
-        (jsonBody \ "accountOpenedYearMonth").as[String] shouldBe mobileHelpToSaveAccount.openedYearMonth.toString
-        (jsonBody \ "savingsUpdate").isDefined           shouldBe true
-        (jsonBody \ "bonusUpdate").isDefined             shouldBe true
-      }
-
-      "calculate amount saved in reporting period correctly in savings update" in new AuthorisedTestScenario
-        with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
 
         val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
+        (jsonBody \ "reportStartDate").as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
+        (jsonBody \ "reportEndDate")
+          .as[LocalDate]                                              shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
         (jsonBody \ "savingsUpdate").isDefined                        shouldBe true
         (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(127.62)
-      }
-
-      "calculate months saved in reporting period correctly in savings update" in new AuthorisedTestScenario
-        with HelpToSaveMocking {
-        accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
-        helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
-
-        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-        status(savingsUpdate) shouldBe OK
-        val jsonBody = contentAsJson(savingsUpdate)
-        (jsonBody \ "savingsUpdate").isDefined               shouldBe true
-        (jsonBody \ "savingsUpdate" \ "monthsSaved").as[Int] shouldBe 4
+        (jsonBody \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 4
+        (jsonBody \ "bonusUpdate").isDefined                          shouldBe true
+        (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
+        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]  shouldBe BigDecimal(181.98)
       }
 
       "do not return savings update section if no transactions found for reporting period" in new AuthorisedTestScenario
@@ -119,17 +99,6 @@ class GetSavingsUpdateSpec
         (jsonBody \ "accountOpenedYearMonth").as[String] shouldBe mobileHelpToSaveAccount.openedYearMonth.toString
         (jsonBody \ "savingsUpdate").isEmpty             shouldBe true
       }
-    }
-
-    "return current bonus estimate correctly" in new AuthorisedTestScenario with HelpToSaveMocking {
-      accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
-      helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
-
-      val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
-      status(savingsUpdate) shouldBe OK
-      val jsonBody = contentAsJson(savingsUpdate)
-      (jsonBody \ "bonusUpdate").isDefined                       shouldBe true
-      (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal] shouldBe BigDecimal(90.99)
     }
 
     "the user has no Help to Save account according to AccountService" should {
