@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, CurrentBonusTerm, Debit, ErrorInfo, Operation, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, Credit, CurrentBonusTerm, ErrorInfo, Operation, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
 
 import java.time.temporal.ChronoUnit.MONTHS
 import java.time.{LocalDate, Month, YearMonth}
@@ -77,13 +77,13 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
                 None)
 
   private def calculateTotalSaved(transactions: Seq[Transaction]): Option[BigDecimal] = {
-    val totalSaved = transactions.filter(t => t.operation == Debit).map(_.amount).sum
+    val totalSaved = transactions.filter(t => t.operation == Credit).map(_.amount).sum
     if (totalSaved > BigDecimal(0)) Some(totalSaved) else None
   }
 
   private def getMonthsSaved(transactions: Seq[Transaction]): Option[Int] = {
     val debitTransactionsByMonth: Map[Month, Seq[Transaction]] =
-      transactions.filter(t => t.operation == Debit).groupBy(i => i.transactionDate.getMonth)
+      transactions.filter(t => t.operation == Credit).groupBy(i => i.transactionDate.getMonth)
     if (debitTransactionsByMonth.nonEmpty) Some(debitTransactionsByMonth.size) else None
   }
 
