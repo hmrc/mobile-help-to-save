@@ -28,6 +28,8 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
+import scala.concurrent.Future
+
 class AccountServiceSpec
     extends WordSpec
     with Matchers
@@ -348,6 +350,7 @@ class AccountServiceSpec
 
       // This should never get called as part of the account service
       override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
+      override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {

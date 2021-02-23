@@ -17,14 +17,13 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import java.time.LocalDateTime
-
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -130,6 +129,7 @@ class ReportingServiceSpec
       override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
 
       override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
+      override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = Future.successful(Right(goalSetEvents))
     }
 
 }

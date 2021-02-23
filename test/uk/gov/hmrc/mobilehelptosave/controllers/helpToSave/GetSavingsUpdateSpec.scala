@@ -23,13 +23,15 @@ import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
-import uk.gov.hmrc.mobilehelptosave.domain.{CurrentBonusTerm, ErrorInfo}
+import uk.gov.hmrc.mobilehelptosave.domain.{CurrentBonusTerm, ErrorInfo, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
-import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
+import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 
 import java.time.{LocalDate, YearMonth}
 import java.time.temporal.ChronoUnit._
@@ -52,7 +54,8 @@ class GetSavingsUpdateSpec
     with LoggerStub
     with OneInstancePerTest
     with TestSupport
-    with ShutteringMocking {
+    with ShutteringMocking
+    with SavingsGoalTestData {
 
   "getSavingsUpdate" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
@@ -66,28 +69,43 @@ class GetSavingsUpdateSpec
   "getSavingsUpdate" when {
     "logged in user's NINO matches NINO in URL" should {
       "return 200 with the users savings update" in new AuthorisedTestScenario with HelpToSaveMocking {
-        accountReturns(Right(Some(mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)))))
+        accountReturns(
+          Right(
+            Some(
+              mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6),
+                                           savingsGoal     = Some(SavingsGoal(Some(10.0))))
+            )
+          )
+        )
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
+        getGoalSetEvents(Future successful Right(dateDynamicSavingsGoalData))
 
         val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
-        (jsonBody \ "reportStartDate").as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
+        (jsonBody \ "reportStartDate")
+          .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
         (jsonBody \ "reportEndDate")
-          .as[LocalDate]                                              shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
-        (jsonBody \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
-        (jsonBody \ "savingsUpdate").isDefined                        shouldBe true
-        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(137.61)
-        (jsonBody \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 4
-        (jsonBody \ "bonusUpdate").isDefined                          shouldBe true
-        (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
-        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]  shouldBe BigDecimal(181.98)
+          .as[LocalDate]                                                               shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+        (jsonBody \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.now().minusMonths(6).toString
+        (jsonBody \ "savingsUpdate").isDefined                                         shouldBe true
+        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe BigDecimal(137.61)
+        (jsonBody \ "savingsUpdate" \ "savedByMonth").isDefined                        shouldBe true
+        (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 4
+        (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 6
+        (jsonBody \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
+        (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentGoalAmount").as[Double] shouldBe 10.0
+        (jsonBody \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
+        (jsonBody \ "bonusUpdate").isDefined                                           shouldBe true
+        (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe BigDecimal(90.99)
+        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe BigDecimal(181.98)
       }
 
       "do not return savings update section if no transactions found for reporting period" in new AuthorisedTestScenario
         with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInMobileHelpToSaveOrder))
+        getGoalSetEvents(Future successful Right(dateDynamicSavingsGoalData))
 
         val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(savingsUpdate) shouldBe OK
@@ -133,12 +151,14 @@ class GetSavingsUpdateSpec
       """return 521 "shuttered": true""" in {
         val accountService            = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
+        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
         val controller = new HelpToSaveController(
           logger,
           accountService,
           helpToSaveGetTransactions,
           new AlwaysAuthorisedWithIds(nino, trueShuttering),
           new HtsSavingsUpdateService,
+          savingsGoalEventRepo,
           stubControllerComponents()
         )
 

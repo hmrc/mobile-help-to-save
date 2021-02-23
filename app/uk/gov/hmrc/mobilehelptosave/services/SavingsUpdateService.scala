@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, Credit, CurrentBonusTerm, ErrorInfo, Operation, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, Credit, CurrentBonusTerm, ErrorInfo, GoalsReached, SavedByMonth, SavingsGoal, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
 
 import java.time.temporal.ChronoUnit.MONTHS
-import java.time.{LocalDate, Month, YearMonth}
+import java.time.{LocalDate, LocalDateTime, Month, YearMonth, ZoneOffset}
 import java.time.temporal.TemporalAdjusters
 import scala.annotation.tailrec
 
@@ -28,7 +29,8 @@ trait SavingsUpdateService {
 
   def getSavingsUpdateResponse(
     account:      Account,
-    transactions: Transactions
+    transactions: Transactions,
+    goalEvents:   List[SavingsGoalSetEvent]
   ): SavingsUpdateResponse
 }
 
@@ -36,7 +38,8 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
   def getSavingsUpdateResponse(
     account:      Account,
-    transactions: Transactions
+    transactions: Transactions,
+    goalEvents:   List[SavingsGoalSetEvent]
   ): SavingsUpdateResponse = {
     val reportStartDate = calculateReportStartDate(account.openedYearMonth)
     val reportEndDate   = LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
@@ -51,7 +54,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       reportStartDate,
       reportEndDate,
       account.openedYearMonth,
-      getSavingsUpdate(reportTransactions),
+      getSavingsUpdate(account, reportTransactions, goalEvents, reportStartDate, reportEndDate),
       getBonusUpdate(account)
     )
   }
@@ -63,9 +66,23 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     else
       LocalDate.of(accountStartDate.getYear, accountStartDate.getMonth, 1)
 
-  private def getSavingsUpdate(transactions: Seq[Transaction]): Option[SavingsUpdate] =
+  private def getSavingsUpdate(
+    account:         Account,
+    transactions:    Seq[Transaction],
+    goalEvents:      List[SavingsGoalSetEvent],
+    reportStartDate: LocalDate,
+    reportEndDate:   LocalDate
+  ): Option[SavingsUpdate] =
     if (transactions.isEmpty) None
-    else Some(SavingsUpdate(calculateTotalSaved(transactions), getMonthsSaved(transactions), None, None))
+    else
+      Some(
+        SavingsUpdate(
+          calculateTotalSaved(transactions),
+          getMonthsSaved(transactions, MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1),
+          calculateGoalsReached(account.savingsGoal, goalEvents, transactions, reportStartDate, reportEndDate),
+          None
+        )
+      )
 
   private def getBonusUpdate(account: Account): BonusUpdate =
     BonusUpdate(account.currentBonusTerm,
@@ -81,10 +98,59 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     if (totalSaved > BigDecimal(0)) Some(totalSaved) else None
   }
 
-  private def getMonthsSaved(transactions: Seq[Transaction]): Option[Int] = {
-    val debitTransactionsByMonth: Map[Month, Seq[Transaction]] =
-      transactions.filter(t => t.operation == Credit).groupBy(i => i.transactionDate.getMonth)
-    if (debitTransactionsByMonth.nonEmpty) Some(debitTransactionsByMonth.size) else None
+  private def getMonthsSaved(
+    transactions: Seq[Transaction],
+    totalMonths:  Int
+  ): Option[SavedByMonth] = {
+    val creditTransactionsByMonth = groupTransactionsByMonth(transactions)
+    if (creditTransactionsByMonth.nonEmpty) Some(SavedByMonth(totalMonths, creditTransactionsByMonth.size)) else None
+  }
+
+  private def calculateGoalsReached(
+    currentGoal:     Option[SavingsGoal],
+    goalEvents:      List[SavingsGoalSetEvent],
+    transactions:    Seq[Transaction],
+    reportStartDate: LocalDate,
+    reportEndDate:   LocalDate
+  ): Option[GoalsReached] = {
+    implicit def ord: Ordering[LocalDateTime] = Ordering.by(_.toInstant(ZoneOffset.UTC))
+    if (currentGoal.isEmpty || currentGoal.get.goalAmount.isEmpty) None
+    else {
+      val currentGoalValue: Double                   = currentGoal.get.goalAmount.get
+      val sortedEvents:     Seq[SavingsGoalSetEvent] = goalEvents.sortBy(_.date)
+      val totalSavedEachMonth: Map[Month, BigDecimal] =
+        groupTransactionsByMonth(transactions).map(t => Map(t._1 -> t._2.map(_.amount).sum)).flatten.toMap
+
+      if (sortedEvents.last.date.isBefore(reportStartDate.atStartOfDay())) {
+        val monthsWhereGoalWasMet: Map[Month, BigDecimal] = totalSavedEachMonth.filter(t => t._2 >= currentGoalValue)
+        Some(GoalsReached(currentGoalValue, monthsWhereGoalWasMet.size))
+      } else {
+        val datesInRange: Seq[LocalDate] = reportStartDate.toEpochDay
+          .until(reportEndDate.toEpochDay)
+          .map(LocalDate.ofEpochDay)
+          .filter(_.getDayOfMonth == 1)
+          .sortBy(_.atStartOfDay())
+        val lowestGoalEachMonth: Map[Month, Double] =
+          sortedEvents
+            .groupBy(_.date.getMonth)
+            .map(e => Map(e._1 -> e._2.map(_.amount.getOrElse(50.0)).min))
+            .flatten
+            .toMap
+        var currentGoal: Double =
+          sortedEvents.filter(_.date.isBefore(reportStartDate.atStartOfDay())).last.amount.getOrElse(0)
+
+        val numberOfTimesGoalHit = datesInRange
+          .map { date =>
+            currentGoal = lowestGoalEachMonth.getOrElse(date.getMonth, currentGoal)
+            if (totalSavedEachMonth.getOrElse(date.getMonth, BigDecimal(0)).toDouble > currentGoal)
+              Map(date.getMonth -> currentGoal)
+            else None
+          }
+          .count(_.canEqual())
+
+        Some(GoalsReached(currentGoalValue, numberOfTimesGoalHit))
+      }
+    }
   }
 
   private def getCurrentBonus(account: Account): Option[BigDecimal] =
@@ -105,5 +171,8 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     }
 
   }
+
+  private def groupTransactionsByMonth(transactions: Seq[Transaction]): Map[Month, Seq[Transaction]] =
+    transactions.filter(t => t.operation == Credit).groupBy(i => i.transactionDate.getMonth)
 
 }

@@ -27,6 +27,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService, SavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
@@ -46,12 +47,14 @@ trait TestSupport {
   def isForbiddenIfNotAuthorisedForUser(authorisedActionForNino: HelpToSaveController => Assertion): Assertion = {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
+    val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
     val controller =
       new HelpToSaveController(logger,
                                accountService,
                                helpToSaveGetTransactions,
                                NeverAuthorisedWithIds,
                                new HtsSavingsUpdateService,
+                               savingsGoalEventRepo,
                                stubControllerComponents())
     authorisedActionForNino(controller)
   }
@@ -59,6 +62,7 @@ trait TestSupport {
   trait AuthorisedTestScenario {
     val accountService            = mock[AccountService[Future]]
     val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
+    val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
 
     val controller: HelpToSaveController =
       new HelpToSaveController(
@@ -67,6 +71,7 @@ trait TestSupport {
         helpToSaveGetTransactions,
         new AlwaysAuthorisedWithIds(nino),
         new HtsSavingsUpdateService,
+        savingsGoalEventRepo,
         stubControllerComponents()
       )
   }
@@ -84,6 +89,12 @@ trait TestSupport {
       (helpToSaveGetTransactions
         .getTransactions(_: Nino)(_: HeaderCarrier))
         .expects(nino, *)
+        .returning(stubbedResponse)
+
+    def getGoalSetEvents(stubbedResponse: Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]]) =
+      (savingsGoalEventRepo
+        .getGoalSetEvents(_: Nino))
+        .expects(nino)
         .returning(stubbedResponse)
 
     def setSavingsGoalReturns(

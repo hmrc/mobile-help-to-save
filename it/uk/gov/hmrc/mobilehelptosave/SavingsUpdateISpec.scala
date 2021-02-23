@@ -63,14 +63,16 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                                                   shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
-      (response.json \ "savingsUpdate").isDefined                        shouldBe true
-      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(62.61)
-      (response.json \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 3
-      (response.json \ "bonusUpdate").isDefined                          shouldBe true
-      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
-      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]  shouldBe BigDecimal(181.98)
+        .as[LocalDate]                                                              shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String]                         shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isDefined                                   shouldBe true
+      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]            shouldBe BigDecimal(62.61)
+      (response.json \ "savingsUpdate" \ "savedByMonth").isDefined                  shouldBe true
+      (response.json \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]    shouldBe 3
+      (response.json \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int] shouldBe 6
+      (response.json \ "bonusUpdate").isDefined                                     shouldBe true
+      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]               shouldBe BigDecimal(90.99)
+      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]             shouldBe BigDecimal(181.98)
     }
 
     "respond with 200 and no savings update section if no transactions are found" in {
@@ -85,10 +87,10 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                                                shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
-      (response.json \ "savingsUpdate").isEmpty                       shouldBe true
-      (response.json \ "bonusUpdate").isDefined                       shouldBe true
+        .as[LocalDate]                                      shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String] shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isEmpty             shouldBe true
+      (response.json \ "bonusUpdate").isDefined             shouldBe true
     }
 
     "respond with a 404 if the user's account isn't found" in {

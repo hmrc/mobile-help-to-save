@@ -17,15 +17,15 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
-
 import cats.instances.future._
 import cats.syntax.functor._
 import play.api.libs.json.Json.obj
 import play.api.libs.json._
+import play.libs.F
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal, Transactions}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,6 +42,7 @@ trait SavingsGoalEventRepo[F[_]] {
   def clearGoalEvents(): F[Boolean]
 
   def getGoalSetEvents(): F[List[SavingsGoalSetEvent]]
+  def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]]
 }
 
 class MongoSavingsGoalEventRepo(
@@ -87,5 +88,13 @@ class MongoSavingsGoalEventRepo(
         case _ => throw new IllegalStateException("Event must be a set event")
       }
     )
+
+  override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] =
+    find("type" -> "set", "nino" -> Json.toJson(nino)).map(
+      _.map {
+        case event: SavingsGoalSetEvent => event
+        case _ => throw new IllegalStateException("Event must be a set event")
+      }
+    ).map(Right(_))
 
 }
