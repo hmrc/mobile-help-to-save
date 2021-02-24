@@ -28,6 +28,7 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class SetSavingsGoalSpec
@@ -262,6 +263,13 @@ class SetSavingsGoalSpec
     override def getGoal(nino: Nino): TestF[Option[SavingsGoal]] = ???
     override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
     override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
+
+    override def setGoal(
+      nino:   Nino,
+      amount: Option[Double],
+      name:   Option[String],
+      date:   LocalDate
+    ): TestF[Unit] = ???
   }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {

@@ -17,8 +17,9 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.test
 
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.domain.{SavingsGoal, TestSavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
@@ -51,4 +52,11 @@ class TestController(
       _ <- milestonesRepo.clearMilestones()
     } yield Ok("Successfully cleared all milestone data")
   }
+
+  def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) {
+    implicit request: Request[TestSavingsGoal] =>
+      savingsGoalEventRepo.setGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
+      Future successful Created("Goal successfully created")
+  }
+
 }

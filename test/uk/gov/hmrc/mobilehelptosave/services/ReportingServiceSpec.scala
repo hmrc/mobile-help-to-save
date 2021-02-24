@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.libs.json.Json
@@ -130,6 +130,12 @@ class ReportingServiceSpec
 
       override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = Future.successful(Right(goalSetEvents))
+      override def setGoal(
+                            nino:   Nino,
+                            amount: Option[Double],
+                            name:   Option[String],
+                            date:   LocalDate
+                          ): Future[Unit] = ???
     }
 
 }

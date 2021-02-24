@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import cats.instances.future._
 import cats.syntax.functor._
 import play.api.libs.json.Json.obj
@@ -36,12 +36,19 @@ trait SavingsGoalEventRepo[F[_]] {
     amount: Option[Double],
     name:   Option[String]
   ): F[Unit]
+
+  def setGoal(
+    nino:   Nino,
+    amount: Option[Double],
+    name:   Option[String],
+    date:   LocalDate
+  ): F[Unit]
   def deleteGoal(nino: Nino): F[Unit]
   def getGoal(nino:    Nino): F[Option[SavingsGoal]]
   def getEvents(nino:  Nino): F[List[SavingsGoalEvent]]
   def clearGoalEvents(): F[Boolean]
 
-  def getGoalSetEvents(): F[List[SavingsGoalSetEvent]]
+  def getGoalSetEvents: F[List[SavingsGoalSetEvent]]
   def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]]
 }
 
@@ -58,6 +65,14 @@ class MongoSavingsGoalEventRepo(
     name:   Option[String]
   ): Future[Unit] =
     insert(SavingsGoalSetEvent(nino = nino, amount = amount, name = name, date = LocalDateTime.now)).void
+
+  override def setGoal(
+    nino:   Nino,
+    amount: Option[Double],
+    name:   Option[String],
+    date:   LocalDate
+  ): Future[Unit] =
+    insert(SavingsGoalSetEvent(nino = nino, amount = amount, name = name, date = date.atStartOfDay())).void
 
   override def deleteGoal(nino: Nino): Future[Unit] =
     insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now)).void
@@ -90,11 +105,13 @@ class MongoSavingsGoalEventRepo(
     )
 
   override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] =
-    find("type" -> "set", "nino" -> Json.toJson(nino)).map(
-      _.map {
-        case event: SavingsGoalSetEvent => event
-        case _ => throw new IllegalStateException("Event must be a set event")
-      }
-    ).map(Right(_))
+    find("type" -> "set", "nino" -> Json.toJson(nino))
+      .map(
+        _.map {
+          case event: SavingsGoalSetEvent => event
+          case _ => throw new IllegalStateException("Event must be a set event")
+        }
+      )
+      .map(Right(_))
 
 }

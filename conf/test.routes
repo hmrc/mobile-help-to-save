@@ -2,3 +2,4 @@
 GET        /clear-goal-events           uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.clearGoalEvents
 GET        /goal-events/:nino           uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getGoalEvents(nino: uk.gov.hmrc.domain.Nino)
 GET        /clear-milestone-data        uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.clearMilestoneData
+PUT        /create-goal                 uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.putSavingsGoal

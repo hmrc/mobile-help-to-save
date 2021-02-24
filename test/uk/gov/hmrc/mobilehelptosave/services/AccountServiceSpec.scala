@@ -20,6 +20,7 @@ import cats.syntax.applicativeError._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import play.libs.F
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
@@ -28,6 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class AccountServiceSpec
@@ -351,6 +353,13 @@ class AccountServiceSpec
       // This should never get called as part of the account service
       override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
+
+      override def setGoal(
+        nino:   Nino,
+        amount: Option[Double],
+        name:   Option[String],
+        date:   LocalDate
+      ): TestF[Unit] = ???
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
