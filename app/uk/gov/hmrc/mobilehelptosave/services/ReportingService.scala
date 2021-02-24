@@ -34,7 +34,7 @@ class ReportingService(
 
   def getCurrentSavingsGoalsEvents(): Future[List[SavingsGoalSetEvent]] =
     savingsGoalEventRepo
-      .getGoalSetEvents()
+      .getGoalSetEvents
       .map(events =>
         events
           .groupBy(_.nino)

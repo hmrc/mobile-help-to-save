@@ -23,6 +23,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, SavingsUpdateService}
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
@@ -60,6 +61,7 @@ class HelpToSaveController(
   helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
   authorisedWithIds:         AuthorisedWithIds,
   savingsUpdateService:      SavingsUpdateService,
+  savingsGoalEventRepo:      SavingsGoalEventRepo[Future],
   val controllerComponents:  ControllerComponents
 )(implicit ec:               ExecutionContext)
     extends BackendBaseController
@@ -125,22 +127,25 @@ class HelpToSaveController(
             transactions <- if (account.isRight && accountExists)
                              helpToSaveGetTransactions.getTransactions(request.nino.getOrElse(Nino("")))
                            else Future successful Left(AccountNotFound)
+            goalSetEvents <- if (account.isRight && accountExists)
+                              savingsGoalEventRepo.getGoalSetEvents(request.nino.getOrElse(Nino("")))
+                            else Future successful Left(AccountNotFound)
           } yield {
-            (account, transactions, accountExists) match {
-              case (Left(ErrorInfo.AccountNotFound), _, _) => AccountNotFound
-              case (Right(_), _, false)                    => AccountNotFound
-              case (Right(accountResult), Right(foundTransactions), true) =>
+            (account, transactions, accountExists, goalSetEvents) match {
+              case (Left(ErrorInfo.AccountNotFound), _, _, _) => AccountNotFound
+              case (Right(_), _, false, _)                    => AccountNotFound
+              case (Right(accountResult), Right(foundTransactions), true, Right(foundGoalEvents)) =>
                 accountResult match {
                   case Some(accountFound) =>
                     Ok(
                       Json.toJson(
                         savingsUpdateService
-                          .getSavingsUpdateResponse(accountFound, foundTransactions)
+                          .getSavingsUpdateResponse(accountFound, foundTransactions, foundGoalEvents)
                       )
                     )
                   case None => AccountNotFound
                 }
-              case (_, _, _) => InternalServerError(Json.toJson(ErrorInfo.General))
+              case (_, _, _, _) => InternalServerError(Json.toJson(ErrorInfo.General))
             }
           }
         }

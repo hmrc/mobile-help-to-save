@@ -34,7 +34,7 @@ object SavingsUpdateResponse {
 
 case class SavingsUpdate(
   savedInPeriod:            Option[BigDecimal],
-  monthsSaved:              Option[Int],
+  savedByMonth:              Option[SavedByMonth],
   goalsReached:             Option[GoalsReached],
   amountEarnedTowardsBonus: Option[Double])
 
@@ -53,6 +53,14 @@ case class BonusUpdate(
 
 object BonusUpdate {
   implicit val format: Format[BonusUpdate] = Json.format[BonusUpdate]
+}
+
+case class SavedByMonth(
+  numberOfMonths: Int,
+  monthsSaved:    Int)
+
+object SavedByMonth {
+  implicit val format: Format[SavedByMonth] = Json.format[SavedByMonth]
 }
 
 case class GoalsReached(

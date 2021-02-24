@@ -25,6 +25,7 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService, SavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
@@ -122,12 +123,14 @@ class GetAccountSpec
       """return 521 "shuttered": true""" in {
         val accountService            = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
+        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
         val controller = new HelpToSaveController(
           logger,
           accountService,
           helpToSaveGetTransactions,
           new AlwaysAuthorisedWithIds(nino, trueShuttering),
           new HtsSavingsUpdateService,
+          savingsGoalEventRepo,
           stubControllerComponents()
         )
 

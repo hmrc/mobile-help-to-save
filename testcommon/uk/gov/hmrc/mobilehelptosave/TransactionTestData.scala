@@ -386,6 +386,14 @@ trait TransactionTestData {
        |    "balanceAfter" : 9.38
        |  }, {
        |    "operation" : "credit",
+       |    "amount" : 25,
+       |    "transactionDate" : "${LocalDate.now().minusMonths(3)}",
+       |    "accountingDate" : "${LocalDate.now().minusMonths(3)}",
+       |    "description" : "BACS payment",
+       |    "transactionReference" : "A1A11AA1A00A000G",
+       |    "balanceAfter" : 9.38
+       |  }, {
+       |    "operation" : "credit",
        |    "amount" : 1.11,
        |    "transactionDate" : "${LocalDate.now().minusMonths(2)}",
        |    "accountingDate" : "${LocalDate.now().minusMonths(2)}",

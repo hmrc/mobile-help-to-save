@@ -22,7 +22,8 @@ import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
@@ -45,9 +46,19 @@ class SavingsUpdateISpec
 
   override implicit lazy val app: Application = appBuilder.build()
 
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val generator            = new Generator(0)
+  private val nino                 = generator.nextNino
+  private val journeyId            = randomUUID().toString
+  private val applicationRouterKey = "application.router"
+  private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
+  val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
+  val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
+
+  System.setProperty(applicationRouterKey, testOnlyRoutes)
+
+  s"GET $clearGoalEventsUrl with $applicationRouterKey set to $testOnlyRoutes" should {
+    s"Return 200 " in (await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200)
+  }
 
   "GET /savings-account/savings-update" should {
 
@@ -58,19 +69,36 @@ class SavingsUpdateISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(123.45, nino = nino, openedYearMonth = YearMonth.now().minusMonths(6))
 
+      await(
+        wsUrl(createGoalUrl)
+          .put(Json.toJson(TestSavingsGoal(nino, Some(10.0), None, LocalDate.now().minusMonths(8))))
+      ).status shouldBe 201
+
+      await(
+        wsUrl(createGoalUrl)
+          .put(Json.toJson(TestSavingsGoal(nino, Some(30.0), None, LocalDate.now().minusMonths(3))))
+      ).status shouldBe 201
+
       val response: WSResponse = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                                                   shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "accountOpenedYearMonth").as[String]              shouldBe YearMonth.now().minusMonths(6).toString
-      (response.json \ "savingsUpdate").isDefined                        shouldBe true
-      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal] shouldBe BigDecimal(62.61)
-      (response.json \ "savingsUpdate" \ "monthsSaved").as[Int]          shouldBe 3
-      (response.json \ "bonusUpdate").isDefined                          shouldBe true
-      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]    shouldBe BigDecimal(90.99)
-      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]  shouldBe BigDecimal(181.98)
+        .as[LocalDate]                                                                    shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isDefined                                         shouldBe true
+      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe BigDecimal(87.61)
+      (response.json \ "savingsUpdate" \ "savedByMonth").isDefined                        shouldBe true
+      (response.json \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 4
+      (response.json \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 6
+      (response.json \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
+      (response.json \ "savingsUpdate" \ "goalsReached" \ "currentGoalAmount").as[Double] shouldBe 30.0
+      (response.json \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
+      (response.json \ "bonusUpdate").isDefined                                           shouldBe true
+      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe BigDecimal(90.99)
+      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe BigDecimal(181.98)
+
+      await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200
     }
 
     "respond with 200 and no savings update section if no transactions are found" in {
@@ -85,10 +113,10 @@ class SavingsUpdateISpec
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
       (response.json \ "reportEndDate")
-        .as[LocalDate]                                                shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
-      (response.json \ "accountOpenedYearMonth").as[String]           shouldBe YearMonth.now().minusMonths(6).toString
-      (response.json \ "savingsUpdate").isEmpty                       shouldBe true
-      (response.json \ "bonusUpdate").isDefined                       shouldBe true
+        .as[LocalDate]                                      shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+      (response.json \ "accountOpenedYearMonth").as[String] shouldBe YearMonth.now().minusMonths(6).toString
+      (response.json \ "savingsUpdate").isEmpty             shouldBe true
+      (response.json \ "bonusUpdate").isDefined             shouldBe true
     }
 
     "respond with a 404 if the user's account isn't found" in {
