@@ -4,7 +4,10 @@
   "accountOpenedYearMonth" : "2020-02",
   "savingsUpdate" : {
     "savedInPeriod" : 100,
-    "monthsSaved" : 4,
+    "savedByMonth": {
+      "numberOfMonths": 6,
+      "monthsSaved": 4
+    },
     "goalsReached" : {
       "currentAmount" : 25,
       "numberOfTimesReached" : 2

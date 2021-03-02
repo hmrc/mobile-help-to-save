@@ -65,6 +65,45 @@ trait AccountTestData {
        |}
     """.stripMargin
 
+  protected def accountReturnedByHelpToSaveJsonStringDateDynamic(
+    accountBalance:     BigDecimal
+  ): String =
+    s"""
+       |{
+       |  "openedYearMonth": "${YearMonth.now().minusMonths(6)}",
+       |  "accountNumber": "1000000000001",
+       |  "isClosed": false,
+       |  "blocked": {
+       |    "unspecified": false,
+       |    "payments": false,
+       |    "withdrawals": false,
+       |    "bonuses": false
+       |  },
+       |  "balance": $accountBalance,
+       |  "paidInThisMonth": 27.88,
+       |  "canPayInThisMonth": 22.12,
+       |  "maximumPaidInThisMonth": 50,
+       |  "thisMonthEndDate": "${LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())}",
+       |  "accountHolderForename": "Testfore",
+       |  "accountHolderSurname": "Testsur",
+       |  "accountHolderEmail": "testemail@example.com",
+       |  "bonusTerms": [
+       |    {
+       |      "bonusEstimate": 90.99,
+       |      "bonusPaid": 0,
+       |      "endDate": "${LocalDate.now().plusMonths(18).withDayOfMonth(LocalDate.now().plusMonths(18).lengthOfMonth())}",
+       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(19)withDayOfMonth(1)}"
+       |    },
+       |    {
+       |      "bonusEstimate": 12,
+       |      "bonusPaid": 0,
+       |      "endDate": "${LocalDate.now().plusMonths(42).withDayOfMonth(LocalDate.now().plusMonths(42).lengthOfMonth())}",
+       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(43)withDayOfMonth(1)}"
+       |    }
+       |  ]
+       |}
+    """.stripMargin
+
   protected def accountReturnedByHelpToSaveJsonString(
     accountBalance:                     BigDecimal,
     firstPeriodBonusEstimate:           BigDecimal,
@@ -215,6 +254,85 @@ trait AccountTestData {
       )
     ),
     currentBonusTerm     = CurrentBonusTerm.First,
+    closureDate          = None,
+    closingBalance       = None,
+    inAppPaymentsEnabled = false,
+    savingsGoalsEnabled  = true,
+    savingsGoal          = None,
+    1
+  )
+
+  protected val savingsUpdateMobileHelpToSaveAccount: Account = Account(
+    number                    = "1000000000001",
+    openedYearMonth           = YearMonth.of(YearMonth.now().minusYears(1).getYear, 1),
+    isClosed                  = false,
+    blocked                   = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
+    balance                   = BigDecimal("123.45"),
+    paidInThisMonth           = BigDecimal("27.88"),
+    canPayInThisMonth         = BigDecimal("22.12"),
+    maximumPaidInThisMonth    = 50,
+    thisMonthEndDate          = monthEndDate,
+    nextPaymentMonthStartDate = Some(LocalDate.of(YearMonth.now().minusYears(3).getYear, 5, 1)),
+    accountHolderName         = "Testfore Testsur",
+    accountHolderEmail        = Some("testemail@example.com"),
+    bonusTerms = Seq(
+      BonusTerm(
+        bonusEstimate                 = BigDecimal("90.99"),
+        bonusPaid                     = BigDecimal("90.99"),
+        endDate                       = LocalDate.of(YearMonth.now().plusYears(1).getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
+        balanceMustBeMoreThanForBonus = 0
+      ),
+      BonusTerm(
+        bonusEstimate                 = 12,
+        bonusPaid                     = 0,
+        endDate                       = LocalDate.of(YearMonth.now().getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
+        balanceMustBeMoreThanForBonus = BigDecimal("181.98")
+      )
+    ),
+    currentBonusTerm     = CurrentBonusTerm.First,
+    closureDate          = None,
+    closingBalance       = None,
+    inAppPaymentsEnabled = false,
+    savingsGoalsEnabled  = true,
+    savingsGoal          = None,
+    1
+  )
+
+  protected val mobileHelpToSaveAccountSecondTerm: Account = Account(
+    number                    = "1000000000001",
+    openedYearMonth           = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1),
+    isClosed                  = false,
+    blocked                   = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
+    balance                   = BigDecimal("123.45"),
+    paidInThisMonth           = BigDecimal("27.88"),
+    canPayInThisMonth         = BigDecimal("22.12"),
+    maximumPaidInThisMonth    = 50,
+    thisMonthEndDate          = monthEndDate,
+    nextPaymentMonthStartDate = Some(LocalDate.of(YearMonth.now().minusYears(3).getYear, 5, 1)),
+    accountHolderName         = "Testfore Testsur",
+    accountHolderEmail        = Some("testemail@example.com"),
+    bonusTerms = Seq(
+      BonusTerm(
+        bonusEstimate                 = BigDecimal("90.99"),
+        bonusPaid                     = BigDecimal("90.99"),
+        endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(2).getYear, 1, 1),
+        balanceMustBeMoreThanForBonus = 0
+      ),
+      BonusTerm(
+        bonusEstimate = 12,
+        bonusPaid     = 0,
+        endDate = LocalDate.of(YearMonth.now().plusMonths(6).getYear,
+                               YearMonth.now().plusMonths(6).getMonth,
+                               YearMonth.now().plusMonths(6).lengthOfMonth()),
+        bonusPaidOnOrAfterDate =
+          LocalDate.of(YearMonth.now().plusMonths(7).getYear, YearMonth.now().plusMonths(7).getMonth, 1),
+        balanceMustBeMoreThanForBonus = BigDecimal("100.00")
+      )
+    ),
+    currentBonusTerm     = CurrentBonusTerm.Second,
     closureDate          = None,
     closingBalance       = None,
     inAppPaymentsEnabled = false,

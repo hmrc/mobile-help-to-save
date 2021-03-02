@@ -536,4 +536,39 @@ trait TransactionTestData {
                   BigDecimal("110.99"))
     )
   )
+
+  def transactionsWithAverageSavingsRate(averageSavingRate: BigDecimal): Transactions = Transactions(
+    Seq(
+      Transaction(Credit,
+        averageSavingRate,
+        LocalDate.now().minusMonths(6),
+        LocalDate.now().minusMonths(6),
+        averageSavingRate),
+      Transaction(Credit,
+        averageSavingRate,
+        LocalDate.now().minusMonths(5),
+        LocalDate.now().minusMonths(5),
+        averageSavingRate),
+      Transaction(Credit,
+        averageSavingRate,
+        LocalDate.now().minusMonths(4),
+        LocalDate.now().minusMonths(4),
+        averageSavingRate),
+      Transaction(Credit,
+        averageSavingRate,
+        LocalDate.now().minusMonths(3),
+        LocalDate.now().minusMonths(3),
+        averageSavingRate),
+      Transaction(Credit,
+        averageSavingRate,
+        LocalDate.now().minusMonths(2),
+        LocalDate.now().minusMonths(2),
+        averageSavingRate),
+      Transaction(Credit,
+        averageSavingRate,
+        LocalDate.now().minusMonths(1),
+        LocalDate.now().minusMonths(1),
+        averageSavingRate),
+    )
+  )
 }

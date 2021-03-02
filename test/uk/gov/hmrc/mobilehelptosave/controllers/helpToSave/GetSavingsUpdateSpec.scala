@@ -72,8 +72,8 @@ class GetSavingsUpdateSpec
         accountReturns(
           Right(
             Some(
-              mobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6),
-                                           savingsGoal     = Some(SavingsGoal(Some(10.0))))
+              savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6),
+                                                        savingsGoal     = Some(SavingsGoal(Some(10.0))))
             )
           )
         )
@@ -89,16 +89,18 @@ class GetSavingsUpdateSpec
           .as[LocalDate]                                                               shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
         (jsonBody \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.now().minusMonths(6).toString
         (jsonBody \ "savingsUpdate").isDefined                                         shouldBe true
-        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe BigDecimal(137.61)
+        (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe 137.61
         (jsonBody \ "savingsUpdate" \ "savedByMonth").isDefined                        shouldBe true
         (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 4
         (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 6
         (jsonBody \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
-        (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentGoalAmount").as[Double] shouldBe 10.0
+        (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 10.0
         (jsonBody \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
         (jsonBody \ "bonusUpdate").isDefined                                           shouldBe true
-        (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe BigDecimal(90.99)
-        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe BigDecimal(181.98)
+        (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 90.99
+        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 181.98
+        (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 302.54
+        (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 355.07
       }
 
       "do not return savings update section if no transactions found for reporting period" in new AuthorisedTestScenario
