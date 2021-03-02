@@ -67,7 +67,7 @@ class SavingsUpdateISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsExistForUser(nino, dateDynamicTransactionsReturnedByHelpToSaveJsonString)
       HelpToSaveStub.currentUserIsEnrolled()
-      HelpToSaveStub.accountExists(123.45, nino = nino, openedYearMonth = YearMonth.now().minusMonths(6))
+      HelpToSaveStub.savingsUpdateAccountExists(123.45, nino = nino)
 
       await(
         wsUrl(createGoalUrl)
@@ -87,16 +87,18 @@ class SavingsUpdateISpec
         .as[LocalDate]                                                                    shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
       (response.json \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.now().minusMonths(6).toString
       (response.json \ "savingsUpdate").isDefined                                         shouldBe true
-      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe BigDecimal(87.61)
+      (response.json \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe 87.61
       (response.json \ "savingsUpdate" \ "savedByMonth").isDefined                        shouldBe true
       (response.json \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 4
       (response.json \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 6
       (response.json \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
-      (response.json \ "savingsUpdate" \ "goalsReached" \ "currentGoalAmount").as[Double] shouldBe 30.0
+      (response.json \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double] shouldBe 30.0
       (response.json \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
       (response.json \ "bonusUpdate").isDefined                                           shouldBe true
-      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe BigDecimal(90.99)
-      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe BigDecimal(181.98)
+      (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 90.99
+      (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 181.98
+      (response.json \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 193.14
+      (response.json \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 238.14
 
       await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200
     }

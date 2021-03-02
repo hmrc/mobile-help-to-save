@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import uk.gov.hmrc.helptosavecalculator.models.{FinalBonusInput, FirstBonusInput, YearMonthDayInput}
+import uk.gov.hmrc.helptosavecalculator.{FinalBonusTermCalculator, FirstBonusTermCalculator}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusUpdate, Credit, CurrentBonusTerm, ErrorInfo, GoalsReached, SavedByMonth, SavingsGoal, SavingsUpdate, SavingsUpdateResponse, Transaction, Transactions}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
 
@@ -36,62 +38,60 @@ trait SavingsUpdateService {
 
 class HtsSavingsUpdateService extends SavingsUpdateService {
 
+  val reportEndDate: LocalDate = LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
+
   def getSavingsUpdateResponse(
     account:      Account,
     transactions: Transactions,
     goalEvents:   List[SavingsGoalSetEvent]
   ): SavingsUpdateResponse = {
     val reportStartDate = calculateReportStartDate(account.openedYearMonth)
-    val reportEndDate   = LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
 
     val reportTransactions: Seq[Transaction] = transactions.transactions.filter(transaction =>
       transaction.transactionDate.isAfter(reportStartDate.minusDays(1)) && transaction.transactionDate.isBefore(
         reportEndDate.plusDays(1)
       )
     )
-
     SavingsUpdateResponse(
       reportStartDate,
       reportEndDate,
       account.openedYearMonth,
-      getSavingsUpdate(account, reportTransactions, goalEvents, reportStartDate, reportEndDate),
-      getBonusUpdate(account)
+      getSavingsUpdate(account, reportTransactions, goalEvents, reportStartDate),
+      getBonusUpdate(account, reportTransactions, reportStartDate)
     )
   }
-
-  @tailrec
-  private def calculateReportStartDate(accountStartDate: YearMonth): LocalDate =
-    if (MONTHS.between(accountStartDate, YearMonth.now()) > 12)
-      calculateReportStartDate(accountStartDate.plusYears(1))
-    else
-      LocalDate.of(accountStartDate.getYear, accountStartDate.getMonth, 1)
 
   private def getSavingsUpdate(
     account:         Account,
     transactions:    Seq[Transaction],
     goalEvents:      List[SavingsGoalSetEvent],
-    reportStartDate: LocalDate,
-    reportEndDate:   LocalDate
+    reportStartDate: LocalDate
   ): Option[SavingsUpdate] =
     if (transactions.isEmpty) None
     else
       Some(
         SavingsUpdate(
           calculateTotalSaved(transactions),
-          getMonthsSaved(transactions, MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1),
-          calculateGoalsReached(account.savingsGoal, goalEvents, transactions, reportStartDate, reportEndDate),
+          getMonthsSaved(transactions, reportStartDate),
+          calculateGoalsReached(account.savingsGoal, goalEvents, transactions, reportStartDate),
           None
         )
       )
 
-  private def getBonusUpdate(account: Account): BonusUpdate =
-    BonusUpdate(account.currentBonusTerm,
-                None,
-                getCurrentBonus(account),
-                defCalculateHighestBalance(account),
-                None,
-                None,
-                None)
+  private def getBonusUpdate(
+    account:         Account,
+    transactions:    Seq[Transaction],
+    reportStartDate: LocalDate
+  ): BonusUpdate =
+    BonusUpdate(
+      account.currentBonusTerm,
+      None,
+      getCurrentBonus(account),
+      defCalculateHighestBalance(account),
+      calculatePotentialBonusAtCurrentRate(transactions, reportStartDate, account),
+      calculatePotentialBonusWithFiveMore(transactions, reportStartDate, account),
+      None
+    )
 
   private def calculateTotalSaved(transactions: Seq[Transaction]): Option[BigDecimal] = {
     val totalSaved = transactions.filter(t => t.operation == Credit).map(_.amount).sum
@@ -99,10 +99,11 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
   }
 
   private def getMonthsSaved(
-    transactions: Seq[Transaction],
-    totalMonths:  Int
+    transactions:    Seq[Transaction],
+    reportStartDate: LocalDate
   ): Option[SavedByMonth] = {
     val creditTransactionsByMonth = groupTransactionsByMonth(transactions)
+    val totalMonths               = MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1
     if (creditTransactionsByMonth.nonEmpty) Some(SavedByMonth(totalMonths, creditTransactionsByMonth.size)) else None
   }
 
@@ -110,8 +111,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     currentGoal:     Option[SavingsGoal],
     goalEvents:      List[SavingsGoalSetEvent],
     transactions:    Seq[Transaction],
-    reportStartDate: LocalDate,
-    reportEndDate:   LocalDate
+    reportStartDate: LocalDate
   ): Option[GoalsReached] = {
     implicit def ord: Ordering[LocalDateTime] = Ordering.by(_.toInstant(ZoneOffset.UTC))
     if (currentGoal.isEmpty || currentGoal.get.goalAmount.isEmpty) None
@@ -172,7 +172,83 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
   }
 
+  private def calculatePotentialBonusAtCurrentRate(
+    transactions:    Seq[Transaction],
+    reportStartDate: LocalDate,
+    account:         Account
+  ): Option[BigDecimal] =
+    calculatePotentialBonus(calculateAverageSavingRate(transactions, reportStartDate), account)
+      .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
+
+  private def calculatePotentialBonusWithFiveMore(
+    transactions:    Seq[Transaction],
+    reportStartDate: LocalDate,
+    account:         Account
+  ): Option[BigDecimal] = {
+    val averageSavingsRate = calculateAverageSavingRate(transactions, reportStartDate)
+    if (averageSavingsRate <= 45.0) {
+      calculatePotentialBonus(averageSavingsRate + 5, account)
+        .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
+    } else None
+  }
+
+  private def calculatePotentialBonus(
+    averageSavingsRate: Double,
+    account:            Account
+  ): Option[Double] =
+    if (averageSavingsRate < 1) None
+    else {
+      val now             = LocalDate.now()
+      val firstBonusTerms = account.bonusTerms.head
+      val finalBonusTerms = account.bonusTerms.last
+      (account.currentBonusTerm) match {
+        case CurrentBonusTerm.First =>
+          val calcInput = new FirstBonusInput(
+            averageSavingsRate,
+            account.balance.toDouble,
+            account.paidInThisMonth.toDouble,
+            toYearMonthDayInput(now),
+            toYearMonthDayInput(firstBonusTerms.endDate),
+            toYearMonthDayInput(finalBonusTerms.endDate),
+            firstBonusTerms.balanceMustBeMoreThanForBonus.toDouble
+          )
+          Some(FirstBonusTermCalculator.INSTANCE.runFirstBonusCalculator(calcInput).getProjectedFirstBonus)
+        case CurrentBonusTerm.Second =>
+          val calcInput = new FinalBonusInput(
+            averageSavingsRate,
+            account.balance.toDouble,
+            account.paidInThisMonth.toDouble,
+            account.canPayInThisMonth.toDouble,
+            toYearMonthDayInput(now),
+            toYearMonthDayInput(finalBonusTerms.endDate),
+            finalBonusTerms.balanceMustBeMoreThanForBonus.toDouble,
+            finalBonusTerms.bonusEstimate.toDouble
+          )
+          Some(FinalBonusTermCalculator.INSTANCE.runFinalBonusCalculator(calcInput).getTotalProjectedBonuses)
+        case _ => None
+      }
+    }
+
+  private def calculateAverageSavingRate(
+    transactions:    Seq[Transaction],
+    reportStartDate: LocalDate
+  ): Double = {
+    val totalMonths = MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1
+    val totalSaved  = calculateTotalSaved(transactions)
+    if (totalMonths == 0) 0 else (totalSaved.getOrElse(BigDecimal(0)) / totalMonths).toDouble
+  }
+
   private def groupTransactionsByMonth(transactions: Seq[Transaction]): Map[Month, Seq[Transaction]] =
     transactions.filter(t => t.operation == Credit).groupBy(i => i.transactionDate.getMonth)
+
+  private def toYearMonthDayInput(date: LocalDate): YearMonthDayInput =
+    new YearMonthDayInput(date.getYear, date.getMonthValue, date.lengthOfMonth())
+
+  @tailrec
+  private def calculateReportStartDate(accountStartDate: YearMonth): LocalDate =
+    if (MONTHS.between(accountStartDate, YearMonth.now()) > 12)
+      calculateReportStartDate(accountStartDate.plusYears(1))
+    else
+      LocalDate.of(accountStartDate.getYear, accountStartDate.getMonth, 1)
 
 }

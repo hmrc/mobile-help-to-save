@@ -164,6 +164,23 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         )
     )
 
+  def savingsUpdateAccountExists(
+    balance:                 BigDecimal,
+    nino:                    Nino
+  )(implicit wireMockServer: WireMockServer
+  ): StubMapping =
+    wireMockServer.stubFor(
+      get(getAccountUrlPathPattern(nino))
+        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(
+              accountReturnedByHelpToSaveJsonStringDateDynamic(balance)
+            )
+        )
+    )
+
   def accountExistsSpecifyBonusTerms(
     balance:                   BigDecimal,
     nino:                      Nino,

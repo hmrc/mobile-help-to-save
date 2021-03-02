@@ -34,7 +34,7 @@ object SavingsUpdateResponse {
 
 case class SavingsUpdate(
   savedInPeriod:            Option[BigDecimal],
-  savedByMonth:              Option[SavedByMonth],
+  savedByMonth:             Option[SavedByMonth],
   goalsReached:             Option[GoalsReached],
   amountEarnedTowardsBonus: Option[Double])
 
@@ -47,8 +47,8 @@ case class BonusUpdate(
   monthsUntilBonus:            Option[Int],
   currentBonus:                Option[BigDecimal],
   highestBalance:              Option[BigDecimal],
-  potentialBonusAtCurrentRate: Option[Double],
-  potentialBonusWithFiveMore:  Option[Double],
+  potentialBonusAtCurrentRate: Option[BigDecimal],
+  potentialBonusWithFiveMore:  Option[BigDecimal],
   maxBonus:                    Option[Double])
 
 object BonusUpdate {
@@ -64,7 +64,7 @@ object SavedByMonth {
 }
 
 case class GoalsReached(
-  currentGoalAmount:    Double,
+  currentAmount:        Double,
   numberOfTimesReached: Int)
 
 object GoalsReached {
