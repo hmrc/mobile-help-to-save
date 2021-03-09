@@ -76,7 +76,7 @@ class SavingsUpdateISpec
 
       await(
         wsUrl(createGoalUrl)
-          .put(Json.toJson(TestSavingsGoal(nino, Some(30.0), None, LocalDate.now().minusMonths(3))))
+          .put(Json.toJson(TestSavingsGoal(nino, Some(30.0), Some("My Goal"), LocalDate.now().minusMonths(3))))
       ).status shouldBe 201
 
       val response: WSResponse = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
@@ -92,13 +92,15 @@ class SavingsUpdateISpec
       (response.json \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 4
       (response.json \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 6
       (response.json \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
-      (response.json \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double] shouldBe 30.0
+      (response.json \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 30.0
+      (response.json \ "savingsUpdate" \ "goalsReached" \ "currentGoalName").as[String]   shouldBe "My Goal"
       (response.json \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
       (response.json \ "bonusUpdate").isDefined                                           shouldBe true
       (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 90.99
       (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 181.98
       (response.json \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 193.14
       (response.json \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 238.14
+      (response.json \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 522.79
 
       await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200
     }

@@ -17,9 +17,9 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.test
 
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.{SavingsGoal, TestSavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.repository.{MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 

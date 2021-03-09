@@ -28,7 +28,6 @@ import uk.gov.hmrc.mobilehelptosave.services.{AccountService, SavingsUpdateServi
 import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.tools.nsc.interactive.Pickler.TildeDecorator
 
 trait HelpToSaveActions {
 

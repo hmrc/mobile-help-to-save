@@ -49,7 +49,7 @@ case class BonusUpdate(
   highestBalance:              Option[BigDecimal],
   potentialBonusAtCurrentRate: Option[BigDecimal],
   potentialBonusWithFiveMore:  Option[BigDecimal],
-  maxBonus:                    Option[Double])
+  maxBonus:                    Option[BigDecimal])
 
 object BonusUpdate {
   implicit val format: Format[BonusUpdate] = Json.format[BonusUpdate]
@@ -65,6 +65,7 @@ object SavedByMonth {
 
 case class GoalsReached(
   currentAmount:        Double,
+  currentGoalName:      Option[String],
   numberOfTimesReached: Int)
 
 object GoalsReached {
