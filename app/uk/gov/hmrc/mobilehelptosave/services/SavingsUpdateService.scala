@@ -53,25 +53,26 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       reportStartDate,
       reportEndDate,
       account.openedYearMonth,
-      getSavingsUpdate(account, reportTransactions, goalEvents, reportStartDate),
+      getSavingsUpdate(account, transactions, reportTransactions, goalEvents, reportStartDate),
       getBonusUpdate(account, reportTransactions, reportStartDate)
     )
   }
 
   private def getSavingsUpdate(
-    account:         Account,
-    transactions:    Seq[Transaction],
-    goalEvents:      List[SavingsGoalSetEvent],
-    reportStartDate: LocalDate
+    account:            Account,
+    transactions:       Transactions,
+    reportTransactions: Seq[Transaction],
+    goalEvents:         List[SavingsGoalSetEvent],
+    reportStartDate:    LocalDate
   ): Option[SavingsUpdate] =
-    if (transactions.isEmpty) None
+    if (reportTransactions.isEmpty) None
     else
       Some(
         SavingsUpdate(
-          calculateTotalSaved(transactions),
-          getMonthsSaved(transactions, reportStartDate),
-          calculateGoalsReached(account.savingsGoal, goalEvents, transactions, reportStartDate),
-          None
+          calculateTotalSaved(reportTransactions),
+          getMonthsSaved(reportTransactions, reportStartDate),
+          calculateGoalsReached(account.savingsGoal, goalEvents, reportTransactions, reportStartDate),
+          calculateAmountEarnedTowardsBonus(transactions, account, reportStartDate)
         )
       )
 
@@ -82,9 +83,9 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
   ): BonusUpdate =
     BonusUpdate(
       account.currentBonusTerm,
-      None,
+      getMonthsUntilNextBonus(account),
       getCurrentBonus(account),
-      defCalculateHighestBalance(account),
+      calculateHighestBalance(account),
       calculatePotentialBonusAtCurrentRate(transactions, reportStartDate, account),
       calculatePotentialBonusWithFiveMore(transactions, reportStartDate, account),
       calculateMaxBonus(account)
@@ -151,6 +152,29 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     }
   }
 
+  private def getMonthsUntilNextBonus(account: Account): Int =
+    if (account.currentBonusTerm == CurrentBonusTerm.First) {
+      MONTHS.between(YearMonth.now(), YearMonth.from(account.bonusTerms.head.endDate)).toInt + 1
+    } else {
+      MONTHS.between(YearMonth.now(), YearMonth.from(account.bonusTerms.last.endDate)).toInt + 1
+    }
+
+  private def calculateAmountEarnedTowardsBonus(
+    transactions:    Transactions,
+    account:         Account,
+    reportStartDate: LocalDate
+  ): Option[BigDecimal] = {
+    val transactionsBeforeReport: Seq[Transaction] = transactions.transactions.filter(transaction =>
+      transaction.transactionDate.isBefore(
+        reportStartDate
+      )
+    )
+    val highestBalanceAtStartOfReport =
+      if (transactionsBeforeReport.isEmpty) BigDecimal(0) else transactionsBeforeReport.map(_.balanceAfter).max
+    val amountEarned = (calculateHighestBalance(account).getOrElse(BigDecimal(0)) - highestBalanceAtStartOfReport) / 2
+    if (amountEarned > 0) Some(amountEarned) else None
+  }
+
   private def getCurrentBonus(account: Account): Option[BigDecimal] =
     if (account.currentBonusTerm == CurrentBonusTerm.First) {
       account.bonusTerms.headOption.map(_.bonusEstimate)
@@ -158,7 +182,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       account.bonusTerms.lastOption.map(_.bonusEstimate)
     }
 
-  private def defCalculateHighestBalance(account: Account): Option[BigDecimal] = {
+  private def calculateHighestBalance(account: Account): Option[BigDecimal] = {
     val finalBonusTerms = account.bonusTerms.last
     if (account.currentBonusTerm == CurrentBonusTerm.First) {
       val highestBalance = finalBonusTerms.balanceMustBeMoreThanForBonus
