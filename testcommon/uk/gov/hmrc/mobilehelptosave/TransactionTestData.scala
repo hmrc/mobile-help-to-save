@@ -483,7 +483,7 @@ trait TransactionTestData {
                   BigDecimal("41.60"),
                   LocalDate.now().minusMonths(16),
                   LocalDate.now().minusMonths(16),
-                  BigDecimal("51.80")),
+                  BigDecimal("60.00")),
       Transaction(Debit,
                   BigDecimal("11.50"),
                   LocalDate.now().minusMonths(15),

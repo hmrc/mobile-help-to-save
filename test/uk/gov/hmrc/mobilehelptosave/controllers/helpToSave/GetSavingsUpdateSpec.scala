@@ -17,17 +17,14 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
-import org.joda.time.Months
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
-import play.api.libs.json.Json
-import play.api.test.Helpers.{contentAsJson, status, _}
+import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
-import uk.gov.hmrc.mobilehelptosave.domain.{CurrentBonusTerm, ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEventRepo, SavingsGoalSetEvent}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
@@ -35,8 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, Trans
 
 import java.time.{LocalDate, YearMonth}
 import java.time.temporal.ChronoUnit._
-import java.time.temporal.{TemporalAdjuster, TemporalAdjusters}
-import scala.annotation.tailrec
+import java.time.temporal.TemporalAdjusters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -96,11 +92,14 @@ class GetSavingsUpdateSpec
         (jsonBody \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
         (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 10.0
         (jsonBody \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
+        (jsonBody \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 120.00
         (jsonBody \ "bonusUpdate").isDefined                                           shouldBe true
+        (jsonBody \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
+        (jsonBody \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 19
         (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 90.99
-        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 181.98
-        (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 302.54
-        (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 355.07
+        (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 300.00
+        (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 268.14
+        (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 313.17
       }
 
       "do not return savings update section if no transactions found for reporting period" in new AuthorisedTestScenario
