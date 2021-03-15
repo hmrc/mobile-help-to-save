@@ -65,9 +65,7 @@ trait AccountTestData {
        |}
     """.stripMargin
 
-  protected def accountReturnedByHelpToSaveJsonStringDateDynamic(
-    accountBalance:     BigDecimal
-  ): String =
+  protected def accountReturnedByHelpToSaveJsonStringDateDynamic(accountBalance: BigDecimal): String =
     s"""
        |{
        |  "openedYearMonth": "${YearMonth.now().minusMonths(6)}",
@@ -91,14 +89,20 @@ trait AccountTestData {
        |    {
        |      "bonusEstimate": 90.99,
        |      "bonusPaid": 0,
-       |      "endDate": "${LocalDate.now().plusMonths(18).withDayOfMonth(LocalDate.now().plusMonths(18).lengthOfMonth())}",
-       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(19)withDayOfMonth(1)}"
+       |      "endDate": "${LocalDate
+         .now()
+         .plusMonths(18)
+         .withDayOfMonth(LocalDate.now().plusMonths(18).lengthOfMonth())}",
+       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(19) withDayOfMonth (1)}"
        |    },
        |    {
        |      "bonusEstimate": 12,
        |      "bonusPaid": 0,
-       |      "endDate": "${LocalDate.now().plusMonths(42).withDayOfMonth(LocalDate.now().plusMonths(42).lengthOfMonth())}",
-       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(43)withDayOfMonth(1)}"
+       |      "endDate": "${LocalDate
+         .now()
+         .plusMonths(42)
+         .withDayOfMonth(LocalDate.now().plusMonths(42).lengthOfMonth())}",
+       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(43) withDayOfMonth (1)}"
        |    }
        |  ]
        |}
@@ -277,18 +281,24 @@ trait AccountTestData {
     accountHolderEmail        = Some("testemail@example.com"),
     bonusTerms = Seq(
       BonusTerm(
-        bonusEstimate                 = BigDecimal("90.99"),
-        bonusPaid                     = BigDecimal("90.99"),
-        endDate                       = LocalDate.of(YearMonth.now().plusYears(1).getYear, 12, 31),
-        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
+        bonusEstimate = BigDecimal("90.99"),
+        bonusPaid     = BigDecimal("90.99"),
+        endDate = LocalDate.of(YearMonth.now().plusMonths(18).getYear,
+                               YearMonth.now().plusMonths(18).getMonth,
+                               YearMonth.now().plusMonths(18).lengthOfMonth()),
+        bonusPaidOnOrAfterDate =
+          LocalDate.of(YearMonth.now().plusMonths(19).getYear, YearMonth.now().plusMonths(19).getMonth, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
-        bonusEstimate                 = 12,
-        bonusPaid                     = 0,
-        endDate                       = LocalDate.of(YearMonth.now().getYear, 12, 31),
-        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
-        balanceMustBeMoreThanForBonus = BigDecimal("181.98")
+        bonusEstimate = 12,
+        bonusPaid     = 0,
+        endDate = LocalDate.of(YearMonth.now().plusMonths(42).getYear,
+                               YearMonth.now().plusMonths(42).getMonth,
+                               YearMonth.now().plusMonths(42).lengthOfMonth()),
+        bonusPaidOnOrAfterDate =
+          LocalDate.of(YearMonth.now().plusMonths(43).getYear, YearMonth.now().plusMonths(43).getMonth, 1),
+        balanceMustBeMoreThanForBonus = BigDecimal("300")
       )
     ),
     currentBonusTerm     = CurrentBonusTerm.First,

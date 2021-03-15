@@ -23,7 +23,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, Trans
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.time.YearMonth
+import java.time.{LocalDate, YearMonth}
 
 class SavingsUpdateServiceSpec
     extends WordSpec
@@ -76,7 +76,7 @@ class SavingsUpdateServiceSpec
       val savingsUpdate =
         service.getSavingsUpdateResponse(
           savingsUpdateMobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.Second,
-                                                    openedYearMonth  = YearMonth.now().minusMonths(6)),
+                                                    openedYearMonth  = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
@@ -87,7 +87,7 @@ class SavingsUpdateServiceSpec
     "calculate the number of times the goal has been hit against the current goal if no changes have been made during the reporting period" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(30),
                                                     currentBonusTerm = CurrentBonusTerm.Second,
                                                     savingsGoal      = Some(SavingsGoal(Some(10.0)))),
           transactionsDateDynamic,
@@ -102,7 +102,7 @@ class SavingsUpdateServiceSpec
     "calculate the number of times a goal has been hit if a goal change has been made during the reporting period" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(30),
                                                     currentBonusTerm = CurrentBonusTerm.Second,
                                                     savingsGoal      = Some(SavingsGoal(Some(50.0)))),
           transactionsDateDynamic,
@@ -117,7 +117,7 @@ class SavingsUpdateServiceSpec
     "calculate the number of times a goal has been hit if several goal changes have been made during the reporting period" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(30),
                                                     currentBonusTerm = CurrentBonusTerm.Second,
                                                     savingsGoal      = Some(SavingsGoal(Some(50.0)))),
           transactionsDateDynamic,
@@ -132,7 +132,7 @@ class SavingsUpdateServiceSpec
     "calculate the number of times a goal has been hit using the lowest goal amount if changed multiple times in a month" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(30),
                                                     currentBonusTerm = CurrentBonusTerm.Second,
                                                     savingsGoal      = Some(SavingsGoal(Some(50.0)))),
           transactionsDateDynamic,
@@ -142,6 +142,76 @@ class SavingsUpdateServiceSpec
       savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         shouldBe true
       savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        shouldBe 50.0
       savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached shouldBe 3
+    }
+
+    "Calculate amount earned towards next bonus correctly for user in first term" in {
+      val savingsUpdate =
+        service.getSavingsUpdateResponse(
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)),
+          transactionsDateDynamic,
+          dateDynamicSavingsGoalData
+        )
+      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) shouldBe Some(120.00)
+    }
+
+    "Calculate amount earned towards next bonus correctly for user in second term" in {
+      val savingsUpdate =
+        service.getSavingsUpdateResponse(
+          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth = YearMonth.now().minusMonths(30)),
+          transactionsDateDynamic,
+          dateDynamicSavingsGoalData
+        )
+      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) shouldBe Some(32.00)
+    }
+
+    "return months until next bonus correctly for user in first term" in {
+      val savingsUpdate =
+        service.getSavingsUpdateResponse(
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)),
+          transactionsDateDynamic,
+          dateDynamicSavingsGoalData
+        )
+      savingsUpdate.bonusUpdate.monthsUntilBonus shouldBe 19
+    }
+
+    "return months until next bonus correctly for user in second term" in {
+      val savingsUpdate =
+        service.getSavingsUpdateResponse(
+          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth = YearMonth.now().minusMonths(30)),
+          transactionsDateDynamic,
+          dateDynamicSavingsGoalData
+        )
+      savingsUpdate.bonusUpdate.monthsUntilBonus shouldBe 7
+    }
+
+    "round up months correctly" in {
+      val savingsUpdate =
+        service.getSavingsUpdateResponse(
+          mobileHelpToSaveAccountSecondTerm.copy(
+            openedYearMonth = YearMonth.now().minusMonths(30),
+            bonusTerms = Seq(
+              BonusTerm(
+                bonusEstimate                 = BigDecimal("90.99"),
+                bonusPaid                     = BigDecimal("90.99"),
+                endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
+                bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(2).getYear, 1, 1),
+                balanceMustBeMoreThanForBonus = 0
+              ),
+              BonusTerm(
+                bonusEstimate = 12,
+                bonusPaid     = 0,
+                endDate =
+                  LocalDate.of(YearMonth.now().getYear, YearMonth.now().getMonth, YearMonth.now().lengthOfMonth()),
+                bonusPaidOnOrAfterDate =
+                  LocalDate.of(YearMonth.now().plusMonths(7).getYear, YearMonth.now().plusMonths(7).getMonth, 1),
+                balanceMustBeMoreThanForBonus = BigDecimal("100.00")
+              )
+            )
+          ),
+          transactionsDateDynamic,
+          dateDynamicSavingsGoalData
+        )
+      savingsUpdate.bonusUpdate.monthsUntilBonus shouldBe 1
     }
 
     "return current bonus estimate correctly for user in first term" in {
@@ -158,7 +228,7 @@ class SavingsUpdateServiceSpec
       val savingsUpdate =
         service.getSavingsUpdateResponse(
           savingsUpdateMobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.Second,
-                                                    openedYearMonth  = YearMonth.now().minusMonths(6)),
+                                                    openedYearMonth  = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
@@ -172,35 +242,34 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(181.98))
+      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(300.00))
     }
 
     "calculate highest balance correctly for user in final term" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
           savingsUpdateMobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.Second,
-                                                    openedYearMonth  = YearMonth.now().minusMonths(6)),
+                                                    openedYearMonth  = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(205.98))
+      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(324.00))
     }
 
     "calculate potential bonus correctly for user in first term" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(28)),
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(394.59))
+      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(268.14))
     }
 
     "calculate potential bonus correctly for user in second term" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
-                                                 currentBonusTerm = CurrentBonusTerm.Second),
+          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
@@ -210,8 +279,7 @@ class SavingsUpdateServiceSpec
     "don't return potential bonus if average savings amount is 0" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth  = YearMonth.now(),
-                                                 currentBonusTerm = CurrentBonusTerm.Second),
+          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth = YearMonth.now()),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
@@ -221,18 +289,17 @@ class SavingsUpdateServiceSpec
     "calculate potential bonus with 5 increase correctly for user in first term" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(28)),
+          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(6)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore shouldBe Some(BigDecimal(449.59))
+      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore shouldBe Some(BigDecimal(313.17))
     }
 
     "calculate potential bonus with 5 increase correctly for user in second term" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
-                                                 currentBonusTerm = CurrentBonusTerm.Second),
+          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
@@ -246,7 +313,7 @@ class SavingsUpdateServiceSpec
           transactionsWithAverageSavingsRate(BigDecimal(45.01)),
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(542.90))
+      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(475.38))
       savingsUpdate.bonusUpdate.potentialBonusWithFiveMore  shouldBe None
     }
 
@@ -257,18 +324,17 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.maxBonus shouldBe Some(BigDecimal(597.79))
+      savingsUpdate.bonusUpdate.maxBonus shouldBe Some(BigDecimal(522.79))
     }
 
     "Calculate maximum bonus possible correctly for user in the second term" in {
       val savingsUpdate =
         service.getSavingsUpdateResponse(
-          savingsUpdateMobileHelpToSaveAccount.copy(openedYearMonth  = YearMonth.now().minusMonths(6),
-                                                    currentBonusTerm = CurrentBonusTerm.Second),
+          mobileHelpToSaveAccountSecondTerm.copy(openedYearMonth = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.maxBonus shouldBe Some(BigDecimal(206.79))
+      savingsUpdate.bonusUpdate.maxBonus shouldBe Some(BigDecimal(172.79))
     }
 
   }

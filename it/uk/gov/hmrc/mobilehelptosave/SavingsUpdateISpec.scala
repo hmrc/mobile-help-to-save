@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Assertion, Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpec}
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
@@ -95,7 +95,10 @@ class SavingsUpdateISpec
       (response.json \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 30.0
       (response.json \ "savingsUpdate" \ "goalsReached" \ "currentGoalName").as[String]   shouldBe "My Goal"
       (response.json \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
+      (response.json \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 85.24
       (response.json \ "bonusUpdate").isDefined                                           shouldBe true
+      (response.json \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
+      (response.json \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 19
       (response.json \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 90.99
       (response.json \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 181.98
       (response.json \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 193.14
