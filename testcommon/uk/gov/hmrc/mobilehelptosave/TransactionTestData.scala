@@ -533,7 +533,7 @@ trait TransactionTestData {
                   BigDecimal(30),
                   LocalDate.now().minusMonths(1),
                   LocalDate.now().minusMonths(1),
-                  BigDecimal("110.99"))
+                  BigDecimal("300.00"))
     )
   )
 

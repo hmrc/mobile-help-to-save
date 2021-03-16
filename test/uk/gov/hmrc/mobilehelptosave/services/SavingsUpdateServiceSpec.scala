@@ -176,7 +176,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) shouldBe Some(32.00)
+      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) shouldBe Some(120.00)
     }
 
     "return months until next bonus correctly for user in first term" in {
