@@ -145,7 +145,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
             }
             if (currentGoal.isDefined && totalSavedEachMonth
                   .getOrElse(date.getMonth, BigDecimal(0))
-                  .toDouble > currentGoal.getOrElse(50.0))
+                  .toDouble >= currentGoal.getOrElse(50.0))
               Map(date.getMonth -> currentGoal.getOrElse(50.0))
             else None
           }
