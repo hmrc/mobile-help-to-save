@@ -135,19 +135,24 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
             .map(e => Map(e._1 -> e._2.map(_.amount.getOrElse(50.0)).min))
             .flatten
             .toMap
-        var currentGoal: Double =
-          sortedEvents.filter(_.date.isBefore(reportStartDate.atStartOfDay())).last.amount.getOrElse(0)
+        var currentGoal: Option[Double] =
+          sortedEvents.filter(_.date.isBefore(reportStartDate.atStartOfDay())).lastOption.map(_.amount.getOrElse(50.0))
 
         val numberOfTimesGoalHit = datesInRange
           .map { date =>
-            currentGoal = lowestGoalEachMonth.getOrElse(date.getMonth, currentGoal)
-            if (totalSavedEachMonth.getOrElse(date.getMonth, BigDecimal(0)).toDouble > currentGoal)
-              Map(date.getMonth -> currentGoal)
-            else None
+          if(lowestGoalEachMonth.contains(date.getMonth)) {
+            currentGoal = lowestGoalEachMonth.get(date.getMonth)
+          }
+          if (currentGoal.isDefined && totalSavedEachMonth
+                .getOrElse(date.getMonth, BigDecimal(0))
+                .toDouble > currentGoal.getOrElse(50.0))
+            Map(date.getMonth -> currentGoal.getOrElse(50.0))
+          else None
           }
           .count(_.canEqual())
 
-        Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
+        if (numberOfTimesGoalHit > 0) Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
+        else None
       }
     }
   }

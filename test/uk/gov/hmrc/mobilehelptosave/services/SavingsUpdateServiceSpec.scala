@@ -19,11 +19,13 @@ package uk.gov.hmrc.mobilehelptosave.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, LocalDateTime, YearMonth}
 
 class SavingsUpdateServiceSpec
     extends WordSpec
@@ -79,6 +81,19 @@ class SavingsUpdateServiceSpec
                                                     openedYearMonth  = YearMonth.now().minusMonths(30)),
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
+        )
+      savingsUpdate.savingsUpdate.isDefined                       shouldBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty shouldBe true
+    }
+
+    "not return goalsReached if user has set their first goal in the current month" in {
+      val savingsUpdate =
+        service.getSavingsUpdateResponse(
+          savingsUpdateMobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.Second,
+                                                    openedYearMonth  = YearMonth.now().minusMonths(30),
+                                                    savingsGoal      = Some(SavingsGoal(Some(10), Some("Holiday")))),
+          transactionsDateDynamic,
+          List(SavingsGoalSetEvent(Nino("CS700100A"), Some(10), LocalDateTime.now()))
         )
       savingsUpdate.savingsUpdate.isDefined                       shouldBe true
       savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty shouldBe true
