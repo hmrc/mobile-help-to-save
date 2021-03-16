@@ -49,11 +49,12 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
         reportEndDate.plusDays(1)
       )
     )
+    val filteredGoalEvents = goalEvents.filter(_.date.isBefore(reportEndDate.plusDays(1).atStartOfDay()))
     SavingsUpdateResponse(
       reportStartDate,
       reportEndDate,
       account.openedYearMonth,
-      getSavingsUpdate(account, transactions, reportTransactions, goalEvents, reportStartDate),
+      getSavingsUpdate(account, transactions, reportTransactions, filteredGoalEvents, reportStartDate),
       getBonusUpdate(account, reportTransactions, reportStartDate)
     )
   }
@@ -71,7 +72,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
         SavingsUpdate(
           calculateTotalSaved(reportTransactions),
           getMonthsSaved(reportTransactions, reportStartDate),
-          calculateGoalsReached(account.savingsGoal, goalEvents, reportTransactions, reportStartDate),
+          if (goalEvents.isEmpty) None else calculateGoalsReached(account.savingsGoal, goalEvents, reportTransactions, reportStartDate),
           calculateAmountEarnedTowardsBonus(transactions, reportTransactions, reportStartDate)
         )
       )
@@ -150,9 +151,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
             else None
           }
           .count(_.canEqual())
-
-        if (numberOfTimesGoalHit > 0) Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
-        else None
+        Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
       }
     }
   }
