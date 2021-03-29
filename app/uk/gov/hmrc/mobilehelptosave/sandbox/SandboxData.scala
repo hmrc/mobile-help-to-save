@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.sandbox
 
 import java.time.temporal.TemporalAdjusters
 import java.time.{LocalDate, YearMonth}
-
 import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
@@ -90,6 +89,31 @@ case class SandboxData(
 
   val milestones = Milestones(
     List[MongoMilestone]()
+  )
+
+  val savingsUpdate = SavingsUpdateResponse(
+    reportStartDate        = LocalDate.of(today.minusMonths(8).getYear, today.minusMonths(8).getMonth, 1),
+    reportEndDate          = today.minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth()),
+    accountOpenedYearMonth = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
+    savingsUpdate = Some(
+      SavingsUpdate(
+        savedInPeriod = Some(BigDecimal(200)),
+        savedByMonth  = Some(SavedByMonth(numberOfMonths = 7, monthsSaved = 6)),
+        goalsReached = Some(
+          GoalsReached(currentAmount = 25.0, currentGoalName = Some("\uD83C\uDFE1 New home"), numberOfTimesReached = 4)
+        ),
+        amountEarnedTowardsBonus = Some(BigDecimal(100))
+      )
+    ),
+    bonusUpdate = BonusUpdate(
+      currentBonusTerm            = CurrentBonusTerm.First,
+      monthsUntilBonus            = 16,
+      currentBonus                = Some(BigDecimal(115)),
+      highestBalance              = None,
+      potentialBonusAtCurrentRate = Some(BigDecimal(345)),
+      potentialBonusWithFiveMore  = Some(BigDecimal(385)),
+      maxBonus                    = Some(BigDecimal(515))
+    )
   )
 
 }
