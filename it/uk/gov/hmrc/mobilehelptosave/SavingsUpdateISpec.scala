@@ -95,7 +95,7 @@ class SavingsUpdateISpec
       (response.json \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 30.0
       (response.json \ "savingsUpdate" \ "goalsReached" \ "currentGoalName").as[String]   shouldBe "My Goal"
       (response.json \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
-      (response.json \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 85.24
+      (response.json \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 24.5
       (response.json \ "bonusUpdate").isDefined                                           shouldBe true
       (response.json \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
       (response.json \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 19

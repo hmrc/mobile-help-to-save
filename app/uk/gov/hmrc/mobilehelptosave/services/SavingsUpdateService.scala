@@ -49,11 +49,12 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
         reportEndDate.plusDays(1)
       )
     )
+    val filteredGoalEvents = goalEvents.filter(_.date.isBefore(reportEndDate.plusDays(1).atStartOfDay()))
     SavingsUpdateResponse(
       reportStartDate,
       reportEndDate,
       account.openedYearMonth,
-      getSavingsUpdate(account, transactions, reportTransactions, goalEvents, reportStartDate),
+      getSavingsUpdate(account, transactions, reportTransactions, filteredGoalEvents, reportStartDate),
       getBonusUpdate(account, reportTransactions, reportStartDate)
     )
   }
@@ -71,8 +72,8 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
         SavingsUpdate(
           calculateTotalSaved(reportTransactions),
           getMonthsSaved(reportTransactions, reportStartDate),
-          calculateGoalsReached(account.savingsGoal, goalEvents, reportTransactions, reportStartDate),
-          calculateAmountEarnedTowardsBonus(transactions, account, reportStartDate)
+          if (goalEvents.isEmpty) None else calculateGoalsReached(account.savingsGoal, goalEvents, reportTransactions, reportStartDate),
+          calculateAmountEarnedTowardsBonus(transactions, reportTransactions, reportStartDate)
         )
       )
 
@@ -140,19 +141,17 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
         val numberOfTimesGoalHit = datesInRange
           .map { date =>
-          if(lowestGoalEachMonth.contains(date.getMonth)) {
-            currentGoal = lowestGoalEachMonth.get(date.getMonth)
-          }
-          if (currentGoal.isDefined && totalSavedEachMonth
-                .getOrElse(date.getMonth, BigDecimal(0))
-                .toDouble > currentGoal.getOrElse(50.0))
-            Map(date.getMonth -> currentGoal.getOrElse(50.0))
-          else None
+            if (lowestGoalEachMonth.contains(date.getMonth)) {
+              currentGoal = lowestGoalEachMonth.get(date.getMonth)
+            }
+            if (currentGoal.isDefined && totalSavedEachMonth
+                  .getOrElse(date.getMonth, BigDecimal(0))
+                  .toDouble >= currentGoal.getOrElse(50.0))
+              Map(date.getMonth -> currentGoal.getOrElse(50.0))
+            else None
           }
           .count(_.canEqual())
-
-        if (numberOfTimesGoalHit > 0) Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
-        else None
+        Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
       }
     }
   }
@@ -165,9 +164,9 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     }
 
   private def calculateAmountEarnedTowardsBonus(
-    transactions:    Transactions,
-    account:         Account,
-    reportStartDate: LocalDate
+    transactions:       Transactions,
+    reportTransactions: Seq[Transaction],
+    reportStartDate:    LocalDate
   ): Option[BigDecimal] = {
     val transactionsBeforeReport: Seq[Transaction] = transactions.transactions.filter(transaction =>
       transaction.transactionDate.isBefore(
@@ -176,8 +175,9 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     )
     val highestBalanceAtStartOfReport =
       if (transactionsBeforeReport.isEmpty) BigDecimal(0) else transactionsBeforeReport.map(_.balanceAfter).max
-    val amountEarned = (calculateHighestBalance(account).getOrElse(BigDecimal(0)) - highestBalanceAtStartOfReport) / 2
-    if (amountEarned > 0) Some(amountEarned) else None
+    val highestBalanceDuringReportingPeriod = reportTransactions.map(_.balanceAfter).max
+    val amountEarned                        = (highestBalanceDuringReportingPeriod - highestBalanceAtStartOfReport) / 2
+    if (amountEarned > 0) Some(amountEarned.setScale(2, BigDecimal.RoundingMode.HALF_UP)) else None
   }
 
   private def getCurrentBonus(account: Account): Option[BigDecimal] =
@@ -194,7 +194,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       if (account.balance < highestBalance) Some(highestBalance) else None
     } else {
       val highestBalance = finalBonusTerms.balanceMustBeMoreThanForBonus + (finalBonusTerms.bonusEstimate * 2)
-      if (account.balance < highestBalance) Some(highestBalance) else None
+      if (account.balance < highestBalance) Some(highestBalance.setScale(2, BigDecimal.RoundingMode.HALF_UP)) else None
     }
   }
 
