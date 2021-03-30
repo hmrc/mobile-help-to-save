@@ -116,5 +116,12 @@ class SandboxController(
       }
     }
 
-  override def getSavingsUpdate(journeyId: JourneyId): Action[AnyContent] = ???
+  override def getSavingsUpdate(journeyId: JourneyId): Action[AnyContent] =
+    Action.async { implicit request =>
+      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+        withShuttering(shuttered) {
+          Future successful Ok(Json.toJson(sandboxData.savingsUpdate))
+        }
+      }
+    }
 }
