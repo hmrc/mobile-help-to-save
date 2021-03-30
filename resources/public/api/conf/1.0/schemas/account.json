@@ -235,6 +235,13 @@
       "examples": [
         1
       ]
+    },
+    "highestBalance": {
+      "type": "number",
+      "description": "The highest balance this account has had",
+      "examples": [
+        135.00
+      ]
     }
   },
   "required": [
@@ -249,6 +256,7 @@
     "accountHolderName",
     "bonusTerms",
     "currentBonusTerm",
-    "inAppPaymentsEnabled"
+    "inAppPaymentsEnabled",
+    "highestBalance"
   ]
 }

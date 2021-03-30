@@ -63,7 +63,8 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     ),
     currentBonusTerm     = CurrentBonusTerm.First,
     inAppPaymentsEnabled = false,
-    daysRemainingInMonth = 1
+    daysRemainingInMonth = 1,
+    highestBalance = 200.12
   )
 
   "Account JSON" when {

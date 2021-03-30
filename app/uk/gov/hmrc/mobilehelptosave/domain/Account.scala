@@ -73,7 +73,8 @@ case class Account(
   savingsGoalsEnabled: Boolean = false,
   // This field is populated from the mongo repository
   savingsGoal:          Option[SavingsGoal] = None,
-  daysRemainingInMonth: Long)
+  daysRemainingInMonth: Long,
+  highestBalance:       BigDecimal)
 
 object Account {
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
@@ -106,7 +107,8 @@ object Account {
     inAppPaymentsEnabled      = inAppPaymentsEnabled,
     savingsGoalsEnabled       = savingsGoalsEnabled,
     daysRemainingInMonth      = calculateDaysRemainingInMonth(now, h),
-    savingsGoal               = savingsGoal
+    savingsGoal               = savingsGoal,
+    highestBalance            = highestBalance(bonusTerms(h, logger), currentBonusTerm(h))
   )
 
   /**
@@ -169,6 +171,19 @@ object Account {
         acc.lastOption.fold(BigDecimal(0))(prevHtsTerm => prevHtsTerm.bonusEstimate * 2)
 
       acc :+ bonusTerm(htsTerm, balanceMustBeMoreThanForBonus)
+    }
+  }
+
+  private def highestBalance(
+    bonusTerms:       Seq[BonusTerm],
+    currentBonusTerm: CurrentBonusTerm.Value
+  ): BigDecimal = {
+    val finalBonusTerms = bonusTerms.last
+    if (currentBonusTerm == CurrentBonusTerm.First) {
+      finalBonusTerms.balanceMustBeMoreThanForBonus
+    } else {
+      val highestBalance = finalBonusTerms.balanceMustBeMoreThanForBonus + (finalBonusTerms.bonusEstimate * 2)
+      highestBalance.setScale(2, BigDecimal.RoundingMode.HALF_UP)
     }
   }
 }
