@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime, YearMonth}
 import java.util.UUID.randomUUID
-
 import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
@@ -36,6 +35,7 @@ import uk.gov.hmrc.mobilehelptosave.services.FixedFakeClock
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, NumberVerification, TransactionTestData}
 
+import java.time.temporal.TemporalAdjusters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -240,6 +240,49 @@ class SandboxControllerSpec
       shutteringEnabled
       val response: Future[Result] =
         controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      status(response) shouldBe 521
+      contentAsJson(response)
+        .as[Shuttering] shouldBe shuttered
+    }
+  }
+
+  "Sandbox getSavingsUpdate" should {
+    "return the sandbox savings update data" in {
+      shutteringDisabled
+      val savingsUpdate: Future[Result] =
+        controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+
+      status(savingsUpdate) shouldBe OK
+      val jsonBody = contentAsJson(savingsUpdate)
+      (jsonBody \ "reportStartDate")
+        .as[LocalDate] shouldBe currentTime.minusMonths(8).`with`(TemporalAdjusters.firstDayOfMonth()).toLocalDate
+      (jsonBody \ "reportEndDate")
+        .as[LocalDate]                                                               shouldBe currentTime.minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth()).toLocalDate
+      (jsonBody \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.from(currentTime).minusMonths(7).toString
+      (jsonBody \ "savingsUpdate").isDefined                                         shouldBe true
+      (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe 200
+      (jsonBody \ "savingsUpdate" \ "savedByMonth").isDefined                        shouldBe true
+      (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 6
+      (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 7
+      (jsonBody \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
+      (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 25.0
+      (jsonBody \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 4
+      (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentGoalName").as[String]   shouldBe "\uD83C\uDFE1 New home"
+      (jsonBody \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 100.00
+      (jsonBody \ "bonusUpdate").isDefined                                           shouldBe true
+      (jsonBody \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
+      (jsonBody \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 16
+      (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 115
+      (jsonBody \ "bonusUpdate" \ "highestBalance").isEmpty                          shouldBe true
+      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 345
+      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 385
+      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 515
+    }
+
+    "return a shuttered response when the service is shuttered" in {
+      shutteringEnabled
+      val response: Future[Result] =
+        controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
       status(response) shouldBe 521
       contentAsJson(response)
         .as[Shuttering] shouldBe shuttered

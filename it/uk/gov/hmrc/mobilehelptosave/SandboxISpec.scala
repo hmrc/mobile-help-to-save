@@ -17,14 +17,13 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import java.util.UUID.randomUUID
-
 import org.scalatest.{Matchers, OptionValues, WordSpec}
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, SavingsUpdateResponse, Transactions}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -199,6 +198,29 @@ class SandboxISpec
           wsUrl(s"/savings-account/$nino/milestones?journeyId=ThisIsAnInvalidJourneyId")
             .addHttpHeaders(sandboxRoutingHeader)
             .get()
+        )
+      response.status shouldBe 400
+    }
+  }
+
+  "GET /savings-update with sandbox header" should {
+    "Return OK response containing valid Account JSON including a savings goal" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-update?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe Status.OK
+      val updateV = response.json.validate[SavingsUpdateResponse]
+      updateV                                                              shouldBe 'success
+      updateV.asOpt.value.savingsUpdate.get.amountEarnedTowardsBonus.value shouldBe 100
+    }
+    "Return 400 when journeyId not supplied" in {
+      val response: WSResponse =
+        await(wsUrl(s"/savings-update").addHttpHeaders(sandboxRoutingHeader).get())
+      response.status shouldBe 400
+    }
+    "Return 400 when invalid journeyId is supplied" in {
+      val response: WSResponse =
+        await(
+          wsUrl(s"/savings-update?journeyId=ThisIsAnInvalidJourneyId").addHttpHeaders(sandboxRoutingHeader).get()
         )
       response.status shouldBe 400
     }

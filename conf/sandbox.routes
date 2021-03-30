@@ -3,6 +3,8 @@ GET           /savings-account/:nino/transactions                          uk.go
 
 GET           /savings-account/:nino                                       uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.getAccount(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 
+GET           /savings-update                                              uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.getSavingsUpdate(journeyId: JourneyId)
+
 PUT           /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.putSavingsGoal(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 DELETE        /savings-account/:nino/goals/current-goal                    uk.gov.hmrc.mobilehelptosave.controllers.SandboxController.deleteSavingsGoal(nino: uk.gov.hmrc.domain.Nino, journeyId: JourneyId)
 
