@@ -90,6 +90,7 @@ class AccountsISpec
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
+      (response.json \ "highestBalance").as[BigDecimal] shouldBe BigDecimal("181.98")
     }
 
     "respond with 200 and accountHolderEmail omitted when no email address are return from help to save" in {

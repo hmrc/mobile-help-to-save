@@ -195,11 +195,6 @@ class AccountSpec
       // check that the first 2 terms were retained
       account.bonusTerms.head.endDate shouldBe LocalDate.of(2019, 12, 31)
       account.bonusTerms(1).endDate   shouldBe LocalDate.of(2021, 12, 31)
-
-      // If we see this warning in production we should probably enhance it to include an identifier such as the NINO.
-      // No identifier included so far because I think it's unlikely this warning will ever be triggered - if it does we can hopefully tie it to a NINO using the request ID field in Kibana.
-      (slf4jLoggerStub
-        .warn(_: String)) verify "Account contained 3 bonus terms, which is more than the expected 2 - discarding all but the first 2 terms"
     }
   }
 }

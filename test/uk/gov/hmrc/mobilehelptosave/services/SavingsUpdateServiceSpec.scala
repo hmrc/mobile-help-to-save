@@ -268,7 +268,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(324.00))
+      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(300.00))
     }
 
     "calculate potential bonus correctly for user in first term" in {

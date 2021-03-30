@@ -263,7 +263,8 @@ trait AccountTestData {
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
-    1
+    1,
+    highestBalance = 181.98
   )
 
   protected val savingsUpdateMobileHelpToSaveAccount: Account = Account(
@@ -307,7 +308,8 @@ trait AccountTestData {
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
-    1
+    1,
+    highestBalance = 300
   )
 
   protected val mobileHelpToSaveAccountSecondTerm: Account = Account(
@@ -348,7 +350,8 @@ trait AccountTestData {
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
-    1
+    1,
+    highestBalance = 100
   )
 
   protected val closedAccountReturnedByHelpToSaveJsonString: String =
