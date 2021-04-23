@@ -22,6 +22,7 @@ import com.softwaremill.macwire.wire
 import controllers.AssetsComponents
 import play.api.ApplicationLoader.Context
 import play.api.libs.ws.ahc.AhcWSComponents
+import play.api.mvc.EssentialFilter
 import play.api.routing.Router
 import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
 import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
@@ -35,6 +36,7 @@ import uk.gov.hmrc.mobilehelptosave.repository._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.services._
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
+import uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters
 import uk.gov.hmrc.play.bootstrap.config._
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.health.HealthController
@@ -115,5 +117,4 @@ class ServiceComponents(context: Context)
   lazy val testController:          TestController          = wire[TestController]
 
   lazy val healthController: HealthController = wire[HealthController]
-
 }

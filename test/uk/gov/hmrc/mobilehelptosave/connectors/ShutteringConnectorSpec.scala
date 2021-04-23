@@ -17,13 +17,13 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
-
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
+import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,32 +35,51 @@ class ShutteringConnectorSpec
     with DefaultAwaitTimeout
     with MockFactory
     with OneInstancePerTest {
-  val mockCoreGet: CoreGet = mock[CoreGet]
 
   private val config: ShutteringConnectorConfig = new ShutteringConnectorConfig {
     override val shutteringBaseUrl: URL = new URL("http:///")
   }
-  val connector:           ShutteringConnector = new ShutteringConnector(mockCoreGet, config)
-  private implicit val hc: HeaderCarrier       = HeaderCarrier()
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def mockShutteringGet[T](f: Future[T]) =
-    (mockCoreGet
-      .GET(_: String)(_: HttpReads[T], _: HeaderCarrier, _: ExecutionContext))
-      .expects("http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId", *, *, *)
-      .returning(f)
+  private def httpGet(response: HttpResponse) =
+    FakeHttpGet(s"http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId", response)
+
+  val internalServerExceptionResponse: FakeHttpGet =
+    httpGet(
+      HttpResponse(
+        500,
+        HttpErrorFunctions.upstreamResponseMessage(
+          "GET",
+          "http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId",
+          500,
+          "INTERNAL SERVER ERROR"
+        )
+      )
+    )
+
+  val badGatewayResponse: FakeHttpGet =
+    httpGet(
+      HttpResponse(
+        502,
+        HttpErrorFunctions.upstreamResponseMessage(
+          "GET",
+          "http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId",
+          502,
+          "BAD GATEWAY"
+        )
+      )
+    )
+
+  def connector(response: FakeHttpGet) = new ShutteringConnector(response, config)
 
   "getTaxReconciliations" should {
     "Assume unshuttered for InternalServerException response" in {
-      mockShutteringGet(Future.successful(new InternalServerException("")))
-
-      val result = await(connector.getShutteringStatus("journeyId"))
+      val result = await(connector(internalServerExceptionResponse).getShutteringStatus("journeyId"))
       result shouldBe Shuttering.shutteringDisabled
     }
 
     "Assume unshuttered for BadGatewayException response" in {
-      mockShutteringGet(Future.successful(new BadGatewayException("")))
-
-      val result: Shuttering = await(connector.getShutteringStatus("journeyId"))
+      val result: Shuttering = await(connector(badGatewayResponse).getShutteringStatus("journeyId"))
       result shouldBe Shuttering.shutteringDisabled
     }
   }

@@ -21,7 +21,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.repository.{MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
-import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

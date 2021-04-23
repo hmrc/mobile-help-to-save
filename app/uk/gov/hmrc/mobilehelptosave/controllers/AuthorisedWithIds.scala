@@ -26,7 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.ShutteringConnector
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,7 +50,7 @@ class AuthorisedWithIdsImpl(
   override def parser: BodyParser[AnyContent] = cc.parsers.anyContent
 
   override protected def refine[A](request: Request[A]): Future[Either[Result, RequestWithIds[A]]] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(request.headers)
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     for {
       shutteredResponse <- shutteringConnector.getShutteringStatus(UUID.randomUUID().toString)

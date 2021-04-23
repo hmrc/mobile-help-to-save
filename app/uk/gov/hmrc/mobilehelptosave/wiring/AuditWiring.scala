@@ -21,7 +21,7 @@ import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
-import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider, RunMode}
+import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpAuditing
 
 trait AuditWiring {
@@ -29,7 +29,6 @@ trait AuditWiring {
 
   private lazy val appName:    String         = AppName.fromConfiguration(configuration)
   lazy val auditConnector:     AuditConnector = wire[DefaultAuditConnector]
-  lazy val runMode:            RunMode        = new RunMode(configuration, environment.mode)
   lazy val httpAuditing:       HttpAuditing   = wire[DefaultHttpAuditing]
   lazy val httpAuditingConfig: AuditingConfig = wire[AuditingConfigProvider].get
 }
