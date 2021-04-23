@@ -18,10 +18,4 @@ class HealthISpec
   "GET /ping/ping" should {
     "return a 200 Ok response" in (await(wsUrl("/ping/ping").get()).status shouldBe 200)
   }
-
-  "GET /admin/details" should {
-    val url = wsUrl("/admin/details")
-    "return a 200 Ok response" in (await(url.get()).status         shouldBe 200)
-    "return an empty object" in (Json.parse(await(url.get()).body) shouldBe JsObject(Seq()))
-  }
 }

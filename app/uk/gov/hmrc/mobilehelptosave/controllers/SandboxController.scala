@@ -24,7 +24,7 @@ import uk.gov.hmrc.mobilehelptosave.connectors.ShutteringConnector
 import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
 import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
-import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 

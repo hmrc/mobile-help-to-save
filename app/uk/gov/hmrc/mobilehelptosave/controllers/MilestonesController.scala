@@ -23,7 +23,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Milestones
 import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
-import uk.gov.hmrc.play.bootstrap.controller.BackendBaseController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 

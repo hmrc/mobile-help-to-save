@@ -21,7 +21,7 @@ import play.api.BuiltInComponents
 import play.api.mvc.EssentialFilter
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, DefaultHttpAuditEvent, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters._
-import uk.gov.hmrc.play.bootstrap.filters.microservice.{DefaultMicroserviceAuditFilter, MicroserviceAuditFilter}
+import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, DefaultBackendAuditFilter}
 
 trait FilterWiring {
   self: BuiltInComponents with AuditWiring =>
@@ -35,11 +35,11 @@ trait FilterWiring {
 
   lazy val httpAuditEvent: HttpAuditEvent = wire[DefaultHttpAuditEvent]
 
-  lazy val metricsFilter:           MetricsFilterImpl       = wire[MetricsFilterImpl]
-  lazy val microserviceAuditFilter: MicroserviceAuditFilter = wire[DefaultMicroserviceAuditFilter]
-  lazy val loggingFilter:           LoggingFilter           = wire[DefaultLoggingFilter]
-  lazy val cacheControlFilter:      CacheControlFilter      = wire[CacheControlFilter]
-  lazy val MDCFilter:               MDCFilter               = wire[MDCFilter]
+  lazy val metricsFilter:           MetricsFilterImpl  = wire[MetricsFilterImpl]
+  lazy val microserviceAuditFilter: BackendAuditFilter = wire[DefaultBackendAuditFilter]
+  lazy val loggingFilter:           LoggingFilter      = wire[DefaultLoggingFilter]
+  lazy val cacheControlFilter:      CacheControlFilter = wire[CacheControlFilter]
+  lazy val MDCFilter:               MDCFilter          = wire[MDCFilter]
   lazy val microserviceFilters:     MicroserviceFilters     = wire[MicroserviceFilters]
 
   override def httpFilters: Seq[EssentialFilter] = microserviceFilters.filters
