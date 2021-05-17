@@ -18,13 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.support
 
 import akka.actor.ActorSystem
 import com.typesafe.config.Config
-import org.scalamock.scalatest.MockFactory
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
-import uk.gov.hmrc.mobilehelptosave.config.{HelpToSaveConnectorConfig, UserServiceConfig}
-
-import java.net.URL
 import scala.concurrent.{ExecutionContext, Future}
 
 class FakeHttpGet(
@@ -35,8 +31,7 @@ class FakeHttpGet(
   override def doGet(
     url:         String,
     headers:     Seq[(String, String)] = Seq.empty
-  )(implicit hc: HeaderCarrier,
-    ec:          ExecutionContext
+  )(implicit ec:          ExecutionContext
   ): Future[HttpResponse] =
     if (urlPredicate(url))
       responseF

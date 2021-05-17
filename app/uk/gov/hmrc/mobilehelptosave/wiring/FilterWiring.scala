@@ -19,12 +19,17 @@ import com.kenshoo.play.metrics.{Metrics, MetricsFilterImpl, MetricsImpl}
 import com.softwaremill.macwire.wire
 import play.api.BuiltInComponents
 import play.api.mvc.EssentialFilter
-import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, DefaultHttpAuditEvent, HttpAuditEvent}
+import uk.gov.hmrc.play.audit.http.HttpAuditing
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
+import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, AuditCounter, AuditCounterMetrics}
+import uk.gov.hmrc.play.bootstrap.audit.{DefaultAuditChannel, DefaultAuditConnector, DefaultAuditCounter, DefaultAuditCounterMetrics}
+import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider, ControllerConfigs, DefaultHttpAuditEvent, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters._
-import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, DefaultBackendAuditFilter}
+import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, BackendFilters, DefaultBackendAuditFilter}
+import uk.gov.hmrc.play.bootstrap.http.DefaultHttpAuditing
 
 trait FilterWiring {
-  self: BuiltInComponents with AuditWiring =>
+  self: BuiltInComponents =>
 
   private lazy val appName: String = AppName.fromConfiguration(configuration)
 
@@ -40,7 +45,15 @@ trait FilterWiring {
   lazy val loggingFilter:           LoggingFilter      = wire[DefaultLoggingFilter]
   lazy val cacheControlFilter:      CacheControlFilter = wire[CacheControlFilter]
   lazy val MDCFilter:               MDCFilter          = wire[MDCFilter]
-  lazy val microserviceFilters:     MicroserviceFilters     = wire[MicroserviceFilters]
+  lazy val backendFilters:          BackendFilters     = wire[BackendFilters]
 
-  override def httpFilters: Seq[EssentialFilter] = microserviceFilters.filters
+  lazy val auditConnector:      AuditConnector      = wire[DefaultAuditConnector]
+  lazy val httpAuditing:        HttpAuditing        = wire[DefaultHttpAuditing]
+  lazy val auditChannel:        AuditChannel        = wire[DefaultAuditChannel]
+  lazy val auditCounter:        AuditCounter        = wire[DefaultAuditCounter]
+  lazy val auditCounterMetrics: AuditCounterMetrics = wire[DefaultAuditCounterMetrics]
+
+  lazy val httpAuditingConfig: AuditingConfig = wire[AuditingConfigProvider].get
+
+  override def httpFilters: Seq[EssentialFilter] = backendFilters.filters
 }

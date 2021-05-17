@@ -18,9 +18,10 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier, Upstream5xxResponse}
+import uk.gov.hmrc.http.{CoreGet, HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,6 +29,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class ShutteringConnector @Inject() (
   http:   CoreGet,
   config: ShutteringConnectorConfig) {
+
+  val logger: Logger = Logger(this.getClass)
 
   def getShutteringStatus(
     journeyId:              String
@@ -40,14 +43,12 @@ class ShutteringConnector @Inject() (
       )
       .map(s => s)
       .recover {
-        case e: Upstream5xxResponse => {
-          Logger.warn(s"Internal Server Error received from mobile-shuttering:\n $e \nAssuming unshuttered.")
+        case e: UpstreamErrorResponse =>
+          logger.warn(s"Internal Server Error received from mobile-shuttering:\n $e \nAssuming unshuttered.")
           Shuttering.shutteringDisabled
-        }
 
-        case e => {
-          Logger.warn(s"Call to mobile-shuttering failed:\n $e \nAssuming unshuttered.")
+        case e =>
+          logger.warn(s"Call to mobile-shuttering failed:\n $e \nAssuming unshuttered.")
           Shuttering.shutteringDisabled
-        }
       }
 }
