@@ -57,6 +57,7 @@ trait WireMockSupport extends BeforeAndAfterAll with BeforeAndAfterEach with App
     "auditing.enabled"                             -> false,
     "microservice.services.auth.port"              -> wireMockPort,
     "microservice.services.help-to-save.port"      -> wireMockPort,
-    "microservice.services.mobile-shuttering.port" -> wireMockPort
+    "microservice.services.mobile-shuttering.port" -> wireMockPort,
+    "metrics.enabled"                              -> false
   )
 }

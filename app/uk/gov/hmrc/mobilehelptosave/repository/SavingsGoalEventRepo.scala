@@ -21,11 +21,10 @@ import cats.instances.future._
 import cats.syntax.functor._
 import play.api.libs.json.Json.obj
 import play.api.libs.json._
-import play.libs.F
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal, Transactions}
+import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 
 import scala.concurrent.{ExecutionContext, Future}
 
