@@ -18,9 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.applicativeError._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
-import play.libs.F
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
@@ -33,9 +33,8 @@ import java.time.LocalDate
 import scala.concurrent.Future
 
 class AccountServiceSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
-    with GeneratorDrivenPropertyChecks
     with AccountTestData
     with MockFactory
     with OneInstancePerTest
@@ -79,23 +78,22 @@ class AccountServiceSpec
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
-      forAll { enabled: Boolean =>
-        val config = testConfig.copy(savingsGoalsEnabled = enabled)
-        val service =
-          new HtsAccountService[TestF](logger,
-                                       config,
-                                       fakeEnrolmentStatus,
-                                       fakeGetAccount,
-                                       savingsGoalEventRepo,
-                                       fakeBalanceMilestoneService,
-                                       fakeBonusPeriodMilestoneService,
-                                       fakeBonusReachedMilestoneService,
-                                       testMilestonesConfig)
+      val config = testConfig.copy(savingsGoalsEnabled = true)
+      val service =
+        new HtsAccountService[TestF](logger,
+                                     config,
+                                     fakeEnrolmentStatus,
+                                     fakeGetAccount,
+                                     savingsGoalEventRepo,
+                                     fakeBalanceMilestoneService,
+                                     fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
+                                     testMilestonesConfig)
 
-        // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-        val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-        result shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = enabled)))
-      }
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = true)))
+
     }
 
     "allow inAppPaymentsEnabled to be overridden with configuration" in {

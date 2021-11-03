@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.util.UUID.randomUUID
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
-import org.scalatest.{Assertion, Matchers, WordSpec}
+import java.util.UUID.randomUUID
+import org.scalatest.Assertion
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
@@ -31,7 +33,7 @@ import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class TransactionsISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with TransactionTestData

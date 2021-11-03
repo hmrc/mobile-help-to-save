@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.TransactionTestData
 import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 
-class TransactionsJsonSpec extends WordSpec with Matchers with SchemaMatchers with TransactionTestData {
+class TransactionsJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers with TransactionTestData {
 
   "Transactions JSON" when {
     "there is a typical list of transactions" should {

@@ -1,7 +1,7 @@
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Matchers, WordSpec}
-import play.api.libs.json.{JsObject, Json}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.support.OneServerPerSuiteWsClient
 
@@ -9,7 +9,7 @@ import uk.gov.hmrc.mobilehelptosave.support.OneServerPerSuiteWsClient
   * Check the health endpoints to ensure that they're wired correctly
   */
 class HealthISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

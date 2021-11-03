@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{FreeSpecLike, Matchers}
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsError, JsString, JsSuccess, Json}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventType._
 
-class SavingsGoalEventTypeTest extends FreeSpecLike with Matchers with TableDrivenPropertyChecks {
+class SavingsGoalEventTypeTest extends AnyWordSpecLike with Matchers with TableDrivenPropertyChecks {
 
   "json values for event types should be lower case" in {
     val table = Table(

@@ -60,8 +60,8 @@ trait ControllerChecks extends Results {
 
   private def errorHandler(errorInfo: ErrorInfo): Result = errorInfo match {
     case ErrorInfo.AccountNotFound        => AccountNotFound
-    case v @ ErrorInfo.ValidationError(_) => UnprocessableEntity(Json.toJson(v))
-    case ErrorInfo.General                => InternalServerError(Json.toJson(ErrorInfo.General))
+    case v @ ErrorInfo.ValidationError(_) => UnprocessableEntity(Json.toJson[ErrorInfo](v))
+    case ErrorInfo.General                => InternalServerError(Json.toJson[ErrorInfo](ErrorInfo.General))
   }
 
   /**

@@ -19,7 +19,9 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.mvc.Results
 import play.api.test.Helpers.{contentAsString, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
@@ -35,7 +37,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorisedWithIdsSpec
-    extends WordSpec
+  extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

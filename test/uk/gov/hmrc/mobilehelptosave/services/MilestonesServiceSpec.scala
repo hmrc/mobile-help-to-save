@@ -17,10 +17,10 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import java.time.{LocalDate, LocalDateTime}
-
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,9 +31,8 @@ import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 import scala.concurrent.Future
 
 class MilestonessServiceSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
-    with GeneratorDrivenPropertyChecks
     with FutureAwaits
     with DefaultAwaitTimeout
     with MockFactory

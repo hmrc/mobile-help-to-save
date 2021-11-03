@@ -18,18 +18,19 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub}
+import uk.gov.hmrc.mobilehelptosave.support.FakeHttpGet
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
 class ShutteringConnectorSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

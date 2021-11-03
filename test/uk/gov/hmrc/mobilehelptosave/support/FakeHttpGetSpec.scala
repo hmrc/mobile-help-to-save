@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class FakeHttpGetSpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout {
+class FakeHttpGetSpec extends AnyWordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "doGet" should {

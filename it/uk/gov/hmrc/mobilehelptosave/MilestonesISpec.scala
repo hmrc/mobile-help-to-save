@@ -19,7 +19,8 @@ package uk.gov.hmrc.mobilehelptosave
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID.randomUUID
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
@@ -32,7 +33,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuite
 import scala.util.Random
 
 class MilestonesISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with FutureAwaits

@@ -17,7 +17,9 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.libs.json.JsObject
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
@@ -32,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class StartupControllerSpec
-    extends WordSpec
+  extends AnyWordSpecLike
     with Matchers
     with MockFactory
     with OneInstancePerTest

@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave.config
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
-class Base64Spec extends WordSpec with Matchers {
+class Base64Spec extends AnyWordSpecLike with Matchers {
   "decode" should {
     "decode simple values" in {
       Base64.decode("YXNkZg==") shouldBe "asdf"

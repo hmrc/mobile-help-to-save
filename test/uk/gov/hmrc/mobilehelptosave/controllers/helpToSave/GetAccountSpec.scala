@@ -18,7 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{OneInstancePerTest, OptionValues}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
@@ -27,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpTo
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService, SavingsUpdateService}
+import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
@@ -36,7 +38,7 @@ import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetAccountSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with FutureAwaits

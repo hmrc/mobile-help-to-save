@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
@@ -34,7 +35,7 @@ import java.time.temporal.TemporalAdjusters
 import java.util.UUID.randomUUID
 
 class SavingsUpdateISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with TransactionTestData
@@ -45,14 +46,13 @@ class SavingsUpdateISpec
     with ComponentSupport {
 
   override implicit lazy val app: Application = appBuilder.build()
-
+  val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
+  val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
   private val generator            = new Generator(0)
   private val nino                 = generator.nextNino
   private val journeyId            = randomUUID().toString
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
-  val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
-  val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
 
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 

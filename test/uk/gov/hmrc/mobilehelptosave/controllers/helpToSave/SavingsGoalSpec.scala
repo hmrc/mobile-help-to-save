@@ -19,8 +19,10 @@ package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 import cats.syntax.either._
 import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, OptionValues, WordSpec}
-import play.api.test.Helpers.{status, contentAsString}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{OneInstancePerTest, OptionValues}
+import play.api.test.Helpers.{contentAsString, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
@@ -29,7 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 //noinspection TypeAnnotation
 class SavingsGoalSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -54,13 +56,14 @@ class SavingsGoalSpec
         status(resultF) shouldBe 204
       }
 
-      "set the goal Bad Request if both amount and name are missing" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "set the goal Bad Request if both amount and name are missing" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
         val amount  = 21.50
         val request = FakeRequest().withBody(SavingsGoal())
 
         val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
 
-        status(resultF) shouldBe 400
+        status(resultF)          shouldBe 400
         contentAsString(resultF) shouldBe "Invalid savings goal combination"
       }
 

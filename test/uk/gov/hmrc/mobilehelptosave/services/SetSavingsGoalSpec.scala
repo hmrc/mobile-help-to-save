@@ -18,8 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.either._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{EitherValues, Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{EitherValues, OneInstancePerTest}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
@@ -32,9 +33,8 @@ import java.time.LocalDate
 import scala.concurrent.Future
 
 class SetSavingsGoalSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
-    with GeneratorDrivenPropertyChecks
     with TestF
     with AccountTestData
     with EitherValues

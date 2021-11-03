@@ -1,6 +1,7 @@
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
@@ -14,7 +15,7 @@ import java.time.LocalDate
   * property settings for the router
   */
 class TestOnlyRoutesNotWiredISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout
@@ -30,7 +31,7 @@ class TestOnlyRoutesNotWiredISpec
 }
 
 class TestOnlyRoutesWiredISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

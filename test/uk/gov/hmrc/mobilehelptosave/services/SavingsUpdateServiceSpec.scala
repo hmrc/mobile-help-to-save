@@ -17,8 +17,9 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -28,9 +29,8 @@ import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 import java.time.{LocalDate, LocalDateTime, YearMonth}
 
 class SavingsUpdateServiceSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
-    with GeneratorDrivenPropertyChecks
     with MockFactory
     with OneInstancePerTest
     with LoggerStub

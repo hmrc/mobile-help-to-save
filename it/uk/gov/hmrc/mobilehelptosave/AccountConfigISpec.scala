@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.util.UUID.randomUUID
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
-import org.scalatest.{Matchers, WordSpec}
+import java.util.UUID.randomUUID
 import org.scalatestplus.play.components.WithApplicationComponents
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
@@ -33,7 +34,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, JsonMatchers, Wir
   * (e.g. changes its response when configuration is changed).
   */
 class AccountConfigISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with JsonMatchers
     with FutureAwaits

@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+
 import java.util.UUID.randomUUID
-import org.scalatest.{Matchers, OptionValues, WordSpec}
+import org.scalatest.OptionValues
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
@@ -28,7 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class SandboxISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with OptionValues

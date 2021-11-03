@@ -144,7 +144,7 @@ class HelpToSaveController(
                     )
                   case None => AccountNotFound
                 }
-              case (_, _, _, _) => InternalServerError(Json.toJson(ErrorInfo.General))
+              case (_, _, _, _) => InternalServerError(Json.toJson[ErrorInfo](ErrorInfo.General))
             }
           }
         }

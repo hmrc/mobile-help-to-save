@@ -10,30 +10,31 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "https://dl.bintray.com/emueller/maven"
   )
 
-  private val simpleReactiveMongoVersion = "8.0.0-play-27"
-  private val bootstrapVersion           = "5.1.0"
-  private val domainVersion              = "5.11.0-play-27"
+  private val simpleReactiveMongoVersion = "8.0.0-play-28"
+  private val bootstrapVersion           = "5.12.0"
+  private val domainVersion              = "6.2.0-play-28"
   private val catsCoreVersion            = "2.2.0"
   private val catsParVersion             = "1.0.0-RC2"
   private val scalaUriVersion            = "1.5.1"
-  private val playHmrcVersion            = "6.2.0-play-27"
+  private val playHmrcVersion            = "6.4.0-play-28"
   private val enumeratumVersion          = "1.5.15"
   private val macrosVersion              = "2.3.7"
   private val refinedVersion             = "0.9.4"
   private val htsKalcVersion             = "0.5.0"
+  private val flexmarkAllVersion         = "0.36.8"
 
   private val scalaMockVersion = "4.1.0"
-  private val scalaTestVersion = "3.0.5"
+  private val scalaTestVersion = "3.2.9"
 
   private val wiremockVersion      = "2.21.0"
-  private val scalaTestPlusVersion = "4.0.3"
+  private val scalaTestPlusVersion = "5.1.0"
 
-  private val scalaCheckVersion              = "1.14.0"
+  private val scalaCheckVersion              = "1.15.4"
   private val pegdownVersion                 = "1.6.0"
   private val playJsonSchemaValidatorVersion = "0.9.5"
 
   val compile: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"              %% "bootstrap-backend-play-27"  % bootstrapVersion withSources (),
+    "uk.gov.hmrc"              %% "bootstrap-backend-play-28"  % bootstrapVersion withSources (),
     "uk.gov.hmrc"              %% "domain"                     % domainVersion,
     "org.typelevel"            %% "cats-core"                  % catsCoreVersion,
     "io.chrisdavenport"        %% "cats-par"                   % catsParVersion,
@@ -47,8 +48,9 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(
-      "org.scalamock" %% "scalamock" % scalaMockVersion % "test",
-      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+      "uk.gov.hmrc"       %% "bootstrap-test-play-28" % bootstrapVersion % "test",
+      "org.scalamock"     %% "scalamock"              % scalaMockVersion % "test",
+      "org.scalatest"     %% "scalatest"              % scalaTestVersion % "test"
     )
 
   val integrationTest: Seq[ModuleID] = testCommon("it") ++ Seq(
@@ -57,10 +59,11 @@ object AppDependencies {
     )
 
   def testCommon(scope: String): Seq[ModuleID] = Seq(
-    "org.scalacheck"    %% "scalacheck"                 % scalaCheckVersion              % scope,
-    "org.pegdown"       % "pegdown"                     % pegdownVersion                 % scope,
-    "com.typesafe.play" %% "play-test"                  % PlayVersion.current            % scope,
-    "com.eclipsesource" %% "play-json-schema-validator" % playJsonSchemaValidatorVersion % scope,
+    "org.scalacheck"       %% "scalacheck"                 % scalaCheckVersion              % scope,
+    "org.pegdown"          % "pegdown"                     % pegdownVersion                 % scope,
+    "com.typesafe.play"    %% "play-test"                  % PlayVersion.current            % scope,
+    "com.eclipsesource"    %% "play-json-schema-validator" % playJsonSchemaValidatorVersion % scope,
+    "com.vladsch.flexmark" % "flexmark-all"                % flexmarkAllVersion             % scope,
     // workaround for version clash in IntelliJ where without this line both jetty-util-9.2.15.v20160210 and jetty-util-9.2.22.v20170606 are brought in
     // which results in a NoSuchMethodError when running StartupISpec
     "org.eclipse.jetty.websocket" % "websocket-client" % "9.2.22.v20170606" % scope
