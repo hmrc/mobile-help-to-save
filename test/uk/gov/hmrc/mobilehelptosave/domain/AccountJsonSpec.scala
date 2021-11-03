@@ -17,16 +17,16 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 
 import java.time.{LocalDate, YearMonth}
-
 import com.eclipsesource.schema.drafts.Version7._
 import com.eclipsesource.schema.SchemaType
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.json.JsonResource.loadResourceJson
 import uk.gov.hmrc.mobilehelptosave.json.Schema.banAdditionalProperties
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 
-class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
+class AccountJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers {
 
   private val strictRamlAccountSchema =
     banAdditionalProperties(loadResourceJson("/public/api/conf/1.0/schemas/account.json"))
@@ -64,7 +64,7 @@ class AccountJsonSpec extends WordSpec with Matchers with SchemaMatchers {
     currentBonusTerm     = CurrentBonusTerm.First,
     inAppPaymentsEnabled = false,
     daysRemainingInMonth = 1,
-    highestBalance = 200.12
+    highestBalance       = 200.12
   )
 
   "Account JSON" when {

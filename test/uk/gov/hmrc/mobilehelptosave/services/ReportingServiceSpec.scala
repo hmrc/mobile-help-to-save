@@ -18,7 +18,9 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import java.time.{LocalDate, LocalDateTime}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
@@ -31,7 +33,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ReportingServiceSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with MockFactory
     with OneInstancePerTest
@@ -129,13 +131,16 @@ class ReportingServiceSpec
       override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
 
       override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
-      override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = Future.successful(Right(goalSetEvents))
+
+      override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] =
+        Future.successful(Right(goalSetEvents))
+
       override def setGoal(
-                            nino:   Nino,
-                            amount: Option[Double],
-                            name:   Option[String],
-                            date:   LocalDate
-                          ): Future[Unit] = ???
+        nino:   Nino,
+        amount: Option[Double],
+        name:   Option[String],
+        date:   LocalDate
+      ): Future[Unit] = ???
     }
 
 }

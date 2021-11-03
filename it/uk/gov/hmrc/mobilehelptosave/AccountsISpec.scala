@@ -17,8 +17,8 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import java.util.UUID.randomUUID
-
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.libs.json.JsObject
 import play.api.libs.ws.WSResponse
@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class AccountsISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with TransactionTestData
@@ -89,7 +89,7 @@ class AccountsISpec
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2022-01-01"
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
-      (response.json \ "currentBonusTerm").as[String] shouldBe "First"
+      (response.json \ "currentBonusTerm").as[String]   shouldBe "First"
       (response.json \ "highestBalance").as[BigDecimal] shouldBe BigDecimal("181.98")
     }
 

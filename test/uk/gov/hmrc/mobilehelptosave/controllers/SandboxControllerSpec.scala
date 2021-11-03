@@ -17,10 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.{LocalDate, LocalDateTime, YearMonth}
-import java.util.UUID.randomUUID
 import eu.timepit.refined.auto._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
@@ -40,7 +41,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SandboxControllerSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with MockFactory

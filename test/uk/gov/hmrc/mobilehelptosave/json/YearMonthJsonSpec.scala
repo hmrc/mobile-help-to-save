@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.mobilehelptosave.json
 
-import java.time.YearMonth
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
-import org.scalatest.{Matchers, WordSpec}
+import java.time.YearMonth
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
 
-class YearMonthJsonSpec extends WordSpec with Matchers {
+class YearMonthJsonSpec extends AnyWordSpecLike with Matchers {
   "YearMonth JSON writes" should {
     "write in format YYYY-MM" in {
       Json.toJson(YearMonth.of(1999, 12)) shouldBe JsString("1999-12")

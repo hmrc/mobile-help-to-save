@@ -18,12 +18,13 @@ package uk.gov.hmrc.mobilehelptosave.scalatest
 
 import com.eclipsesource.schema.drafts.Version7._
 import com.eclipsesource.schema.SchemaType
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.mobilehelptosave.io.Resources
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers.validateAgainstSchema
 
-class SchemaMatchersSpec extends WordSpec with Matchers {
+class SchemaMatchersSpec extends AnyWordSpecLike with Matchers {
   private val accountSchema: SchemaType = loadResourceJson("test_schema.json").as[SchemaType]
   val goodJsonExampleResourceName = "valid_instance.json"
   val badJsonExampleResourceName  = "invalid_instance.json"

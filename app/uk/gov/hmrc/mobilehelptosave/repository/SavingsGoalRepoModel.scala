@@ -71,9 +71,10 @@ object SavingsGoalEvent {
   implicit val format: OFormat[SavingsGoalEvent] = new OFormat[SavingsGoalEvent] {
 
     override def writes(o: SavingsGoalEvent): JsObject = o match {
-      case ev: SavingsGoalSetEvent => setEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Set))
+      case ev: SavingsGoalSetEvent =>
+        setEventFormat.writes(ev) + ("type" -> Json.toJson[SavingsGoalEventType](SavingsGoalEventType.Set))
       case ev: SavingsGoalDeleteEvent =>
-        deleteEventFormat.writes(ev) + ("type" -> Json.toJson(SavingsGoalEventType.Delete))
+        deleteEventFormat.writes(ev) + ("type" -> Json.toJson[SavingsGoalEventType](SavingsGoalEventType.Delete))
     }
 
     override def reads(json: JsValue): JsResult[SavingsGoalEvent] =

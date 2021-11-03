@@ -16,18 +16,25 @@
 
 package uk.gov.hmrc.mobilehelptosave.api
 
-import org.scalatest.{Matchers, WordSpec}
-import play.api.http.LazyHttpErrorHandler
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.http.HttpErrorHandler
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 
-class DocumentationControllerSpec extends WordSpec with Matchers with FutureAwaits with DefaultAwaitTimeout {
+class DocumentationControllerSpec
+    extends AnyWordSpecLike
+    with Matchers
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with MockFactory {
   "definition" should {
     "have content type = application/json" in {
       val controller = new DocumentationController(
-        LazyHttpErrorHandler,
+        mock[HttpErrorHandler],
         TestDocumentationControllerConfig,
         stubControllerComponents(),
         null // nasty, but there's not apparent way to create a test `Assets` and the test does not use it, so...

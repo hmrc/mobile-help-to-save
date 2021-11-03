@@ -50,7 +50,7 @@ class ServiceComponents(context: Context)
 
   implicit val ec: ExecutionContext = actorSystem.dispatcher
 
-  lazy val prodLogger: LoggerLike = Logger
+  lazy val prodLogger: LoggerLike = Logger(this.getClass)
 
   lazy val prefix:           String                           = "/"
   lazy val sandboxRouter:    sandbox.Routes                   = wire[sandbox.Routes]

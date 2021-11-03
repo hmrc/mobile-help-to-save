@@ -17,13 +17,14 @@
 package uk.gov.hmrc.mobilehelptosave.api
 
 import org.scalatest.concurrent.Eventually
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class ApiDefinitionISpec
-    extends WordSpec
+  extends AnyWordSpecLike
     with Matchers
     with Eventually
     with FutureAwaits

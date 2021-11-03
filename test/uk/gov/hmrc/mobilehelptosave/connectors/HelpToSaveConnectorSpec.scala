@@ -19,7 +19,9 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.{ConnectException, URL}
 import io.lemonlabs.uri._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
@@ -35,7 +37,7 @@ import scala.concurrent.Future
 import scala.concurrent.Future._
 
 class HelpToSaveConnectorSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with FutureAwaits
     with DefaultAwaitTimeout

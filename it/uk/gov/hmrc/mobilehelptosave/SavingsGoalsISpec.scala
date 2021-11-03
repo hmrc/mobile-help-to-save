@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.util.UUID.randomUUID
+import org.scalatest.OptionValues
 
-import org.scalatest._
+import java.util.UUID.randomUUID
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.JsValue
@@ -34,7 +36,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, One
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SavingsGoalsISpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with TransactionTestData

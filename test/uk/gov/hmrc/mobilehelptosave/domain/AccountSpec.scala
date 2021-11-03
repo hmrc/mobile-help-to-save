@@ -17,15 +17,16 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 
 import java.time.{LocalDate, YearMonth}
-
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, OneInstancePerTest, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveBonusTerm
 import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
 
 class AccountSpec
-    extends WordSpec
+    extends AnyWordSpecLike
     with Matchers
     with AccountTestData
     with MockFactory

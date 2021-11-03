@@ -17,8 +17,8 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import akka.stream.Materializer
+import akka.stream.testkit.NoMaterializer
 import play.api.mvc._
-import play.api.test.NoMaterializer
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 
