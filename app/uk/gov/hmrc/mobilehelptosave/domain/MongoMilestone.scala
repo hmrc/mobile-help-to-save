@@ -148,15 +148,15 @@ object Milestone {
         JsString(s"Your Help to Save account will be closed from ${values get "bonusPaidOnOrAfterDate"}.")
       case Milestone(EndOfFinalBonusPeriodZeroBalancePositiveBonus, values) =>
         JsString(
-          s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+          s"Your final bonus of £${values get "bonusEstimate"} will be paid into your bank account by ${values get "bonusPaidOnOrAfterDate"}."
         )
       case Milestone(EndOfFinalBonusPeriodPositiveBalanceNoBonus, values) =>
         JsString(
-          s"Your savings of £${values get "balance"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+          s"Your savings of £${values get "balance"} will be paid into your bank account by ${values get "bonusPaidOnOrAfterDate"}."
         )
       case Milestone(EndOfFinalBonusPeriodPositiveBalancePositiveBonus, values) =>
         JsString(
-          s"Your savings of £${values get "balance"} and final bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidOnOrAfterDate"}."
+          s"Your savings of £${values get "balance"} and final bonus of £${values get "bonusEstimate"} will be paid into your bank account by ${values get "bonusPaidOnOrAfterDate"}."
         )
       case Milestone(FirstBonusEarnedMaximum, values) =>
         JsString(s"You earned the maximum first bonus of £${values get "bonusPaid"}.")
