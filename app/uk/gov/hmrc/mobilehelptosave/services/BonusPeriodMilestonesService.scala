@@ -187,7 +187,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
               EndOfFinalBonusPeriodZeroBalancePositiveBonus,
               Some(
                 Map("bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.plusDays(9).format(dateFormat))
               )
             )
           )
@@ -197,7 +197,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
               EndOfFinalBonusPeriodPositiveBalanceNoBonus,
               Some(
                 Map("balance"                -> currentBalance.toString(),
-                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.plusDays(9).format(dateFormat))
               )
             )
           )
@@ -208,7 +208,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
               Some(
                 Map(
                   "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat),
+                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.plusDays(9).format(dateFormat),
                   "balance"                -> currentBalance.toString()
                 )
               )
