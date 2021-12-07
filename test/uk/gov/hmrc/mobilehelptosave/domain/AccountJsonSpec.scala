@@ -62,6 +62,10 @@ class AccountJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers 
       )
     ),
     currentBonusTerm     = CurrentBonusTerm.First,
+    nbaAccountNumber     = Some("123456789"),
+    nbaPayee             = Some("Mr Testfore Testur"),
+    nbaRollNumber        = Some("RN136912"),
+    nbaSortCode          = Some("12-34-56"),
     inAppPaymentsEnabled = false,
     daysRemainingInMonth = 1,
     highestBalance       = 200.12

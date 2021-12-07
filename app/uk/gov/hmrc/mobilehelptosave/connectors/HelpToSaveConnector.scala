@@ -142,7 +142,11 @@ case class HelpToSaveAccount(
   accountHolderEmail:     Option[String],
   bonusTerms:             Seq[HelpToSaveBonusTerm],
   closureDate:            Option[LocalDate],
-  closingBalance:         Option[BigDecimal])
+  closingBalance:         Option[BigDecimal],
+  nbaAccountNumber:       Option[String],
+  nbaPayee:               Option[String],
+  nbaRollNumber:          Option[String],
+  nbaSortCode:            Option[String])
 
 object HelpToSaveAccount {
   implicit val yearMonthFormat: Format[YearMonth]        = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat

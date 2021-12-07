@@ -32,6 +32,7 @@ object AppDependencies {
   private val scalaCheckVersion              = "1.15.4"
   private val pegdownVersion                 = "1.6.0"
   private val playJsonSchemaValidatorVersion = "0.9.5"
+  private val playJsonExtensionsVersion      = "0.42.0"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"              %% "bootstrap-backend-play-28"  % bootstrapVersion withSources (),
@@ -44,7 +45,8 @@ object AppDependencies {
     "com.beachape"             %% "enumeratum-play-json"       % enumeratumVersion,
     "com.softwaremill.macwire" %% "macros"                     % macrosVersion,
     "eu.timepit"               %% "refined"                    % refinedVersion,
-    "uk.gov.hmrc"              % "help-to-save-kalculator-jvm" % htsKalcVersion
+    "uk.gov.hmrc"              % "help-to-save-kalculator-jvm" % htsKalcVersion,
+    "ai.x"                     %% "play-json-extensions"       % playJsonExtensionsVersion
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(

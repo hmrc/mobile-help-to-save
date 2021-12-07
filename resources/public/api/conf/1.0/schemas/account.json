@@ -212,6 +212,22 @@
         "AfterFinalTerm"
       ]
     },
+    "nbaAccountNumber":{
+      "type": "string",
+      "description": "INSERT HERE"
+    },
+    "nbaPayee": {
+      "type": "string",
+      "description": "INSERT HERE"
+    },
+    "nbaRollNumber": {
+      "type": "string",
+      "description": "INSERT HERE"
+    },
+    "nbaSortCode": {
+      "type": "string",
+      "description": "INSERT HERE"
+    },
     "inAppPaymentsEnabled": {
       "type": "boolean",
       "description": "Are in-app payments enabled for this account?"

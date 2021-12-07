@@ -56,8 +56,12 @@ case class SandboxData(
           HelpToSaveBonusTerm(BigDecimal("115.00"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
           HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
         ),
-        closureDate    = None,
-        closingBalance = None
+        closureDate      = None,
+        closingBalance   = None,
+        nbaAccountNumber = None,
+        nbaPayee         = None,
+        nbaRollNumber    = None,
+        nbaSortCode      = None
       ),
       inAppPaymentsEnabled = config.inAppPaymentsEnabled,
       savingsGoalsEnabled  = true,
