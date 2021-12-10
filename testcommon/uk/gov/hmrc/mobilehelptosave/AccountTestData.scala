@@ -577,4 +577,47 @@ trait AccountTestData {
       |  ]
       |}
     """.stripMargin
+
+  protected val mobileHelpToSaveAccountNoNbaDetails: Account = Account(
+    number                    = "1000000000001",
+    openedYearMonth           = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1),
+    isClosed                  = false,
+    blocked                   = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
+    balance                   = BigDecimal("123.45"),
+    paidInThisMonth           = BigDecimal("27.88"),
+    canPayInThisMonth         = BigDecimal("22.12"),
+    maximumPaidInThisMonth    = 50,
+    thisMonthEndDate          = monthEndDate,
+    nextPaymentMonthStartDate = Some(LocalDate.of(YearMonth.now().minusYears(3).getYear, 5, 1)),
+    accountHolderName         = "Testfore Testsur",
+    accountHolderEmail        = Some("testemail@example.com"),
+    bonusTerms = Seq(
+      BonusTerm(
+        bonusEstimate                 = BigDecimal("90.99"),
+        bonusPaid                     = BigDecimal("90.99"),
+        endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(1).getYear, 1, 1),
+        balanceMustBeMoreThanForBonus = 0
+      ),
+      BonusTerm(
+        bonusEstimate                 = 12,
+        bonusPaid                     = 0,
+        endDate                       = LocalDate.of(YearMonth.now().getYear, 12, 31),
+        bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
+        balanceMustBeMoreThanForBonus = BigDecimal("181.98")
+      )
+    ),
+    currentBonusTerm     = CurrentBonusTerm.First,
+    closureDate          = None,
+    closingBalance       = None,
+    nbaAccountNumber     = None,
+    nbaPayee             = None,
+    nbaRollNumber        = None,
+    nbaSortCode          = None,
+    inAppPaymentsEnabled = false,
+    savingsGoalsEnabled  = true,
+    savingsGoal          = None,
+    1,
+    highestBalance = 181.98
+  )
 }

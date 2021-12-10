@@ -212,21 +212,21 @@
         "AfterFinalTerm"
       ]
     },
-    "nbaAccountNumber":{
+    "nbaAccountNumber": {
       "type": "string",
-      "description": "INSERT HERE"
+      "description": "Account number for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details."
     },
     "nbaPayee": {
       "type": "string",
-      "description": "INSERT HERE"
-    },
+      "description": "Payee for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details."
+  },
     "nbaRollNumber": {
       "type": "string",
-      "description": "INSERT HERE"
+      "description": "Roll number for Nominated Bank Account (withdrawals). Only present for Building Society Accounts. Field omitted if the customer has not entered details."
     },
     "nbaSortCode": {
       "type": "string",
-      "description": "INSERT HERE"
+      "description": "Sort code for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details."
     },
     "inAppPaymentsEnabled": {
       "type": "boolean",

@@ -38,7 +38,7 @@ import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetAccountSpec
-    extends AnyWordSpecLike
+  extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with FutureAwaits
@@ -95,7 +95,7 @@ class GetAccountSpec
         (jsonBody \ "message")
           .as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
-        (slf4jLoggerStub.warn(_: String)) verify * never ()
+        (slf4jLoggerStub.warn(_: String)) verify * never()
       }
     }
 
@@ -123,9 +123,9 @@ class GetAccountSpec
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService            = mock[AccountService[Future]]
+        val accountService = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
-        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
+        val savingsGoalEventRepo = mock[SavingsGoalEventRepo[Future]]
         val controller = new HelpToSaveController(
           logger,
           accountService,
@@ -140,9 +140,36 @@ class GetAccountSpec
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "title").as[String]      shouldBe "Shuttered"
+        (jsonBody \ "title").as[String] shouldBe "Shuttered"
         (jsonBody \ "message")
           .as[String] shouldBe "HTS is currently not available"
+      }
+    }
+
+    "nba account details are associated with the NINO" should {
+      "return the nbaAccountNumber, nbaPayee, nbaRolNumber and nbaSortCode in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccount)))
+
+        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        status(accountData) shouldBe OK
+        val account = contentAsJson(accountData).as[Account]
+        account.nbaAccountNumber shouldBe Some("123456789")
+        account.nbaPayee shouldBe Some("Mr Testfore Testur")
+        account.nbaRollNumber shouldBe Some("RN136912")
+        account.nbaSortCode shouldBe Some("12-34-56")
+      }
+    }
+    "nba account details are not associated with the NINO" should {
+      "return nothing for nbaAccountNumber, nbaPayee, nbaRolNumber and nbaSortCode in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
+        accountReturns(Right(Some(mobileHelpToSaveAccountNoNbaDetails)))
+
+        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        status(accountData) shouldBe OK
+        val account = contentAsJson(accountData).as[Account]
+        account.nbaAccountNumber shouldBe None
+        account.nbaPayee shouldBe None
+        account.nbaRollNumber shouldBe None
+        account.nbaSortCode shouldBe None
       }
     }
   }
