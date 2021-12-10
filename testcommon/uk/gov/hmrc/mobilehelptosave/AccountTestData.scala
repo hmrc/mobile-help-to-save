@@ -61,7 +61,11 @@ trait AccountTestData {
        |      "endDate": "2021-12-31",
        |      "bonusPaidOnOrAfterDate": "2022-01-01"
        |    }
-       |  ]
+       |  ],
+       |  "nbaAccountNumber": "123456789",
+       |  "nbaPayee": "Mr Testfore Testur",
+       |  "nbaRollNumber": "RN136912",
+       |  "nbaSortCode": "12-34-56"
        |}
     """.stripMargin
 
@@ -223,8 +227,12 @@ trait AccountTestData {
         bonusPaidOnOrAfterDate = LocalDate.of(2022, 1, 1)
       )
     ),
-    closureDate    = None,
-    closingBalance = None
+    closureDate      = None,
+    closingBalance   = None,
+    nbaAccountNumber = Some("123456789"),
+    nbaPayee         = Some("Mr Testfore Testur"),
+    nbaRollNumber    = Some("RN136912"),
+    nbaSortCode      = Some("12-34-56")
   )
 
   /** An Account object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
@@ -260,6 +268,10 @@ trait AccountTestData {
     currentBonusTerm     = CurrentBonusTerm.First,
     closureDate          = None,
     closingBalance       = None,
+    nbaAccountNumber     = Some("123456789"),
+    nbaPayee             = Some("Mr Testfore Testur"),
+    nbaRollNumber        = Some("RN136912"),
+    nbaSortCode          = Some("12-34-56"),
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
@@ -305,6 +317,10 @@ trait AccountTestData {
     currentBonusTerm     = CurrentBonusTerm.First,
     closureDate          = None,
     closingBalance       = None,
+    nbaAccountNumber     = Some("123456789"),
+    nbaPayee             = Some("Mr Testfore Testur"),
+    nbaRollNumber        = Some("RN136912"),
+    nbaSortCode          = Some("12-34-56"),
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
@@ -347,6 +363,10 @@ trait AccountTestData {
     currentBonusTerm     = CurrentBonusTerm.Second,
     closureDate          = None,
     closingBalance       = None,
+    nbaAccountNumber     = Some("123456789"),
+    nbaPayee             = Some("Mr Testfore Testur"),
+    nbaRollNumber        = Some("RN136912"),
+    nbaSortCode          = Some("12-34-56"),
     inAppPaymentsEnabled = false,
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
@@ -557,4 +577,6 @@ trait AccountTestData {
       |  ]
       |}
     """.stripMargin
+
+  protected val mobileHelpToSaveAccountNoNbaDetails: Account = mobileHelpToSaveAccount.copy(nbaAccountNumber = None, nbaPayee = None, nbaRollNumber = None, nbaSortCode = None)
 }
