@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ case class MongoMilestone(
   milestone:     Milestone,
   isSeen:        Boolean = false,
   isRepeatable:  Boolean = true,
-  generatedDate: LocalDateTime = LocalDateTime.now()) {
+  generatedDate: LocalDateTime = LocalDateTime.now(),
+  expireAt:      LocalDateTime = LocalDateTime.now().plusYears(4)) {
   def compare(that: MilestoneType) = milestoneType.priority - that.priority
 }
 
