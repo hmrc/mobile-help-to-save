@@ -55,7 +55,7 @@ class MongoMilestonesRepo(
       Index(Seq("expireAt" -> IndexType.Descending),
             name    = Some("expireAtIdx"),
             options = BSONDocument("expireAfterSeconds" -> 0)),
-      Index(Seq("nino" -> IndexType.Ascending), Some("nino"), unique = true)
+      Index(Seq("nino" -> IndexType.Text), Some("ninoIdx"), unique = false, sparse = true)
     )
 
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
