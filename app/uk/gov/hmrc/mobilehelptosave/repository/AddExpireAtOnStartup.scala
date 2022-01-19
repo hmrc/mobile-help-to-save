@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import reactivemongo.api.commands.MultiBulkWriteResult
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import reactivemongo.play.json.collection.JSONBatchCommands.FindAndModifyCommand
 
 import java.time.LocalDateTime
 import javax.inject.Singleton
@@ -35,8 +36,8 @@ class AddExpireAtOnStartup(mongoMilestonesRepo: MongoMilestonesRepo)(implicit ex
     updateMilestones <- updateMilestones()
   } yield ()
 
-  private def updateFuture(repo: IndexedMongoRepo[_, _]): Future[MultiBulkWriteResult] = {
-    val updateBuilder = repo.collection.update(true)
+  private def updateUnseenMilestones(): Future[MultiBulkWriteResult] = {
+    val updateBuilder = mongoMilestonesRepo.collection.update(true)
     val updates = updateBuilder.element(
       q     = BSONDocument("isSeen" -> false),
       u     = BSONDocument("$set" -> BSONDocument("expireAt" -> LocalDateTime.now().plusYears(4).toString)),
@@ -45,19 +46,23 @@ class AddExpireAtOnStartup(mongoMilestonesRepo: MongoMilestonesRepo)(implicit ex
     updates.flatMap(updateEle => updateBuilder.many(Seq(updateEle)))
   }
 
+  private def removeSeenMilestones(): Future[FindAndModifyCommand.FindAndModifyResult] =
+    mongoMilestonesRepo.collection.findAndRemove(BSONDocument("isSeen" -> true))
+
   private def updateMilestones(): Future[Unit] =
     for {
       totalDocsBefore <- mongoMilestonesRepo.count
-      docsToRemove    <- mongoMilestonesRepo.count(Json.obj("isSeen"-> true))
-      docsToUpdate    <- mongoMilestonesRepo.count(Json.obj("isSeen"-> false))
+      docsToRemove    <- mongoMilestonesRepo.count(Json.obj("isSeen" -> true))
+      docsToUpdate    <- mongoMilestonesRepo.count(Json.obj("isSeen" -> false))
       _ = logger.info(
-        s"mongo.updateDb flag set to true. Updating MongoDB collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to remove: $docsToRemove\n Expected records to update $docsToUpdate"
+        s"mongo.updateDb flag set to true. Updating MongoDB collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to remove: $docsToRemove\n Expected records to update: $docsToUpdate"
       )
       indexesSuccess <- mongoMilestonesRepo.ensureIndexes
-      updateSuccess  <- updateFuture(mongoMilestonesRepo)
+      updateSuccess  <- updateUnseenMilestones()
+      removeSuccess  <- removeSeenMilestones()
       docsAfter      <- mongoMilestonesRepo.count
       _ = logger.info(
-        s"Update of ${mongoMilestonesRepo.collection.name} success = $updateSuccess, Index creation success = $indexesSuccess, documents updated: ${updateSuccess.upserted.size} documents remaining now: $docsAfter"
+        s"Update of ${mongoMilestonesRepo.collection.name} success = $updateSuccess\n Index creation success = $indexesSuccess\n documents updated: ${updateSuccess.nModified}\n documents remaining now: $docsAfter (Expected $docsToUpdate)"
       )
 
     } yield ()
