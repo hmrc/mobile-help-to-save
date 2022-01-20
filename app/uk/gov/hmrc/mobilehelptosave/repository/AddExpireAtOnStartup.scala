@@ -39,15 +39,20 @@ class AddExpireAtOnStartup(mongoMilestonesRepo: MongoMilestonesRepo)(implicit ex
   private def updateUnseenMilestones(): Future[MultiBulkWriteResult] = {
     val updateBuilder = mongoMilestonesRepo.collection.update(true)
     val updates = updateBuilder.element(
-      q     = BSONDocument("isSeen" -> false),
-      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> LocalDateTime.now().plusYears(4).toString)),
+      q = BSONDocument("isSeen" -> false),
+      u = BSONDocument("$set" -> BSONDocument("expireAt" -> LocalDateTime.now().plusYears(4).toString)),
       multi = true
     )
     updates.flatMap(updateEle => updateBuilder.many(Seq(updateEle)))
   }
 
-  private def removeSeenMilestones(): Future[FindAndModifyCommand.FindAndModifyResult] =
-    mongoMilestonesRepo.collection.findAndRemove(BSONDocument("isSeen" -> true))
+  private def removeSeenMilestones() = {
+
+  val delete = mongoMilestonesRepo.collection.delete(ordered = true)
+  val elements = delete.element(q = BSONDocument("isSeen" -> true))
+
+  delete.many(elements)
+}
 
   private def updateMilestones(): Future[Unit] =
     for {
