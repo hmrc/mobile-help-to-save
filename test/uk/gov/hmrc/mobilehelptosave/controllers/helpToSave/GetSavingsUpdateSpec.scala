@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateSe
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 
-import java.time.{LocalDate, YearMonth}
+import java.time.{LocalDate, Month, YearMonth}
 import java.time.temporal.ChronoUnit._
 import java.time.temporal.TemporalAdjusters
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -109,12 +109,16 @@ class GetSavingsUpdateSpec
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInMobileHelpToSaveOrder))
         getGoalSetEvents(Future successful Right(dateDynamicSavingsGoalData))
+        val expectedStartDate =
+          if (YearMonth.now().getMonth == Month.JANUARY)
+            LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.firstDayOfYear())
+          else LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
 
         val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
         (jsonBody \ "reportStartDate")
-          .as[LocalDate] shouldBe LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
+          .as[LocalDate] shouldBe expectedStartDate
         (jsonBody \ "reportEndDate")
           .as[LocalDate]                                 shouldBe LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
         (jsonBody \ "accountOpenedYearMonth").as[String] shouldBe mobileHelpToSaveAccount.openedYearMonth.toString

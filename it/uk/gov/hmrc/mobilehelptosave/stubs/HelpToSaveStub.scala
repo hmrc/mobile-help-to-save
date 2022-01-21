@@ -149,7 +149,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
     balance:                 BigDecimal,
     nino:                    Nino,
     firstTermBonusPaid:      BigDecimal = 90.99,
-    openedYearMonth:         YearMonth = YearMonth.of(2018, 1)
+    openedYearMonth:         YearMonth = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1)
   )(implicit wireMockServer: WireMockServer
   ): StubMapping =
     wireMockServer.stubFor(

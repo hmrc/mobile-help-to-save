@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import com.github.nscala_time.time.Imports.YearMonth
+
 import java.util.UUID.randomUUID
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -59,7 +61,7 @@ class AccountsISpec
       response.status shouldBe 200
 
       (response.json \ "number").as[String]                   shouldBe "1000000000001"
-      (response.json \ "openedYearMonth").as[String]          shouldBe "2018-01"
+      (response.json \ "openedYearMonth").as[String]          shouldBe s"${YearMonth.now().minusYears(3).getYear}-01"
       (response.json \ "isClosed").as[Boolean]                shouldBe false
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
@@ -69,8 +71,9 @@ class AccountsISpec
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
-      (response.json \ "thisMonthEndDate").as[String]          shouldBe "2018-04-30"
-      (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
+      (response.json \ "thisMonthEndDate").as[String] shouldBe s"${YearMonth.now().minusYears(3).getYear}-04-30"
+      (response.json \ "nextPaymentMonthStartDate")
+        .as[String] shouldBe s"${YearMonth.now().minusYears(3).getYear}-05-01"
 
       (response.json \ "accountHolderName").as[String]  shouldBe "Testfore Testsur"
       (response.json \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
@@ -78,15 +81,17 @@ class AccountsISpec
       val firstBonusTermJson = (response.json \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
-      (firstBonusTermJson \ "endDate").as[String]                           shouldBe "2019-12-31"
-      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2020-01-01"
+      (firstBonusTermJson \ "endDate").as[String] shouldBe s"${YearMonth.now().minusYears(2).getYear}-12-31"
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate")
+        .as[String]                                                         shouldBe s"${YearMonth.now().minusYears(1).getYear}-01-01"
       (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
       val secondBonusTermJson = (response.json \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                           shouldBe "2021-12-31"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2022-01-01"
+      (secondBonusTermJson \ "endDate").as[String] shouldBe s"${YearMonth.now() getYear}-12-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate")
+        .as[String]                                                          shouldBe s"${YearMonth.now().plusYears(1).getYear}-01-01"
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
       (response.json \ "currentBonusTerm").as[String]   shouldBe "First"
