@@ -212,6 +212,22 @@
         "AfterFinalTerm"
       ]
     },
+    "nbaAccountNumber": {
+      "type": "string",
+      "description": "Account number for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details."
+    },
+    "nbaPayee": {
+      "type": "string",
+      "description": "Payee for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details."
+  },
+    "nbaRollNumber": {
+      "type": "string",
+      "description": "Roll number for Nominated Bank Account (withdrawals). Only present for Building Society Accounts. Field omitted if the customer has not entered details."
+    },
+    "nbaSortCode": {
+      "type": "string",
+      "description": "Sort code for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details."
+    },
     "inAppPaymentsEnabled": {
       "type": "boolean",
       "description": "Are in-app payments enabled for this account?"

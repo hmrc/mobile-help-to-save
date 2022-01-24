@@ -16,29 +16,31 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
+import ai.x.play.json.Encoders.encoder
+
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, YearMonth}
-
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
+import ai.x.play.json.Jsonx
 
 case class BonusTerm(
-  bonusEstimate:                 BigDecimal,
-  bonusPaid:                     BigDecimal,
-  endDate:                       LocalDate,
-  bonusPaidOnOrAfterDate:        LocalDate,
-  balanceMustBeMoreThanForBonus: BigDecimal)
+                      bonusEstimate: BigDecimal,
+                      bonusPaid: BigDecimal,
+                      endDate: LocalDate,
+                      bonusPaidOnOrAfterDate: LocalDate,
+                      balanceMustBeMoreThanForBonus: BigDecimal)
 
 object BonusTerm {
   implicit val format: OFormat[BonusTerm] = Json.format[BonusTerm]
 }
 
 case class Blocking(
-  unspecified: Boolean,
-  payments:    Boolean,
-  withdrawals: Boolean,
-  bonuses:     Boolean)
+                     unspecified: Boolean,
+                     payments: Boolean,
+                     withdrawals: Boolean,
+                     bonuses: Boolean)
 
 object Blocking {
   implicit val format: OFormat[Blocking] = Json.format[Blocking]
@@ -47,68 +49,76 @@ object Blocking {
 object CurrentBonusTerm extends Enumeration {
   val First, Second, AfterFinalTerm = Value
 
-  implicit val reads:  Reads[Value]  = Reads.enumNameReads(CurrentBonusTerm)
+  implicit val reads: Reads[Value] = Reads.enumNameReads(CurrentBonusTerm)
   implicit val writes: Writes[Value] = Writes.enumNameWrites
 }
 
 case class Account(
-  number:                    String,
-  openedYearMonth:           YearMonth,
-  isClosed:                  Boolean,
-  blocked:                   Blocking,
-  balance:                   BigDecimal,
-  paidInThisMonth:           BigDecimal,
-  canPayInThisMonth:         BigDecimal,
-  maximumPaidInThisMonth:    BigDecimal,
-  thisMonthEndDate:          LocalDate,
-  nextPaymentMonthStartDate: Option[LocalDate],
-  accountHolderName:         String,
-  accountHolderEmail:        Option[String],
-  bonusTerms:                Seq[BonusTerm],
-  currentBonusTerm:          CurrentBonusTerm.Value,
-  closureDate:               Option[LocalDate] = None,
-  closingBalance:            Option[BigDecimal] = None,
-  inAppPaymentsEnabled:      Boolean,
-  // This field is populated from the application config
-  savingsGoalsEnabled: Boolean = false,
-  // This field is populated from the mongo repository
-  savingsGoal:          Option[SavingsGoal] = None,
-  daysRemainingInMonth: Long,
-  highestBalance:       BigDecimal)
+                    number: String,
+                    openedYearMonth: YearMonth,
+                    isClosed: Boolean,
+                    blocked: Blocking,
+                    balance: BigDecimal,
+                    paidInThisMonth: BigDecimal,
+                    canPayInThisMonth: BigDecimal,
+                    maximumPaidInThisMonth: BigDecimal,
+                    thisMonthEndDate: LocalDate,
+                    nextPaymentMonthStartDate: Option[LocalDate],
+                    accountHolderName: String,
+                    accountHolderEmail: Option[String],
+                    bonusTerms: Seq[BonusTerm],
+                    currentBonusTerm: CurrentBonusTerm.Value,
+                    closureDate: Option[LocalDate] = None,
+                    closingBalance: Option[BigDecimal] = None,
+                    nbaAccountNumber: Option[String],
+                    nbaPayee: Option[String],
+                    nbaRollNumber: Option[String],
+                    nbaSortCode: Option[String],
+                    inAppPaymentsEnabled: Boolean,
+                    // This field is populated from the application config
+                    savingsGoalsEnabled: Boolean = false,
+                    // This field is populated from the mongo repository
+                    savingsGoal: Option[SavingsGoal] = None,
+                    daysRemainingInMonth: Long,
+                    highestBalance: BigDecimal)
 
 object Account {
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
-  implicit val format:          OFormat[Account]  = Json.format[Account]
+  implicit val format: OFormat[Account] = Jsonx.formatCaseClass[Account]
 
   def apply(
-    h:                    HelpToSaveAccount,
-    inAppPaymentsEnabled: Boolean,
-    savingsGoalsEnabled:  Boolean,
-    logger:               LoggerLike,
-    now:                  LocalDate,
-    savingsGoal:          Option[SavingsGoal]
-  ): Account = Account(
-    number                    = h.accountNumber,
-    openedYearMonth           = h.openedYearMonth,
-    isClosed                  = h.isClosed,
-    blocked                   = h.blocked,
-    balance                   = h.balance,
-    paidInThisMonth           = h.paidInThisMonth,
-    canPayInThisMonth         = h.canPayInThisMonth,
-    maximumPaidInThisMonth    = h.maximumPaidInThisMonth,
-    thisMonthEndDate          = h.thisMonthEndDate,
+             h: HelpToSaveAccount,
+             inAppPaymentsEnabled: Boolean,
+             savingsGoalsEnabled: Boolean,
+             logger: LoggerLike,
+             now: LocalDate,
+             savingsGoal: Option[SavingsGoal]
+           ): Account = Account(
+    number = h.accountNumber,
+    openedYearMonth = h.openedYearMonth,
+    isClosed = h.isClosed,
+    blocked = h.blocked,
+    balance = h.balance,
+    paidInThisMonth = h.paidInThisMonth,
+    canPayInThisMonth = h.canPayInThisMonth,
+    maximumPaidInThisMonth = h.maximumPaidInThisMonth,
+    thisMonthEndDate = h.thisMonthEndDate,
     nextPaymentMonthStartDate = nextPaymentMonthStartDate(h),
-    accountHolderName         = h.accountHolderForename + " " + h.accountHolderSurname,
-    accountHolderEmail        = h.accountHolderEmail,
-    bonusTerms                = bonusTerms(h, logger),
-    currentBonusTerm          = currentBonusTerm(h),
-    closureDate               = h.closureDate,
-    closingBalance            = h.closingBalance,
-    inAppPaymentsEnabled      = inAppPaymentsEnabled,
-    savingsGoalsEnabled       = savingsGoalsEnabled,
-    daysRemainingInMonth      = calculateDaysRemainingInMonth(now, h),
-    savingsGoal               = savingsGoal,
-    highestBalance            = highestBalance(bonusTerms(h, logger), currentBonusTerm(h))
+    accountHolderName = h.accountHolderForename + " " + h.accountHolderSurname,
+    accountHolderEmail = h.accountHolderEmail,
+    bonusTerms = bonusTerms(h, logger),
+    currentBonusTerm = currentBonusTerm(h),
+    closureDate = h.closureDate,
+    closingBalance = h.closingBalance,
+    nbaAccountNumber = h.nbaAccountNumber,
+    nbaPayee = h.nbaPayee,
+    nbaRollNumber = h.nbaRollNumber,
+    nbaSortCode = h.nbaSortCode,
+    inAppPaymentsEnabled = inAppPaymentsEnabled,
+    savingsGoalsEnabled = savingsGoalsEnabled,
+    daysRemainingInMonth = calculateDaysRemainingInMonth(now, h),
+    savingsGoal = savingsGoal,
+    highestBalance = highestBalance(bonusTerms(h, logger), currentBonusTerm(h))
   )
 
   /**
@@ -123,9 +133,9 @@ object Account {
     *         the result will be 1)
     */
   private def calculateDaysRemainingInMonth(
-    now: LocalDate,
-    h:   HelpToSaveAccount
-  ): Long =
+                                             now: LocalDate,
+                                             h: HelpToSaveAccount
+                                           ): Long =
     ChronoUnit.DAYS.between(now, h.thisMonthEndDate) + 1
 
   private def nextPaymentMonthStartDate(h: HelpToSaveAccount) =
@@ -145,18 +155,18 @@ object Account {
     }
 
   private def bonusTerms(
-    h:      HelpToSaveAccount,
-    logger: LoggerLike
-  ): Seq[BonusTerm] = {
+                          h: HelpToSaveAccount,
+                          logger: LoggerLike
+                        ): Seq[BonusTerm] = {
 
     def bonusTerm(
-      htsTerm:                       HelpToSaveBonusTerm,
-      balanceMustBeMoreThanForBonus: BigDecimal
-    ) = BonusTerm(
-      bonusEstimate                 = htsTerm.bonusEstimate,
-      bonusPaid                     = htsTerm.bonusPaid,
-      endDate                       = htsTerm.endDate,
-      bonusPaidOnOrAfterDate        = htsTerm.bonusPaidOnOrAfterDate,
+                   htsTerm: HelpToSaveBonusTerm,
+                   balanceMustBeMoreThanForBonus: BigDecimal
+                 ) = BonusTerm(
+      bonusEstimate = htsTerm.bonusEstimate,
+      bonusPaid = htsTerm.bonusPaid,
+      endDate = htsTerm.endDate,
+      bonusPaidOnOrAfterDate = htsTerm.bonusPaidOnOrAfterDate,
       balanceMustBeMoreThanForBonus = balanceMustBeMoreThanForBonus
     )
 
@@ -175,9 +185,9 @@ object Account {
   }
 
   private def highestBalance(
-    bonusTerms:       Seq[BonusTerm],
-    currentBonusTerm: CurrentBonusTerm.Value
-  ): BigDecimal = {
+                              bonusTerms: Seq[BonusTerm],
+                              currentBonusTerm: CurrentBonusTerm.Value
+                            ): BigDecimal = {
     val finalBonusTerms = bonusTerms.last
     if (currentBonusTerm == CurrentBonusTerm.First) {
       finalBonusTerms.balanceMustBeMoreThanForBonus
