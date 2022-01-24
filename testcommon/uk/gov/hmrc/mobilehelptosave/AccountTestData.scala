@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ trait AccountTestData {
        |  "paidInThisMonth": 27.88,
        |  "canPayInThisMonth": 22.12,
        |  "maximumPaidInThisMonth": 50,
-       |  "thisMonthEndDate": "2018-04-30",
+       |  "thisMonthEndDate": "${YearMonth.now().minusYears(3).getYear}-04-30",
        |  "accountHolderForename": "Testfore",
        |  "accountHolderSurname": "Testsur",
        |  "accountHolderEmail": "testemail@example.com",
@@ -52,14 +52,14 @@ trait AccountTestData {
        |    {
        |      "bonusEstimate": 90.99,
        |      "bonusPaid": $firstTermBonusPaid,
-       |      "endDate": "2019-12-31",
-       |      "bonusPaidOnOrAfterDate": "2020-01-01"
+       |      "endDate": "${YearMonth.now().minusYears(2).getYear}-12-31",
+       |      "bonusPaidOnOrAfterDate": "${YearMonth.now().minusYears(1).getYear}-01-01"
        |    },
        |    {
        |      "bonusEstimate": 12,
        |      "bonusPaid": 0,
-       |      "endDate": "2021-12-31",
-       |      "bonusPaidOnOrAfterDate": "2022-01-01"
+       |      "endDate": "${YearMonth.now().getYear}-12-31",
+       |      "bonusPaidOnOrAfterDate": "${YearMonth.now().plusYears(1).getYear}-01-01"
        |    }
        |  ],
        |  "nbaAccountNumber": "123456789",
@@ -196,13 +196,13 @@ trait AccountTestData {
       |}
     """.stripMargin
 
-  val monthEndDate: LocalDate = LocalDate.of(2018, 4, 30)
-  val now:          LocalDate = LocalDate.of(2018, 4, 30)
+  val monthEndDate: LocalDate = LocalDate.of(YearMonth.now().minusYears(3).getYear, 4, 30)
+  val now:          LocalDate = LocalDate.of(YearMonth.now().minusYears(3).getYear, 4, 30)
 
   /** A HelpToSaveAccount object containing the same data as [[accountReturnedByHelpToSaveJsonString]] */
   protected val helpToSaveAccount: HelpToSaveAccount = HelpToSaveAccount(
     accountNumber          = "1000000000001",
-    openedYearMonth        = YearMonth.of(2018, 1),
+    openedYearMonth        = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1),
     isClosed               = false,
     blocked                = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
     balance                = BigDecimal("123.45"),
@@ -217,14 +217,14 @@ trait AccountTestData {
       HelpToSaveBonusTerm(
         bonusEstimate          = BigDecimal("90.99"),
         bonusPaid              = BigDecimal("90.99"),
-        endDate                = LocalDate.of(2019, 12, 31),
-        bonusPaidOnOrAfterDate = LocalDate.of(2020, 1, 1)
+        endDate                = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
+        bonusPaidOnOrAfterDate = LocalDate.of(YearMonth.now().minusYears(1).getYear, 1, 1)
       ),
       HelpToSaveBonusTerm(
         bonusEstimate          = 12,
         bonusPaid              = 0,
-        endDate                = LocalDate.of(2021, 12, 31),
-        bonusPaidOnOrAfterDate = LocalDate.of(2022, 1, 1)
+        endDate                = LocalDate.of(YearMonth.now().getYear, 12, 31),
+        bonusPaidOnOrAfterDate = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1)
       )
     ),
     closureDate      = None,

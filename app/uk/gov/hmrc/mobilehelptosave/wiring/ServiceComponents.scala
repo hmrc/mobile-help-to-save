@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,11 +99,12 @@ class ServiceComponents(context: Context)
   lazy val bonusReachedMilestonesService: BonusReachedMilestonesService[Future] =
     wire[HtsBonusReachedMilestonesService[Future]]
 
-  lazy val mongo:               ReactiveMongoComponent       = wire[ReactiveMongoComponentImpl]
-  lazy val eventRepo:           SavingsGoalEventRepo[Future] = wire[MongoSavingsGoalEventRepo]
-  lazy val eligibilityRepo:     EligibilityRepo[Future]      = wire[MongoEligibilityRepo]
-  lazy val previousBalanceRepo: PreviousBalanceRepo[Future]  = wire[MongoPreviousBalanceRepo]
-  lazy val milestonesRepo:      MilestonesRepo[Future]       = wire[MongoMilestonesRepo]
+  lazy val mongo:               ReactiveMongoComponent    = wire[ReactiveMongoComponentImpl]
+  lazy val eligibilityRepo:     EligibilityRepo[Future]   = wire[MongoEligibilityRepo]
+  lazy val eventRepo:           MongoSavingsGoalEventRepo = wire[MongoSavingsGoalEventRepo]
+  lazy val previousBalanceRepo: MongoPreviousBalanceRepo  = wire[MongoPreviousBalanceRepo]
+  lazy val milestonesRepo:      MongoMilestonesRepo       = wire[MongoMilestonesRepo]
+  val loadOnStartupModule:      RunOnStartup              = wire[RunOnStartup]
 
   lazy val startupController:       StartupController       = wire[StartupController]
   lazy val helpToSaveController:    HelpToSaveController    = wire[HelpToSaveController]
