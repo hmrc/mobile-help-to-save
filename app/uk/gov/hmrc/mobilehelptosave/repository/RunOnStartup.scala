@@ -16,66 +16,24 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import com.google.inject.AbstractModule
 import play.api.Logger
-import play.api.libs.json.Json
-import reactivemongo.api.commands.MultiBulkWriteResult
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.ImplicitBSONHandlers._
-
-import java.time.LocalDateTime
 import javax.inject.Singleton
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class RunOnStartup(mongoMilestonesRepo: MongoMilestonesRepo)(implicit executionContext: ExecutionContext) {
+class RunOnStartup(
+  mongoMilestonesRepo:       MongoMilestonesRepo,
+  mongoSavingsGoalEventRepo: MongoSavingsGoalEventRepo,
+  mongoPreviousBalanceRepo:  MongoPreviousBalanceRepo
+)(implicit executionContext: ExecutionContext) {
   val logger: Logger = Logger(this.getClass)
 
   for {
-    updateMilestones <- updateMilestones()
-  } yield ()
-
-  private def updateUnseenMilestones(): Future[MultiBulkWriteResult] = {
-    val updateBuilder = mongoMilestonesRepo.collection.update(true)
-    val updates = updateBuilder.element(
-      q = BSONDocument("isSeen" -> false),
-      u = BSONDocument("$set" -> BSONDocument("expireAt" -> LocalDateTime.now().plusYears(4).toString)),
-      multi = true
-    )
-    updates.flatMap(updateEle => updateBuilder.many(Seq(updateEle)))
-  }
-
-  private def removeSeenMilestones() = {
-
-    val delete = mongoMilestonesRepo.collection.delete(ordered = true)
-    val elements = delete.element(q = BSONDocument("isSeen" -> true))
-
-    delete.many(elements)
-  }
-
-  private def updateMilestones(): Future[Unit] =
-    for {
-      totalDocsBefore <- mongoMilestonesRepo.count
-      docsToRemove    <- mongoMilestonesRepo.count(Json.obj("isSeen" -> true))
-      docsToUpdate    <- mongoMilestonesRepo.count(Json.obj("isSeen" -> false))
-      _ = logger.info(
-        s"mongo.updateDb flag set to true. Updating MongoDB collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to remove: $docsToRemove\n Expected records to update: $docsToUpdate"
-      )
-      indexesSuccess <- mongoMilestonesRepo.ensureIndexes
-      updateSuccess  <- updateUnseenMilestones()
-      removeSuccess  <- removeSeenMilestones()
-      docsAfter      <- mongoMilestonesRepo.count
-      _ = logger.info(
-        s"Update of ${mongoMilestonesRepo.collection.name} success = $updateSuccess\n Index creation success = $indexesSuccess\n documents updated: ${updateSuccess.nModified}\n documents remaining now: $docsAfter (Expected $docsToUpdate)"
-      )
-
-    } yield ()
+    milestoneCount   <- mongoMilestonesRepo.count
+    goalCount        <- mongoSavingsGoalEventRepo.count
+    prevBalanceCount <- mongoPreviousBalanceRepo.count
+  } yield (logger.info(
+    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nCurrent savingsGoal collection count = $goalCount\nCurrent previous balance collection count = $prevBalanceCount\n\n========================================================================================"
+  ))
 
 }
-
-class LoadOnStartupModule extends AbstractModule {
-
-  override def configure(): Unit =
-    bind(classOf[RunOnStartup]).asEagerSingleton()
-}
-
