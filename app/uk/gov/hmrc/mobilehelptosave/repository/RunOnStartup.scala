@@ -35,8 +35,7 @@ class RunOnStartup(
   val logger: Logger = Logger(this.getClass)
 
   val updateValues: BSONDocument = BSONDocument(
-    "$set" -> BSONDocument("expireAt"       -> LocalDateTime.now().plusMonths(54).toString),
-    "$set" -> BSONDocument("updateRequired" -> true)
+    "$set" -> BSONDocument("expireAt" -> LocalDateTime.now().plusMonths(54).toString, "updateRequired" -> true)
   )
 
   for {
@@ -56,7 +55,7 @@ class RunOnStartup(
     for {
       totalDocsBefore <- mongoMilestonesRepo.count
       _ = logger.info(
-        s"mongo.updateDb flag set to true. Updating MongoDB collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $docsToUpdate"
+        s"mongo.updateDb flag set to true. Updating MongoDB collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $totalDocsBefore"
       )
       indexesSuccess      <- mongoMilestonesRepo.ensureIndexes
       updateUnseenSuccess <- updateUnseenMilestones(updateBuilder)
