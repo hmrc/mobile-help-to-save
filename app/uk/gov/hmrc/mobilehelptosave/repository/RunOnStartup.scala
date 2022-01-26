@@ -17,10 +17,10 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import play.api.Logger
-import play.api.libs.json.Json
 import reactivemongo.api.commands.MultiBulkWriteResult
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.mobilehelptosave.config.RunOnStartupConfig
 
 import java.time.LocalDateTime
 import javax.inject.Singleton
@@ -30,7 +30,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class RunOnStartup(
   mongoMilestonesRepo:       MongoMilestonesRepo,
   mongoSavingsGoalEventRepo: MongoSavingsGoalEventRepo,
-  mongoPreviousBalanceRepo:  MongoPreviousBalanceRepo
+  mongoPreviousBalanceRepo:  MongoPreviousBalanceRepo,
+  config:                    RunOnStartupConfig
 )(implicit executionContext: ExecutionContext) {
   val logger: Logger = Logger(this.getClass)
 
@@ -45,17 +46,18 @@ class RunOnStartup(
   } yield (logger.info(
     s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nCurrent savingsGoal collection count = $goalCount\nCurrent previous balance collection count = $prevBalanceCount\n\n========================================================================================"
   ))
-
-  for {
-    updateMilestones <- updateMilestones()
-  } yield ()
+  if (config.milestonesUpdateEnabled) {
+    for {
+      updateMilestones <- updateMilestones()
+    } yield ()
+  }
 
   private def updateMilestones(): Future[Unit] = {
     val updateBuilder: mongoMilestonesRepo.collection.UpdateBuilder = mongoMilestonesRepo.collection.update(true)
     for {
       totalDocsBefore <- mongoMilestonesRepo.count
       _ = logger.info(
-        s"mongo.updateDb flag set to true. Updating MongoDB collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $totalDocsBefore"
+        s"mongo.updateMilestones flag set to true. Updating Milestones collection ${mongoMilestonesRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $totalDocsBefore"
       )
       indexesSuccess      <- mongoMilestonesRepo.ensureIndexes
       updateUnseenSuccess <- updateUnseenMilestones(updateBuilder)
