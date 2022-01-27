@@ -21,10 +21,13 @@ import cats.syntax.functor._
 import play.api.libs.json.Json.obj
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.MongoMilestone
 
+import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesRepo[F[_]] {
@@ -47,6 +50,14 @@ class MongoMilestonesRepo(
     extends IndexedMongoRepo[Nino, MongoMilestone]("milestones", "nino", unique = false, mongo = mongo)
     with MilestonesRepo[Future] {
 
+  override def indexes: Seq[Index] =
+    Seq(
+      Index(Seq("expireAt" -> IndexType.Descending),
+            name    = Some("expireAtIdx"),
+            options = BSONDocument("expireAfterSeconds" -> 0)),
+      Index(Seq("nino" -> IndexType.Text), Some("ninoIdx"), unique = false, sparse = true)
+    )
+
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
     collection
       .find(obj("nino" -> milestone.nino, "milestone" -> milestone.milestone), None)(JsObjectDocumentWriter,
@@ -68,7 +79,7 @@ class MongoMilestonesRepo(
       .update(ordered = false)
       .one(
         q     = obj("nino" -> nino, "milestoneType" -> milestoneType, "isSeen" -> false),
-        u     = obj("$set" -> Json.obj("isSeen" -> true)),
+        u     = obj("$set" -> Json.obj("isSeen" -> true, "expireAt" -> LocalDateTime.now().plusMonths(6))),
         multi = true
       )
       .void

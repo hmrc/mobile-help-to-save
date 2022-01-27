@@ -23,6 +23,8 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.views.txt
 
+import javax.inject.Inject
+
 case class ApiAccess(
   `type`:                    String,
   whitelistedApplicationIds: Seq[String])
@@ -31,7 +33,7 @@ object ApiAccess {
   implicit val writes: OWrites[ApiAccess] = Json.writes[ApiAccess]
 }
 
-class DocumentationController(
+class DocumentationController @Inject()(
   errorHandler: HttpErrorHandler,
   config:       DocumentationControllerConfig,
   cc:           ControllerComponents,

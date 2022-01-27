@@ -23,12 +23,14 @@ import uk.gov.hmrc.domain.Nino
 import scala.language.implicitConversions
 
 case class MongoMilestone(
-  nino:          Nino,
-  milestoneType: MilestoneType,
-  milestone:     Milestone,
-  isSeen:        Boolean = false,
-  isRepeatable:  Boolean = true,
-  generatedDate: LocalDateTime = LocalDateTime.now()) {
+  nino:           Nino,
+  milestoneType:  MilestoneType,
+  milestone:      Milestone,
+  isSeen:         Boolean = false,
+  isRepeatable:   Boolean = true,
+  generatedDate:  LocalDateTime = LocalDateTime.now(),
+  expireAt:       LocalDateTime = LocalDateTime.now().plusYears(4),
+  updateRequired: Boolean = false) {
   def compare(that: MilestoneType) = milestoneType.priority - that.priority
 }
 

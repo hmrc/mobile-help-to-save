@@ -35,7 +35,8 @@ case class MobileHelpToSaveConfig(
     with StartupControllerConfig
     with UserServiceConfig
     with ReportingServiceConfig
-    with MilestonesConfig {
+    with MilestonesConfig
+    with RunOnStartupConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
@@ -59,6 +60,8 @@ case class MobileHelpToSaveConfig(
 
   override def bonusReachedMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.bonusReachedMilestoneCheckEnabled")
+
+  override def milestonesUpdateEnabled: Boolean = configBoolean("mongodb.updateMilestones")
 
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
@@ -118,4 +121,8 @@ trait StartupControllerConfig {
 
 trait ShutteringConnectorConfig {
   def shutteringBaseUrl: URL
+}
+
+trait RunOnStartupConfig {
+  def milestonesUpdateEnabled: Boolean
 }
