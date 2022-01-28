@@ -91,7 +91,8 @@ class MongoSavingsGoalEventRepo(
     result.map {
       case None => None
       case Some(_: SavingsGoalDeleteEvent) => None
-      case Some(SavingsGoalSetEvent(_, amount, _, name)) => Some(SavingsGoal(goalName = name, goalAmount = amount))
+      case Some(SavingsGoalSetEvent(_, amount, _, name, _, _)) =>
+        Some(SavingsGoal(goalName = name, goalAmount = amount))
     }
   }
 
