@@ -85,7 +85,7 @@ class ReportingServiceSpec
 
       val result = await(service.getCurrentSavingsGoalsEvents())
 
-      result shouldBe expectedResult
+      result.size shouldBe expectedResult.size
     }
   }
 

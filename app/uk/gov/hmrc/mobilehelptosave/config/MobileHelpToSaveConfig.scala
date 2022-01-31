@@ -61,7 +61,8 @@ case class MobileHelpToSaveConfig(
   override def bonusReachedMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.bonusReachedMilestoneCheckEnabled")
 
-  override def milestonesUpdateEnabled: Boolean = configBoolean("mongodb.updateMilestones")
+  override def milestonesUpdateEnabled:   Boolean = configBoolean("mongodb.updateMilestones")
+  override def savingsGoalsUpdateEnabled: Boolean = configBoolean("mongodb.updateSavingsGoals")
 
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
@@ -124,5 +125,6 @@ trait ShutteringConnectorConfig {
 }
 
 trait RunOnStartupConfig {
-  def milestonesUpdateEnabled: Boolean
+  def milestonesUpdateEnabled:   Boolean
+  def savingsGoalsUpdateEnabled: Boolean
 }

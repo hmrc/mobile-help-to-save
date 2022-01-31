@@ -48,7 +48,8 @@ class RunOnStartup(
   ))
   if (config.milestonesUpdateEnabled) {
     for {
-      updateMilestones <- updateMilestones()
+      _ <- if (config.milestonesUpdateEnabled) updateMilestones() else Future.successful()
+      _ <- if (config.savingsGoalsUpdateEnabled) updateSavingsGoals() else Future.successful()
     } yield ()
   }
 
@@ -88,6 +89,49 @@ class RunOnStartup(
 
     val updates = builder.element(
       q     = BSONDocument("isSeen" -> true),
+      u     = updateValues,
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle)))
+  }
+
+  private def updateSavingsGoals(): Future[Unit] = {
+    val updateBuilder: mongoSavingsGoalEventRepo.collection.UpdateBuilder =
+      mongoSavingsGoalEventRepo.collection.update(true)
+    for {
+      totalDocsBefore <- mongoSavingsGoalEventRepo.count
+      _ = logger.info(
+        s"mongo.updateSavingsGoals flag set to true. Updating SavingsGoals collection ${mongoSavingsGoalEventRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $totalDocsBefore"
+      )
+      indexesSuccess           <- mongoSavingsGoalEventRepo.ensureIndexes
+      updateSetGoalsSuccess    <- updateSetGoals(updateBuilder)
+      updateDeleteGoalsSuccess <- updateDeleteGoals(updateBuilder)
+      docsAfter                <- mongoSavingsGoalEventRepo.count
+      _ = logger.info(
+        s"Update of ${mongoSavingsGoalEventRepo.collection.name} complete\nIndex creation success = $indexesSuccess\n set savings goals updated: ${updateSetGoalsSuccess.nModified}\n delete savings goals updated: ${updateDeleteGoalsSuccess.nModified}\n Total savings goals updated: ${updateSetGoalsSuccess.nModified + updateDeleteGoalsSuccess.nModified}\n Total documents in collection now: $docsAfter (Expected: $totalDocsBefore)"
+      )
+
+    } yield ()
+  }
+
+  private def updateSetGoals(
+    builder: mongoSavingsGoalEventRepo.collection.UpdateBuilder
+  ): Future[MultiBulkWriteResult] = {
+
+    val updates = builder.element(
+      q     = BSONDocument("type" -> "set"),
+      u     = updateValues,
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle)))
+  }
+
+  private def updateDeleteGoals(
+    builder: mongoSavingsGoalEventRepo.collection.UpdateBuilder
+  ): Future[MultiBulkWriteResult] = {
+
+    val updates = builder.element(
+      q     = BSONDocument("type" -> "delete"),
       u     = updateValues,
       multi = true
     )

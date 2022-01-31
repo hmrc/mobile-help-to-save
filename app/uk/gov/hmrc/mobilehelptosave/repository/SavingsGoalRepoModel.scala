@@ -48,18 +48,23 @@ object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercas
 sealed trait SavingsGoalEvent {
   def nino: Nino
   def date: LocalDateTime
+
 }
 
 case class SavingsGoalSetEvent(
-  nino:   Nino,
-  amount: Option[Double] = None,
-  date:   LocalDateTime,
-  name:   Option[String] = None)
+  nino:           Nino,
+  amount:         Option[Double] = None,
+  date:           LocalDateTime,
+  name:           Option[String] = None,
+  expireAt:       LocalDateTime = LocalDateTime.now().plusMonths(54),
+  updateRequired: Boolean = false)
     extends SavingsGoalEvent
 
 case class SavingsGoalDeleteEvent(
-  nino: Nino,
-  date: LocalDateTime)
+  nino:           Nino,
+  date:           LocalDateTime,
+  expireAt:       LocalDateTime = LocalDateTime.now().plusMonths(54),
+  updateRequired: Boolean = false)
     extends SavingsGoalEvent
 
 object SavingsGoalEvent {

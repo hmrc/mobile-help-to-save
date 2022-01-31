@@ -29,7 +29,7 @@ case class MongoMilestone(
   isSeen:         Boolean = false,
   isRepeatable:   Boolean = true,
   generatedDate:  LocalDateTime = LocalDateTime.now(),
-  expireAt:       LocalDateTime = LocalDateTime.now().plusYears(4),
+  expireAt:       LocalDateTime = LocalDateTime.now().plusMonths(54),
   updateRequired: Boolean = false) {
   def compare(that: MilestoneType) = milestoneType.priority - that.priority
 }
