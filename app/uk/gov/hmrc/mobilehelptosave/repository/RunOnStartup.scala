@@ -18,11 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import play.api.Logger
 import reactivemongo.api.commands.MultiBulkWriteResult
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONDateTime, BSONDocument}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mobilehelptosave.config.RunOnStartupConfig
 
-import java.time.LocalDateTime
+import java.time.temporal.ChronoField
+import java.time.{LocalDateTime, ZoneId}
 import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,14 +45,14 @@ class RunOnStartup(
     goalCount        <- mongoSavingsGoalEventRepo.count
     prevBalanceCount <- mongoPreviousBalanceRepo.count
   } yield (logger.info(
-    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nCurrent savingsGoal collection count = $goalCount\nCurrent previous balance collection count = $prevBalanceCount\n\n========================================================================================"
+    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nCurrent savingsGoal collection count = $goalCount\nCurrent previous balance collection count = $prevBalanceCount\n\n==============================================================================="
   ))
-  if (config.milestonesUpdateEnabled) {
-    for {
-      _ <- if (config.milestonesUpdateEnabled) updateMilestones() else Future.successful()
-      _ <- if (config.savingsGoalsUpdateEnabled) updateSavingsGoals() else Future.successful()
-    } yield ()
-  }
+
+  for {
+    _ <- if (config.milestonesUpdateEnabled) updateMilestones() else Future.successful()
+    _ <- if (config.savingsGoalsUpdateEnabled) updateSavingsGoals() else Future.successful()
+    _ <- if (config.previousBalancesUpdateEnabled) updatePreviousBalances() else Future.successful()
+  } yield ()
 
   private def updateMilestones(): Future[Unit] = {
     val updateBuilder: mongoMilestonesRepo.collection.UpdateBuilder = mongoMilestonesRepo.collection.update(true)
@@ -138,4 +139,64 @@ class RunOnStartup(
     updates.flatMap(updateEle => builder.many(Seq(updateEle)))
   }
 
+  private def updatePreviousBalances(): Future[Unit] = {
+    val updateBuilder: mongoPreviousBalanceRepo.collection.UpdateBuilder =
+      mongoPreviousBalanceRepo.collection.update(true)
+    for {
+      totalDocsBefore <- mongoPreviousBalanceRepo.count
+      _ = logger.info(
+        s"mongo.updatePreviousBalances flag set to true. Updating Previous Balance collection ${mongoPreviousBalanceRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $totalDocsBefore"
+      )
+      indexesSuccess                   <- mongoPreviousBalanceRepo.ensureIndexes
+      updatePositivePrevBalanceSuccess <- updatePositivePreviousBalances(updateBuilder)
+      updateZeroPrevBalanceSuccess     <- updateZeroePreviousBalances(updateBuilder)
+      docsAfter                        <- mongoPreviousBalanceRepo.count
+      _ = logger.info(
+        s"Update of ${mongoPreviousBalanceRepo.collection.name} complete\nIndex creation success = $indexesSuccess\n positive previous balances updated: ${updatePositivePrevBalanceSuccess.nModified}\n zero previous balances updated: ${updateZeroPrevBalanceSuccess.nModified}\n Total savings goals updated: ${updatePositivePrevBalanceSuccess.nModified + updateZeroPrevBalanceSuccess.nModified}\n Total documents in collection now: $docsAfter (Expected: $totalDocsBefore)"
+      )
+
+    } yield ()
+  }
+
+  private def updatePositivePreviousBalances(
+    builder: mongoPreviousBalanceRepo.collection.UpdateBuilder
+  ): Future[MultiBulkWriteResult] = {
+
+    val updates = builder.element(
+      q = BSONDocument(
+        "previousBalance" -> BSONDocument(
+          "$gt" -> 0
+        )
+      ),
+      u     = updateValues,
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle))).recover {
+      case e => {
+        logger.warn("Error trying to update previousBalances: " + e)
+        throw new InternalError
+      }
+
+    }
+  }
+
+  private def updateZeroePreviousBalances(
+    builder: mongoPreviousBalanceRepo.collection.UpdateBuilder
+  ): Future[MultiBulkWriteResult] = {
+
+    val updates = builder.element(
+      q = BSONDocument(
+        "previousBalance" -> 0
+      ),
+      u     = updateValues,
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle))).recover {
+      case e => {
+        logger.warn("Error trying to update previousBalances: " + e)
+        throw new InternalError
+      }
+
+    }
+  }
 }

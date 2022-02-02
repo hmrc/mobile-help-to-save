@@ -65,7 +65,9 @@ class MongoPreviousBalanceRepo(
 case class PreviousBalance(
   nino:            Nino,
   previousBalance: BigDecimal,
-  date:            LocalDateTime)
+  date:            LocalDateTime,
+  expireAt:        LocalDateTime = LocalDateTime.now().plusMonths(54),
+  updateRequired:  Boolean = false)
 
 object PreviousBalance {
   implicit val formats: OFormat[PreviousBalance] = Json.format
