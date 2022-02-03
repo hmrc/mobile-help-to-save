@@ -11,7 +11,7 @@ object AppDependencies {
   )
 
   private val simpleReactiveMongoVersion = "8.0.0-play-28"
-  private val bootstrapVersion           = "5.12.0"
+  private val bootstrapVersion           = "5.18.0"
   private val domainVersion              = "6.2.0-play-28"
   private val catsCoreVersion            = "2.2.0"
   private val catsParVersion             = "1.0.0-RC2"

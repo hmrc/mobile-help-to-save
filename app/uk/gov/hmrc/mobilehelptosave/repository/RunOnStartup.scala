@@ -40,18 +40,24 @@ class RunOnStartup(
   )
 
   for {
-    milestoneCount   <- mongoMilestonesRepo.count
-    goalCount        <- mongoSavingsGoalEventRepo.count
-    prevBalanceCount <- mongoPreviousBalanceRepo.count
+    milestoneCount           <- mongoMilestonesRepo.count
+    milestoneSeenCount       <- mongoMilestonesRepo.find("isSeen" -> true)
+    milestoneUnseenCount     <- mongoMilestonesRepo.find("isSeen" -> false)
+    goalCount                <- mongoSavingsGoalEventRepo.count
+    goalSetCount             <- mongoSavingsGoalEventRepo.find("type" -> "set")
+    goalDeleteCount          <- mongoSavingsGoalEventRepo.find("type" -> "delete")
+    prevBalanceCount         <- mongoPreviousBalanceRepo.count
+    prevPositiveBalanceCount <- mongoPreviousBalanceRepo.find("previousBalance" -> BSONDocument("$gt" -> 0))
+    prevZeroBalanceCount     <- mongoPreviousBalanceRepo.find("previousBalance" -> 0)
   } yield (logger.info(
-    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nCurrent savingsGoal collection count = $goalCount\nCurrent previous balance collection count = $prevBalanceCount\n\n========================================================================================"
+    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nSeen milestones = ${milestoneSeenCount.size}\nUnseen milestones = ${milestoneUnseenCount.size}\n\nCurrent savingsGoal collection count = $goalCount\nSet savingsGoals  = ${goalSetCount.size}\nDelete savingsGoals  = ${goalDeleteCount.size}\n\nCurrent previous balance collection count = $prevBalanceCount\nPrevious positive balances = ${prevPositiveBalanceCount.size}\nPrevious zero balances = ${prevZeroBalanceCount.size}\n\n==============================================================================="
   ))
-  if (config.milestonesUpdateEnabled) {
-    for {
-      _ <- if (config.milestonesUpdateEnabled) updateMilestones() else Future.successful()
-      _ <- if (config.savingsGoalsUpdateEnabled) updateSavingsGoals() else Future.successful()
-    } yield ()
-  }
+
+  for {
+    _ <- if (config.milestonesUpdateEnabled) updateMilestones() else Future.successful()
+    _ <- if (config.savingsGoalsUpdateEnabled) updateSavingsGoals() else Future.successful()
+    _ <- if (config.previousBalancesUpdateEnabled) updatePreviousBalances() else Future.successful()
+  } yield ()
 
   private def updateMilestones(): Future[Unit] = {
     val updateBuilder: mongoMilestonesRepo.collection.UpdateBuilder = mongoMilestonesRepo.collection.update(true)
@@ -138,4 +144,64 @@ class RunOnStartup(
     updates.flatMap(updateEle => builder.many(Seq(updateEle)))
   }
 
+  private def updatePreviousBalances(): Future[Unit] = {
+    val updateBuilder: mongoPreviousBalanceRepo.collection.UpdateBuilder =
+      mongoPreviousBalanceRepo.collection.update(true)
+    for {
+      totalDocsBefore <- mongoPreviousBalanceRepo.count
+      _ = logger.info(
+        s"mongo.updatePreviousBalances flag set to true. Updating Previous Balance collection ${mongoPreviousBalanceRepo.collection.name} collection containing $totalDocsBefore records.\n Expected records to update: $totalDocsBefore"
+      )
+      indexesSuccess                   <- mongoPreviousBalanceRepo.ensureIndexes
+      updatePositivePrevBalanceSuccess <- updatePositivePreviousBalances(updateBuilder)
+      updateZeroPrevBalanceSuccess     <- updateZeroePreviousBalances(updateBuilder)
+      docsAfter                        <- mongoPreviousBalanceRepo.count
+      _ = logger.info(
+        s"Update of ${mongoPreviousBalanceRepo.collection.name} complete\nIndex creation success = $indexesSuccess\n positive previous balances updated: ${updatePositivePrevBalanceSuccess.nModified}\n zero previous balances updated: ${updateZeroPrevBalanceSuccess.nModified}\n Total savings goals updated: ${updatePositivePrevBalanceSuccess.nModified + updateZeroPrevBalanceSuccess.nModified}\n Total documents in collection now: $docsAfter (Expected: $totalDocsBefore)"
+      )
+
+    } yield ()
+  }
+
+  private def updatePositivePreviousBalances(
+    builder: mongoPreviousBalanceRepo.collection.UpdateBuilder
+  ): Future[MultiBulkWriteResult] = {
+
+    val updates = builder.element(
+      q = BSONDocument(
+        "previousBalance" -> BSONDocument(
+          "$gt" -> 0
+        )
+      ),
+      u     = updateValues,
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle))).recover {
+      case e => {
+        logger.warn("Error trying to update previousBalances: " + e)
+        throw new InternalError
+      }
+
+    }
+  }
+
+  private def updateZeroePreviousBalances(
+    builder: mongoPreviousBalanceRepo.collection.UpdateBuilder
+  ): Future[MultiBulkWriteResult] = {
+
+    val updates = builder.element(
+      q = BSONDocument(
+        "previousBalance" -> 0
+      ),
+      u     = updateValues,
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle))).recover {
+      case e => {
+        logger.warn("Error trying to update previousBalances: " + e)
+        throw new InternalError
+      }
+
+    }
+  }
 }
