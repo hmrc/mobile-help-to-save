@@ -18,12 +18,11 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import play.api.Logger
 import reactivemongo.api.commands.MultiBulkWriteResult
-import reactivemongo.bson.{BSONDateTime, BSONDocument}
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.mobilehelptosave.config.RunOnStartupConfig
 
-import java.time.temporal.ChronoField
-import java.time.{LocalDateTime, ZoneId}
+import java.time.LocalDateTime
 import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,11 +40,17 @@ class RunOnStartup(
   )
 
   for {
-    milestoneCount   <- mongoMilestonesRepo.count
-    goalCount        <- mongoSavingsGoalEventRepo.count
-    prevBalanceCount <- mongoPreviousBalanceRepo.count
+    milestoneCount           <- mongoMilestonesRepo.count
+    milestoneSeenCount       <- mongoMilestonesRepo.find("isSeen" -> true)
+    milestoneUnseenCount     <- mongoMilestonesRepo.find("isSeen" -> false)
+    goalCount                <- mongoSavingsGoalEventRepo.count
+    goalSetCount             <- mongoSavingsGoalEventRepo.find("type" -> "set")
+    goalDeleteCount          <- mongoSavingsGoalEventRepo.find("type" -> "delete")
+    prevBalanceCount         <- mongoPreviousBalanceRepo.count
+    prevPositiveBalanceCount <- mongoPreviousBalanceRepo.find("previousBalance" -> BSONDocument("$gt" -> 0))
+    prevZeroBalanceCount     <- mongoPreviousBalanceRepo.find("previousBalance" -> 0)
   } yield (logger.info(
-    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nCurrent savingsGoal collection count = $goalCount\nCurrent previous balance collection count = $prevBalanceCount\n\n==============================================================================="
+    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nSeen milestones = ${milestoneSeenCount.size}\nUnseen milestones = ${milestoneUnseenCount.size}\n\nCurrent savingsGoal collection count = $goalCount\nSet savingsGoals  = ${goalSetCount.size}\nDelete savingsGoals  = ${goalDeleteCount.size}\n\nCurrent previous balance collection count = $prevBalanceCount\nPrevious positive balances = ${prevPositiveBalanceCount.size}\nPrevious zero balances = ${prevZeroBalanceCount.size}\n\n==============================================================================="
   ))
 
   for {

@@ -19,10 +19,11 @@ import com.kenshoo.play.metrics.{Metrics, MetricsFilterImpl, MetricsImpl}
 import com.softwaremill.macwire.wire
 import play.api.BuiltInComponents
 import play.api.mvc.EssentialFilter
+import uk.gov.hmrc.play.audit.{DefaultAuditChannel, DefaultAuditConnector}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, Counter, DatastreamMetrics}
-import uk.gov.hmrc.play.bootstrap.audit.{DefaultAuditChannel, DefaultAuditConnector, EnabledCounter, EnabledDatastreamMetricsProvider}
+import uk.gov.hmrc.play.bootstrap.audit.EnabledDatastreamMetricsProvider
 import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider, ControllerConfigs, DefaultHttpAuditEvent, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters._
 import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, BackendFilters, DefaultBackendAuditFilter}
@@ -38,7 +39,7 @@ trait FilterWiring {
 
   lazy val controllerConfigs:  ControllerConfigs  = ControllerConfigs.fromConfig(configuration)
   lazy val cacheControlConfig: CacheControlConfig = CacheControlConfig.fromConfig(configuration)
-  lazy val graphiteConfig: GraphiteReporterProviderConfig = GraphiteReporterProviderConfig.fromConfig(configuration, configuration)
+  lazy val graphiteConfig: GraphiteReporterProviderConfig = GraphiteReporterProviderConfig.fromConfig(configuration)
 
   lazy val httpAuditEvent: HttpAuditEvent = wire[DefaultHttpAuditEvent]
 
