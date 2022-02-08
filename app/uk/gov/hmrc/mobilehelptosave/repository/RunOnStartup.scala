@@ -39,7 +39,7 @@ class RunOnStartup(
     "$set" -> BSONDocument("expireAt" -> LocalDateTime.now().plusMonths(54).toString, "updateRequired" -> true)
   )
 
-  for {
+  val counts = for {
     milestoneCount           <- mongoMilestonesRepo.count
     milestoneSeenCount       <- mongoMilestonesRepo.find("isSeen" -> true)
     milestoneUnseenCount     <- mongoMilestonesRepo.find("isSeen" -> false)
@@ -52,6 +52,10 @@ class RunOnStartup(
   } yield (logger.info(
     s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nSeen milestones = ${milestoneSeenCount.size}\nUnseen milestones = ${milestoneUnseenCount.size}\n\nCurrent savingsGoal collection count = $goalCount\nSet savingsGoals  = ${goalSetCount.size}\nDelete savingsGoals  = ${goalDeleteCount.size}\n\nCurrent previous balance collection count = $prevBalanceCount\nPrevious positive balances = ${prevPositiveBalanceCount.size}\nPrevious zero balances = ${prevZeroBalanceCount.size}\n\n==============================================================================="
   ))
+
+  counts.recover {
+    case e => logger.info("DB Count failed: " + e)
+  }
 
   for {
     _ <- if (config.milestonesUpdateEnabled) updateMilestones() else Future.successful()
