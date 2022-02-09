@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import play.api.Logger
+import play.api.libs.json.Json
 import reactivemongo.api.commands.MultiBulkWriteResult
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -41,16 +42,16 @@ class RunOnStartup(
 
   val counts = for {
     milestoneCount           <- mongoMilestonesRepo.count
-    milestoneSeenCount       <- mongoMilestonesRepo.find("isSeen" -> true)
-    milestoneUnseenCount     <- mongoMilestonesRepo.find("isSeen" -> false)
+    milestoneSeenCount       <- mongoMilestonesRepo.count(Json.obj("isSeen" -> true))
+    milestoneUnseenCount     <- mongoMilestonesRepo.count(Json.obj("isSeen" -> false))
     goalCount                <- mongoSavingsGoalEventRepo.count
-    goalSetCount             <- mongoSavingsGoalEventRepo.find("type" -> "set")
-    goalDeleteCount          <- mongoSavingsGoalEventRepo.find("type" -> "delete")
+    goalSetCount             <- mongoSavingsGoalEventRepo.count(Json.obj("type" -> "set"))
+    goalDeleteCount          <- mongoSavingsGoalEventRepo.count(Json.obj("type" -> "delete"))
     prevBalanceCount         <- mongoPreviousBalanceRepo.count
-    prevPositiveBalanceCount <- mongoPreviousBalanceRepo.find("previousBalance" -> BSONDocument("$gt" -> 0))
-    prevZeroBalanceCount     <- mongoPreviousBalanceRepo.find("previousBalance" -> 0)
+    prevPositiveBalanceCount <- mongoPreviousBalanceRepo.count(Json.obj("previousBalance" -> BSONDocument("$gt" -> 0)))
+    prevZeroBalanceCount     <- mongoPreviousBalanceRepo.count(Json.obj("previousBalance" -> 0))
   } yield (logger.info(
-    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nSeen milestones = ${milestoneSeenCount.size}\nUnseen milestones = ${milestoneUnseenCount.size}\n\nCurrent savingsGoal collection count = $goalCount\nSet savingsGoals  = ${goalSetCount.size}\nDelete savingsGoals  = ${goalDeleteCount.size}\n\nCurrent previous balance collection count = $prevBalanceCount\nPrevious positive balances = ${prevPositiveBalanceCount.size}\nPrevious zero balances = ${prevZeroBalanceCount.size}\n\n==============================================================================="
+    s"\n====================== CURRENT MONGODB COLLECTION TOTALS ======================\n\nCurrent milestone collection count = $milestoneCount\nSeen milestones = $milestoneSeenCount\nUnseen milestones = $milestoneUnseenCount\n\nCurrent savingsGoal collection count = $goalCount\nSet savingsGoals  = $goalSetCount\nDelete savingsGoals  = $goalDeleteCount\n\nCurrent previous balance collection count = $prevBalanceCount\nPrevious positive balances = $prevPositiveBalanceCount\nPrevious zero balances = $prevZeroBalanceCount\n\n==============================================================================="
   ))
 
   counts.recover {
