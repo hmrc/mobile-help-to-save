@@ -69,8 +69,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     val firstPeriodBonusEstimate           = bonusTerms.head.bonusEstimate
     val secondPeriodBonusEstimate          = bonusTerms(1).bonusEstimate
     val firstPeriodBonusPaid               = bonusTerms.head.bonusPaid
-    val firstPeriodBonusPaidOnOrAfterDate  = bonusTerms.head.bonusPaidOnOrAfterDate
-    val secondPeriodBonusPaidOnOrAfterDate = bonusTerms(1).bonusPaidOnOrAfterDate
+    val firstPeriodBonusPaidByDate         = bonusTerms.head.bonusPaidOnOrAfterDate
+    val secondPeriodBonusPaidByDate        = bonusTerms(1).bonusPaidOnOrAfterDate
     val secondPeriodBonusPaid              = bonusTerms(1).bonusPaid
 
     checkBonusPeriods(
@@ -81,8 +81,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
       secondPeriodBonusEstimate,
       firstPeriodBonusPaid,
       currentBalance,
-      firstPeriodBonusPaidOnOrAfterDate,
-      secondPeriodBonusPaidOnOrAfterDate,
+      firstPeriodBonusPaidByDate,
+      secondPeriodBonusPaidByDate,
       secondPeriodBonusPaid,
       currentBonusTerm,
       accountClosed
@@ -100,8 +100,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     secondPeriodBonusEstimate:          BigDecimal,
     firstPeriodBonus:                   BigDecimal,
     currentBalance:                     BigDecimal,
-    firstPeriodBonusPaidOnOrAfterDate:  LocalDate,
-    secondPeriodBonusPaidOnOrAfterDate: LocalDate,
+    firstPeriodBonusPaidByDate:         LocalDate,
+    secondPeriodBonusPaidByDate:        LocalDate,
     secondPeriodBonus:                  BigDecimal,
     currentBonusTerm:                   CurrentBonusTerm.Value,
     accountClosed:                      Boolean
@@ -118,7 +118,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
     val firstPeriodBonusPaid               = firstPeriodBonus > 0
     val secondPeriodBonusPaid              = secondPeriodBonus > 0
     val within20DaysOfFirstPeriodEndDate   = currentDateInDuration(endOfFirstBonusPeriod, 19)
-    val under90DaysSinceFirstPeriodEndDate = currentDateInDuration(firstPeriodBonusPaidOnOrAfterDate.plusDays(90), 89)
+    val under90DaysSinceFirstPeriodEndDate = currentDateInDuration(firstPeriodBonusPaidByDate.plusDays(90), 89)
     val within20DaysOfFinalEndDate         = currentDateInDuration(endOfSecondBonusPeriod, 19)
     val dateFormat                         = DateTimeFormatter.ofPattern("d MMMM yyyy")
     val maxBonus                           = 600
@@ -148,7 +148,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
             EndOfFirstBonusPeriodPositiveBonus,
             Some(
               Map("bonusEstimate"          -> firstPeriodBonusEstimate.toString(),
-                  "bonusPaidOnOrAfterDate" -> firstPeriodBonusPaidOnOrAfterDate.format(dateFormat))
+                  "bonusPaidByDate"        -> firstPeriodBonusPaidByDate.format(dateFormat)
+              )
             )
           )
         )
@@ -178,7 +179,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
           Some(
             createBonusPeriodMongoMilestone(
               EndOfFinalBonusPeriodZeroBalanceNoBonus,
-              Some(Map("bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.format(dateFormat)))
+              Some(Map("bonusPaidByDate" -> secondPeriodBonusPaidByDate.format(dateFormat)))
             )
           )
         else if (currentBalance <= 0 && hasSecondBonusEstimate)
@@ -187,7 +188,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
               EndOfFinalBonusPeriodZeroBalancePositiveBonus,
               Some(
                 Map("bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.plusDays(9).format(dateFormat))
+                    "bonusPaidByDate"        -> secondPeriodBonusPaidByDate.plusDays(9).format(dateFormat))
               )
             )
           )
@@ -197,7 +198,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
               EndOfFinalBonusPeriodPositiveBalanceNoBonus,
               Some(
                 Map("balance"                -> currentBalance.toString(),
-                    "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.plusDays(9).format(dateFormat))
+                    "bonusPaidByDate" -> secondPeriodBonusPaidByDate.plusDays(9).format(dateFormat))
               )
             )
           )
@@ -208,7 +209,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
               Some(
                 Map(
                   "bonusEstimate"          -> secondPeriodBonusEstimate.toString(),
-                  "bonusPaidOnOrAfterDate" -> secondPeriodBonusPaidOnOrAfterDate.plusDays(9).format(dateFormat),
+                  "bonusPaidByDate" -> secondPeriodBonusPaidByDate.plusDays(9).format(dateFormat),
                   "balance"                -> currentBalance.toString()
                 )
               )

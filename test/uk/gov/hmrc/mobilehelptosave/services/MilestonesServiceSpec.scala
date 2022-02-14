@@ -54,6 +54,7 @@ class MilestonessServiceSpec
       bonusPaid                     = BigDecimal("90.99"),
       endDate                       = LocalDate.now().plusDays(19),
       bonusPaidOnOrAfterDate        = LocalDate.now().plusDays(50),
+      bonusPaidByDate               = LocalDate.now().plusDays(50),
       balanceMustBeMoreThanForBonus = 0
     ),
     BonusTerm(
@@ -61,6 +62,7 @@ class MilestonessServiceSpec
       bonusPaid                     = 0,
       endDate                       = LocalDate.now().plusYears(1),
       bonusPaidOnOrAfterDate        = LocalDate.now().plusMonths(13),
+      bonusPaidByDate               = LocalDate.now().plusMonths(13),
       balanceMustBeMoreThanForBonus = BigDecimal("181.98")
     )
   )
@@ -245,6 +247,7 @@ class MilestonessServiceSpec
 
       val bonusTerms = Seq(
         baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
+        baseBonusTerms(0).copy(bonusPaidByDate        = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
         baseBonusTerms(1).copy(bonusEstimate          = 0)
       )
 

@@ -51,6 +51,7 @@ class AccountJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers 
         bonusPaid                     = BigDecimal("200.12"),
         endDate                       = LocalDate.of(2020, 4, 30),
         bonusPaidOnOrAfterDate        = LocalDate.of(2020, 5, 1),
+        bonusPaidByDate               = LocalDate.of(2020, 5, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
@@ -58,6 +59,7 @@ class AccountJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers 
         bonusPaid                     = 0,
         endDate                       = LocalDate.of(2022, 4, 30),
         bonusPaidOnOrAfterDate        = LocalDate.of(2022, 5, 1),
+        bonusPaidByDate               = LocalDate.of(2020, 5, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("400.24")
       )
     ),
