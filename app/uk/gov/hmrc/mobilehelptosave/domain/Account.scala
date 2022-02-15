@@ -30,6 +30,7 @@ case class BonusTerm(
                       bonusPaid: BigDecimal,
                       endDate: LocalDate,
                       bonusPaidOnOrAfterDate: LocalDate,
+                      bonusPaidByDate: LocalDate,
                       balanceMustBeMoreThanForBonus: BigDecimal)
 
 object BonusTerm {
@@ -167,6 +168,7 @@ object Account {
       bonusPaid = htsTerm.bonusPaid,
       endDate = htsTerm.endDate,
       bonusPaidOnOrAfterDate = htsTerm.bonusPaidOnOrAfterDate,
+      bonusPaidByDate = htsTerm.bonusPaidOnOrAfterDate,
       balanceMustBeMoreThanForBonus = balanceMustBeMoreThanForBonus
     )
 

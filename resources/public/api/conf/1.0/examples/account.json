@@ -23,6 +23,7 @@
       "bonusPaid": 0,
       "endDate": "2019-10-31",
       "bonusPaidOnOrAfterDate": "2019-11-01",
+      "bonusPaidByDate": "2019-11-01",
       "balanceMustBeMoreThanForBonus": 0
     },
     {
@@ -30,6 +31,7 @@
       "bonusPaid": 0,
       "endDate": "2021-10-31",
       "bonusPaidOnOrAfterDate": "2021-11-01",
+      "bonusPaidByDate": "2021-11-01",
       "balanceMustBeMoreThanForBonus": 200
     }
   ],
