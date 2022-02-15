@@ -246,8 +246,7 @@ class MilestonessServiceSpec
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(
-        baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
-        baseBonusTerms(0).copy(bonusPaidByDate        = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
+        baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1), bonusPaidByDate = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
         baseBonusTerms(1).copy(bonusEstimate          = 0)
       )
 

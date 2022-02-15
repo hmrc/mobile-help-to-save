@@ -53,15 +53,13 @@ trait AccountTestData {
        |      "bonusEstimate": 90.99,
        |      "bonusPaid": $firstTermBonusPaid,
        |      "endDate": "${YearMonth.now().minusYears(2).getYear}-12-31",
-       |      "bonusPaidOnOrAfterDate": "${YearMonth.now().minusYears(1).getYear}-01-01",
-       |      "bonusPaidByDate": "${YearMonth.now().minusYears(1).getYear}-01-01"
+       |      "bonusPaidOnOrAfterDate": "${YearMonth.now().minusYears(1).getYear}-01-01"
        |    },
        |    {
        |      "bonusEstimate": 12,
        |      "bonusPaid": 0,
        |      "endDate": "${YearMonth.now().getYear}-12-31",
-       |      "bonusPaidOnOrAfterDate": "${YearMonth.now().plusYears(1).getYear}-01-01",
-       |      "bonusPaidByDate": "${YearMonth.now().minusYears(1).getYear}-01-01"
+       |      "bonusPaidOnOrAfterDate": "${YearMonth.now().plusYears(1).getYear}-01-01"
        |    }
        |  ],
        |  "nbaAccountNumber": "123456789",
@@ -99,8 +97,7 @@ trait AccountTestData {
          .now()
          .plusMonths(18)
          .withDayOfMonth(LocalDate.now().plusMonths(18).lengthOfMonth())}",
-       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(19) withDayOfMonth (1)}",
-       |      "bonusPaidByDate": "${LocalDate.now().plusMonths(19) withDayOfMonth (1)}"
+       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(19) withDayOfMonth (1)}"
        |    },
        |    {
        |      "bonusEstimate": 12,
@@ -109,8 +106,7 @@ trait AccountTestData {
          .now()
          .plusMonths(42)
          .withDayOfMonth(LocalDate.now().plusMonths(42).lengthOfMonth())}",
-       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(43) withDayOfMonth (1)}",
-       |      "bonusPaidBy": "${LocalDate.now().plusMonths(43) withDayOfMonth (1)}"
+       |      "bonusPaidOnOrAfterDate": "${LocalDate.now().plusMonths(43) withDayOfMonth (1)}"
        |    }
        |  ]
        |}
@@ -152,15 +148,13 @@ trait AccountTestData {
        |      "bonusEstimate": $firstPeriodBonusEstimate,
        |      "bonusPaid": $firstPeriodBonusPaid,
        |      "endDate": "$firstPeriodEndDate",
-       |      "bonusPaidOnOrAfterDate": "$firstPeriodBonusPaidOnOrAfterDate",
-       |      "bonusPaidByDate": "$firstPeriodBonusPaidOnOrAfterDate"
+       |      "bonusPaidOnOrAfterDate": "$firstPeriodBonusPaidOnOrAfterDate"
        |    },
        |    { 
        |      "bonusEstimate": $secondPeriodBonusEstimate,
        |      "bonusPaid": $secondPeriodBonusPaid,
        |      "endDate": "$secondPeriodEndDate",
-       |      "bonusPaidOnOrAfterDate": "$secondPeriodBonusPaidOnOrAfterDate",
-       |      "bonusPaidByDate": "$secondPeriodBonusPaidOnOrAfterDate"
+       |      "bonusPaidOnOrAfterDate": "$secondPeriodBonusPaidOnOrAfterDate"
        |    }
        |  ]
        |}
@@ -190,15 +184,13 @@ trait AccountTestData {
       |      "bonusEstimate": 90.99,
       |      "bonusPaid": 90.99,
       |      "endDate": "2019-12-31",
-      |      "bonusPaidOnOrAfterDate": "2020-01-01",
-      |      "bonusPaidByDate": "2020-01-01"
+      |      "bonusPaidOnOrAfterDate": "2020-01-01"
       |    },
       |    {
       |      "bonusEstimate": 12,
       |      "bonusPaid": 0,
       |      "endDate": "2021-12-31",
-      |      "bonusPaidOnOrAfterDate": "2022-01-01",
-      |      "bonusPaidByDate": "2020-01-01"
+      |      "bonusPaidOnOrAfterDate": "2022-01-01"
       |    }
       |  ]
       |}
@@ -417,14 +409,12 @@ trait AccountTestData {
       |      "bonusPaid": 0,
       |      "endDate": "2020-02-29",
       |      "bonusPaidOnOrAfterDate": "2020-03-01",
-      |      "bonusPaidByDate": "2020-03-01"
       |    },
       |    {
       |      "bonusEstimate": 0,
       |      "bonusPaid": 0,
       |      "endDate": "2022-02-28",
       |      "bonusPaidOnOrAfterDate": "2022-03-01",
-      |      "bonusPaidByDate": "2022-03-01"
       |    }
       |  ],
       |  "closureDate": "2018-04-09",
@@ -456,13 +446,11 @@ trait AccountTestData {
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
       |    "bonusPaidOnOrAfterDate" : "2019-11-01",
-      |    "bonusPaidByDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
       |    "bonusPaidOnOrAfterDate" : "2021-11-01",
-      |    "bonusPaidByDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -490,13 +478,11 @@ trait AccountTestData {
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
       |    "bonusPaidOnOrAfterDate" : "2019-11-01",
-      |    "bonusPaidByDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
       |    "bonusPaidOnOrAfterDate" : "2021-11-01",
-      |    "bonusPaidByDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -524,13 +510,11 @@ trait AccountTestData {
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
       |    "bonusPaidOnOrAfterDate" : "2019-11-01",
-      |    "bonusPaidByDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
       |    "bonusPaidOnOrAfterDate" : "2021-11-01",
-      |    "bonusPaidByDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -558,13 +542,11 @@ trait AccountTestData {
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
       |    "bonusPaidOnOrAfterDate" : "2019-11-01",
-      |    "bonusPaidByDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
       |    "bonusPaidOnOrAfterDate" : "2021-11-01",
-      |    "bonusPaidByDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -594,14 +576,12 @@ trait AccountTestData {
       |      "bonusPaid": 0,
       |      "endDate": "2019-10-31",
       |      "bonusPaidOnOrAfterDate": "2019-11-01",
-      |      "bonusPaidByDate" : "2019-11-01"
       |    },
       |    {
       |      "bonusEstimate": 0,
       |      "bonusPaid": 0,
       |      "endDate": "2021-10-31",
       |      "bonusPaidOnOrAfterDate": "2021-11-01",
-      |      "bonusPaidByDate": "2021-11-01"
       |    }
       |  ]
       |}

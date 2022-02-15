@@ -69,8 +69,8 @@ class HtsBonusPeriodMilestonesService[F[_]](
     val firstPeriodBonusEstimate           = bonusTerms.head.bonusEstimate
     val secondPeriodBonusEstimate          = bonusTerms(1).bonusEstimate
     val firstPeriodBonusPaid               = bonusTerms.head.bonusPaid
-    val firstPeriodBonusPaidByDate         = bonusTerms.head.bonusPaidOnOrAfterDate
-    val secondPeriodBonusPaidByDate        = bonusTerms(1).bonusPaidOnOrAfterDate
+    val firstPeriodBonusPaidByDate         = bonusTerms.head.bonusPaidByDate
+    val secondPeriodBonusPaidByDate        = bonusTerms(1).bonusPaidByDate
     val secondPeriodBonusPaid              = bonusTerms(1).bonusPaid
 
     checkBonusPeriods(
