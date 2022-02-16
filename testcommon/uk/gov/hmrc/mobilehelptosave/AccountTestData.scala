@@ -408,13 +408,13 @@ trait AccountTestData {
       |      "bonusEstimate": 7.50,
       |      "bonusPaid": 0,
       |      "endDate": "2020-02-29",
-      |      "bonusPaidOnOrAfterDate": "2020-03-01",
+      |      "bonusPaidOnOrAfterDate": "2020-03-01"
       |    },
       |    {
       |      "bonusEstimate": 0,
       |      "bonusPaid": 0,
       |      "endDate": "2022-02-28",
-      |      "bonusPaidOnOrAfterDate": "2022-03-01",
+      |      "bonusPaidOnOrAfterDate": "2022-03-01"
       |    }
       |  ],
       |  "closureDate": "2018-04-09",
@@ -445,12 +445,12 @@ trait AccountTestData {
       |    "bonusEstimate" : 125,
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2019-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2021-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -477,12 +477,12 @@ trait AccountTestData {
       |    "bonusEstimate" : 125,
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2019-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2021-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -509,12 +509,12 @@ trait AccountTestData {
       |    "bonusEstimate" : 125,
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2019-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2021-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -541,12 +541,12 @@ trait AccountTestData {
       |    "bonusEstimate" : 125,
       |    "bonusPaid" : 0,
       |    "endDate" : "2019-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2019-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2019-11-01"
       |  }, {
       |    "bonusEstimate" : 0,
       |    "bonusPaid" : 0,
       |    "endDate" : "2021-10-31",
-      |    "bonusPaidOnOrAfterDate" : "2021-11-01",
+      |    "bonusPaidOnOrAfterDate" : "2021-11-01"
       |  } ]
       |}""".stripMargin
 
@@ -575,13 +575,13 @@ trait AccountTestData {
       |      "bonusEstimate": 125,
       |      "bonusPaid": 0,
       |      "endDate": "2019-10-31",
-      |      "bonusPaidOnOrAfterDate": "2019-11-01",
+      |      "bonusPaidOnOrAfterDate": "2019-11-01"
       |    },
       |    {
       |      "bonusEstimate": 0,
       |      "bonusPaid": 0,
       |      "endDate": "2021-10-31",
-      |      "bonusPaidOnOrAfterDate": "2021-11-01",
+      |      "bonusPaidOnOrAfterDate": "2021-11-01"
       |    }
       |  ]
       |}
