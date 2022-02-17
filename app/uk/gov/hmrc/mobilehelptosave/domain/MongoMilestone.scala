@@ -142,7 +142,7 @@ object Milestone {
       case Milestone(BalanceReached2400, _) => JsString("You have saved the most possible with Help to Save!")
       case Milestone(EndOfFirstBonusPeriodPositiveBonus, values) =>
         JsString(
-          s"Your first bonus of £${values get "bonusEstimate"} will be paid into your bank account from ${values get "bonusPaidByDate"}."
+          s"Your first bonus of £${values get "bonusEstimate"} will be paid into your bank account by ${values get "bonusPaidByDate"}."
         )
       case Milestone(StartOfFinalBonusPeriodNoBonus, _) =>
         JsString("There are still 2 years to use your account to save and earn a tax-free bonus from the government.")

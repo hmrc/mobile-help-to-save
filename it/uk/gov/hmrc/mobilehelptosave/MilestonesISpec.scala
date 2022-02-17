@@ -353,7 +353,7 @@ class MilestonesISpec
       (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodPositiveBonus"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 2"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
-        .as[String] shouldBe s"Your first bonus of £200 will be paid into your bank account from ${firstEndDate.plusDays(1).format(dateFormat)}."
+        .as[String] shouldBe s"Your first bonus of £200 will be paid into your bank account by ${firstEndDate.plusDays(14).format(dateFormat)}."
     }
 
     "respond with 200 and the StartOfFinalBonusPeriodNoBonus milestone in a list as JSON when the milestone is hit" in {
@@ -444,7 +444,7 @@ class MilestonesISpec
         .as[String]                                                    shouldBe "EndOfFinalBonusPeriodZeroBalancePositiveBonus"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
-        .as[String] shouldBe s"Your final bonus of £250 will be paid into your bank account by ${secondEndDate.plusDays(10).format(dateFormat)}."
+        .as[String] shouldBe s"Your final bonus of £250 will be paid into your bank account by ${secondEndDate.plusDays(14).format(dateFormat)}."
     }
 
     "respond with 200 and the EndOfFinalBonusPeriodPositiveBalanceNoBonus milestone in a list as JSON when the milestone is hit" in {
@@ -463,7 +463,7 @@ class MilestonesISpec
         .as[String]                                                    shouldBe "EndOfFinalBonusPeriodPositiveBalanceNoBonus"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
-        .as[String] shouldBe s"Your savings of £1350 will be paid into your bank account by ${secondEndDate.plusDays(10).format(dateFormat)}."
+        .as[String] shouldBe s"Your savings of £1350 will be paid into your bank account by ${secondEndDate.plusDays(14).format(dateFormat)}."
     }
 
     "respond with 200 and the EndOfFinalBonusPeriodPositiveBalancePositiveBonus milestone in a list as JSON when the milestone is hit" in {
@@ -482,7 +482,7 @@ class MilestonesISpec
         .as[String]                                                    shouldBe "EndOfFinalBonusPeriodPositiveBalancePositiveBonus"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 4"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
-        .as[String] shouldBe s"Your savings of £1350 and final bonus of £600 will be paid into your bank account by ${secondEndDate.plusDays(10).format(dateFormat)}."
+        .as[String] shouldBe s"Your savings of £1350 and final bonus of £600 will be paid into your bank account by ${secondEndDate.plusDays(14).format(dateFormat)}."
     }
 
     "respond with 200 and the FinalBonusEarnedMaximum milestone in a list as JSON when the milestone is hit" in {
@@ -581,7 +581,7 @@ class MilestonesISpec
       (response.json \ "milestones" \ 0 \ "milestoneKey").as[String]   shouldBe "EndOfFirstBonusPeriodPositiveBonus"
       (response.json \ "milestones" \ 0 \ "milestoneTitle").as[String] shouldBe "It's nearly the end of year 2"
       (response.json \ "milestones" \ 0 \ "milestoneMessage")
-        .as[String] shouldBe s"Your first bonus of £200 will be paid into your bank account from ${firstEndDate.plusDays(1).format(dateFormat)}."
+        .as[String] shouldBe s"Your first bonus of £200 will be paid into your bank account by ${firstEndDate.plusDays(14).format(dateFormat)}."
 
       (response.json \ "milestones" \ 1 \ "milestoneType").asOpt[String]    shouldBe None
       (response.json \ "milestones" \ 1 \ "milestoneKey").asOpt[String]     shouldBe None
