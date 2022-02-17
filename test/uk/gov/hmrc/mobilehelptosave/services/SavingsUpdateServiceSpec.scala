@@ -210,6 +210,7 @@ class SavingsUpdateServiceSpec
                 bonusPaid                     = BigDecimal("90.99"),
                 endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
                 bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(2).getYear, 1, 1),
+                bonusPaidByDate               = LocalDate.of(YearMonth.now().minusYears(2).getYear, 1, 1),
                 balanceMustBeMoreThanForBonus = 0
               ),
               BonusTerm(
@@ -218,6 +219,8 @@ class SavingsUpdateServiceSpec
                 endDate =
                   LocalDate.of(YearMonth.now().getYear, YearMonth.now().getMonth, YearMonth.now().lengthOfMonth()),
                 bonusPaidOnOrAfterDate =
+                  LocalDate.of(YearMonth.now().plusMonths(7).getYear, YearMonth.now().plusMonths(7).getMonth, 1),
+                bonusPaidByDate =
                   LocalDate.of(YearMonth.now().plusMonths(7).getYear, YearMonth.now().plusMonths(7).getMonth, 1),
                 balanceMustBeMoreThanForBonus = BigDecimal("100.00")
               )

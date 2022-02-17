@@ -31,7 +31,7 @@ import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class AccountsISpec
-    extends AnyWordSpecLike
+  extends AnyWordSpecLike
     with Matchers
     with SchemaMatchers
     with TransactionTestData
@@ -45,7 +45,7 @@ class AccountsISpec
   override implicit lazy val app: Application = appBuilder.build()
 
   private val generator = new Generator(0)
-  private val nino      = generator.nextNino
+  private val nino = generator.nextNino
   private val journeyId = randomUUID().toString
 
   "GET /savings-account/{nino}" should {
@@ -60,13 +60,13 @@ class AccountsISpec
 
       response.status shouldBe 200
 
-      (response.json \ "number").as[String]                   shouldBe "1000000000001"
-      (response.json \ "openedYearMonth").as[String]          shouldBe s"${YearMonth.now().minusYears(3).getYear}-01"
-      (response.json \ "isClosed").as[Boolean]                shouldBe false
+      (response.json \ "number").as[String] shouldBe "1000000000001"
+      (response.json \ "openedYearMonth").as[String] shouldBe s"${YearMonth.now().minusYears(3).getYear}-01"
+      (response.json \ "isClosed").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "balance", BigDecimal("123.45"))
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
@@ -75,26 +75,30 @@ class AccountsISpec
       (response.json \ "nextPaymentMonthStartDate")
         .as[String] shouldBe s"${YearMonth.now().minusYears(3).getYear}-05-01"
 
-      (response.json \ "accountHolderName").as[String]  shouldBe "Testfore Testsur"
+      (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
       (response.json \ "accountHolderEmail").as[String] shouldBe "testemail@example.com"
 
-      val firstBonusTermJson = (response.json \ "bonusTerms")(0)
+      val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
       (firstBonusTermJson \ "endDate").as[String] shouldBe s"${YearMonth.now().minusYears(2).getYear}-12-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate")
-        .as[String]                                                         shouldBe s"${YearMonth.now().minusYears(1).getYear}-01-01"
+        .as[String] shouldBe s"${YearMonth.now().minusYears(1).getYear}-01-01"
+      (firstBonusTermJson \ "bonusPaidByDate")
+        .as[String] shouldBe s"${YearMonth.now().minusYears(1).getYear}-01-01"
       (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
-      val secondBonusTermJson = (response.json \ "bonusTerms")(1)
+      val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
       (secondBonusTermJson \ "endDate").as[String] shouldBe s"${YearMonth.now() getYear}-12-31"
       (secondBonusTermJson \ "bonusPaidOnOrAfterDate")
-        .as[String]                                                          shouldBe s"${YearMonth.now().plusYears(1).getYear}-01-01"
+        .as[String] shouldBe s"${YearMonth.now().plusYears(1).getYear}-01-01"
+      (secondBonusTermJson \ "bonusPaidByDate")
+        .as[String] shouldBe s"${YearMonth.now().plusYears(1).getYear}-01-01"
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
-      (response.json \ "currentBonusTerm").as[String]   shouldBe "First"
+      (response.json \ "currentBonusTerm").as[String] shouldBe "First"
       (response.json \ "highestBalance").as[BigDecimal] shouldBe BigDecimal("181.98")
     }
 
@@ -107,32 +111,34 @@ class AccountsISpec
 
       response.status shouldBe 200
 
-      (response.json \ "number").as[String]                   shouldBe "1000000000001"
-      (response.json \ "openedYearMonth").as[String]          shouldBe "2018-01"
-      (response.json \ "isClosed").as[Boolean]                shouldBe false
+      (response.json \ "number").as[String] shouldBe "1000000000001"
+      (response.json \ "openedYearMonth").as[String] shouldBe "2018-01"
+      (response.json \ "isClosed").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "balance", BigDecimal("123.45"))
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal("27.88"))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal("22.12"))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
-      (response.json \ "thisMonthEndDate").as[String]          shouldBe "2018-04-30"
+      (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
       (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
       (response.json \ "accountHolderName").as[String] shouldBe "Testfore Testsur"
-      response.json.as[JsObject].keys                  should not contain "accountHolderEmail"
+      response.json.as[JsObject].keys should not contain "accountHolderEmail"
 
-      val firstBonusTermJson = (response.json \ "bonusTerms")(0)
+      val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("90.99"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("90.99"))
-      (firstBonusTermJson \ "endDate").as[String]                           shouldBe "2019-12-31"
-      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2020-01-01"
+      (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-12-31"
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-01-01"
+      (firstBonusTermJson \ "bonusPaidByDate").as[String] shouldBe "2020-01-01"
       (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
-      val secondBonusTermJson = (response.json \ "bonusTerms")(1)
+      val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(12))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                           shouldBe "2021-12-31"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2022-01-01"
+      (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-12-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-01-01"
+      (secondBonusTermJson \ "bonusPaidByDate").as[String] shouldBe "2022-01-01"
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("181.98")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
@@ -146,7 +152,7 @@ class AccountsISpec
 
       response.status shouldBe 404
 
-      (response.json \ "code").as[String]    shouldBe "ACCOUNT_NOT_FOUND"
+      (response.json \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
       (response.json \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
       HelpToSaveStub.accountShouldNotHaveBeenCalled(nino)
@@ -196,10 +202,10 @@ class AccountsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
-      (response.json \ "number").as[String]          shouldBe "1000000000002"
+      (response.json \ "number").as[String] shouldBe "1000000000002"
       (response.json \ "openedYearMonth").as[String] shouldBe "2018-03"
 
-      (response.json \ "isClosed").as[Boolean]   shouldBe true
+      (response.json \ "isClosed").as[Boolean] shouldBe true
       (response.json \ "closureDate").as[String] shouldBe "2018-04-09"
       shouldBeBigDecimal(response.json \ "closingBalance", BigDecimal(10))
 
@@ -208,21 +214,23 @@ class AccountsISpec
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal(0))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(50))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
-      (response.json \ "thisMonthEndDate").as[String]          shouldBe "2018-04-30"
+      (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-04-30"
       (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-05-01"
 
-      val firstBonusTermJson = (response.json \ "bonusTerms")(0)
+      val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("7.50"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (firstBonusTermJson \ "endDate").as[String]                           shouldBe "2020-02-29"
-      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2020-03-01"
+      (firstBonusTermJson \ "endDate").as[String] shouldBe "2020-02-29"
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-03-01"
+      (firstBonusTermJson \ "bonusPaidByDate").as[String] shouldBe "2020-03-01"
       (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
-      val secondBonusTermJson = (response.json \ "bonusTerms")(1)
+      val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                           shouldBe "2022-02-28"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2022-03-01"
+      (secondBonusTermJson \ "endDate").as[String] shouldBe "2022-02-28"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-03-01"
+      (secondBonusTermJson \ "bonusPaidByDate").as[String] shouldBe "2022-03-01"
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("15.00")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
@@ -236,36 +244,38 @@ class AccountsISpec
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 200
 
-      (response.json \ "number").as[String]          shouldBe "1100000112068"
+      (response.json \ "number").as[String] shouldBe "1100000112068"
       (response.json \ "openedYearMonth").as[String] shouldBe "2017-11"
 
-      (response.json \ "isClosed").as[Boolean]         shouldBe false
-      (response.json \ "closureDate").asOpt[String]    shouldBe None
+      (response.json \ "isClosed").as[Boolean] shouldBe false
+      (response.json \ "closureDate").asOpt[String] shouldBe None
       (response.json \ "closingBalance").asOpt[String] shouldBe None
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe true
-      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean] shouldBe false
       shouldBeBigDecimal(response.json \ "balance", BigDecimal(250))
       shouldBeBigDecimal(response.json \ "paidInThisMonth", BigDecimal(50))
       shouldBeBigDecimal(response.json \ "canPayInThisMonth", BigDecimal(0))
       shouldBeBigDecimal(response.json \ "maximumPaidInThisMonth", BigDecimal(50))
-      (response.json \ "thisMonthEndDate").as[String]          shouldBe "2018-03-31"
+      (response.json \ "thisMonthEndDate").as[String] shouldBe "2018-03-31"
       (response.json \ "nextPaymentMonthStartDate").as[String] shouldBe "2018-04-01"
 
-      val firstBonusTermJson = (response.json \ "bonusTerms")(0)
+      val firstBonusTermJson = (response.json \ "bonusTerms") (0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal(125))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (firstBonusTermJson \ "endDate").as[String]                           shouldBe "2019-10-31"
-      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2019-11-01"
+      (firstBonusTermJson \ "endDate").as[String] shouldBe "2019-10-31"
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2019-11-01"
+      (firstBonusTermJson \ "bonusPaidByDate").as[String] shouldBe "2019-11-01"
       (firstBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe 0
 
-      val secondBonusTermJson = (response.json \ "bonusTerms")(1)
+      val secondBonusTermJson = (response.json \ "bonusTerms") (1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                           shouldBe "2021-10-31"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]            shouldBe "2021-11-01"
+      (secondBonusTermJson \ "endDate").as[String] shouldBe "2021-10-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2021-11-01"
+      (secondBonusTermJson \ "bonusPaidByDate").as[String] shouldBe "2021-11-01"
       (secondBonusTermJson \ "balanceMustBeMoreThanForBonus").as[BigDecimal] shouldBe BigDecimal("250.00")
 
       (response.json \ "currentBonusTerm").as[String] shouldBe "First"
@@ -280,9 +290,9 @@ class AccountsISpec
       response.status shouldBe 200
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe true
+      (response.json \ "blocked" \ "payments").as[Boolean] shouldBe true
       (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean] shouldBe false
     }
 
     "include account withdrawals blocked field when account is enrolled but blocked" in {
@@ -294,9 +304,9 @@ class AccountsISpec
       response.status shouldBe 200
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe true
-      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe false
+      (response.json \ "blocked" \ "bonuses").as[Boolean] shouldBe false
     }
 
     "include account bonuses blocked field when account is enrolled but blocked" in {
@@ -308,23 +318,23 @@ class AccountsISpec
       response.status shouldBe 200
 
       (response.json \ "blocked" \ "unspecified").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "payments").as[Boolean]    shouldBe false
+      (response.json \ "blocked" \ "payments").as[Boolean] shouldBe false
       (response.json \ "blocked" \ "withdrawals").as[Boolean] shouldBe false
-      (response.json \ "blocked" \ "bonuses").as[Boolean]     shouldBe true
+      (response.json \ "blocked" \ "bonuses").as[Boolean] shouldBe true
     }
 
     "return 401 when the user is not logged in" in {
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 401
-      response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
+      response.body shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 403
-      response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+      response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 400 when no journeyId is supplied" in {

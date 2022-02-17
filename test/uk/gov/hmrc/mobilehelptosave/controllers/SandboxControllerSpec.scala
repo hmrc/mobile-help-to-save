@@ -206,12 +206,14 @@ class SandboxControllerSpec
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("0"))
       (firstBonusTermJson \ "endDate").as[String]                shouldBe "2020-01-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2020-02-01"
+      (firstBonusTermJson \ "bonusPaidByDate").as[String]        shouldBe "2020-02-01"
 
       val secondBonusTermJson = (json \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                shouldBe "2022-01-31"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-02-01"
+      (secondBonusTermJson \ "endDate").as[String]                    shouldBe "2022-01-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]     shouldBe "2022-02-01"
+      (secondBonusTermJson \ "bonusPaidByDate").as[String]            shouldBe "2022-02-01"
 
       (json \ "inAppPaymentsEnabled").as[Boolean] shouldBe false
     }

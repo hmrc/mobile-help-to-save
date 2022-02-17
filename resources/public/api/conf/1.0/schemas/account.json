@@ -169,6 +169,16 @@
               "2019-11-01"
             ]
           },
+          "bonusPaidByDate": {
+            "type": "string",
+            "description": "The earliest date the bonus will be paid (i.e. on or after the date specified)",
+            "minLength": 10,
+            "maxLength": 10,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "examples": [
+              "2019-11-01"
+            ]
+          },
           "balanceMustBeMoreThanForBonus": {
             "type": "number",
             "description": "The savings amount that needs to be exceeded (in this term) to earn a bonus",
