@@ -255,6 +255,7 @@ trait AccountTestData {
         bonusPaid                     = BigDecimal("90.99"),
         endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
         bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(1).getYear, 1, 1),
+        bonusPaidByDate               = LocalDate.of(YearMonth.now().minusYears(1).getYear, 1, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
@@ -262,6 +263,7 @@ trait AccountTestData {
         bonusPaid                     = 0,
         endDate                       = LocalDate.of(YearMonth.now().getYear, 12, 31),
         bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
+        bonusPaidByDate               = LocalDate.of(YearMonth.now().plusYears(1).getYear, 1, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("181.98")
       )
     ),
@@ -301,6 +303,8 @@ trait AccountTestData {
                                YearMonth.now().plusMonths(18).lengthOfMonth()),
         bonusPaidOnOrAfterDate =
           LocalDate.of(YearMonth.now().plusMonths(19).getYear, YearMonth.now().plusMonths(19).getMonth, 1),
+        bonusPaidByDate =
+          LocalDate.of(YearMonth.now().plusMonths(19).getYear, YearMonth.now().plusMonths(19).getMonth, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
@@ -310,6 +314,8 @@ trait AccountTestData {
                                YearMonth.now().plusMonths(42).getMonth,
                                YearMonth.now().plusMonths(42).lengthOfMonth()),
         bonusPaidOnOrAfterDate =
+          LocalDate.of(YearMonth.now().plusMonths(43).getYear, YearMonth.now().plusMonths(43).getMonth, 1),
+        bonusPaidByDate =
           LocalDate.of(YearMonth.now().plusMonths(43).getYear, YearMonth.now().plusMonths(43).getMonth, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("300")
       )
@@ -347,6 +353,7 @@ trait AccountTestData {
         bonusPaid                     = BigDecimal("90.99"),
         endDate                       = LocalDate.of(YearMonth.now().minusYears(2).getYear, 12, 31),
         bonusPaidOnOrAfterDate        = LocalDate.of(YearMonth.now().minusYears(2).getYear, 1, 1),
+        bonusPaidByDate               = LocalDate.of(YearMonth.now().minusYears(2).getYear, 1, 1),
         balanceMustBeMoreThanForBonus = 0
       ),
       BonusTerm(
@@ -356,6 +363,8 @@ trait AccountTestData {
                                YearMonth.now().plusMonths(6).getMonth,
                                YearMonth.now().plusMonths(6).lengthOfMonth()),
         bonusPaidOnOrAfterDate =
+          LocalDate.of(YearMonth.now().plusMonths(7).getYear, YearMonth.now().plusMonths(7).getMonth, 1),
+        bonusPaidByDate =
           LocalDate.of(YearMonth.now().plusMonths(7).getYear, YearMonth.now().plusMonths(7).getMonth, 1),
         balanceMustBeMoreThanForBonus = BigDecimal("100.00")
       )
