@@ -159,7 +159,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
             StartOfFinalBonusPeriodNoBonus
           )
         )
-      else if (firstPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.Second) {
+      else if (firstPeriodBonusPaid && currentBonusTerm == CurrentBonusTerm.Second && !within20DaysOfFinalEndDate) {
         if (firstPeriodBonus == maxBonus)
           Some(
             createBonusPeriodMongoMilestone(
