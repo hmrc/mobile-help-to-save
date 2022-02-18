@@ -60,6 +60,7 @@ class HtsAccountService[F[_]](
   balanceMilestonesService:      BalanceMilestonesService[F],
   bonusPeriodMilestonesService:  BonusPeriodMilestonesService[F],
   bonusReachedMilestonesService: BonusReachedMilestonesService[F],
+  mongoUpdateService:            MongoUpdateService[F],
   milestonesConfig:              MilestonesConfig
 )(implicit F:                    MonadError[F, Throwable])
     extends AccountService[F] {
@@ -114,6 +115,7 @@ class HtsAccountService[F[_]](
                                                                              account.bonusTerms,
                                                                              account.currentBonusTerm)
                   else F.pure(())
+            _ <- mongoUpdateService.updateExpireAtByNino(nino, account.)
             } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
         }

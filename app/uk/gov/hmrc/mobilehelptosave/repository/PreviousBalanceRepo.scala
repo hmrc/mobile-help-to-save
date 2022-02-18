@@ -17,12 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
-
 import cats.instances.future._
 import cats.syntax.functor._
 import play.api.libs.json.Json.obj
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
 
@@ -38,6 +38,11 @@ trait PreviousBalanceRepo[F[_]] {
   def getPreviousBalance(nino: Nino): F[Option[PreviousBalance]]
 
   def clearPreviousBalance(): Future[Unit]
+
+  def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): F[Unit]
 }
 
 class MongoPreviousBalanceRepo(
@@ -60,6 +65,20 @@ class MongoPreviousBalanceRepo(
 
   override def clearPreviousBalance(): Future[Unit] =
     removeAll().void
+
+  override def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): Future[Unit] = {
+    val builder: collection.UpdateBuilder = collection.update(true)
+    val updates = builder.element(
+      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
+      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
+
+  }
 }
 
 case class PreviousBalance(

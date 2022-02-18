@@ -41,6 +41,11 @@ trait MilestonesRepo[F[_]] {
   ): F[Unit]
 
   def clearMilestones(): F[Unit]
+
+  def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): F[Unit]
 }
 
 class MongoMilestonesRepo(
@@ -87,4 +92,17 @@ class MongoMilestonesRepo(
   override def clearMilestones(): Future[Unit] =
     removeAll().void
 
+  override def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): Future[Unit] = {
+    val builder: collection.UpdateBuilder = collection.update(true)
+    val updates = builder.element(
+      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
+      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
+
+  }
 }

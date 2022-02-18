@@ -92,6 +92,7 @@ class ServiceComponents(context: Context)
   lazy val accountService:           AccountService[Future]           = wire[HtsAccountService[Future]]
   lazy val milestonesService:        MilestonesService[Future]        = wire[HtsMilestonesService[Future]]
   lazy val balanceMilestonesService: BalanceMilestonesService[Future] = wire[HtsBalanceMilestonesService[Future]]
+  lazy val balanceMilestonesService: BalanceMilestonesService[Future] = wire[HtsBalanceMilestonesService[Future]]
 
   lazy val bonusPeriodMilestonesService: BonusPeriodMilestonesService[Future] =
     wire[HtsBonusPeriodMilestonesService[Future]]

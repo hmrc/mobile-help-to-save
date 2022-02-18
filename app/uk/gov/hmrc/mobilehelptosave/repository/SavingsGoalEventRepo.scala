@@ -22,6 +22,7 @@ import cats.syntax.functor._
 import play.api.libs.json.Json.obj
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
@@ -49,6 +50,11 @@ trait SavingsGoalEventRepo[F[_]] {
 
   def getGoalSetEvents: F[List[SavingsGoalSetEvent]]
   def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]]
+
+  def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): F[Unit]
 }
 
 class MongoSavingsGoalEventRepo(
@@ -113,5 +119,19 @@ class MongoSavingsGoalEventRepo(
         }
       )
       .map(Right(_))
+
+  override def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): Future[Unit] = {
+    val builder: collection.UpdateBuilder = collection.update(true)
+    val updates = builder.element(
+      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
+      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
+
+  }
 
 }
