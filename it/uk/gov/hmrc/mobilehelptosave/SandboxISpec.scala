@@ -44,7 +44,7 @@ class SandboxISpec
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
   private val generator            = new Generator(0)
   private val nino                 = generator.nextNino
-  private val journeyId            = randomUUID().toString
+  private val journeyId            = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {

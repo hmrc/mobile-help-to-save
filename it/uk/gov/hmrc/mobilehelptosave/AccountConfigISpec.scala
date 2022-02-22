@@ -26,7 +26,7 @@ import play.api.Application
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, JsonMatchers, WireMockSupport, WithTestServer}
 
 /**
@@ -47,11 +47,11 @@ class AccountConfigISpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val journeyId = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   "GET /savings-account/{nino} and /sandbox/savings-account/{nino}" should {
     "allow inAppPaymentsEnabled to be overridden with configuration" in {
-
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(1, nino)

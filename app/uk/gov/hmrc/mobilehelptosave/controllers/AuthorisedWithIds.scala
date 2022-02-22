@@ -53,7 +53,7 @@ class AuthorisedWithIdsImpl(
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     for {
-      shutteredResponse <- shutteringConnector.getShutteringStatus(UUID.randomUUID().toString)
+      shutteredResponse <- shutteringConnector.getShutteringStatus("27085215-69a4-4027-8f72-b04b10ec16b0")
       auth: Either[Result, Option[Nino]] <- if (shutteredResponse.shuttered) {
                                              Future.successful(Right(None))
                                            } else {

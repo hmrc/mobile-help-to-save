@@ -55,7 +55,7 @@ class TestController(
 
   def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) {
     implicit request: Request[TestSavingsGoal] =>
-      savingsGoalEventRepo.setGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
+      savingsGoalEventRepo.setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
       Future successful Created("Goal successfully created")
   }
 

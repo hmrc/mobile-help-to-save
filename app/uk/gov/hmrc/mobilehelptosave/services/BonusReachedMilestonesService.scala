@@ -25,6 +25,8 @@ import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
+import java.time.LocalDateTime
+
 trait BonusReachedMilestonesService[F[_]] {
 
   def bonusReachedMilestoneCheck(
@@ -56,14 +58,16 @@ class HtsBonusReachedMilestonesService[F[_]](
   )(implicit hc:      HeaderCarrier
   ): F[MilestoneCheckResult] = {
 
-    val firstPeriodBonusEstimate  = bonusTerms.head.bonusEstimate
-    val secondPeriodBonusEstimate = bonusTerms(1).bonusEstimate
+    val firstPeriodBonusEstimate    = bonusTerms.head.bonusEstimate
+    val secondPeriodBonusEstimate   = bonusTerms(1).bonusEstimate
+    val secondPeriodBonusPaidBydate = bonusTerms(1).bonusPaidByDate.atStartOfDay()
 
     checkBonusReached(
       nino,
       firstPeriodBonusEstimate,
       secondPeriodBonusEstimate,
-      currentBonusTerm
+      currentBonusTerm,
+      secondPeriodBonusPaidBydate
     ) match {
       case Some(milestone) => super.setMilestone(milestone).map(_ => MilestoneHit)
       case _               => F.pure(MilestoneNotHit)
@@ -74,23 +78,24 @@ class HtsBonusReachedMilestonesService[F[_]](
     implicit nino:             Nino,
     firstPeriodBonusEstimate:  BigDecimal,
     secondPeriodBonusEstimate: BigDecimal,
-    currentBonusTerm:          CurrentBonusTerm.Value
+    currentBonusTerm:          CurrentBonusTerm.Value,
+    finalBonusPaidByDate:      LocalDateTime
   ): Option[MongoMilestone] =
     (currentBonusTerm, firstPeriodBonusEstimate, secondPeriodBonusEstimate) match {
       case (CurrentBonusTerm.First, firstBonusEstimate, _) if inRange(150, 300, firstBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FirstBonusReached150))
+        Some(createBonusReachedMongoMilestone(FirstBonusReached150, finalBonusPaidByDate))
       case (CurrentBonusTerm.First, firstBonusEstimate, _) if inRange(300, 600, firstBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FirstBonusReached300))
+        Some(createBonusReachedMongoMilestone(FirstBonusReached300, finalBonusPaidByDate))
       case (CurrentBonusTerm.First, firstBonusEstimate, _) if reached(600, firstBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FirstBonusReached600))
+        Some(createBonusReachedMongoMilestone(FirstBonusReached600, finalBonusPaidByDate))
       case (CurrentBonusTerm.Second, _, secondBonusEstimate) if inRange(75, 200, secondBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FinalBonusReached75))
+        Some(createBonusReachedMongoMilestone(FinalBonusReached75, finalBonusPaidByDate))
       case (CurrentBonusTerm.Second, _, secondBonusEstimate) if inRange(200, 300, secondBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FinalBonusReached200))
+        Some(createBonusReachedMongoMilestone(FinalBonusReached200, finalBonusPaidByDate))
       case (CurrentBonusTerm.Second, _, secondBonusEstimate) if inRange(300, 500, secondBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FinalBonusReached300))
+        Some(createBonusReachedMongoMilestone(FinalBonusReached300, finalBonusPaidByDate))
       case (CurrentBonusTerm.Second, _, secondBonusEstimate) if reached(500, secondBonusEstimate) =>
-        Some(createBonusReachedMongoMilestone(FinalBonusReached500))
+        Some(createBonusReachedMongoMilestone(FinalBonusReached500, finalBonusPaidByDate))
       case _ => None
     }
 
@@ -107,15 +112,16 @@ class HtsBonusReachedMilestonesService[F[_]](
     value >= threshold
 
   private def createBonusReachedMongoMilestone(
-    milestoneKey:  MilestoneKey,
-    values:        Option[Map[String, String]] = None
-  )(implicit nino: Nino
+    milestoneKey:         MilestoneKey,
+    finalBonusPaidByDate: LocalDateTime
+  )(implicit nino:        Nino
   ): MongoMilestone =
     MongoMilestone(
       nino          = nino,
       milestoneType = BonusReached,
-      milestone     = Milestone(milestoneKey, values),
-      isRepeatable  = false
+      milestone     = Milestone(milestoneKey),
+      isRepeatable  = false,
+      expireAt      = finalBonusPaidByDate.plusMonths(6)
     )
 
 }

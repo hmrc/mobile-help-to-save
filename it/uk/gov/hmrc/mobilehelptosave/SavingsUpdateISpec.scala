@@ -27,7 +27,7 @@ import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 import java.time.{LocalDate, YearMonth}
@@ -50,7 +50,7 @@ class SavingsUpdateISpec
   val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
   private val generator            = new Generator(0)
   private val nino                 = generator.nextNino
-  private val journeyId            = randomUUID().toString
+  private val journeyId            = "27085215-69a4-4027-8f72-b04b10ec16b0"
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
 
@@ -64,6 +64,7 @@ class SavingsUpdateISpec
 
     "respond with 200 and the users savings update" in {
 
+      stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsExistForUser(nino, dateDynamicTransactionsReturnedByHelpToSaveJsonString)
       HelpToSaveStub.currentUserIsEnrolled()
@@ -110,6 +111,7 @@ class SavingsUpdateISpec
 
     "respond with 200 and no savings update section if no transactions are found" in {
 
+      stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
       HelpToSaveStub.currentUserIsEnrolled()
@@ -127,6 +129,7 @@ class SavingsUpdateISpec
     }
 
     "respond with a 404 if the user's account isn't found" in {
+
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userAccountNotFound(nino)
       stubForShutteringDisabled
@@ -140,6 +143,7 @@ class SavingsUpdateISpec
     }
 
     "return 401 when the user is not logged in" in {
+      stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe 401
@@ -147,6 +151,7 @@ class SavingsUpdateISpec
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
+      stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe 403

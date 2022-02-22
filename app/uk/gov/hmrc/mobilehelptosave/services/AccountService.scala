@@ -60,6 +60,7 @@ class HtsAccountService[F[_]](
   balanceMilestonesService:      BalanceMilestonesService[F],
   bonusPeriodMilestonesService:  BonusPeriodMilestonesService[F],
   bonusReachedMilestonesService: BonusReachedMilestonesService[F],
+  mongoUpdateService:            MongoUpdateService[F],
   milestonesConfig:              MilestonesConfig
 )(implicit F:                    MonadError[F, Throwable])
     extends AccountService[F] {
@@ -72,8 +73,13 @@ class HtsAccountService[F[_]](
     withValidSavingsAmount(savingsGoal.goalAmount) {
       withHelpToSaveAccount(nino) { acc =>
         withEnoughSavingsHeadroom(savingsGoal.goalAmount, acc) {
-          trappingRepoExceptions("error writing savings goal to repo",
-                                 savingsGoalEventRepo.setGoal(nino, savingsGoal.goalAmount, savingsGoal.goalName))
+          trappingRepoExceptions(
+            "error writing savings goal to repo",
+            savingsGoalEventRepo.setGoal(nino,
+                                         savingsGoal.goalAmount,
+                                         savingsGoal.goalName,
+                                         acc.bonusTerms(1).bonusPaidOnOrAfterDate)
+          )
         }
       }
     }
@@ -84,8 +90,9 @@ class HtsAccountService[F[_]](
     }
 
   override def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]] =
-    withHelpToSaveAccount(nino) { _ =>
-      trappingRepoExceptions("error writing to savings goal events repo", savingsGoalEventRepo.deleteGoal(nino))
+    withHelpToSaveAccount(nino) { acc =>
+      trappingRepoExceptions("error writing to savings goal events repo",
+                             savingsGoalEventRepo.deleteGoal(nino, acc.bonusTerms(1).bonusPaidOnOrAfterDate))
     }
 
   override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
@@ -100,7 +107,9 @@ class HtsAccountService[F[_]](
           case Some(account) =>
             EitherT.liftF[F, ErrorInfo, Option[Account]](for {
               _ <- if (milestonesConfig.balanceMilestoneCheckEnabled)
-                    balanceMilestonesService.balanceMilestoneCheck(nino, account.balance)
+                    balanceMilestonesService.balanceMilestoneCheck(nino,
+                                                                   account.balance,
+                                                                   account.bonusTerms(1).bonusPaidByDate)
                   else F.pure(())
               _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
                     bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino,
@@ -114,6 +123,7 @@ class HtsAccountService[F[_]](
                                                                              account.bonusTerms,
                                                                              account.currentBonusTerm)
                   else F.pure(())
+              _ <- mongoUpdateService.updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
             } yield Some(account))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
         }

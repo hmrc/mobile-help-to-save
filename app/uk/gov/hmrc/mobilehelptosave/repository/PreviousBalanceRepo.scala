@@ -17,12 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.LocalDateTime
-
 import cats.instances.future._
 import cats.syntax.functor._
 import play.api.libs.json.Json.obj
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
 
@@ -31,13 +31,19 @@ import scala.concurrent.{ExecutionContext, Future}
 trait PreviousBalanceRepo[F[_]] {
 
   def setPreviousBalance(
-    nino:            Nino,
-    previousBalance: BigDecimal
+    nino:                 Nino,
+    previousBalance:      BigDecimal,
+    finalBonusPaidByDate: LocalDateTime
   ): F[Unit]
 
   def getPreviousBalance(nino: Nino): F[Option[PreviousBalance]]
 
   def clearPreviousBalance(): Future[Unit]
+
+  def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): F[Unit]
 }
 
 class MongoPreviousBalanceRepo(
@@ -48,11 +54,12 @@ class MongoPreviousBalanceRepo(
     with PreviousBalanceRepo[Future] {
 
   override def setPreviousBalance(
-    nino:            Nino,
-    previousBalance: BigDecimal
+    nino:                 Nino,
+    previousBalance:      BigDecimal,
+    finalBonusPaidByDate: LocalDateTime
   ): Future[Unit] =
     findAndUpdate(query  = obj(indexFieldName -> Json.toJson(nino)),
-                  update = obj("$set" -> Json.toJson(PreviousBalance(nino, previousBalance, LocalDateTime.now()))),
+                  update = obj("$set" -> Json.toJson(PreviousBalance(nino, previousBalance, LocalDateTime.now(), finalBonusPaidByDate.plusMonths(6)))),
                   upsert = true).void
 
   override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] =
@@ -60,6 +67,20 @@ class MongoPreviousBalanceRepo(
 
   override def clearPreviousBalance(): Future[Unit] =
     removeAll().void
+
+  override def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): Future[Unit] = {
+    val builder: collection.UpdateBuilder = collection.update(true)
+    val updates = builder.element(
+      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
+      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
+      multi = true
+    )
+    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
+
+  }
 }
 
 case class PreviousBalance(

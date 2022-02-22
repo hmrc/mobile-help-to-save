@@ -121,12 +121,17 @@ class ReportingServiceSpec
     new SavingsGoalEventRepo[Future] {
 
       override def setGoal(
-        nino:   Nino,
-        amount: Option[Double] = None,
-        name:   Option[String] = None
+        nino:                        Nino,
+        amount:                      Option[Double] = None,
+        name:                        Option[String] = None,
+        secondPeriodBonusPaidByDate: LocalDate
       ): Future[Unit] = ???
-      override def getEvents(nino:  Nino): Future[List[SavingsGoalEvent]] = ???
-      override def deleteGoal(nino: Nino): Future[Unit]                   = ???
+      override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] = ???
+
+      override def deleteGoal(
+        nino:                        Nino,
+        secondPeriodBonusPaidByDate: LocalDate
+      ):                              Future[Unit]    = ???
       override def clearGoalEvents(): Future[Boolean] = ???
       override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
 
@@ -135,12 +140,18 @@ class ReportingServiceSpec
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] =
         Future.successful(Right(goalSetEvents))
 
-      override def setGoal(
+      override def setTestGoal(
         nino:   Nino,
         amount: Option[Double],
         name:   Option[String],
         date:   LocalDate
       ): Future[Unit] = ???
+
+      override def updateExpireAt(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): Future[Unit] =
+        Future.unit
     }
 
 }

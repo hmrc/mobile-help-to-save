@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.OptionValues
 
-import java.util.UUID.randomUUID
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
@@ -30,7 +29,7 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,7 +59,7 @@ class SavingsGoalsISpec
   private val inVaalidGoalJson      = toJson(savingsGoalBad)
   private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\uD83C\uDFE1 New home"))
   private val validGoalJsonWithName = toJson(savingsGoal2)
-  private val journeyId             = randomUUID().toString
+  private val journeyId             = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   private def setSavingsGoal(
     nino: Nino,
@@ -69,6 +68,7 @@ class SavingsGoalsISpec
     await(wsUrl(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=$journeyId").put(json))
 
   trait LoggedInUserScenario {
+    ShutteringStub.stubForShutteringDisabled()
     HelpToSaveStub.currentUserIsEnrolled()
     HelpToSaveStub.accountExistsWithNoEmail(nino)
     AuthStub.userIsLoggedIn(nino)
@@ -133,6 +133,7 @@ class SavingsGoalsISpec
     }
 
     "respond with 404 and account not found when user is not enrolled" in {
+      ShutteringStub.stubForShutteringDisabled()
       HelpToSaveStub.currentUserIsNotEnrolled()
       AuthStub.userIsLoggedIn(nino)
 
@@ -145,6 +146,7 @@ class SavingsGoalsISpec
     }
 
     "return 401 when the user is not logged in" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 401
@@ -152,6 +154,7 @@ class SavingsGoalsISpec
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 403

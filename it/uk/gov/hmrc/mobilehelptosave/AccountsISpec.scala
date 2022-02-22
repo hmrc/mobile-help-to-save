@@ -27,7 +27,7 @@ import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class AccountsISpec
@@ -46,12 +46,13 @@ class AccountsISpec
 
   private val generator = new Generator(0)
   private val nino = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val journeyId = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   "GET /savings-account/{nino}" should {
 
     "respond with 200 and the users account data" in {
 
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(123.45, nino = nino)
@@ -103,6 +104,7 @@ class AccountsISpec
     }
 
     "respond with 200 and accountHolderEmail omitted when no email address are return from help to save" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExistsWithNoEmail(nino)
@@ -145,6 +147,7 @@ class AccountsISpec
     }
 
     "respond with 404 and account not found when user is not enrolled" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
@@ -159,6 +162,7 @@ class AccountsISpec
     }
 
     "respond with 500 with general error message body when get account fails" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInternalServerError(nino)
@@ -171,6 +175,7 @@ class AccountsISpec
     }
 
     "respond with 500 with general error message body when get account returns JSON that doesn't conform to the schema" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsInvalidJson(nino)
@@ -183,6 +188,7 @@ class AccountsISpec
     }
 
     "respond with 500 with general error message body when get account returns badly formed JSON" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountReturnsBadlyFormedJson(nino)
@@ -195,6 +201,7 @@ class AccountsISpec
     }
 
     "include account closure fields when account is closed" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.closedAccountExists(nino)
@@ -237,6 +244,7 @@ class AccountsISpec
     }
 
     "include account unspecified blocked fields when account is enrolled but blocked" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.unspecifiedBlockedAccountExists(nino)
@@ -282,6 +290,7 @@ class AccountsISpec
     }
 
     "include account payments blocked field when account is enrolled but blocked" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.paymentsBlockedAccountExists(nino)
@@ -296,6 +305,7 @@ class AccountsISpec
     }
 
     "include account withdrawals blocked field when account is enrolled but blocked" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.withdrawalsBlockedAccountExists(nino)
@@ -310,6 +320,7 @@ class AccountsISpec
     }
 
     "include account bonuses blocked field when account is enrolled but blocked" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.bonusesBlockedAccountExists(nino)
@@ -324,6 +335,7 @@ class AccountsISpec
     }
 
     "return 401 when the user is not logged in" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 401
@@ -331,6 +343,7 @@ class AccountsISpec
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response: WSResponse = await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 403
