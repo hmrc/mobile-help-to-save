@@ -23,7 +23,7 @@ object ShutteringStub {
 
   def stubForShutteringDisabled()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo("/mobile-shuttering/service/mobile-help-to-save/shuttered-status"))
+      get(urlEqualTo("/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=27085215-69a4-4027-8f72-b04b10ec16b0"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -39,7 +39,7 @@ object ShutteringStub {
 
   def stubForShutteringEnabled()(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo("/mobile-shuttering/service/mobile-help-to-save/shuttered-status"))
+      get(urlEqualTo("/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=27085215-69a4-4027-8f72-b04b10ec16b0"))
         .willReturn(
           aResponse()
             .withStatus(200)

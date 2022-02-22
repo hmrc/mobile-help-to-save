@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class StartupISpec
@@ -43,6 +43,7 @@ class StartupISpec
   "GET /mobile-help-to-save/startup" should {
 
     "include user.state" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.currentUserIsEligible()
@@ -53,6 +54,7 @@ class StartupISpec
     }
 
     "omit user state if call to help-to-save fails" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
 
@@ -65,6 +67,7 @@ class StartupISpec
     }
 
     "return 401 when the user is not logged in" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 401
@@ -72,6 +75,7 @@ class StartupISpec
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(wsUrl("/mobile-help-to-save/startup").get())
       response.status shouldBe 403

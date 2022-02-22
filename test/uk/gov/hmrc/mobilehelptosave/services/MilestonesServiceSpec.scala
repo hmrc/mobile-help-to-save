@@ -42,6 +42,7 @@ class MilestonessServiceSpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
+  private val now       = LocalDate.now()
 
   private val testConfig =
     TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
@@ -160,7 +161,7 @@ class MilestonessServiceSpec
       val service =
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.balanceMilestoneCheck(nino, 0).unsafeGet
+      val result = service.balanceMilestoneCheck(nino, 0, now).unsafeGet
       result shouldBe CouldNotCheck
     }
 
@@ -171,7 +172,7 @@ class MilestonessServiceSpec
       val service =
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.balanceMilestoneCheck(nino, 0).unsafeGet
+      val result = service.balanceMilestoneCheck(nino, 0, now).unsafeGet
       result shouldBe MilestoneNotHit
     }
 
@@ -182,7 +183,7 @@ class MilestonessServiceSpec
       val service =
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.balanceMilestoneCheck(nino, 1).unsafeGet
+      val result = service.balanceMilestoneCheck(nino, 1, now).unsafeGet
       result shouldBe MilestoneHit
     }
   }
@@ -246,7 +247,10 @@ class MilestonessServiceSpec
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms = Seq(
-        baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1), bonusPaidByDate = LocalDate.now().minusDays(1), bonusEstimate = 0, bonusPaid = 0),
+        baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1),
+                               bonusPaidByDate        = LocalDate.now().minusDays(1),
+                               bonusEstimate          = 0,
+                               bonusPaid              = 0),
         baseBonusTerms(1).copy(bonusEstimate          = 0)
       )
 
@@ -555,17 +559,29 @@ class MilestonessServiceSpec
       milestoneId: String
     ):                              TestF[Unit] = F.unit
     override def clearMilestones(): TestF[Unit] = ???
+
+    override def updateExpireAt(
+      nino:     Nino,
+      expireAt: LocalDateTime
+    ): TestF[Unit] = F.unit
+
   }
 
   private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) =
     new PreviousBalanceRepo[TestF] {
 
       override def setPreviousBalance(
-        nino:            Nino,
-        previousBalance: BigDecimal
+        nino:                 Nino,
+        previousBalance:      BigDecimal,
+        finalBonusPaidByDate: LocalDateTime
       ): TestF[Unit] = F.unit
       override def getPreviousBalance(nino: Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
       override def clearPreviousBalance(): Future[Unit] = ???
+
+      override def updateExpireAt(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] = F.unit
     }
 
 }

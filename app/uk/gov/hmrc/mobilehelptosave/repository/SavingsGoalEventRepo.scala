@@ -32,20 +32,25 @@ import scala.concurrent.{ExecutionContext, Future}
 trait SavingsGoalEventRepo[F[_]] {
 
   def setGoal(
-    nino:   Nino,
-    amount: Option[Double],
-    name:   Option[String]
+    nino:                        Nino,
+    amount:                      Option[Double],
+    name:                        Option[String],
+    secondPeriodBonusPaidByDate: LocalDate
   ): F[Unit]
 
-  def setGoal(
+  def setTestGoal(
     nino:   Nino,
     amount: Option[Double],
     name:   Option[String],
     date:   LocalDate
   ): F[Unit]
-  def deleteGoal(nino: Nino): F[Unit]
-  def getGoal(nino:    Nino): F[Option[SavingsGoal]]
-  def getEvents(nino:  Nino): F[List[SavingsGoalEvent]]
+
+  def deleteGoal(
+    nino:                        Nino,
+    secondPeriodBonusPaidByDate: LocalDate
+  ): F[Unit]
+  def getGoal(nino:   Nino): F[Option[SavingsGoal]]
+  def getEvents(nino: Nino): F[List[SavingsGoalEvent]]
   def clearGoalEvents(): F[Boolean]
 
   def getGoalSetEvents: F[List[SavingsGoalSetEvent]]
@@ -65,22 +70,38 @@ class MongoSavingsGoalEventRepo(
     with SavingsGoalEventRepo[Future] {
 
   override def setGoal(
-    nino:   Nino,
-    amount: Option[Double],
-    name:   Option[String]
+    nino:                        Nino,
+    amount:                      Option[Double],
+    name:                        Option[String],
+    secondPeriodBonusPaidByDate: LocalDate
   ): Future[Unit] =
-    insert(SavingsGoalSetEvent(nino = nino, amount = amount, name = name, date = LocalDateTime.now)).void
+    insert(
+      SavingsGoalSetEvent(nino     = nino,
+                          amount   = amount,
+                          name     = name,
+                          date     = LocalDateTime.now,
+                          expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())
+    ).void
 
-  override def setGoal(
+  override def setTestGoal(
     nino:   Nino,
     amount: Option[Double],
     name:   Option[String],
     date:   LocalDate
   ): Future[Unit] =
-    insert(SavingsGoalSetEvent(nino = nino, amount = amount, name = name, date = date.atStartOfDay())).void
+    insert(
+      SavingsGoalSetEvent(nino     = nino,
+                          amount   = amount,
+                          name     = name,
+                          date     = date.atStartOfDay(),
+                          expireAt = date.plusMonths(1).atStartOfDay())
+    ).void
 
-  override def deleteGoal(nino: Nino): Future[Unit] =
-    insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now)).void
+  override def deleteGoal(
+    nino:                        Nino,
+    secondPeriodBonusPaidByDate: LocalDate
+  ): Future[Unit] =
+    insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now, secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())).void
 
   override def clearGoalEvents(): Future[Boolean] =
     removeAll().map(_ => true).recover {

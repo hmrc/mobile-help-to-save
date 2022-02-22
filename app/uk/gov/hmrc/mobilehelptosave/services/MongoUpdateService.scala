@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.MonadError
 import play.api.Logger
+import reactivemongo.core.protocol.Response.Successful
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.repository.{MongoMilestonesRepo, MongoPreviousBalanceRepo, MongoSavingsGoalEventRepo}
 
@@ -29,8 +30,7 @@ trait MongoUpdateService[F[_]] {
   def updateExpireAtByNino(
     nino:     Nino,
     expireAt: LocalDateTime
-  )(
-  ): Unit
+  ): F[Unit]
 
 }
 
@@ -45,8 +45,7 @@ class HtsMongoUpdateService[F[_]](
   override def updateExpireAtByNino(
     nino:     Nino,
     expireAt: LocalDateTime
-  )(
-  ): Unit = {
+  ): F[Unit] = {
 
     val logger: Logger = Logger(this.getClass)
 
@@ -59,6 +58,8 @@ class HtsMongoUpdateService[F[_]](
     processUpdates.recover {
       case e => logger.warn("ExpireAt update failed: " + e)
     }
+
+    F.pure()
 
   }
 }

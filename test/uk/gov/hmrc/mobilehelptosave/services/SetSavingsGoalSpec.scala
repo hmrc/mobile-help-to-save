@@ -29,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.Future
 
 class SetSavingsGoalSpec
@@ -68,6 +68,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet shouldBe Right(())
@@ -87,6 +88,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(0.99))).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
@@ -106,6 +108,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service
@@ -129,6 +132,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
@@ -148,6 +152,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.General
@@ -158,9 +163,10 @@ class SetSavingsGoalSpec
     new BalanceMilestonesService[TestF] {
 
       override def balanceMilestoneCheck(
-        nino:           Nino,
-        currentBalance: BigDecimal
-      )(implicit hc:    HeaderCarrier
+        nino:                        Nino,
+        currentBalance:              BigDecimal,
+        secondPeriodBonusPaidByDate: LocalDate
+      )(implicit hc:                 HeaderCarrier
       ): TestF[MilestoneCheckResult] =
         F.pure(CouldNotCheck)
     }
@@ -230,9 +236,10 @@ class SetSavingsGoalSpec
   ): SavingsGoalEventRepo[TestF] = new SavingsGoalEventRepo[TestF] {
 
     override def setGoal(
-      nino:   Nino,
-      amount: Option[Double] = None,
-      name:   Option[String] = None
+      nino:                        Nino,
+      amount:                      Option[Double] = None,
+      name:                        Option[String] = None,
+      secondPeriodBonusPaidByDate: LocalDate
     ): TestF[Unit] = {
       nino shouldBe expectedNino
       setGoalResponse match {
@@ -249,7 +256,10 @@ class SetSavingsGoalSpec
       }
     }
 
-    override def deleteGoal(nino: Nino): TestF[Unit] = {
+    override def deleteGoal(
+      nino:                        Nino,
+      secondPeriodBonusPaidByDate: LocalDate
+    ): TestF[Unit] = {
       nino shouldBe expectedNino
       deleteGoalResponse match {
         case Left(t)  => F.raiseError(t)
@@ -264,13 +274,32 @@ class SetSavingsGoalSpec
     override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
     override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
 
-    override def setGoal(
+    override def setTestGoal(
       nino:   Nino,
       amount: Option[Double],
       name:   Option[String],
       date:   LocalDate
     ): TestF[Unit] = ???
+
+    override def updateExpireAt(
+      nino:     Nino,
+      expireAt: LocalDateTime
+    ): TestF[Unit] = {
+      nino shouldBe expectedNino
+      F.unit
+    }
   }
+
+  private def fakeMongoUpdateService: MongoUpdateService[TestF] =
+    new MongoUpdateService[TestF] {
+
+      override def updateExpireAtByNino(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] =
+        F.pure()
+
+    }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
 

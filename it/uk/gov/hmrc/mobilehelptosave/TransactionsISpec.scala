@@ -29,7 +29,7 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
 import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class TransactionsISpec
@@ -47,12 +47,13 @@ class TransactionsISpec
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
-  private val journeyId = randomUUID().toString
+  private val journeyId = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   "GET /savings-account/{nino}/transactions" should {
 
     "respond with 200 and the users transactions" in {
 
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsExistForUser(nino)
 
@@ -64,6 +65,7 @@ class TransactionsISpec
 
     "respond with 200 and an empty transactions list when there are no transactions for the NINO" in {
 
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
 
@@ -75,6 +77,7 @@ class TransactionsISpec
 
     "respond with 200 and users debit transaction more than 50 pounds" in {
 
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
 
@@ -86,6 +89,7 @@ class TransactionsISpec
 
     "respond with 200 and multiple transactions within same month and same day" in {
 
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
 
@@ -96,6 +100,7 @@ class TransactionsISpec
     }
 
     "respond with a 404 if the user's NINO isn't found" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userDoesNotHaveAnHtsAccount(nino)
 
@@ -109,6 +114,7 @@ class TransactionsISpec
     }
 
     "return 401 when the user is not logged in" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
       val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 401
@@ -117,6 +123,7 @@ class TransactionsISpec
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
+      ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 403

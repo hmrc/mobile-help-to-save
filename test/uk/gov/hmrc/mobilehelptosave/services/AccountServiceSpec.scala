@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import cats.MonadError
 import cats.syntax.applicativeError._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -29,8 +30,8 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.time.LocalDate
-import scala.concurrent.Future
+import java.time.{LocalDate, LocalDateTime}
+import scala.concurrent.{ExecutionContext, Future}
 
 class AccountServiceSpec
     extends AnyWordSpecLike
@@ -66,6 +67,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -88,6 +90,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -109,6 +112,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -134,6 +138,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Right(None)
 
@@ -153,6 +158,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -183,6 +189,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -201,6 +208,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -218,6 +226,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -235,6 +244,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -244,11 +254,13 @@ class AccountServiceSpec
     new BalanceMilestonesService[TestF] {
 
       override def balanceMilestoneCheck(
-        nino:           Nino,
-        currentBalance: BigDecimal
-      )(implicit hc:    HeaderCarrier
+        nino:                        Nino,
+        currentBalance:              BigDecimal,
+        secondPeriodBonusPaidByDate: LocalDate
+      )(implicit hc:                 HeaderCarrier
       ): TestF[MilestoneCheckResult] =
         F.pure(CouldNotCheck)
+
     }
 
   private def fakeBonusPeriodMilestoneService: BonusPeriodMilestonesService[TestF] =
@@ -313,9 +325,10 @@ class AccountServiceSpec
     new SavingsGoalEventRepo[TestF] {
 
       override def setGoal(
-        nino:   Nino,
-        amount: Option[Double] = None,
-        name:   Option[String] = None
+        nino:                        Nino,
+        amount:                      Option[Double] = None,
+        name:                        Option[String] = None,
+        secondPeriodBonusPaidByDate: LocalDate
       ): TestF[Unit] = {
         nino shouldBe expectedNino
         F.unit
@@ -329,7 +342,10 @@ class AccountServiceSpec
         }
       }
 
-      override def deleteGoal(nino: Nino): TestF[Unit] = {
+      override def deleteGoal(
+        nino:                        Nino,
+        secondPeriodBonusPaidByDate: LocalDate
+      ): TestF[Unit] = {
         nino shouldBe expectedNino
         F.unit
       }
@@ -342,7 +358,7 @@ class AccountServiceSpec
             F.pure {
               events.sortBy(_.date)(localDateTimeOrdering.reverse).headOption.flatMap {
                 case SavingsGoalSetEvent(_, amount, _, name, _, _) => Some(SavingsGoal(amount))
-                case _                                       => None
+                case _                                             => None
               }
             }
           case Left(t) => F.raiseError(t)
@@ -352,12 +368,31 @@ class AccountServiceSpec
       override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
 
-      override def setGoal(
+      override def setTestGoal(
         nino:   Nino,
         amount: Option[Double],
         name:   Option[String],
         date:   LocalDate
       ): TestF[Unit] = ???
+
+      override def updateExpireAt(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] = {
+        nino shouldBe expectedNino
+        F.unit
+      }
+    }
+
+  private def fakeMongoUpdateService: MongoUpdateService[TestF] =
+    new MongoUpdateService[TestF] {
+
+      override def updateExpireAtByNino(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] =
+        F.pure()
+
     }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
