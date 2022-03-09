@@ -24,13 +24,13 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.AccountTestData
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
+import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, YearMonth}
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountServiceSpec
@@ -40,7 +40,8 @@ class AccountServiceSpec
     with MockFactory
     with OneInstancePerTest
     with LoggerStub
-    with TestF {
+    with TestF
+    with TransactionTestData {
 
   private val generator  = new Generator(0)
   private val nino       = generator.nextNino
@@ -57,7 +58,9 @@ class AccountServiceSpec
     "convert the account from the help-to-save domain to the mobile-help-to-save domain" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+
       val service =
         new HtsAccountService[TestF](logger,
                                      testConfig,
@@ -68,6 +71,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -78,6 +83,7 @@ class AccountServiceSpec
     "fold the value of the 'savingsGoalEnabled' config into the returned account" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val config = testConfig.copy(savingsGoalsEnabled = true)
@@ -91,6 +97,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -102,6 +110,7 @@ class AccountServiceSpec
     "allow inAppPaymentsEnabled to be overridden with configuration" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
         new HtsAccountService[TestF](logger,
@@ -113,6 +122,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
@@ -125,9 +136,157 @@ class AccountServiceSpec
       )
     }
 
+    "not return a potential bonus is the account is less than 3 months old" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount =
+        fakeHelpToSaveGetAccount(nino,
+                                 Right(Some(helpToSaveAccount.copy(openedYearMonth = YearMonth.now().minusMonths(2)))))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+
+      val service =
+        new HtsAccountService[TestF](logger,
+                                     testConfig,
+                                     fakeEnrolmentStatus,
+                                     fakeGetAccount,
+                                     savingsGoalEventRepo,
+                                     fakeBalanceMilestoneService,
+                                     fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
+                                     testMilestonesConfig)
+
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result shouldBe Right(
+        Some(
+          mobileHelpToSaveAccount.copy(openedYearMonth     = YearMonth.now().minusMonths(2),
+                                       savingsGoalsEnabled = testConfig.savingsGoalsEnabled,
+                                       potentialBonus      = None)
+        )
+      )
+    }
+
+    "Return a potential bonus calculated with £5 a month rate if account balance is 0" in {
+      val bonusTerms1         = helpToSaveAccount.bonusTerms.head
+      val bonusTerms2         = helpToSaveAccount.bonusTerms.last
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount =
+        fakeHelpToSaveGetAccount(
+          nino,
+          Right(
+            Some(
+              helpToSaveAccount.copy(
+                balance          = BigDecimal("0"),
+                thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 1, 31),
+                bonusTerms = Seq(bonusTerms1.copy(bonusEstimate = BigDecimal("0"), bonusPaid = BigDecimal("0")),
+                                 bonusTerms2.copy(bonusEstimate = BigDecimal("0")))
+              )
+            )
+          )
+        )
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+
+      val service =
+        new HtsAccountService[TestF](logger,
+                                     testConfig,
+                                     fakeEnrolmentStatus,
+                                     fakeGetAccount,
+                                     savingsGoalEventRepo,
+                                     fakeBalanceMilestoneService,
+                                     fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
+                                     testMilestonesConfig)
+
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("22.5"))))
+
+    }
+
+    "Return a potential bonus of 0 if the max potential bonus is calculated as 0" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount =
+        fakeHelpToSaveGetAccount(
+          nino,
+          Right(
+            Some(
+              helpToSaveAccount.copy(
+                balance           = BigDecimal("100"),
+                paidInThisMonth   = BigDecimal("50"),
+                canPayInThisMonth = BigDecimal("0")
+              )
+            )
+          )
+        )
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+
+      val service =
+        new HtsAccountService[TestF](logger,
+                                     testConfig,
+                                     fakeEnrolmentStatus,
+                                     fakeGetAccount,
+                                     savingsGoalEventRepo,
+                                     fakeBalanceMilestoneService,
+                                     fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
+                                     testMilestonesConfig)
+
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("0"))))
+    }
+
+    "Return a user's potential bonus" in {
+      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
+      val fakeGetAccount =
+        fakeHelpToSaveGetAccount(
+          nino,
+          Right(
+            Some(
+              helpToSaveAccount.copy(
+                thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 1, 31)
+              )
+            )
+          )
+        )
+      val fakeGetTransactions =
+        fakeHelpToSaveGetTransactions(Right(transactionsWithAverageSavingsRate(BigDecimal("10"))))
+      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
+
+      val service =
+        new HtsAccountService[TestF](logger,
+                                     testConfig,
+                                     fakeEnrolmentStatus,
+                                     fakeGetAccount,
+                                     savingsGoalEventRepo,
+                                     fakeBalanceMilestoneService,
+                                     fakeBonusPeriodMilestoneService,
+                                     fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
+                                     testMilestonesConfig)
+
+      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
+      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("106.80"))))
+    }
+
     // this is to avoid unnecessary load on NS&I, see NGC-3799
     "return None without attempting to get account from help-to-save when the user is not enrolled" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
         new HtsAccountService[TestF](logger,
@@ -139,6 +298,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Right(None)
 
@@ -148,6 +309,7 @@ class AccountServiceSpec
     "return None and log a warning when user is enrolled according to help-to-save but no account exists in NS&I" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(None))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
         new HtsAccountService[TestF](logger,
@@ -159,6 +321,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -177,6 +341,7 @@ class AccountServiceSpec
         ): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
           fail("getAccount should not have been called")
       }
+      val fakeGetTransactions = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
 
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
@@ -190,6 +355,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service.account(nino).unsafeGet shouldBe Right(None)
@@ -198,6 +365,7 @@ class AccountServiceSpec
     "return errors returned by connector.enrolmentStatus" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Left(ErrorInfo.General))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
         new HtsAccountService[TestF](logger,
@@ -209,6 +377,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -216,6 +386,7 @@ class AccountServiceSpec
     "return errors returned by connector.getAccount" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Left(ErrorInfo.General))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
         new HtsAccountService[TestF](logger,
@@ -227,6 +398,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -234,6 +407,7 @@ class AccountServiceSpec
     "return errors if savingsGoalRepo.get throws exception" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Left(new Exception("test exception")))
       val service =
         new HtsAccountService[TestF](logger,
@@ -245,6 +419,8 @@ class AccountServiceSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
     }
@@ -318,6 +494,15 @@ class AccountServiceSpec
       }
     }
 
+  private def fakeHelpToSaveGetTransactions(
+    transactionsOrError: Either[ErrorInfo, Transactions]
+  ): HelpToSaveGetTransactions[TestF] =
+    new HelpToSaveGetTransactions[TestF] {
+
+      override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Transactions]] =
+        F.pure(transactionsOrError)
+    }
+
   private def fakeSavingsGoalEventsRepo(
     expectedNino:     Nino,
     goalsOrException: Either[Throwable, List[SavingsGoalEvent]]
@@ -385,15 +570,7 @@ class AccountServiceSpec
     }
 
   private def fakeMongoUpdateService: MongoUpdateService[TestF] =
-    new MongoUpdateService[TestF] {
-
-      override def updateExpireAtByNino(
-        nino:     Nino,
-        expireAt: LocalDateTime
-      ): TestF[Unit] =
-        F.pure()
-
-    }
+    (nino: Nino, expireAt: LocalDateTime) => F.pure()
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
 

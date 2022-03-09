@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.LocalDate
-
+import java.time.{LocalDate, YearMonth}
 import cats.MonadError
 import cats.data.EitherT
 import cats.syntax.applicativeError._
@@ -29,7 +28,7 @@ import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.{AccountServiceConfig, MilestonesConfig}
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
@@ -61,6 +60,8 @@ class HtsAccountService[F[_]](
   bonusPeriodMilestonesService:  BonusPeriodMilestonesService[F],
   bonusReachedMilestonesService: BonusReachedMilestonesService[F],
   mongoUpdateService:            MongoUpdateService[F],
+  savingsUpdateService:          SavingsUpdateService,
+  helpToSaveGetTransactions:     HelpToSaveGetTransactions[F],
   milestonesConfig:              MilestonesConfig
 )(implicit F:                    MonadError[F, Throwable])
     extends AccountService[F] {
@@ -84,6 +85,26 @@ class HtsAccountService[F[_]](
       }
     }
 
+  protected def withValidSavingsAmount[T](goal: Option[Double])(fn: => F[Result[T]]): F[Result[T]] =
+    goal match {
+      case Some(goal) if goal < 1.0 || BigDecimal(goal).scale > 2 =>
+        F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
+      case _ => fn
+    }
+
+  protected def withEnoughSavingsHeadroom[T](
+    goal: Option[Double],
+    acc:  HelpToSaveAccount
+  )(fn:   => F[Result[T]]
+  ): F[Result[T]] = {
+    val maxGoal = acc.maximumPaidInThisMonth
+    goal match {
+      case Some(goal) if (goal > maxGoal) =>
+        F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
+      case _ => fn
+    }
+  }
+
   override def getSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]] =
     withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error reading goal from events repo", savingsGoalEventRepo.getGoal(nino))
@@ -93,6 +114,31 @@ class HtsAccountService[F[_]](
     withHelpToSaveAccount(nino) { acc =>
       trappingRepoExceptions("error writing to savings goal events repo",
                              savingsGoalEventRepo.deleteGoal(nino, acc.bonusTerms(1).bonusPaidOnOrAfterDate))
+    }
+
+  /**
+    * Check if the nino has an NS&I help-to-save account associated with it. If so, run the supplied function on it,
+    * otherwise map to an appropriate ErrorInfo value.
+    */
+  protected def withHelpToSaveAccount[T](
+    nino:        Nino
+  )(f:           HelpToSaveAccount => F[Result[T]]
+  )(implicit hc: HeaderCarrier
+  ): F[Result[T]] =
+    helpToSaveGetAccount.getAccount(nino).flatMap {
+      case Right(Some(account)) => f(account)
+      case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
+      case Left(errorInfo)      => F.pure(errorInfo.asLeft)
+    }
+
+  protected def trappingRepoExceptions[T](
+    msg: String,
+    f:   => F[T]
+  ): F[Result[T]] =
+    f.map(_.asRight[ErrorInfo]).recover {
+      case NonFatal(t) =>
+        logger.error(msg, t)
+        ErrorInfo.General.asLeft[T]
     }
 
   override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
@@ -123,65 +169,15 @@ class HtsAccountService[F[_]](
                                                                              account.bonusTerms,
                                                                              account.currentBonusTerm)
                   else F.pure(())
-              _ <- mongoUpdateService.updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
-            } yield Some(account))
+              _ <- mongoUpdateService
+                    .updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
+              potentialBonus <- getPotentialBonus(nino, account)
+            } yield Some(account.copy(potentialBonus = potentialBonus)))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
         }
       case false =>
         EitherT.rightT[F, ErrorInfo](Option.empty[Account])
     }.value
-
-  protected def withValidSavingsAmount[T](goal: Option[Double])(fn: => F[Result[T]]): F[Result[T]] =
-    goal match {
-      case Some(goal) if goal < 1.0 || BigDecimal(goal).scale > 2 =>
-        F.pure(ErrorInfo.ValidationError(s"goal amount should be a valid monetary amount [$goal]").asLeft)
-      case _ => fn
-    }
-
-  protected def withEnoughSavingsHeadroom[T](
-    goal: Option[Double],
-    acc:  HelpToSaveAccount
-  )(fn:   => F[Result[T]]
-  ): F[Result[T]] = {
-    val maxGoal = acc.maximumPaidInThisMonth
-    goal match {
-      case Some(goal) if (goal > maxGoal) =>
-        F.pure(ErrorInfo.ValidationError(s"goal amount should be in range 1 to $maxGoal").asLeft)
-      case _ => fn
-    }
-  }
-
-  /**
-    * Check if the nino has an NS&I help-to-save account associated with it. If so, run the supplied function on it,
-    * otherwise map to an appropriate ErrorInfo value.
-    */
-  protected def withHelpToSaveAccount[T](
-    nino:        Nino
-  )(f:           HelpToSaveAccount => F[Result[T]]
-  )(implicit hc: HeaderCarrier
-  ): F[Result[T]] =
-    helpToSaveGetAccount.getAccount(nino).flatMap {
-      case Right(Some(account)) => f(account)
-      case Right(None)          => F.pure(ErrorInfo.AccountNotFound.asLeft)
-      case Left(errorInfo)      => F.pure(errorInfo.asLeft)
-    }
-
-  protected def trappingRepoExceptions[T](
-    msg: String,
-    f:   => F[T]
-  ): F[Result[T]] =
-    f.map(_.asRight[ErrorInfo]).recover {
-      case NonFatal(t) =>
-        logger.error(msg, t)
-        ErrorInfo.General.asLeft[T]
-    }
-
-  protected def fetchSavingsGoal(nino: Nino): F[Result[Option[SavingsGoal]]] =
-    savingsGoalEventRepo.getGoal(nino).map(_.asRight[ErrorInfo]).recover {
-      case t =>
-        logger.warn("call to repo to retrieve savings goal failed", t)
-        ErrorInfo.General.asLeft[Option[SavingsGoal]]
-    }
 
   protected def fetchAccountWithGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Option[Account]]] =
     (
@@ -208,4 +204,36 @@ class HtsAccountService[F[_]](
         None.asRight
     }
 
+  protected def fetchSavingsGoal(nino: Nino): F[Result[Option[SavingsGoal]]] =
+    savingsGoalEventRepo.getGoal(nino).map(_.asRight[ErrorInfo]).recover {
+      case t =>
+        logger.warn("call to repo to retrieve savings goal failed", t)
+        ErrorInfo.General.asLeft[Option[SavingsGoal]]
+    }
+
+  private def getPotentialBonus(
+    nino:        Nino,
+    account:     Account
+  )(implicit hc: HeaderCarrier
+  ): F[Option[BigDecimal]] =
+    if (YearMonth.now().isBefore(account.openedYearMonth.plusMonths(3))) F.pure(None)
+    else if (account.balance == BigDecimal(0.0))
+      F.pure(Some(BigDecimal(savingsUpdateService.calculatePotentialBonus(5, account).getOrElse(0.0))))
+    else if (savingsUpdateService.calculateMaxBonus(account).contains(BigDecimal(0.0))) F.pure(Some(0))
+    else {
+      helpToSaveGetTransactions.getTransactions(nino).map {
+        case Right(foundTransactions) =>
+          val reportStartDate = savingsUpdateService.calculateReportStartDate(account.openedYearMonth)
+          val averageSavingRate =
+            savingsUpdateService.calculateAverageSavingRate(foundTransactions.transactions, reportStartDate)
+          Some(
+            savingsUpdateService
+              .calculatePotentialBonus(averageSavingRate, account)
+              .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
+              .getOrElse(0.0)
+          )
+        case _ => None
+      }
+
+    }
 }

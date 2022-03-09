@@ -41,5 +41,6 @@
   "savingsGoal": {
     "goalAmount": 21.50
   },
-  "highestBalance": 200
+  "highestBalance": 200,
+  "potentialBonus": 100
 }
