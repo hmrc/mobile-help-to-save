@@ -24,7 +24,7 @@ import org.scalatest.{EitherValues, OneInstancePerTest}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
@@ -57,6 +57,7 @@ class SetSavingsGoalSpec
     "return Right[Unit] if successful" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount      = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val fakeGoalsRepo       = fakeSavingsGoalEventsRepo(nino)
 
       val service =
@@ -69,6 +70,8 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet shouldBe Right(())
@@ -77,6 +80,7 @@ class SetSavingsGoalSpec
     "return a ValidationError if the goal is < 1.0" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
@@ -89,6 +93,8 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(0.99))).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
@@ -97,6 +103,7 @@ class SetSavingsGoalSpec
     "return a ValidationError if the goal is > maximum for month" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
@@ -109,6 +116,8 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service
@@ -121,6 +130,7 @@ class SetSavingsGoalSpec
     "return an AccountNotFound if the nino does not have an account with NS&I" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(None))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino)
 
       val service =
@@ -133,6 +143,8 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
@@ -141,6 +153,7 @@ class SetSavingsGoalSpec
     "return a General error if the repo throws a Non-Fatal exception" in {
       val fakeEnrolmentStatus  = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount       = fakeHelpToSaveGetAccount(nino, Right(Some(helpToSaveAccount)))
+      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, setGoalResponse = Left(new Exception("non fatal")))
 
       val service =
@@ -153,6 +166,8 @@ class SetSavingsGoalSpec
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
                                      fakeMongoUpdateService,
+                                     new HtsSavingsUpdateService,
+                                     fakeGetTransactions,
                                      testMilestonesConfig)
 
       service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.General
@@ -224,6 +239,15 @@ class SetSavingsGoalSpec
 
         F.pure(accountOrError)
       }
+    }
+
+  private def fakeHelpToSaveGetTransactions(
+    transactionsOrError: Either[ErrorInfo, Transactions]
+  ): HelpToSaveGetTransactions[TestF] =
+    new HelpToSaveGetTransactions[TestF] {
+
+      override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Transactions]] =
+        F.pure(transactionsOrError)
     }
 
   private val fUnit = F.unit

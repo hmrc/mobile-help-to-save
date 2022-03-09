@@ -268,6 +268,13 @@
       "examples": [
         135.00
       ]
+    },
+    "potentialBonus": {
+      "type": "number",
+      "description": "The potential bonus this account has could achieve",
+      "examples": [
+        120.00
+      ]
     }
   },
   "required": [

@@ -278,7 +278,8 @@ trait AccountTestData {
     savingsGoalsEnabled  = true,
     savingsGoal          = None,
     1,
-    highestBalance = 181.98
+    highestBalance = 181.98,
+    potentialBonus = Some(0)
   )
 
   protected val savingsUpdateMobileHelpToSaveAccount: Account = Account(
