@@ -261,7 +261,7 @@ class AccountServiceSpec
           )
         )
       val fakeGetTransactions =
-        fakeHelpToSaveGetTransactions(Right(transactionsWithAverageSavingsRate(BigDecimal("10"))))
+        fakeHelpToSaveGetTransactions(Right(transactionsWithAverageSavingsRate(BigDecimal("50"))))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
@@ -280,7 +280,7 @@ class AccountServiceSpec
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("106.80"))))
+      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("206.79"))))
     }
 
     // this is to avoid unnecessary load on NS&I, see NGC-3799

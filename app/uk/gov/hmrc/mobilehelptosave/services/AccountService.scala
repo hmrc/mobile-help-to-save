@@ -32,6 +32,7 @@ import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnr
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
+import java.time.temporal.TemporalAdjusters
 import scala.util.control.NonFatal
 
 trait AccountService[F[_]] {
@@ -224,8 +225,13 @@ class HtsAccountService[F[_]](
       helpToSaveGetTransactions.getTransactions(nino).map {
         case Right(foundTransactions) =>
           val reportStartDate = savingsUpdateService.calculateReportStartDate(account.openedYearMonth)
+          val reportTransactions: Seq[Transaction] = foundTransactions.transactions.filter(transaction =>
+            transaction.transactionDate.isAfter(reportStartDate.minusDays(1)) && transaction.transactionDate.isBefore(
+              LocalDate.now().`with`(TemporalAdjusters.firstDayOfMonth())
+            )
+          )
           val averageSavingRate =
-            savingsUpdateService.calculateAverageSavingRate(foundTransactions.transactions, reportStartDate)
+            savingsUpdateService.calculateAverageSavingRate(reportTransactions, reportStartDate)
           Some(
             savingsUpdateService
               .calculatePotentialBonus(averageSavingRate, account)
