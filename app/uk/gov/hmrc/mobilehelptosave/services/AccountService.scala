@@ -218,7 +218,7 @@ class HtsAccountService[F[_]](
   )(implicit hc: HeaderCarrier
   ): F[Option[BigDecimal]] =
     if (YearMonth.now().isBefore(account.openedYearMonth.plusMonths(3))) F.pure(None)
-    else if (account.balance == BigDecimal(0.0))
+    else if (account.balance == BigDecimal(0.0) && account.highestBalance == 0)
       F.pure(Some(BigDecimal(savingsUpdateService.calculatePotentialBonus(5, account).getOrElse(0.0))))
     else if (savingsUpdateService.calculateMaxBonus(account).contains(BigDecimal(0.0))) F.pure(Some(0))
     else {
@@ -232,12 +232,19 @@ class HtsAccountService[F[_]](
           )
           val averageSavingRate =
             savingsUpdateService.calculateAverageSavingRate(reportTransactions, reportStartDate)
-          Some(
-            savingsUpdateService
-              .calculatePotentialBonus(averageSavingRate, account)
-              .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
-              .getOrElse(0.0)
-          )
+
+          if (averageSavingRate > 0)
+            Some(
+              savingsUpdateService
+                .calculatePotentialBonus(averageSavingRate, account)
+                .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
+                .getOrElse(0.0)
+            )
+          else
+            account.currentBonusTerm match {
+              case CurrentBonusTerm.First  => Some(account.bonusTerms.head.bonusEstimate)
+              case CurrentBonusTerm.Second => Some(account.bonusTerms.last.bonusEstimate)
+            }
         case _ => None
       }
 
