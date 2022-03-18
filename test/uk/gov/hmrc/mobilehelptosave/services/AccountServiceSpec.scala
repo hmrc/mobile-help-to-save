@@ -212,6 +212,8 @@ class AccountServiceSpec
     }
 
     "Return a potential bonus of 0 if the max potential bonus is calculated as 0" in {
+      val bonusTerms1         = helpToSaveAccount.bonusTerms.head
+      val bonusTerms2         = helpToSaveAccount.bonusTerms.last
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount =
         fakeHelpToSaveGetAccount(
@@ -219,9 +221,12 @@ class AccountServiceSpec
           Right(
             Some(
               helpToSaveAccount.copy(
-                balance           = BigDecimal("100"),
+                balance           = BigDecimal("0"),
                 paidInThisMonth   = BigDecimal("50"),
-                canPayInThisMonth = BigDecimal("0")
+                canPayInThisMonth = BigDecimal("0")         ,
+                  thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 6, 28),
+                bonusTerms = Seq(bonusTerms1.copy(bonusEstimate = BigDecimal("600"), bonusPaid = BigDecimal("600")),
+                  bonusTerms2.copy(bonusEstimate = BigDecimal("0")))
               )
             )
           )
