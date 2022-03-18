@@ -279,7 +279,7 @@ trait AccountTestData {
     savingsGoal          = None,
     1,
     highestBalance = 181.98,
-    potentialBonus = Some(0)
+    potentialBonus = Some(BigDecimal("90.99"))
   )
 
   protected val savingsUpdateMobileHelpToSaveAccount: Account = Account(

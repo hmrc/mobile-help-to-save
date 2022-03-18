@@ -52,7 +52,7 @@ class CalculatorService(
       toYearMonthDayInput(now),
       toYearMonthDayInput(firstBonusTerms.endDate),
       toYearMonthDayInput(finalBonusTerms.endDate),
-      firstBonusTerms.balanceMustBeMoreThanForBonus.toDouble
+      finalBonusTerms.balanceMustBeMoreThanForBonus.toDouble
     )
   }
 
