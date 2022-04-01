@@ -38,7 +38,6 @@ object BonusTerm {
 }
 
 case class Blocking(
-  unspecified: Boolean,
   payments:    Boolean,
   withdrawals: Boolean,
   bonuses:     Boolean)

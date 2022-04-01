@@ -43,7 +43,7 @@ case class SandboxData(
         accountNumber          = "1100000112057",
         openedYearMonth        = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
         isClosed               = false,
-        blocked                = Blocking(unspecified = false, payments = false, withdrawals = false, bonuses = false),
+        blocked                = Blocking(payments = false, withdrawals = false, bonuses = false),
         balance                = BigDecimal("230.00"),
         paidInThisMonth        = BigDecimal("30.00"),
         canPayInThisMonth      = BigDecimal("20.00"),

@@ -21,13 +21,6 @@
       "type": "object",
       "description": "Actions that are blocked for this account",
       "properties": {
-        "unspecified": {
-          "type": "boolean",
-          "description": "Some unspecified action(s) is/are blocked. More specific blocking flags may be added in a future version of the API.",
-          "examples": [
-            "false"
-          ]
-        },
         "payments": {
           "type": "boolean",
           "description": "Payments to this account are blocked.",
@@ -51,7 +44,6 @@
         }
       },
       "required": [
-        "unspecified",
         "payments",
         "withdrawals",
         "bonuses"

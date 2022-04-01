@@ -194,7 +194,6 @@ class SandboxControllerSpec
       (json \ "number").as[String]                     shouldBe "1100000112057"
       (json \ "openedYearMonth").as[String]            shouldBe "2018-02"
       (json \ "isClosed").as[Boolean]                  shouldBe false
-      (json \ "blocked" \ "unspecified").as[Boolean]   shouldBe false
       (json \ "balance").as[BigDecimal]                shouldBe BigDecimal(230)
       (json \ "paidInThisMonth").as[BigDecimal]        shouldBe BigDecimal(30.0)
       (json \ "canPayInThisMonth").as[BigDecimal]      shouldBe BigDecimal(20.0)

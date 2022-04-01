@@ -238,17 +238,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         )
     )
 
-  def unspecifiedBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
-    wireMockServer.stubFor(
-      get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withBody(enrolledButUnspecifiedBlockedReturnedByHelpToSaveJsonString)
-        )
-    )
-
   def paymentsBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
