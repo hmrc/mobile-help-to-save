@@ -35,7 +35,6 @@ trait AccountTestData {
        |  "accountNumber": "1000000000001",
        |  "isClosed": false,
        |  "blocked": {
-       |    "unspecified": false,
        |    "payments": false,
        |    "withdrawals": false,
        |    "bonuses": false
@@ -76,7 +75,6 @@ trait AccountTestData {
        |  "accountNumber": "1000000000001",
        |  "isClosed": false,
        |  "blocked": {
-       |    "unspecified": false,
        |    "payments": false,
        |    "withdrawals": false,
        |    "bonuses": false
@@ -130,7 +128,6 @@ trait AccountTestData {
        |  "accountNumber": "1000000000001",
        |  "isClosed": $isClosed,
        |  "blocked": {
-       |    "unspecified": false,
        |    "payments": false,
        |    "withdrawals": false,
        |    "bonuses": false
@@ -167,7 +164,6 @@ trait AccountTestData {
       |  "accountNumber": "1000000000001",
       |  "isClosed": false,
       |  "blocked": {
-      |    "unspecified": false,
       |    "payments": false,
       |    "withdrawals": false,
       |    "bonuses": false
@@ -204,7 +200,7 @@ trait AccountTestData {
     accountNumber          = "1000000000001",
     openedYearMonth        = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1),
     isClosed               = false,
-    blocked                = Blocking(payments = false, withdrawals = false, bonuses = false),
+    blocked                = HtsBlocking(payments = false, withdrawals = false, bonuses = false),
     balance                = BigDecimal("123.45"),
     paidInThisMonth        = BigDecimal("27.88"),
     canPayInThisMonth      = BigDecimal("22.12"),

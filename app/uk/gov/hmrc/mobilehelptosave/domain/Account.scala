@@ -37,7 +37,17 @@ object BonusTerm {
   implicit val format: OFormat[BonusTerm] = Json.format[BonusTerm]
 }
 
+case class HtsBlocking(
+  payments:    Boolean,
+  withdrawals: Boolean,
+  bonuses:     Boolean)
+
+object HtsBlocking {
+  implicit val format: OFormat[HtsBlocking] = Json.format[HtsBlocking]
+}
+
 case class Blocking(
+  unspecified: Boolean = false,
   payments:    Boolean,
   withdrawals: Boolean,
   bonuses:     Boolean)
@@ -98,7 +108,7 @@ object Account {
     number                    = h.accountNumber,
     openedYearMonth           = h.openedYearMonth,
     isClosed                  = h.isClosed,
-    blocked                   = h.blocked,
+    blocked                   = Blocking(payments = h.blocked.payments, withdrawals = h.blocked.withdrawals, bonuses = h.blocked.bonuses),
     balance                   = h.balance,
     paidInThisMonth           = h.paidInThisMonth,
     canPayInThisMonth         = h.canPayInThisMonth,
