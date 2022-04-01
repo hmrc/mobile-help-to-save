@@ -131,7 +131,7 @@ case class HelpToSaveAccount(
   accountNumber:          String,
   openedYearMonth:        YearMonth,
   isClosed:               Boolean,
-  blocked:                Blocking,
+  blocked:                HtsBlocking,
   balance:                BigDecimal,
   paidInThisMonth:        BigDecimal,
   canPayInThisMonth:      BigDecimal,
