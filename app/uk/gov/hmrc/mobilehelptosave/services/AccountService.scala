@@ -233,6 +233,17 @@ class HtsAccountService[F[_]](
           val averageSavingRate =
             savingsUpdateService.calculateAverageSavingRate(reportTransactions, reportStartDate)
 
+          if (averageSavingRate > 50) {
+            logger.warn(
+              s"Average saving rate above 50!: $averageSavingRate. " +
+                s"\nAccount startDate: ${account.openedYearMonth} " +
+                s"\nReport startDate: $reportStartDate " +
+                s"\nReport endDate: ${LocalDate.now().`with`(TemporalAdjusters.firstDayOfMonth())} " +
+                s"\nTransactions: $reportTransactions"
+            )
+            F.pure(None)
+          }
+
           if (averageSavingRate > 0)
             Some(
               savingsUpdateService
