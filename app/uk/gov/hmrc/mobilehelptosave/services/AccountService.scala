@@ -236,26 +236,26 @@ class HtsAccountService[F[_]](
           if (averageSavingRate > 50) {
             logger.warn(
               s"Average saving rate above 50!: $averageSavingRate. " +
-                s"\nAccount startDate: ${account.openedYearMonth} " +
-                s"\nReport startDate: $reportStartDate " +
-                s"\nReport endDate: ${LocalDate.now().`with`(TemporalAdjusters.firstDayOfMonth())} " +
-                s"\nTransactions: $reportTransactions"
+              s"\nAccount startDate: ${account.openedYearMonth} " +
+              s"\nReport startDate: $reportStartDate " +
+              s"\nReport endDate: ${LocalDate.now().`with`(TemporalAdjusters.firstDayOfMonth())} " +
+              s"\nTransactions: $reportTransactions"
             )
-            F.pure(None)
-          }
-
-          if (averageSavingRate > 0)
+            None
+          } else if (averageSavingRate > 0) {
             Some(
               savingsUpdateService
                 .calculatePotentialBonus(averageSavingRate, account)
                 .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
                 .getOrElse(0.0)
             )
-          else
+          } else {
             account.currentBonusTerm match {
-              case CurrentBonusTerm.First  => Some(account.bonusTerms.head.bonusEstimate)
-              case CurrentBonusTerm.Second => Some(account.bonusTerms.last.bonusEstimate)
+              case CurrentBonusTerm.First          => Some(account.bonusTerms.head.bonusEstimate)
+              case CurrentBonusTerm.Second         => Some(account.bonusTerms.last.bonusEstimate)
+              case CurrentBonusTerm.AfterFinalTerm => None
             }
+          }
         case _ => None
       }
 
