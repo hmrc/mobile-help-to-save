@@ -213,7 +213,7 @@ class SandboxISpec
       response.status shouldBe Status.OK
       val updateV = response.json.validate[SavingsUpdateResponse]
       updateV                                                              shouldBe 'success
-      updateV.asOpt.value.savingsUpdate.get.amountEarnedTowardsBonus.value shouldBe 50
+      updateV.asOpt.value.savingsUpdate.get.amountEarnedTowardsBonus.value shouldBe 75
     }
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
