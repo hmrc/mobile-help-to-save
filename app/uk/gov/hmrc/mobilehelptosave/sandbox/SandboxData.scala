@@ -30,7 +30,7 @@ case class SandboxData(
   config: SandboxDataConfig) {
 
   private def today:             LocalDate = clock.now().toLocalDate
-  private def openedDate:        LocalDate = today.minusMonths(7)
+  private def openedDate:        LocalDate = today.minusMonths(17)
   private def endOfMonth:        LocalDate = today.`with`(TemporalAdjusters.lastDayOfMonth())
   private def startOfFirstTerm:  LocalDate = openedDate.`with`(TemporalAdjusters.firstDayOfMonth())
   private def endOfFirstTerm:    LocalDate = startOfFirstTerm.plusYears(2).minusDays(1)
@@ -44,7 +44,7 @@ case class SandboxData(
         openedYearMonth        = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
         isClosed               = false,
         blocked                = HtsBlocking(payments = false, withdrawals = false, bonuses = false),
-        balance                = BigDecimal("230.00"),
+        balance                = BigDecimal("100.00"),
         paidInThisMonth        = BigDecimal("30.00"),
         canPayInThisMonth      = BigDecimal("20.00"),
         maximumPaidInThisMonth = BigDecimal("50.00"),
@@ -53,7 +53,7 @@ case class SandboxData(
         accountHolderSurname   = "Testsur",
         accountHolderEmail     = Some("testemail@example.com"),
         bonusTerms = List(
-          HelpToSaveBonusTerm(BigDecimal("115.00"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
+          HelpToSaveBonusTerm(BigDecimal("75.00"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
           HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
         ),
         closureDate      = None,
@@ -70,6 +70,8 @@ case class SandboxData(
       savingsGoal = Some(SavingsGoal(goalAmount = Some(25.0), goalName = Some("\uD83C\uDFE1 New home")))
     )
   }
+
+  val accountWithPotentialBonus = account.copy(potentialBonus = Some(300))
 
   val transactions = Transactions({
     Seq(
@@ -101,22 +103,22 @@ case class SandboxData(
     accountOpenedYearMonth = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
     savingsUpdate = Some(
       SavingsUpdate(
-        savedInPeriod = Some(BigDecimal(200)),
-        savedByMonth  = Some(SavedByMonth(numberOfMonths = 7, monthsSaved = 6)),
+        savedInPeriod = Some(BigDecimal(100)),
+        savedByMonth  = Some(SavedByMonth(numberOfMonths = 5, monthsSaved = 4)),
         goalsReached = Some(
-          GoalsReached(currentAmount = 25.0, currentGoalName = Some("\uD83C\uDFE1 New home"), numberOfTimesReached = 4)
+          GoalsReached(currentAmount = 25.0, currentGoalName = Some("\uD83C\uDFE1 New home"), numberOfTimesReached = 2)
         ),
-        amountEarnedTowardsBonus = Some(BigDecimal(100))
+        amountEarnedTowardsBonus = Some(BigDecimal(75))
       )
     ),
     bonusUpdate = BonusUpdate(
       currentBonusTerm            = CurrentBonusTerm.First,
-      monthsUntilBonus            = 16,
-      currentBonus                = Some(BigDecimal(115)),
+      monthsUntilBonus            = 8,
+      currentBonus                = Some(BigDecimal(50)),
       highestBalance              = None,
-      potentialBonusAtCurrentRate = Some(BigDecimal(345)),
-      potentialBonusWithFiveMore  = Some(BigDecimal(385)),
-      maxBonus                    = Some(BigDecimal(515))
+      potentialBonusAtCurrentRate = Some(BigDecimal(300)),
+      potentialBonusWithFiveMore  = Some(BigDecimal(500)),
+      maxBonus                    = Some(BigDecimal(600))
     )
   )
 
