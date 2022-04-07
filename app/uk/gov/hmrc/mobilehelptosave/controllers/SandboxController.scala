@@ -62,7 +62,7 @@ class SandboxController(
     Action.async { implicit request =>
       shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
         withShuttering(shuttered) {
-          Future successful Ok(Json.toJson(sandboxData.account))
+          Future successful Ok(Json.toJson(sandboxData.accountWithPotentialBonus))
         }
       }
     }
