@@ -53,7 +53,7 @@ case class SandboxData(
         accountHolderSurname   = "Testsur",
         accountHolderEmail     = Some("testemail@example.com"),
         bonusTerms = List(
-          HelpToSaveBonusTerm(BigDecimal("75.00"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
+          HelpToSaveBonusTerm(BigDecimal("125.00"), BigDecimal("0.00"), endOfFirstTerm, endOfFirstTerm.plusDays(1)),
           HelpToSaveBonusTerm(BigDecimal("0.00"), BigDecimal("0.00"), endOfSecondTerm, endOfSecondTerm.plusDays(1))
         ),
         closureDate      = None,
@@ -106,19 +106,19 @@ case class SandboxData(
         savedInPeriod = Some(BigDecimal(100)),
         savedByMonth  = Some(SavedByMonth(numberOfMonths = 5, monthsSaved = 4)),
         goalsReached = Some(
-          GoalsReached(currentAmount = 25.0, currentGoalName = Some("\uD83C\uDFE1 New home"), numberOfTimesReached = 2)
+          GoalsReached(currentAmount = 50, currentGoalName = Some("\uD83C\uDFE1 New home"), numberOfTimesReached = 2)
         ),
-        amountEarnedTowardsBonus = Some(BigDecimal(75))
+        amountEarnedTowardsBonus = Some(BigDecimal(50))
       )
     ),
     bonusUpdate = BonusUpdate(
       currentBonusTerm            = CurrentBonusTerm.First,
       monthsUntilBonus            = 8,
-      currentBonus                = Some(BigDecimal(50)),
+      currentBonus                = Some(BigDecimal(125)),
       highestBalance              = None,
-      potentialBonusAtCurrentRate = Some(BigDecimal(300)),
-      potentialBonusWithFiveMore  = Some(BigDecimal(500)),
-      maxBonus                    = Some(BigDecimal(600))
+      potentialBonusAtCurrentRate = Some(BigDecimal(275)),
+      potentialBonusWithFiveMore  = Some(BigDecimal(310)),
+      maxBonus                    = Some(BigDecimal(450))
     )
   )
 

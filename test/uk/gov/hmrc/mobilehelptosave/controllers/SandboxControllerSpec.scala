@@ -201,7 +201,7 @@ class SandboxControllerSpec
       (json \ "thisMonthEndDate").as[String]           shouldBe "2021-07-31"
 
       val firstBonusTermJson = (json \ "bonusTerms")(0)
-      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("75"))
+      shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("125"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("0"))
       (firstBonusTermJson \ "endDate").as[String]                shouldBe "2022-01-31"
       (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-02-01"
@@ -267,18 +267,18 @@ class SandboxControllerSpec
       (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "monthsSaved").as[Int]          shouldBe 4
       (jsonBody \ "savingsUpdate" \ "savedByMonth" \ "numberOfMonths").as[Int]       shouldBe 5
       (jsonBody \ "savingsUpdate" \ "goalsReached").isDefined                        shouldBe true
-      (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 25.0
+      (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentAmount").as[Double]     shouldBe 50.0
       (jsonBody \ "savingsUpdate" \ "goalsReached" \ "numberOfTimesReached").as[Int] shouldBe 2
       (jsonBody \ "savingsUpdate" \ "goalsReached" \ "currentGoalName").as[String]   shouldBe "\uD83C\uDFE1 New home"
-      (jsonBody \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 75.00
+      (jsonBody \ "savingsUpdate" \ "amountEarnedTowardsBonus").as[BigDecimal]       shouldBe 50.00
       (jsonBody \ "bonusUpdate").isDefined                                           shouldBe true
       (jsonBody \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
       (jsonBody \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 8
-      (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 50
+      (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 125
       (jsonBody \ "bonusUpdate" \ "highestBalance").isEmpty                          shouldBe true
-      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 300
-      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 500
-      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 600
+      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 275
+      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 310
+      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 450
     }
 
     "return a shuttered response when the service is shuttered" in {
