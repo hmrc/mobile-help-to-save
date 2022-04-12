@@ -122,9 +122,9 @@ case class SandboxData(
       monthsUntilBonus            = 8,
       currentBonus                = Some(BigDecimal(125)),
       highestBalance              = None,
-      potentialBonusAtCurrentRate = Some(BigDecimal(250)),
-      potentialBonusWithFiveMore  = Some(BigDecimal(280)),
-      maxBonus                    = Some(BigDecimal(425))
+      potentialBonusAtCurrentRate = Some(BigDecimal(125)),
+      potentialBonusWithFiveMore  = Some(BigDecimal(140)),
+      maxBonus                    = Some(BigDecimal(250))
     )
   )
 

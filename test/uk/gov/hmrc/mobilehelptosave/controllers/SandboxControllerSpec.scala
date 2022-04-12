@@ -311,9 +311,9 @@ class SandboxControllerSpec
       (jsonBody \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 8
       (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 125
       (jsonBody \ "bonusUpdate" \ "highestBalance").isEmpty                          shouldBe true
-      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 250
-      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 280
-      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 425
+      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 125
+      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 140
+      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 250
     }
 
     "return a shuttered response when the service is shuttered" in {
