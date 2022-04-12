@@ -309,7 +309,7 @@ class SandboxControllerSpec
         .as[LocalDate] shouldBe currentTime.minusMonths(5).`with`(TemporalAdjusters.firstDayOfMonth()).toLocalDate
       (jsonBody \ "reportEndDate")
         .as[LocalDate]                                                               shouldBe currentTime.minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth()).toLocalDate
-      (jsonBody \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.from(currentTime).minusYears(1).minusMonths(5).toString
+      (jsonBody \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.from(currentTime).minusMonths(17).toString
       (jsonBody \ "savingsUpdate").isDefined                                         shouldBe true
       (jsonBody \ "savingsUpdate" \ "savedInPeriod").as[BigDecimal]                  shouldBe 100
       (jsonBody \ "savingsUpdate" \ "savedByMonth").isDefined                        shouldBe true

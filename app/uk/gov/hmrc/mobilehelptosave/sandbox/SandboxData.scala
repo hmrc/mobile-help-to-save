@@ -106,7 +106,7 @@ case class SandboxData(
   )
 
   val savingsUpdate = SavingsUpdateResponse(
-    reportStartDate        = LocalDate.of(today.minusMonths(5).getYear, today.minusMonths(5).getMonth, 1),
+    reportStartDate        = today.minusMonths(5).`with`(TemporalAdjusters.firstDayOfMonth()),
     reportEndDate          = today.minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth()),
     accountOpenedYearMonth = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
     savingsUpdate = Some(
