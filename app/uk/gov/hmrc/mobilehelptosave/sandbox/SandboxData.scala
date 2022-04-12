@@ -124,7 +124,7 @@ case class SandboxData(
       highestBalance              = None,
       potentialBonusAtCurrentRate = Some(BigDecimal(125)),
       potentialBonusWithFiveMore  = Some(BigDecimal(140)),
-      maxBonus                    = Some(BigDecimal(250))
+      maxBonus                    = Some(BigDecimal(225))
     )
   )
 

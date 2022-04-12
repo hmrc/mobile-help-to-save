@@ -313,7 +313,7 @@ class SandboxControllerSpec
       (jsonBody \ "bonusUpdate" \ "highestBalance").isEmpty                          shouldBe true
       (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 125
       (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 140
-      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 250
+      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 225
     }
 
     "return a shuttered response when the service is shuttered" in {
