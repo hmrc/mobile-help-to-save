@@ -93,7 +93,7 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      json transactionCount () shouldBe 16
+      json transactionCount () shouldBe 18
 
       var atIndex = 0
       json operation atIndex       shouldBe "credit"
@@ -104,103 +104,117 @@ class SandboxControllerSpec
 
       atIndex = 1
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(25)
+      json amount atIndex          shouldBe BigDecimal(50)
       json transactionDate atIndex shouldBe "2022-03-11"
       json accountingDate atIndex  shouldBe "2022-03-11"
       json balanceAfter atIndex    shouldBe BigDecimal(100)
 
       atIndex = 2
       json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(-25)
+      json transactionDate atIndex shouldBe "2022-02-11"
+      json accountingDate atIndex  shouldBe "2022-02-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(50)
+
+      atIndex = 3
+      json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2022-02-11"
       json accountingDate atIndex  shouldBe "2022-02-11"
       json balanceAfter atIndex    shouldBe BigDecimal(75)
 
-      atIndex = 3
+      atIndex = 4
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(25)
+      json amount atIndex          shouldBe BigDecimal(50)
       json transactionDate atIndex shouldBe "2022-01-11"
       json accountingDate atIndex  shouldBe "2022-01-11"
       json balanceAfter atIndex    shouldBe BigDecimal(50)
 
-      atIndex = 4
+      atIndex = 5
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(-25)
+      json transactionDate atIndex shouldBe "2021-12-11"
+      json accountingDate atIndex  shouldBe "2021-12-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(0)
+
+      atIndex = 6
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-12-11"
       json accountingDate atIndex  shouldBe "2021-12-11"
       json balanceAfter atIndex    shouldBe BigDecimal(25)
 
-      atIndex = 5
+      atIndex = 7
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(-250)
       json transactionDate atIndex shouldBe "2021-11-11"
       json accountingDate atIndex  shouldBe "2021-11-11"
       json balanceAfter atIndex    shouldBe BigDecimal(0)
 
-      atIndex = 6
+      atIndex = 8
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-10-11"
       json accountingDate atIndex  shouldBe "2021-10-11"
       json balanceAfter atIndex    shouldBe BigDecimal(250)
 
-      atIndex = 7
+      atIndex = 9
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-09-11"
       json accountingDate atIndex  shouldBe "2021-09-11"
       json balanceAfter atIndex    shouldBe BigDecimal(225)
 
-      atIndex = 8
+      atIndex = 10
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-08-11"
       json accountingDate atIndex  shouldBe "2021-08-11"
       json balanceAfter atIndex    shouldBe BigDecimal(200)
 
-      atIndex = 9
+      atIndex = 11
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-07-11"
       json accountingDate atIndex  shouldBe "2021-07-11"
       json balanceAfter atIndex    shouldBe BigDecimal(175)
 
-      atIndex = 10
+      atIndex = 12
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-06-11"
       json accountingDate atIndex  shouldBe "2021-06-11"
       json balanceAfter atIndex    shouldBe BigDecimal(150)
 
-      atIndex = 11
+      atIndex = 13
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-05-11"
       json accountingDate atIndex  shouldBe "2021-05-11"
       json balanceAfter atIndex    shouldBe BigDecimal(125)
 
-      atIndex = 12
+      atIndex = 14
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-04-11"
       json accountingDate atIndex  shouldBe "2021-04-11"
       json balanceAfter atIndex    shouldBe BigDecimal(100)
 
-      atIndex = 13
+      atIndex = 15
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-03-11"
       json accountingDate atIndex  shouldBe "2021-03-11"
       json balanceAfter atIndex    shouldBe BigDecimal(75)
 
-      atIndex = 14
+      atIndex = 16
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-02-11"
       json accountingDate atIndex  shouldBe "2021-02-11"
       json balanceAfter atIndex    shouldBe BigDecimal(50)
 
-      atIndex = 15
+      atIndex = 17
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
       json transactionDate atIndex shouldBe "2021-01-11"
