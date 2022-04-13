@@ -71,7 +71,7 @@ case class SandboxData(
     )
   }
 
-  val accountWithPotentialBonus = account.copy(potentialBonus = Some(250))
+  val accountWithPotentialBonus = account.copy(potentialBonus = Some(225))
 
   val transactions = Transactions({
     Seq(
