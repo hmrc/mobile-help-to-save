@@ -71,21 +71,29 @@ case class SandboxData(
     )
   }
 
-  val accountWithPotentialBonus = account.copy(potentialBonus = Some(300))
+  val accountWithPotentialBonus = account.copy(potentialBonus = Some(225))
 
   val transactions = Transactions({
     Seq(
-      (0L, 30.00, 230.00),
-      (1L, 20.00, 200.00),
-      (1L, 18.20, 180.00),
-      (2L, 10.40, 161.80),
-      (3L, 35.00, 151.40),
-      (3L, 15.00, 116.40),
-      (4L, 06.00, 101.40),
-      (5L, 20.40, 95.40),
-      (5L, 10.00, 75.00),
-      (6L, 25.00, 65.00),
-      (7L, 40.00, 40.00)
+      (0L, 30.00, 130.00),
+      (1L, 50.00, 100.00),
+      (2L, -25.00, 50.00),
+      (2L, 25.00, 75.00),
+      (3L, 50.00, 50.00),
+      (4L, -25.00, 00.00),
+      (4L, 25.00, 25.00),
+      (5L, -250.00, 00.00),
+      (6L, 25.00, 250.00),
+      (7L, 25.00, 225.00),
+      (8L, 25.00, 200.00),
+      (9L, 25.00, 175.00),
+      (10L, 25.00, 150.00),
+      (11L, 25.00, 125.00),
+      (12L, 25.00, 100.00),
+      (13L, 25.00, 75.00),
+      (14L, 25.00, 50.00),
+      (15L, 25.00, 25.00),
+
     ) map {
       case (monthsAgo, creditAmount, balance) =>
         val date = today.minusMonths(monthsAgo)
@@ -98,7 +106,7 @@ case class SandboxData(
   )
 
   val savingsUpdate = SavingsUpdateResponse(
-    reportStartDate        = LocalDate.of(today.minusMonths(8).getYear, today.minusMonths(8).getMonth, 1),
+    reportStartDate        = today.minusMonths(5).`with`(TemporalAdjusters.firstDayOfMonth()),
     reportEndDate          = today.minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth()),
     accountOpenedYearMonth = YearMonth.of(openedDate.getYear, openedDate.getMonthValue),
     savingsUpdate = Some(
@@ -115,10 +123,10 @@ case class SandboxData(
       currentBonusTerm            = CurrentBonusTerm.First,
       monthsUntilBonus            = 8,
       currentBonus                = Some(BigDecimal(125)),
-      highestBalance              = None,
-      potentialBonusAtCurrentRate = Some(BigDecimal(275)),
-      potentialBonusWithFiveMore  = Some(BigDecimal(310)),
-      maxBonus                    = Some(BigDecimal(450))
+      highestBalance              = Some(BigDecimal(250)),
+      potentialBonusAtCurrentRate = Some(BigDecimal(125)),
+      potentialBonusWithFiveMore  = Some(BigDecimal(140)),
+      maxBonus                    = Some(BigDecimal(225))
     )
   )
 

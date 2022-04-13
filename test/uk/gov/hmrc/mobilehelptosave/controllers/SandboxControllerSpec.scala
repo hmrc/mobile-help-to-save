@@ -57,7 +57,7 @@ class SandboxControllerSpec
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private val generator   = new Generator(0)
   private val nino        = generator.nextNino
-  private val currentTime = LocalDateTime.of(2021, 7, 29, 12, 30)
+  private val currentTime = LocalDateTime.of(2022, 4, 11, 12, 30)
   private val fixedClock  = new FixedFakeClock(currentTime)
 
   private val controller: SandboxController =
@@ -93,84 +93,133 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      json transactionCount () shouldBe 11
+      json transactionCount () shouldBe 18
 
       var atIndex = 0
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(30)
-      json transactionDate atIndex shouldBe "2021-07-29"
-      json accountingDate atIndex  shouldBe "2021-07-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(230)
+      json transactionDate atIndex shouldBe "2022-04-11"
+      json accountingDate atIndex  shouldBe "2022-04-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(130)
 
       atIndex = 1
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(20)
-      json transactionDate atIndex shouldBe "2021-06-29"
-      json accountingDate atIndex  shouldBe "2021-06-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(200)
+      json amount atIndex          shouldBe BigDecimal(50)
+      json transactionDate atIndex shouldBe "2022-03-11"
+      json accountingDate atIndex  shouldBe "2022-03-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(100)
 
       atIndex = 2
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(18.2)
-      json transactionDate atIndex shouldBe "2021-06-29"
-      json accountingDate atIndex  shouldBe "2021-06-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(180)
+      json amount atIndex          shouldBe BigDecimal(-25)
+      json transactionDate atIndex shouldBe "2022-02-11"
+      json accountingDate atIndex  shouldBe "2022-02-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(50)
 
       atIndex = 3
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(10.4)
-      json transactionDate atIndex shouldBe "2021-05-29"
-      json accountingDate atIndex  shouldBe "2021-05-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(161.8)
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2022-02-11"
+      json accountingDate atIndex  shouldBe "2022-02-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(75)
 
       atIndex = 4
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(35)
-      json transactionDate atIndex shouldBe "2021-04-29"
-      json accountingDate atIndex  shouldBe "2021-04-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(151.4)
+      json amount atIndex          shouldBe BigDecimal(50)
+      json transactionDate atIndex shouldBe "2022-01-11"
+      json accountingDate atIndex  shouldBe "2022-01-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(50)
 
       atIndex = 5
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(15)
-      json transactionDate atIndex shouldBe "2021-04-29"
-      json accountingDate atIndex  shouldBe "2021-04-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(116.4)
+      json amount atIndex          shouldBe BigDecimal(-25)
+      json transactionDate atIndex shouldBe "2021-12-11"
+      json accountingDate atIndex  shouldBe "2021-12-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(0)
 
       atIndex = 6
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(6)
-      json transactionDate atIndex shouldBe "2021-03-29"
-      json accountingDate atIndex  shouldBe "2021-03-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(101.4)
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-12-11"
+      json accountingDate atIndex  shouldBe "2021-12-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(25)
 
       atIndex = 7
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(20.4)
-      json transactionDate atIndex shouldBe "2021-02-28"
-      json accountingDate atIndex  shouldBe "2021-02-28"
-      json balanceAfter atIndex    shouldBe BigDecimal(95.4)
+      json amount atIndex          shouldBe BigDecimal(-250)
+      json transactionDate atIndex shouldBe "2021-11-11"
+      json accountingDate atIndex  shouldBe "2021-11-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(0)
 
       atIndex = 8
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(10)
-      json transactionDate atIndex shouldBe "2021-02-28"
-      json accountingDate atIndex  shouldBe "2021-02-28"
-      json balanceAfter atIndex    shouldBe BigDecimal(75)
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-10-11"
+      json accountingDate atIndex  shouldBe "2021-10-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(250)
 
       atIndex = 9
       json operation atIndex       shouldBe "credit"
       json amount atIndex          shouldBe BigDecimal(25)
-      json transactionDate atIndex shouldBe "2021-01-29"
-      json accountingDate atIndex  shouldBe "2021-01-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(65)
+      json transactionDate atIndex shouldBe "2021-09-11"
+      json accountingDate atIndex  shouldBe "2021-09-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(225)
 
       atIndex = 10
       json operation atIndex       shouldBe "credit"
-      json amount atIndex          shouldBe BigDecimal(40)
-      json transactionDate atIndex shouldBe "2020-12-29"
-      json accountingDate atIndex  shouldBe "2020-12-29"
-      json balanceAfter atIndex    shouldBe BigDecimal(40)
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-08-11"
+      json accountingDate atIndex  shouldBe "2021-08-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(200)
+
+      atIndex = 11
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-07-11"
+      json accountingDate atIndex  shouldBe "2021-07-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(175)
+
+      atIndex = 12
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-06-11"
+      json accountingDate atIndex  shouldBe "2021-06-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(150)
+
+      atIndex = 13
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-05-11"
+      json accountingDate atIndex  shouldBe "2021-05-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(125)
+
+      atIndex = 14
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-04-11"
+      json accountingDate atIndex  shouldBe "2021-04-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(100)
+
+      atIndex = 15
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-03-11"
+      json accountingDate atIndex  shouldBe "2021-03-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(75)
+
+      atIndex = 16
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-02-11"
+      json accountingDate atIndex  shouldBe "2021-02-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(50)
+
+      atIndex = 17
+      json operation atIndex       shouldBe "credit"
+      json amount atIndex          shouldBe BigDecimal(25)
+      json transactionDate atIndex shouldBe "2021-01-11"
+      json accountingDate atIndex  shouldBe "2021-01-11"
+      json balanceAfter atIndex    shouldBe BigDecimal(25)
     }
 
     "return a shuttered response when the service is shuttered" in {
@@ -192,27 +241,27 @@ class SandboxControllerSpec
       val json: JsValue = contentAsJson(response)
 
       (json \ "number").as[String]                     shouldBe "1100000112057"
-      (json \ "openedYearMonth").as[String]            shouldBe "2020-02"
+      (json \ "openedYearMonth").as[String]            shouldBe "2020-11"
       (json \ "isClosed").as[Boolean]                  shouldBe false
       (json \ "balance").as[BigDecimal]                shouldBe BigDecimal(100)
       (json \ "paidInThisMonth").as[BigDecimal]        shouldBe BigDecimal(30.0)
       (json \ "canPayInThisMonth").as[BigDecimal]      shouldBe BigDecimal(20.0)
       (json \ "maximumPaidInThisMonth").as[BigDecimal] shouldBe BigDecimal(50)
-      (json \ "thisMonthEndDate").as[String]           shouldBe "2021-07-31"
+      (json \ "thisMonthEndDate").as[String]           shouldBe "2022-04-30"
 
       val firstBonusTermJson = (json \ "bonusTerms")(0)
       shouldBeBigDecimal(firstBonusTermJson \ "bonusEstimate", BigDecimal("125"))
       shouldBeBigDecimal(firstBonusTermJson \ "bonusPaid", BigDecimal("0"))
-      (firstBonusTermJson \ "endDate").as[String]                shouldBe "2022-01-31"
-      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-02-01"
-      (firstBonusTermJson \ "bonusPaidByDate").as[String]        shouldBe "2022-02-01"
+      (firstBonusTermJson \ "endDate").as[String]                shouldBe "2022-10-31"
+      (firstBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2022-11-01"
+      (firstBonusTermJson \ "bonusPaidByDate").as[String]        shouldBe "2022-11-01"
 
       val secondBonusTermJson = (json \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                    shouldBe "2024-01-31"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]     shouldBe "2024-02-01"
-      (secondBonusTermJson \ "bonusPaidByDate").as[String]            shouldBe "2024-02-01"
+      (secondBonusTermJson \ "endDate").as[String]                    shouldBe "2024-10-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]     shouldBe "2024-11-01"
+      (secondBonusTermJson \ "bonusPaidByDate").as[String]            shouldBe "2024-11-01"
 
       (json \ "inAppPaymentsEnabled").as[Boolean] shouldBe false
     }
@@ -257,7 +306,7 @@ class SandboxControllerSpec
       status(savingsUpdate) shouldBe OK
       val jsonBody = contentAsJson(savingsUpdate)
       (jsonBody \ "reportStartDate")
-        .as[LocalDate] shouldBe currentTime.minusMonths(8).`with`(TemporalAdjusters.firstDayOfMonth()).toLocalDate
+        .as[LocalDate] shouldBe currentTime.minusMonths(5).`with`(TemporalAdjusters.firstDayOfMonth()).toLocalDate
       (jsonBody \ "reportEndDate")
         .as[LocalDate]                                                               shouldBe currentTime.minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth()).toLocalDate
       (jsonBody \ "accountOpenedYearMonth").as[String]                               shouldBe YearMonth.from(currentTime).minusMonths(17).toString
@@ -275,10 +324,10 @@ class SandboxControllerSpec
       (jsonBody \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
       (jsonBody \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 8
       (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 125
-      (jsonBody \ "bonusUpdate" \ "highestBalance").isEmpty                          shouldBe true
-      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 275
-      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 310
-      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 450
+      (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 250
+      (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 125
+      (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 140
+      (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 225
     }
 
     "return a shuttered response when the service is shuttered" in {
