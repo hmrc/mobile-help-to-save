@@ -123,7 +123,7 @@ case class SandboxData(
       currentBonusTerm            = CurrentBonusTerm.First,
       monthsUntilBonus            = 8,
       currentBonus                = Some(BigDecimal(125)),
-      highestBalance              = None,
+      highestBalance              = Some(BigDecimal(250)),
       potentialBonusAtCurrentRate = Some(BigDecimal(125)),
       potentialBonusWithFiveMore  = Some(BigDecimal(140)),
       maxBonus                    = Some(BigDecimal(225))

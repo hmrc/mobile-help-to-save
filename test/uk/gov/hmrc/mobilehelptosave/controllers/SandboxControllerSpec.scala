@@ -324,7 +324,7 @@ class SandboxControllerSpec
       (jsonBody \ "bonusUpdate" \ "currentBonusTerm").as[String]                     shouldBe "First"
       (jsonBody \ "bonusUpdate" \ "monthsUntilBonus").as[Int]                        shouldBe 8
       (jsonBody \ "bonusUpdate" \ "currentBonus").as[BigDecimal]                     shouldBe 125
-      (jsonBody \ "bonusUpdate" \ "highestBalance").isEmpty                          shouldBe true
+      (jsonBody \ "bonusUpdate" \ "highestBalance").as[BigDecimal]                   shouldBe 250
       (jsonBody \ "bonusUpdate" \ "potentialBonusAtCurrentRate").as[BigDecimal]      shouldBe 125
       (jsonBody \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 140
       (jsonBody \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 225
