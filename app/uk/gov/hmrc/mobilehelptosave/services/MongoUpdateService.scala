@@ -23,7 +23,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.repository.{MongoMilestonesRepo, MongoPreviousBalanceRepo, MongoSavingsGoalEventRepo}
 
 import java.time.LocalDateTime
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MongoUpdateService[F[_]] {
 
@@ -50,9 +50,12 @@ class HtsMongoUpdateService[F[_]](
     val logger: Logger = Logger(this.getClass)
 
     val processUpdates = for {
-      _ <- mongoMilestonesRepo.updateExpireAt(nino, expireAt)
-      _ <- mongoSavingsGoalEventRepo.updateExpireAt(nino, expireAt)
-      _ <- mongoPreviousBalanceRepo.updateExpireAt(nino, expireAt)
+      updateRequired <- mongoPreviousBalanceRepo.getPreviousBalanceUpdateRequired(nino)
+      _              <- if (updateRequired.isDefined) mongoMilestonesRepo.updateExpireAt(nino, expireAt) else Future successful Unit
+      _ <- if (updateRequired.isDefined) mongoSavingsGoalEventRepo.updateExpireAt(nino, expireAt)
+          else Future successful Unit
+      _ <- if (updateRequired.isDefined) mongoPreviousBalanceRepo.updateExpireAt(nino, expireAt)
+          else Future successful Unit
     } yield ()
 
     processUpdates.recover {
