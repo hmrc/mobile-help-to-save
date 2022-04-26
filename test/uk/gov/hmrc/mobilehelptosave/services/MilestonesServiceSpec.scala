@@ -575,7 +575,10 @@ class MilestonessServiceSpec
         previousBalance:      BigDecimal,
         finalBonusPaidByDate: LocalDateTime
       ): TestF[Unit] = F.unit
-      override def getPreviousBalance(nino: Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
+      override def getPreviousBalance(nino:               Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
+
+      override def getPreviousBalanceUpdateRequired(nino: Nino): TestF[Option[PreviousBalance]] =
+        F.pure(previousBalance)
       override def clearPreviousBalance(): Future[Unit] = ???
 
       override def updateExpireAt(

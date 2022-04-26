@@ -44,6 +44,8 @@ trait PreviousBalanceRepo[F[_]] {
     nino:     Nino,
     expireAt: LocalDateTime
   ): F[Unit]
+
+  def getPreviousBalanceUpdateRequired(nino: Nino): F[Option[PreviousBalance]]
 }
 
 class MongoPreviousBalanceRepo(
@@ -81,6 +83,9 @@ class MongoPreviousBalanceRepo(
     updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
 
   }
+
+  override def getPreviousBalanceUpdateRequired(nino: Nino): Future[Option[PreviousBalance]] =
+    collection.find(obj("nino" -> nino, "updateRequired" -> true), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).one[PreviousBalance]
 }
 
 case class PreviousBalance(

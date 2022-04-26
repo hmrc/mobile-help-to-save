@@ -170,8 +170,10 @@ class HtsAccountService[F[_]](
                                                                              account.bonusTerms,
                                                                              account.currentBonusTerm)
                   else F.pure(())
-              _ <- mongoUpdateService
-                    .updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
+              _ <- if (account.openedYearMonth.isBefore(YearMonth.now().minusMonths(42)))
+                    mongoUpdateService
+                      .updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
+                  else F.pure()
               potentialBonus <- getPotentialBonus(nino, account)
             } yield Some(account.copy(potentialBonus = potentialBonus)))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])
