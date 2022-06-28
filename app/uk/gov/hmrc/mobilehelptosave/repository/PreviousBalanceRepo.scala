@@ -19,13 +19,18 @@ package uk.gov.hmrc.mobilehelptosave.repository
 import java.time.LocalDateTime
 import cats.instances.future._
 import cats.syntax.functor._
-import play.api.libs.json.Json.obj
+import com.mongodb.client.model.Indexes.text
+import org.mongodb.scala.Document
+import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.{FindOneAndReplaceOptions, IndexModel, IndexOptions}
+import org.mongodb.scala.model.Indexes.descending
+import org.mongodb.scala.model.Updates.{combine, set}
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 trait PreviousBalanceRepo[F[_]] {
@@ -49,10 +54,21 @@ trait PreviousBalanceRepo[F[_]] {
 }
 
 class MongoPreviousBalanceRepo(
-  mongo:        ReactiveMongoComponent
+  mongo:        MongoComponent
 )(implicit ec:  ExecutionContext,
   mongoFormats: Format[PreviousBalance])
-    extends IndexedMongoRepo[Nino, PreviousBalance]("previousBalance", "nino", unique = false, mongo = mongo)
+    extends PlayMongoRepository[PreviousBalance](collectionName = "previousBalance",
+                                                 mongoComponent = mongo,
+                                                 domainFormat   = mongoFormats,
+                                                 indexes = Seq(
+                                                   IndexModel(descending("expireAt"),
+                                                              IndexOptions()
+                                                                .name("expireAtIdx")
+                                                                .expireAfter(0, TimeUnit.SECONDS)),
+                                                   IndexModel(text("nino"),
+                                                              IndexOptions().name("ninoIdx").unique(false).sparse(true))
+                                                 ),
+      replaceIndexes = true)
     with PreviousBalanceRepo[Future] {
 
   override def setPreviousBalance(
@@ -60,32 +76,37 @@ class MongoPreviousBalanceRepo(
     previousBalance:      BigDecimal,
     finalBonusPaidByDate: LocalDateTime
   ): Future[Unit] =
-    findAndUpdate(query  = obj(indexFieldName -> Json.toJson(nino)),
-                  update = obj("$set" -> Json.toJson(PreviousBalance(nino, previousBalance, LocalDateTime.now(), finalBonusPaidByDate.plusMonths(6)))),
-                  upsert = true).void
+    collection
+      .findOneAndReplace(
+        filter      = equal("nino", Codecs.toBson(nino)),
+        replacement = (PreviousBalance(nino, previousBalance, LocalDateTime.now(), finalBonusPaidByDate.plusMonths(6))),
+        options     = FindOneAndReplaceOptions().upsert(true)
+      )
+      .toFuture()
+      .void
 
   override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] =
-    collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).one[PreviousBalance]
+    collection.find(equal("nino", Codecs.toBson(nino))).headOption()
 
   override def clearPreviousBalance(): Future[Unit] =
-    removeAll().void
+    collection.deleteMany(filter = Document()).toFuture.void
 
   override def updateExpireAt(
     nino:     Nino,
     expireAt: LocalDateTime
-  ): Future[Unit] = {
-    val builder: collection.UpdateBuilder = collection.update(true)
-    val updates = builder.element(
-      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
-      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
-      multi = true
-    )
-    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
-
-  }
+  ): Future[Unit] =
+    collection
+      .updateMany(
+        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
+        update = combine(set("updateRequired", false), set("expireAt", expireAt.toString))
+      )
+      .toFutureOption()
+      .void
 
   override def getPreviousBalanceUpdateRequired(nino: Nino): Future[Option[PreviousBalance]] =
-    collection.find(obj("nino" -> nino, "updateRequired" -> true), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).one[PreviousBalance]
+    collection
+      .find(and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)))
+      .headOption()
 }
 
 case class PreviousBalance(

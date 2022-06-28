@@ -24,7 +24,7 @@ import org.scalatest.Assertion
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.WSResponse
+import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
@@ -49,6 +49,12 @@ class TransactionsISpec
   private val nino      = generator.nextNino
   private val journeyId = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
+  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
+  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
+
+  private def requestWithAuthHeaders(url: String): WSRequest =
+    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
+
   "GET /savings-account/{nino}/transactions" should {
 
     "respond with 200 and the users transactions" in {
@@ -57,7 +63,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsExistForUser(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -69,7 +75,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.zeroTransactionsExistForUser(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -81,7 +87,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.transactionsWithOver50PoundDebit(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -93,7 +99,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.multipleTransactionsWithinSameMonthAndDay(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
       checkTransactionsResponseInvariants(response)
@@ -104,7 +110,7 @@ class TransactionsISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userDoesNotHaveAnHtsAccount(nino)
 
-      val response: WSResponse = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
 
       response.status shouldBe 404
       val jsonBody: JsValue = response.json
@@ -116,7 +122,7 @@ class TransactionsISpec
     "return 401 when the user is not logged in" in {
       ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 401
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
@@ -125,7 +131,7 @@ class TransactionsISpec
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 403
       checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
@@ -133,19 +139,19 @@ class TransactionsISpec
 
     "return 400 when journeyId is not supplied" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions").get())
+      val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions").get())
       response.status shouldBe 400
     }
 
     "return 400 when invalid NINO supplied" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-account/AA123123123/transactions?journeyId=$journeyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-account/AA123123123/transactions?journeyId=$journeyId").get())
       response.status shouldBe 400
     }
 
     "return 400 when invalid journeyId is supplied" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-account/$nino/transactions?journeyId=ThisIsAnInvalidJourneyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=ThisIsAnInvalidJourneyId").get())
       response.status shouldBe 400
     }
   }

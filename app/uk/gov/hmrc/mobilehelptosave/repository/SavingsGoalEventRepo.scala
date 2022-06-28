@@ -19,14 +19,19 @@ package uk.gov.hmrc.mobilehelptosave.repository
 import java.time.{LocalDate, LocalDateTime}
 import cats.instances.future._
 import cats.syntax.functor._
-import play.api.libs.json.Json.obj
+import com.mongodb.client.model.Indexes.text
+import org.mongodb.scala.Document
+import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Indexes.descending
+import org.mongodb.scala.model.Updates.{combine, set}
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 trait SavingsGoalEventRepo[F[_]] {
@@ -50,11 +55,11 @@ trait SavingsGoalEventRepo[F[_]] {
     secondPeriodBonusPaidByDate: LocalDate
   ): F[Unit]
   def getGoal(nino:   Nino): F[Option[SavingsGoal]]
-  def getEvents(nino: Nino): F[List[SavingsGoalEvent]]
+  def getEvents(nino: Nino): F[Seq[SavingsGoalEvent]]
   def clearGoalEvents(): F[Boolean]
 
-  def getGoalSetEvents: F[List[SavingsGoalSetEvent]]
-  def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]]
+  def getGoalSetEvents: F[Seq[SavingsGoalSetEvent]]
+  def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]]
 
   def updateExpireAt(
     nino:     Nino,
@@ -63,10 +68,27 @@ trait SavingsGoalEventRepo[F[_]] {
 }
 
 class MongoSavingsGoalEventRepo(
-  mongo:        ReactiveMongoComponent
+  mongo:        MongoComponent
 )(implicit ec:  ExecutionContext,
   mongoFormats: Format[SavingsGoalEvent])
-    extends IndexedMongoRepo[Nino, SavingsGoalEvent]("savingsGoalEvents", "nino", unique = false, mongo = mongo)
+    extends PlayMongoRepository[SavingsGoalEvent](
+      collectionName = "savingsGoalEvents",
+      mongoComponent = mongo,
+      domainFormat   = mongoFormats,
+      extraCodecs =
+        Codecs.playFormatCodecsBuilder(mongoFormats).forType[SavingsGoalSetEvent].forType[SavingsGoalDeleteEvent].build,
+      indexes = Seq(
+        IndexModel(descending("expireAt"),
+                   IndexOptions()
+                     .name("expireAtIdx")
+                     .expireAfter(0, TimeUnit.SECONDS)),
+        IndexModel(
+          text("nino"),
+          IndexOptions().name("ninoIdx").unique(false).sparse(true)
+        )
+      ),
+      replaceIndexes = true
+    )
     with SavingsGoalEventRepo[Future] {
 
   override def setGoal(
@@ -75,13 +97,16 @@ class MongoSavingsGoalEventRepo(
     name:                        Option[String],
     secondPeriodBonusPaidByDate: LocalDate
   ): Future[Unit] =
-    insert(
-      SavingsGoalSetEvent(nino     = nino,
-                          amount   = amount,
-                          name     = name,
-                          date     = LocalDateTime.now,
-                          expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())
-    ).void
+    collection
+      .insertOne(
+        SavingsGoalSetEvent(nino     = nino,
+                            amount   = amount,
+                            name     = name,
+                            date     = LocalDateTime.now,
+                            expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())
+      )
+      .toFuture()
+      .void
 
   override def setTestGoal(
     nino:   Nino,
@@ -89,32 +114,43 @@ class MongoSavingsGoalEventRepo(
     name:   Option[String],
     date:   LocalDate
   ): Future[Unit] =
-    insert(
-      SavingsGoalSetEvent(nino     = nino,
-                          amount   = amount,
-                          name     = name,
-                          date     = date.atStartOfDay(),
-                          expireAt = date.plusMonths(1).atStartOfDay())
-    ).void
+    collection
+      .insertOne(
+        SavingsGoalSetEvent(nino     = nino,
+                            amount   = amount,
+                            name     = name,
+                            date     = date.atStartOfDay(),
+                            expireAt = date.plusMonths(1).atStartOfDay())
+      )
+      .toFuture()
+      .void
 
   override def deleteGoal(
     nino:                        Nino,
     secondPeriodBonusPaidByDate: LocalDate
   ): Future[Unit] =
-    insert(SavingsGoalDeleteEvent(nino, LocalDateTime.now, secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())).void
+    collection
+      .insertOne(
+        SavingsGoalDeleteEvent(nino, LocalDateTime.now, secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())
+      )
+      .toFuture()
+      .void
 
   override def clearGoalEvents(): Future[Boolean] =
-    removeAll().map(_ => true).recover {
-      case _ => false
-    }
+    collection
+      .deleteMany(filter = Document())
+      .map(_ => true)
+      .recover {
+        case _ => false
+      }
+      .head()
 
-  override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] =
-    find("nino" -> Json.toJson(nino))
+  override def getEvents(nino: Nino): Future[Seq[SavingsGoalEvent]] =
+    collection.find(equal("nino", Codecs.toBson(nino))).toFuture()
 
   override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = {
-    val query =
-      collection.find(obj("nino" -> nino), None)(JsObjectDocumentWriter, JsObjectDocumentWriter).sort(obj("date" -> -1))
-    val result: Future[Option[SavingsGoalEvent]] = query.one[SavingsGoalEvent]
+    val result =
+      collection.find(equal("nino", Codecs.toBson(nino))).sort(descending("date")).headOption()
     result.map {
       case None => None
       case Some(_: SavingsGoalDeleteEvent) => None
@@ -123,36 +159,35 @@ class MongoSavingsGoalEventRepo(
     }
   }
 
-  override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] =
-    find("type" -> "set").map(
-      _.map {
+  override def getGoalSetEvents(): Future[Seq[SavingsGoalSetEvent]] =
+    collection
+      .find(equal("type", "set"))
+      .map {
         case event: SavingsGoalSetEvent => event
         case _ => throw new IllegalStateException("Event must be a set event")
       }
-    )
+      .toFuture()
 
-  override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] =
-    find("type" -> "set", "nino" -> Json.toJson(nino))
-      .map(
-        _.map {
-          case event: SavingsGoalSetEvent => event
-          case _ => throw new IllegalStateException("Event must be a set event")
-        }
-      )
+  override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]] =
+    collection
+      .find(Filters.and(equal("type", "set"), equal("nino", Codecs.toBson(nino))))
+      .map {
+        case event: SavingsGoalSetEvent => event
+        case _ => throw new IllegalStateException("Event must be a set event")
+      }
+      .toFuture()
       .map(Right(_))
 
   override def updateExpireAt(
     nino:     Nino,
     expireAt: LocalDateTime
-  ): Future[Unit] = {
-    val builder: collection.UpdateBuilder = collection.update(true)
-    val updates = builder.element(
-      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
-      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
-      multi = true
-    )
-    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
-
-  }
+  ): Future[Unit] =
+    collection
+      .updateMany(
+        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
+        update = combine(set("updateRequired", false), set("expireAt", expireAt.toString))
+      )
+      .toFutureOption()
+      .void
 
 }

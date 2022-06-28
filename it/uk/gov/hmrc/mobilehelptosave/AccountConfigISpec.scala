@@ -23,7 +23,7 @@ import java.util.UUID.randomUUID
 import org.scalatestplus.play.components.WithApplicationComponents
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
-import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
@@ -49,6 +49,9 @@ class AccountConfigISpec
   private val nino      = generator.nextNino
   private val journeyId = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
+  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
+  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
+
   "GET /savings-account/{nino} and /sandbox/savings-account/{nino}" should {
     "allow inAppPaymentsEnabled to be overridden with configuration" in {
       ShutteringStub.stubForShutteringDisabled()
@@ -66,7 +69,11 @@ class AccountConfigISpec
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
-        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()),
+        responseShouldHaveInAppPaymentsEqualTo(await(
+                                                 wsUrl(s"/savings-account/$nino?journeyId=$journeyId")
+                                                   .addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
+                                                   .get()
+                                               ),
                                                expectedValue = false)
         responseShouldHaveInAppPaymentsEqualTo(
           await(wsUrl(s"/sandbox/savings-account/$nino?journeyId=$journeyId").get()),
@@ -84,7 +91,11 @@ class AccountConfigISpec
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
-        responseShouldHaveInAppPaymentsEqualTo(await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").get()),
+        responseShouldHaveInAppPaymentsEqualTo(await(
+                                                 wsUrl(s"/savings-account/$nino?journeyId=$journeyId")
+                                                   .addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
+                                                   .get()
+                                               ),
                                                expectedValue = true)
         responseShouldHaveInAppPaymentsEqualTo(
           await(wsUrl(s"/sandbox/savings-account/$nino?journeyId=$journeyId").get()),
@@ -110,7 +121,9 @@ class AccountConfigISpec
 
         val response: WSResponse = await(wsUrl(s"/savings-account/$nino").get())
         response.status shouldBe (400)
-        val sandboxResponse: WSResponse = await(wsUrl(s"/sandbox/savings-account/$nino").get())
+        val sandboxResponse: WSResponse = await(
+          wsUrl(s"/sandbox/savings-account/$nino").addHttpHeaders(acceptJsonHeader, authorisationJsonHeader).get()
+        )
         sandboxResponse.status shouldBe (400)
       }
     }

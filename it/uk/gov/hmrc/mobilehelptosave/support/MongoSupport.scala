@@ -3,11 +3,8 @@ package uk.gov.hmrc.mobilehelptosave.support
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.ServerProvider
 import org.scalatestplus.play.components.WithApplicationComponents
-import reactivemongo.api.DefaultDB
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 import scala.util.{Random, Try}
 
 /**
@@ -23,8 +20,8 @@ trait MongoSupport extends BeforeAndAfterEach with AppBuilder with ComponentSupp
   )
 
   override protected def afterEach(): Unit = {
-    val db: DefaultDB = components.mongo.mongoConnector.db()
-    Try(Await.ready(db.drop(), 10 seconds))
+    val db = components.mongo.database
+    Try(db.drop())
 
     super.afterEach()
   }

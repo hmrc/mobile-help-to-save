@@ -48,7 +48,7 @@ trait AccountService[F[_]] {
   def getSavingsGoal(nino:    Nino)(implicit hc: HeaderCarrier): F[Result[Option[SavingsGoal]]]
   def deleteSavingsGoal(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Unit]]
 
-  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]]
+  def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Seq[SavingsGoalEvent]]]
 }
 
 class HtsAccountService[F[_]](
@@ -142,7 +142,7 @@ class HtsAccountService[F[_]](
         ErrorInfo.General.asLeft[T]
     }
 
-  override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[List[SavingsGoalEvent]]] =
+  override def savingsGoalEvents(nino: Nino)(implicit hc: HeaderCarrier): F[Result[Seq[SavingsGoalEvent]]] =
     withHelpToSaveAccount(nino) { _ =>
       trappingRepoExceptions("error reading from savings goal events repo", savingsGoalEventRepo.getEvents(nino))
     }

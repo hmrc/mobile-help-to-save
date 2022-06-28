@@ -18,22 +18,27 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import cats.instances.future._
 import cats.syntax.functor._
-import play.api.libs.json.Json.obj
+import com.mongodb.client.model.FindOneAndUpdateOptions
+import com.mongodb.client.model.Indexes.text
+import org.mongodb.scala.Document
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, UpdateOptions}
+import org.mongodb.scala.model.Indexes.descending
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.MongoMilestone
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesRepo[F[_]] {
   def setMilestone(milestone: MongoMilestone): F[Unit]
 
-  def getMilestones(nino: Nino): F[List[MongoMilestone]]
+  def getMilestones(nino: Nino): F[Seq[MongoMilestone]]
 
   def markAsSeen(
     nino:          Nino,
@@ -49,60 +54,61 @@ trait MilestonesRepo[F[_]] {
 }
 
 class MongoMilestonesRepo(
-  mongo:        ReactiveMongoComponent
+  mongo:        MongoComponent
 )(implicit ec:  ExecutionContext,
   mongoFormats: Format[MongoMilestone])
-    extends IndexedMongoRepo[Nino, MongoMilestone]("milestones", "nino", unique = false, mongo = mongo)
+    extends PlayMongoRepository[MongoMilestone](collectionName = "milestones",
+                                                mongoComponent = mongo,
+                                                domainFormat   = mongoFormats,
+                                                indexes = Seq(
+                                                  IndexModel(descending("expireAt"),
+                                                             IndexOptions()
+                                                               .name("expireAtIdx")),
+                                                  IndexModel(text("nino"),
+                                                             IndexOptions().name("ninoIdx").unique(false).sparse(true))
+                                                ),
+                                                replaceIndexes = true)
     with MilestonesRepo[Future] {
-
-  override def indexes: Seq[Index] =
-    Seq(
-      Index(Seq("expireAt" -> IndexType.Descending),
-            name    = Some("expireAtIdx"),
-            options = BSONDocument("expireAfterSeconds" -> 0)),
-      Index(Seq("nino" -> IndexType.Text), Some("ninoIdx"), unique = false, sparse = true)
-    )
 
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
     collection
-      .find(obj("nino" -> milestone.nino, "milestone" -> milestone.milestone), None)(JsObjectDocumentWriter,
-                                                                                     JsObjectDocumentWriter)
-      .one[MongoMilestone]
+      .find(and(equal("nino", Codecs.toBson(milestone.nino)), equal("milestone", Codecs.toBson(milestone.milestone))))
+      .headOption()
       .map {
-        case Some(m) => if (m.isRepeatable) insert(milestone).void else ()
-        case _       => insert(milestone).void
+        case Some(m) => if (m.isRepeatable) collection.insertOne(milestone).toFuture().void else ()
+        case _       => collection.insertOne(milestone).toFuture().void
       }
 
-  override def getMilestones(nino: Nino): Future[List[MongoMilestone]] =
-    find("nino" -> Json.toJson(nino), "isSeen" -> false)
+  override def getMilestones(nino: Nino): Future[Seq[MongoMilestone]] =
+    collection
+      .find(and(equal("nino", Codecs.toBson(nino)), equal("isSeen", false)))
+      .toFuture()
 
   override def markAsSeen(
     nino:          Nino,
     milestoneType: String
   ): Future[Unit] =
     collection
-      .update(ordered = false)
-      .one(
-        q     = obj("nino" -> nino, "milestoneType" -> milestoneType, "isSeen" -> false),
-        u     = obj("$set" -> Json.obj("isSeen" -> true, "expireAt" -> LocalDateTime.now().plusMonths(6))),
-        multi = true
+      .findOneAndUpdate(
+        filter = and(equal("nino", Codecs.toBson(nino)), equal("milestoneType", milestoneType), equal("isSeen", false)),
+        update = combine(set("isSeen", true), set("expireAt", LocalDateTime.now().plusMonths(6).toString))
       )
+      .toFutureOption()
       .void
 
   override def clearMilestones(): Future[Unit] =
-    removeAll().void
+    collection.deleteMany(filter = Document()).toFuture.void
 
   override def updateExpireAt(
     nino:     Nino,
     expireAt: LocalDateTime
-  ): Future[Unit] = {
-    val builder: collection.UpdateBuilder = collection.update(true)
-    val updates = builder.element(
-      q     = BSONDocument("nino" -> nino.nino, "updateRequired" -> true),
-      u     = BSONDocument("$set" -> BSONDocument("expireAt" -> expireAt.toString, "updateRequired" -> false)),
-      multi = true
-    )
-    updates.flatMap(updateEle => builder.many(Seq(updateEle)).void)
+  ): Future[Unit] =
+    collection
+      .updateMany(
+        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
+        update = combine(set("updateRequired", false), set("expireAt", expireAt))
+      )
+      .toFutureOption()
+      .void
 
-  }
 }

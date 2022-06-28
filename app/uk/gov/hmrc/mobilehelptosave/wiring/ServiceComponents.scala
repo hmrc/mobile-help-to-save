@@ -24,7 +24,6 @@ import play.api.ApplicationLoader.Context
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.routing.Router
 import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
-import play.modules.reactivemongo.{ReactiveMongoComponent, ReactiveMongoComponentImpl}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
@@ -34,6 +33,7 @@ import uk.gov.hmrc.mobilehelptosave.controllers.test.TestController
 import uk.gov.hmrc.mobilehelptosave.repository._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.services._
+import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config._
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
@@ -100,7 +100,7 @@ class ServiceComponents(context: Context)
   lazy val bonusReachedMilestonesService: BonusReachedMilestonesService[Future] =
     wire[HtsBonusReachedMilestonesService[Future]]
 
-  lazy val mongo:               ReactiveMongoComponent    = wire[ReactiveMongoComponentImpl]
+  lazy val mongo:               MongoComponent            = MongoComponent(context.initialConfiguration.underlying.getString("mongodb.uri"))
   lazy val eligibilityRepo:     EligibilityRepo[Future]   = wire[MongoEligibilityRepo]
   lazy val eventRepo:           MongoSavingsGoalEventRepo = wire[MongoSavingsGoalEventRepo]
   lazy val previousBalanceRepo: MongoPreviousBalanceRepo  = wire[MongoPreviousBalanceRepo]

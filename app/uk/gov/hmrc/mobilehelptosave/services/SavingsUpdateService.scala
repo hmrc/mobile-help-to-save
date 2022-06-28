@@ -29,7 +29,7 @@ trait SavingsUpdateService {
   def getSavingsUpdateResponse(
     account:      Account,
     transactions: Transactions,
-    goalEvents:   List[SavingsGoalSetEvent]
+    goalEvents:   Seq[SavingsGoalSetEvent]
   ): SavingsUpdateResponse
 
   def calculateMaxBonus(account: Account): Option[BigDecimal]
@@ -54,7 +54,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
   def getSavingsUpdateResponse(
     account:      Account,
     transactions: Transactions,
-    goalEvents:   List[SavingsGoalSetEvent]
+    goalEvents:   Seq[SavingsGoalSetEvent]
   ): SavingsUpdateResponse = {
     val reportStartDate = calculateReportStartDate(account.openedYearMonth)
 
@@ -117,7 +117,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     account:            Account,
     transactions:       Transactions,
     reportTransactions: Seq[Transaction],
-    goalEvents:         List[SavingsGoalSetEvent],
+    goalEvents:         Seq[SavingsGoalSetEvent],
     reportStartDate:    LocalDate
   ): Option[SavingsUpdate] =
     if (reportTransactions.isEmpty) None
@@ -163,7 +163,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
   private def calculateGoalsReached(
     currentGoal:     Option[SavingsGoal],
-    goalEvents:      List[SavingsGoalSetEvent],
+    goalEvents:      Seq[SavingsGoalSetEvent],
     transactions:    Seq[Transaction],
     reportStartDate: LocalDate
   ): Option[GoalsReached] = {
