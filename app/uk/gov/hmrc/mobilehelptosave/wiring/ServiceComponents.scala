@@ -26,7 +26,7 @@ import play.api.routing.Router
 import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
-import uk.gov.hmrc.mobilehelptosave.config.{MobileHelpToSaveConfig, MongoConfig}
+import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveConnectorImpl, ShutteringConnector}
 import uk.gov.hmrc.mobilehelptosave.controllers._
 import uk.gov.hmrc.mobilehelptosave.controllers.test.TestController
