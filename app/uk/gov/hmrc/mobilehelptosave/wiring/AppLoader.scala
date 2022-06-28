@@ -25,6 +25,7 @@ class AppLoader extends ApplicationLoader {
     LoggerConfigurator(context.environment.classLoader).foreach { configurator =>
       configurator.configure(context.environment)
     }
+
     new ServiceComponents(context).application
   }
 }

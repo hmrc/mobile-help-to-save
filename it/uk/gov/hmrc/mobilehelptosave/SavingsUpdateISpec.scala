@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.WSResponse
+import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
@@ -54,10 +54,16 @@ class SavingsUpdateISpec
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
 
+  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
+  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
+
+  private def requestWithAuthHeaders(url: String): WSRequest =
+    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
+
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 
   s"GET $clearGoalEventsUrl with $applicationRouterKey set to $testOnlyRoutes" should {
-    s"Return 200 " in (await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200)
+    s"Return 200 " in (await(requestWithAuthHeaders(clearGoalEventsUrl).get).status shouldBe 200)
   }
 
   "GET /savings-account/savings-update" should {
@@ -80,7 +86,7 @@ class SavingsUpdateISpec
           .put(Json.toJson(TestSavingsGoal(nino, Some(30.0), Some("My Goal"), LocalDate.now().minusMonths(3))))
       ).status shouldBe 201
 
-      val response: WSResponse = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
@@ -106,7 +112,7 @@ class SavingsUpdateISpec
       (response.json \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 238.14
       (response.json \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 522.79
 
-      await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200
+      await(requestWithAuthHeaders(clearGoalEventsUrl).get).status shouldBe 200
     }
 
     "respond with 200 and no savings update section if no transactions are found" in {
@@ -117,7 +123,7 @@ class SavingsUpdateISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.accountExists(123.45, nino = nino, openedYearMonth = YearMonth.now().minusMonths(6))
 
-      val response: WSResponse = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       (response.json \ "reportStartDate")
         .as[LocalDate] shouldBe LocalDate.now().minusMonths(6).`with`(TemporalAdjusters.firstDayOfMonth())
@@ -134,7 +140,7 @@ class SavingsUpdateISpec
       HelpToSaveStub.userAccountNotFound(nino)
       stubForShutteringDisabled
 
-      val response: WSResponse = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
 
       response.status shouldBe 404
       val jsonBody: JsValue = response.json
@@ -145,7 +151,7 @@ class SavingsUpdateISpec
     "return 401 when the user is not logged in" in {
       stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe 401
       response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
@@ -153,20 +159,20 @@ class SavingsUpdateISpec
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response = await(wsUrl(s"/savings-update?journeyId=$journeyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
       response.status shouldBe 403
       response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 400 when journeyId is not supplied" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-update").get())
+      val response = await(requestWithAuthHeaders(s"/savings-update").get())
       response.status shouldBe 400
     }
 
     "return 400 when invalid journeyId is supplied" in {
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl(s"/savings-update?journeyId=ThisIsAnInvalidJourneyId").get())
+      val response = await(requestWithAuthHeaders(s"/savings-update?journeyId=ThisIsAnInvalidJourneyId").get())
       response.status shouldBe 400
     }
   }

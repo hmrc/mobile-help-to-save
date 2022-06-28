@@ -23,7 +23,7 @@ import java.time.LocalDateTime
 
 trait SavingsGoalTestData {
 
-  protected val dateDynamicSavingsGoalData = List(
+  protected val dateDynamicSavingsGoalData = Seq(
     SavingsGoalSetEvent(Nino("CS700100A"), Some(10), LocalDateTime.now()),
     SavingsGoalSetEvent(Nino("CS700100A"), Some(15), LocalDateTime.now().minusMonths(1)),
     SavingsGoalSetEvent(Nino("CS700100A"), Some(20), LocalDateTime.now().minusMonths(3)),

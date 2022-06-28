@@ -15,7 +15,7 @@
  */
 
 package uk.gov.hmrc.mobilehelptosave.wiring
-import play.api.BuiltInComponents
+import play.api.{BuiltInComponents, OptionalDevContext}
 import play.api.http.{DefaultHttpFilters, HttpRequestHandler}
 import uk.gov.hmrc.api.sandbox.RoutingHttpRequestHandler
 
@@ -23,10 +23,11 @@ trait SandboxRequestRouting {
   self: BuiltInComponents =>
 
   override lazy val httpRequestHandler: HttpRequestHandler =
-    new RoutingHttpRequestHandler(router,
+    new RoutingHttpRequestHandler(webCommands,
+                                  new OptionalDevContext(devContext),
+                                  router,
                                   httpErrorHandler,
                                   httpConfiguration,
                                   new DefaultHttpFilters(httpFilters: _*),
-                                  environment,
                                   configuration)
 }

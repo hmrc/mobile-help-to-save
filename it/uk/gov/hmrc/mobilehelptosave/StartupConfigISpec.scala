@@ -22,7 +22,7 @@ import org.scalatestplus.play.components.WithApplicationComponents
 import org.scalatestplus.play.{PortNumber, WsScalaTestClient}
 import play.api.Application
 import play.api.libs.json.JsObject
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{WSClient, WSRequest}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
@@ -47,6 +47,9 @@ class StartupConfigISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
+  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
+  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
+
   "GET /mobile-help-to-save/startup" should {
     "not call other microservices and only include shuttering information and feature flags when helpToSave.shuttering.shuttered = true" in withTestServer(
       appBuilder.build()
@@ -58,7 +61,8 @@ class StartupConfigISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsEnrolled()
 
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response =
+        await(wsUrl("/mobile-help-to-save/startup").addHttpHeaders(acceptJsonHeader, authorisationJsonHeader).get())
 
       response.status                                          shouldBe 200
       (response.json \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
@@ -80,7 +84,8 @@ class StartupConfigISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.currentUserIsNotEnrolled()
 
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response =
+        await(wsUrl("/mobile-help-to-save/startup").addHttpHeaders(acceptJsonHeader, authorisationJsonHeader).get())
       response.status                           shouldBe 200
       (response.json \ "infoUrl").as[String]    shouldBe "https://www.gov.uk/get-help-savings-low-income"
       (response.json \ "infoUrlSso").as[String] shouldBe "http://localhost:8249/mobile-help-to-save/info"
@@ -106,7 +111,8 @@ class StartupConfigISpec
         implicit val implicitPortNumber: PortNumber = portNumber
         implicit val wsClient:           WSClient   = components.wsClient
 
-        val response = await(wsUrl("/mobile-help-to-save/startup").get())
+        val response =
+          await(wsUrl("/mobile-help-to-save/startup").addHttpHeaders(acceptJsonHeader, authorisationJsonHeader).get())
         response.status                                 shouldBe 200
         (response.json \ "infoUrl").as[String]          shouldBe "http://www.example.com/test/help-to-save-information"
         (response.json \ "infoUrlSso").as[String]       shouldBe "/info"

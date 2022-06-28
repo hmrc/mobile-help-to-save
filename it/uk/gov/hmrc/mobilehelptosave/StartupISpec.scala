@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
+import play.api.libs.ws.WSRequest
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
@@ -40,6 +41,12 @@ class StartupISpec
   private val generator = new Generator(0)
   private val nino      = generator.nextNino
 
+  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
+  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
+
+  private def requestWithAuthHeaders(url: String): WSRequest =
+    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
+
   "GET /mobile-help-to-save/startup" should {
 
     "include user.state" in {
@@ -48,7 +55,7 @@ class StartupISpec
       HelpToSaveStub.currentUserIsEnrolled()
       HelpToSaveStub.currentUserIsEligible()
 
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response = await(requestWithAuthHeaders("/mobile-help-to-save/startup").get())
       response.status                                  shouldBe 200
       (response.json \ "user" \ "state").asOpt[String] shouldBe Some("Enrolled")
     }
@@ -58,7 +65,7 @@ class StartupISpec
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.enrolmentStatusReturnsInternalServerError()
 
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response = await(requestWithAuthHeaders("/mobile-help-to-save/startup").get())
       response.status                                   shouldBe 200
       (response.json \ "user" \ "state").asOpt[String]  shouldBe None
       (response.json \ "userError" \ "code").as[String] shouldBe "GENERAL"
@@ -69,7 +76,7 @@ class StartupISpec
     "return 401 when the user is not logged in" in {
       ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response = await(requestWithAuthHeaders("/mobile-help-to-save/startup").get())
       response.status shouldBe 401
       response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
@@ -77,7 +84,7 @@ class StartupISpec
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
       ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
-      val response = await(wsUrl("/mobile-help-to-save/startup").get())
+      val response = await(requestWithAuthHeaders("/mobile-help-to-save/startup").get())
       response.status shouldBe 403
       response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }

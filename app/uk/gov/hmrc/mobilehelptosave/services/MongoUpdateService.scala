@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.MonadError
 import play.api.Logger
-import reactivemongo.core.protocol.Response.Successful
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.repository.{MongoMilestonesRepo, MongoPreviousBalanceRepo, MongoSavingsGoalEventRepo}
 

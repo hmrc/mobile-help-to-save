@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
 
 case class EligibilityCheckResult(
   result:     String,
@@ -50,7 +50,7 @@ case class Eligibility(
 
 object Eligibility {
 
-  private implicit val dateFormat = ReactiveMongoFormats.dateTimeFormats
+  private implicit val dateFormat = MongoJodaFormats.dateTimeFormat
 
   implicit val format: Format[Eligibility] = Json.format[Eligibility]
 

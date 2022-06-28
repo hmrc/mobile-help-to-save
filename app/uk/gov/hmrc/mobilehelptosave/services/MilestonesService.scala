@@ -46,7 +46,7 @@ class HtsMilestonesService[F[_]](
 )(implicit F:          MonadError[F, Throwable])
     extends MilestonesService[F] {
 
-  protected def filterDuplicateMilestoneTypes(milestones: List[MongoMilestone]): List[MongoMilestone] =
+  protected def filterDuplicateMilestoneTypes(milestones: Seq[MongoMilestone]): List[MongoMilestone] =
     milestones
       .groupBy(_.milestoneType)
       .flatMap(grouped =>

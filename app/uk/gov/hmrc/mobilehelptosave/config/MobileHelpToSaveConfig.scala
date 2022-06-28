@@ -39,8 +39,8 @@ case class MobileHelpToSaveConfig(
     with RunOnStartupConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
-  override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
-  override val shutteringBaseUrl: URL = configBaseUrl("mobile-shuttering")
+  override val helpToSaveBaseUrl: URL    = configBaseUrl("help-to-save")
+  override val shutteringBaseUrl: URL    = configBaseUrl("mobile-shuttering")
 
   override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")

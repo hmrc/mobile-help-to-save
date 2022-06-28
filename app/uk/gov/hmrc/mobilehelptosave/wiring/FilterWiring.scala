@@ -40,7 +40,7 @@ trait FilterWiring {
   lazy val cacheControlConfig: CacheControlConfig = CacheControlConfig.fromConfig(configuration)
 
   lazy val graphiteConfig: GraphiteReporterProviderConfig =
-    GraphiteReporterProviderConfig.fromConfig(configuration, configuration)
+    GraphiteReporterProviderConfig.fromConfig(configuration)
 
   lazy val httpAuditEvent: HttpAuditEvent = wire[DefaultHttpAuditEvent]
 

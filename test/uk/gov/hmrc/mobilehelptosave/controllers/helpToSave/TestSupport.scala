@@ -91,7 +91,7 @@ trait TestSupport {
         .expects(nino, *)
         .returning(stubbedResponse)
 
-    def getGoalSetEvents(stubbedResponse: Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]]) =
+    def getGoalSetEvents(stubbedResponse: Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]]) =
       (savingsGoalEventRepo
         .getGoalSetEvents(_: Nino))
         .expects(nino)
