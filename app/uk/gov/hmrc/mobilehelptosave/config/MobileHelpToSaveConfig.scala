@@ -36,11 +36,13 @@ case class MobileHelpToSaveConfig(
     with UserServiceConfig
     with ReportingServiceConfig
     with MilestonesConfig
-    with RunOnStartupConfig {
+    with RunOnStartupConfig
+    with MongoConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
   override val helpToSaveBaseUrl: URL    = configBaseUrl("help-to-save")
   override val shutteringBaseUrl: URL    = configBaseUrl("mobile-shuttering")
+  override val mongoUri:          String = configString("mongodb.uri")
 
   override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
@@ -129,4 +131,8 @@ trait RunOnStartupConfig {
   def milestonesUpdateEnabled:       Boolean
   def savingsGoalsUpdateEnabled:     Boolean
   def previousBalancesUpdateEnabled: Boolean
+}
+
+trait MongoConfig {
+  def mongoUri: String
 }

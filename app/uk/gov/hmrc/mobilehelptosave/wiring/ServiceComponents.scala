@@ -100,7 +100,7 @@ class ServiceComponents(context: Context)
   lazy val bonusReachedMilestonesService: BonusReachedMilestonesService[Future] =
     wire[HtsBonusReachedMilestonesService[Future]]
 
-  lazy val mongo:               MongoComponent            = MongoComponent(context.initialConfiguration.underlying.getString("mongodb.uri"))
+  lazy val mongo:               MongoComponent            = wire[HtsMongoComponent]
   lazy val eligibilityRepo:     EligibilityRepo[Future]   = wire[MongoEligibilityRepo]
   lazy val eventRepo:           MongoSavingsGoalEventRepo = wire[MongoSavingsGoalEventRepo]
   lazy val previousBalanceRepo: MongoPreviousBalanceRepo  = wire[MongoPreviousBalanceRepo]
