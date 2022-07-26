@@ -60,7 +60,6 @@ class HtsAccountService[F[_]](
   balanceMilestonesService:      BalanceMilestonesService[F],
   bonusPeriodMilestonesService:  BonusPeriodMilestonesService[F],
   bonusReachedMilestonesService: BonusReachedMilestonesService[F],
-  mongoUpdateService:            MongoUpdateService[F],
   savingsUpdateService:          SavingsUpdateService,
   helpToSaveGetTransactions:     HelpToSaveGetTransactions[F],
   milestonesConfig:              MilestonesConfig
@@ -170,10 +169,6 @@ class HtsAccountService[F[_]](
                                                                              account.bonusTerms,
                                                                              account.currentBonusTerm)
                   else F.pure(())
-              _ <- if (account.openedYearMonth.isBefore(YearMonth.now().minusMonths(42)))
-                    mongoUpdateService
-                      .updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
-                  else F.pure()
               potentialBonus <- getPotentialBonus(nino, account)
             } yield Some(account.copy(potentialBonus = potentialBonus)))
           case _ => EitherT.rightT[F, ErrorInfo](Option.empty[Account])

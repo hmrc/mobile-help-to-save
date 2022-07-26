@@ -46,11 +46,6 @@ trait MilestonesRepo[F[_]] {
   ): F[Unit]
 
   def clearMilestones(): F[Unit]
-
-  def updateExpireAt(
-    nino:     Nino,
-    expireAt: LocalDateTime
-  ): F[Unit]
 }
 
 class MongoMilestonesRepo(
@@ -67,12 +62,12 @@ class MongoMilestonesRepo(
                                                   IndexModel(text("nino"),
                                                              IndexOptions().name("ninoIdx").unique(false).sparse(true))
                                                 ),
-                                                replaceIndexes = true)
+                                                replaceIndexes = false)
     with MilestonesRepo[Future] {
 
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
     collection
-      .find(and(equal("nino", Codecs.toBson(milestone.nino)), equal("milestone", Codecs.toBson(milestone.milestone))))
+      .find(and(equal("nino", milestone.nino.nino), equal("milestone", Codecs.toBson(milestone.milestone))))
       .headOption()
       .map {
         case Some(m) => if (m.isRepeatable) collection.insertOne(milestone).toFuture().void else ()
@@ -81,7 +76,7 @@ class MongoMilestonesRepo(
 
   override def getMilestones(nino: Nino): Future[Seq[MongoMilestone]] =
     collection
-      .find(and(equal("nino", Codecs.toBson(nino)), equal("isSeen", false)))
+      .find(and(equal("nino", nino.nino), equal("isSeen", false)))
       .toFuture()
 
   override def markAsSeen(
@@ -90,7 +85,7 @@ class MongoMilestonesRepo(
   ): Future[Unit] =
     collection
       .findOneAndUpdate(
-        filter = and(equal("nino", Codecs.toBson(nino)), equal("milestoneType", milestoneType), equal("isSeen", false)),
+        filter = and(equal("nino", nino.nino), equal("milestoneType", milestoneType), equal("isSeen", false)),
         update = combine(set("isSeen", true), set("expireAt", LocalDateTime.now().plusMonths(6).toString))
       )
       .toFutureOption()
@@ -98,17 +93,5 @@ class MongoMilestonesRepo(
 
   override def clearMilestones(): Future[Unit] =
     collection.deleteMany(filter = Document()).toFuture.void
-
-  override def updateExpireAt(
-    nino:     Nino,
-    expireAt: LocalDateTime
-  ): Future[Unit] =
-    collection
-      .updateMany(
-        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
-        update = combine(set("updateRequired", false), set("expireAt", expireAt))
-      )
-      .toFutureOption()
-      .void
 
 }

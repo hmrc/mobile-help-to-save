@@ -21,9 +21,8 @@ import cats.instances.future._
 import cats.syntax.functor._
 import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.Document
-import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.descending
-import org.mongodb.scala.model.Updates.{combine, set}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -61,10 +60,6 @@ trait SavingsGoalEventRepo[F[_]] {
   def getGoalSetEvents: F[Seq[SavingsGoalSetEvent]]
   def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]]
 
-  def updateExpireAt(
-    nino:     Nino,
-    expireAt: LocalDateTime
-  ): F[Unit]
 }
 
 class MongoSavingsGoalEventRepo(
@@ -87,7 +82,7 @@ class MongoSavingsGoalEventRepo(
           IndexOptions().name("ninoIdx").unique(false).sparse(true)
         )
       ),
-      replaceIndexes = true
+      replaceIndexes = false
     )
     with SavingsGoalEventRepo[Future] {
 
@@ -146,11 +141,11 @@ class MongoSavingsGoalEventRepo(
       .head()
 
   override def getEvents(nino: Nino): Future[Seq[SavingsGoalEvent]] =
-    collection.find(equal("nino", Codecs.toBson(nino))).toFuture()
+    collection.find(equal("nino", nino.nino)).toFuture()
 
   override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = {
     val result =
-      collection.find(equal("nino", Codecs.toBson(nino))).sort(descending("date")).headOption()
+      collection.find(equal("nino", nino.nino)).sort(descending("date")).headOption()
     result.map {
       case None => None
       case Some(_: SavingsGoalDeleteEvent) => None
@@ -170,24 +165,12 @@ class MongoSavingsGoalEventRepo(
 
   override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]] =
     collection
-      .find(Filters.and(equal("type", "set"), equal("nino", Codecs.toBson(nino))))
+      .find(Filters.and(equal("type", "set"), equal("nino", nino.nino)))
       .map {
         case event: SavingsGoalSetEvent => event
         case _ => throw new IllegalStateException("Event must be a set event")
       }
       .toFuture()
       .map(Right(_))
-
-  override def updateExpireAt(
-    nino:     Nino,
-    expireAt: LocalDateTime
-  ): Future[Unit] =
-    collection
-      .updateMany(
-        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
-        update = combine(set("updateRequired", false), set("expireAt", expireAt.toString))
-      )
-      .toFutureOption()
-      .void
 
 }

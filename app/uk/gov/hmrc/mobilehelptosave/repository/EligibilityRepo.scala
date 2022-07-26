@@ -52,12 +52,12 @@ class MongoEligibilityRepo(
                                                IndexModel(text("nino"),
                                                           IndexOptions().name("ninoIdx").unique(true).sparse(true))
                                              ),
-                                             replaceIndexes = true)
+                                             replaceIndexes = false)
     with EligibilityRepo[Future] {
 
   override def setEligibility(eligibility: Eligibility): Future[Unit] =
     collection.insertOne(eligibility).toFuture().void
 
   override def getEligibility(nino: Nino): Future[Option[Eligibility]] =
-    collection.find(equal("nino", Codecs.toBson(nino))).headOption()
+    collection.find(equal("nino", nino.nino)).headOption()
 }
