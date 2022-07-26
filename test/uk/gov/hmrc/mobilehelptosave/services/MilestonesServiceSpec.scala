@@ -560,11 +560,6 @@ class MilestonessServiceSpec
     ):                              TestF[Unit] = F.unit
     override def clearMilestones(): TestF[Unit] = ???
 
-    override def updateExpireAt(
-      nino:     Nino,
-      expireAt: LocalDateTime
-    ): TestF[Unit] = F.unit
-
   }
 
   private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) =
@@ -577,14 +572,8 @@ class MilestonessServiceSpec
       ): TestF[Unit] = F.unit
       override def getPreviousBalance(nino:               Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
 
-      override def getPreviousBalanceUpdateRequired(nino: Nino): TestF[Option[PreviousBalance]] =
-        F.pure(previousBalance)
       override def clearPreviousBalance(): Future[Unit] = ???
 
-      override def updateExpireAt(
-        nino:     Nino,
-        expireAt: LocalDateTime
-      ): TestF[Unit] = F.unit
     }
 
 }

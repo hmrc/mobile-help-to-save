@@ -45,12 +45,6 @@ trait PreviousBalanceRepo[F[_]] {
 
   def clearPreviousBalance(): Future[Unit]
 
-  def updateExpireAt(
-    nino:     Nino,
-    expireAt: LocalDateTime
-  ): F[Unit]
-
-  def getPreviousBalanceUpdateRequired(nino: Nino): F[Option[PreviousBalance]]
 }
 
 class MongoPreviousBalanceRepo(
@@ -68,7 +62,7 @@ class MongoPreviousBalanceRepo(
                                                    IndexModel(text("nino"),
                                                               IndexOptions().name("ninoIdx").unique(false).sparse(true))
                                                  ),
-      replaceIndexes = true)
+      replaceIndexes = false)
     with PreviousBalanceRepo[Future] {
 
   override def setPreviousBalance(
@@ -78,7 +72,7 @@ class MongoPreviousBalanceRepo(
   ): Future[Unit] =
     collection
       .findOneAndReplace(
-        filter      = equal("nino", Codecs.toBson(nino)),
+        filter      = equal("nino", nino.nino),
         replacement = (PreviousBalance(nino, previousBalance, LocalDateTime.now(), finalBonusPaidByDate.plusMonths(6))),
         options     = FindOneAndReplaceOptions().upsert(true)
       )
@@ -86,27 +80,10 @@ class MongoPreviousBalanceRepo(
       .void
 
   override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] =
-    collection.find(equal("nino", Codecs.toBson(nino))).headOption()
+    collection.find(equal("nino", nino.nino)).headOption()
 
   override def clearPreviousBalance(): Future[Unit] =
     collection.deleteMany(filter = Document()).toFuture.void
-
-  override def updateExpireAt(
-    nino:     Nino,
-    expireAt: LocalDateTime
-  ): Future[Unit] =
-    collection
-      .updateMany(
-        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
-        update = combine(set("updateRequired", false), set("expireAt", expireAt.toString))
-      )
-      .toFutureOption()
-      .void
-
-  override def getPreviousBalanceUpdateRequired(nino: Nino): Future[Option[PreviousBalance]] =
-    collection
-      .find(and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)))
-      .headOption()
 }
 
 case class PreviousBalance(
