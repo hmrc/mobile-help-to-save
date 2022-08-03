@@ -166,46 +166,6 @@ class AccountServiceSpec
       )
     }
 
-    "Return a potential bonus calculated with £5 a month rate if they have no saved anything after 3 months" in {
-      val bonusTerms1         = helpToSaveAccount.bonusTerms.head
-      val bonusTerms2         = helpToSaveAccount.bonusTerms.last
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount =
-        fakeHelpToSaveGetAccount(
-          nino,
-          Right(
-            Some(
-              helpToSaveAccount.copy(
-                balance          = BigDecimal("0"),
-                thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 1, 31),
-                bonusTerms = Seq(bonusTerms1.copy(bonusEstimate = BigDecimal("0"), bonusPaid = BigDecimal("0")),
-                                 bonusTerms2.copy(bonusEstimate = BigDecimal("0")))
-              )
-            )
-          )
-        )
-      val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
-      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
-
-      val service =
-        new HtsAccountService[TestF](logger,
-                                     testConfig,
-                                     fakeEnrolmentStatus,
-                                     fakeGetAccount,
-                                     savingsGoalEventRepo,
-                                     fakeBalanceMilestoneService,
-                                     fakeBonusPeriodMilestoneService,
-                                     fakeBonusReachedMilestoneService,
-                                     new HtsSavingsUpdateService,
-                                     fakeGetTransactions,
-                                     testMilestonesConfig)
-
-      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("12.5"))))
-
-    }
-
     "Return a potential bonus of 0 if the max potential bonus is calculated as 0" in {
       val bonusTerms1         = helpToSaveAccount.bonusTerms.head
       val bonusTerms2         = helpToSaveAccount.bonusTerms.last
@@ -247,41 +207,6 @@ class AccountServiceSpec
       result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("0"))))
     }
 
-    "Return a user's potential bonus" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount =
-        fakeHelpToSaveGetAccount(
-          nino,
-          Right(
-            Some(
-              helpToSaveAccount.copy(
-                thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 1, 31)
-              )
-            )
-          )
-        )
-      val fakeGetTransactions =
-        fakeHelpToSaveGetTransactions(Right(transactionsWithAverageSavingsRate(BigDecimal("50"))))
-      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
-
-      val service =
-        new HtsAccountService[TestF](logger,
-                                     testConfig,
-                                     fakeEnrolmentStatus,
-                                     fakeGetAccount,
-                                     savingsGoalEventRepo,
-                                     fakeBalanceMilestoneService,
-                                     fakeBonusPeriodMilestoneService,
-                                     fakeBonusReachedMilestoneService,
-                                     new HtsSavingsUpdateService,
-                                     fakeGetTransactions,
-                                     testMilestonesConfig)
-
-      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("106.80"))))
-    }
-
     "Return a user's potential bonus as their current estimate if they have not saved recently" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
       val fakeGetAccount =
@@ -315,42 +240,6 @@ class AccountServiceSpec
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("12"))))
-    }
-
-    "Return a user's potential bonus if they have 0 balance because of withdrawals" in {
-      val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(true))
-      val fakeGetAccount =
-        fakeHelpToSaveGetAccount(
-          nino,
-          Right(
-            Some(
-              helpToSaveAccount.copy(
-                balance          = BigDecimal("0"),
-                thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 1, 31)
-              )
-            )
-          )
-        )
-      val fakeGetTransactions =
-        fakeHelpToSaveGetTransactions(Right(transactionsWithAverageSavingsRate(BigDecimal("50"))))
-      val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
-
-      val service =
-        new HtsAccountService[TestF](logger,
-                                     testConfig,
-                                     fakeEnrolmentStatus,
-                                     fakeGetAccount,
-                                     savingsGoalEventRepo,
-                                     fakeBalanceMilestoneService,
-                                     fakeBonusPeriodMilestoneService,
-                                     fakeBonusReachedMilestoneService,
-                                     new HtsSavingsUpdateService,
-                                     fakeGetTransactions,
-                                     testMilestonesConfig)
-
-      // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("45.07"))))
     }
 
     "Return a user's potential bonus using an average rate based on the previous year if they are in the first month of the 2nd year" in {
