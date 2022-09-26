@@ -24,7 +24,7 @@ import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, UpdateOptions}
-import org.mongodb.scala.model.Indexes.descending
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.MongoMilestone
@@ -59,10 +59,10 @@ class MongoMilestonesRepo(
                                                   IndexModel(descending("expireAt"),
                                                              IndexOptions()
                                                                .name("expireAtIdx")),
-                                                  IndexModel(text("nino"),
+                                                  IndexModel(ascending("nino"),
                                                              IndexOptions().name("ninoIdx").unique(false).sparse(true))
                                                 ),
-                                                replaceIndexes = false)
+                                                replaceIndexes = true)
     with MilestonesRepo[Future] {
 
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
