@@ -22,7 +22,7 @@ import cats.syntax.functor._
 import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.model.Indexes.descending
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -78,11 +78,11 @@ class MongoSavingsGoalEventRepo(
                      .name("expireAtIdx")
                      .expireAfter(0, TimeUnit.SECONDS)),
         IndexModel(
-          text("nino"),
+          ascending("nino"),
           IndexOptions().name("ninoIdx").unique(false).sparse(true)
         )
       ),
-      replaceIndexes = false
+      replaceIndexes = true
     )
     with SavingsGoalEventRepo[Future] {
 

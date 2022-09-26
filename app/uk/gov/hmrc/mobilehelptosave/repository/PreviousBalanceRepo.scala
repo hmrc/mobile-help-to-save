@@ -23,7 +23,7 @@ import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, IndexModel, IndexOptions}
-import org.mongodb.scala.model.Indexes.descending
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.Updates.{combine, set}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -59,10 +59,10 @@ class MongoPreviousBalanceRepo(
                                                               IndexOptions()
                                                                 .name("expireAtIdx")
                                                                 .expireAfter(0, TimeUnit.SECONDS)),
-                                                   IndexModel(text("nino"),
+                                                   IndexModel(ascending("nino"),
                                                               IndexOptions().name("ninoIdx").unique(false).sparse(true))
                                                  ),
-      replaceIndexes = false)
+      replaceIndexes = true)
     with PreviousBalanceRepo[Future] {
 
   override def setPreviousBalance(

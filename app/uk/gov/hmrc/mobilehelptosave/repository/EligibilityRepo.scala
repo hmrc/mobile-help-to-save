@@ -21,7 +21,7 @@ import cats.syntax.functor._
 import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
-import org.mongodb.scala.model.Indexes.descending
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
@@ -49,10 +49,10 @@ class MongoEligibilityRepo(
                                                           IndexOptions()
                                                             .name("expireAtIdx")
                                                             .expireAfter(0, TimeUnit.SECONDS)),
-                                               IndexModel(text("nino"),
+                                               IndexModel(ascending("nino"),
                                                           IndexOptions().name("ninoIdx").unique(true).sparse(true))
                                              ),
-                                             replaceIndexes = false)
+                                             replaceIndexes = true)
     with EligibilityRepo[Future] {
 
   override def setEligibility(eligibility: Eligibility): Future[Unit] =
