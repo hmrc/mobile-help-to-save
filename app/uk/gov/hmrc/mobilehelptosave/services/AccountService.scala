@@ -60,6 +60,7 @@ class HtsAccountService[F[_]](
   balanceMilestonesService:      BalanceMilestonesService[F],
   bonusPeriodMilestonesService:  BonusPeriodMilestonesService[F],
   bonusReachedMilestonesService: BonusReachedMilestonesService[F],
+  mongoUpdateService:            MongoUpdateService[F],
   savingsUpdateService:          SavingsUpdateService,
   helpToSaveGetTransactions:     HelpToSaveGetTransactions[F],
   milestonesConfig:              MilestonesConfig
@@ -152,6 +153,7 @@ class HtsAccountService[F[_]](
         EitherT(fetchAccountWithGoal(nino)).flatMap {
           case Some(account) =>
             EitherT.liftF[F, ErrorInfo, Option[Account]](for {
+              _ <- mongoUpdateService.updateExpireAtByNino(nino, account.bonusTerms(1).bonusPaidByDate.plusMonths(6).atStartOfDay())
               _ <- if (milestonesConfig.balanceMilestoneCheckEnabled)
                     balanceMilestonesService.balanceMilestoneCheck(nino,
                                                                    account.balance,

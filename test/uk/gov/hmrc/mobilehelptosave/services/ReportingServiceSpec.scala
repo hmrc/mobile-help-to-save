@@ -147,6 +147,13 @@ class ReportingServiceSpec
         date:   LocalDate
       ): Future[Unit] = ???
 
+      override def updateExpireAt(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): Future[Unit] = Future.unit
+
+      override def updateExpireAt(): Future[Unit] = Future.unit
+
     }
 
 }

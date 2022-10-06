@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 import cats.instances.future._
 import cats.syntax.functor._
-import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.Document
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.{ascending, descending}
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
+import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Updates}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
@@ -59,6 +59,12 @@ trait SavingsGoalEventRepo[F[_]] {
 
   def getGoalSetEvents: F[Seq[SavingsGoalSetEvent]]
   def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]]
+  def updateExpireAt(): F[Unit]
+
+  def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): F[Unit]
 
 }
 
@@ -94,11 +100,13 @@ class MongoSavingsGoalEventRepo(
   ): Future[Unit] =
     collection
       .insertOne(
-        SavingsGoalSetEvent(nino     = nino,
-                            amount   = amount,
-                            name     = name,
-                            date     = LocalDateTime.now,
-                            expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())
+        SavingsGoalSetEvent(
+          nino     = nino,
+          amount   = amount,
+          name     = name,
+          date     = LocalDateTime.now,
+          expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay()
+        )
       )
       .toFuture()
       .void
@@ -126,7 +134,11 @@ class MongoSavingsGoalEventRepo(
   ): Future[Unit] =
     collection
       .insertOne(
-        SavingsGoalDeleteEvent(nino, LocalDateTime.now, secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay())
+        SavingsGoalDeleteEvent(
+          nino,
+          LocalDateTime.now,
+          secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay()
+        )
       )
       .toFuture()
       .void
@@ -172,5 +184,28 @@ class MongoSavingsGoalEventRepo(
       }
       .toFuture()
       .map(Right(_))
+
+  override def updateExpireAt(): Future[Unit] =
+    collection
+      .updateMany(
+        filter = Document(),
+        update = combine(set("updateRequired", true),
+                         set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54)),
+                         set("date", LocalDateTime.now(ZoneOffset.UTC)))
+      )
+      .toFutureOption()
+      .void
+
+  override def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): Future[Unit] =
+    collection
+      .updateMany(
+        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
+        update = combine(set("updateRequired", false), set("expireAt", expireAt))
+      )
+      .toFutureOption()
+      .void
 
 }

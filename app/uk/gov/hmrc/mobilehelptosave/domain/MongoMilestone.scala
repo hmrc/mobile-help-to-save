@@ -15,10 +15,10 @@
  */
 
 package uk.gov.hmrc.mobilehelptosave.domain
-import java.time.LocalDateTime
-
+import java.time.{LocalDateTime, ZoneOffset}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import scala.language.implicitConversions
 
@@ -28,13 +28,14 @@ case class MongoMilestone(
   milestone:      Milestone,
   isSeen:         Boolean = false,
   isRepeatable:   Boolean = true,
-  generatedDate:  LocalDateTime = LocalDateTime.now(),
-  expireAt:       LocalDateTime = LocalDateTime.now().plusMonths(54),
+  generatedDate:  LocalDateTime = LocalDateTime.now(ZoneOffset.UTC),
+  expireAt:       LocalDateTime = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54),
   updateRequired: Boolean = false) {
   def compare(that: MilestoneType) = milestoneType.priority - that.priority
 }
 
 object MongoMilestone {
+  implicit val dateFormat: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
   implicit val format:                        OFormat[MongoMilestone] = Json.format
   implicit def ordering[A <: MongoMilestone]: Ordering[A]             = Ordering.by(_.milestoneType.priority)
 }

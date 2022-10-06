@@ -18,12 +18,10 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import cats.instances.future._
 import cats.syntax.functor._
-import com.mongodb.client.model.FindOneAndUpdateOptions
-import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model.{FindOneAndUpdateOptions, IndexModel, IndexOptions, UpdateOptions}
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -31,7 +29,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.MongoMilestone
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,6 +44,13 @@ trait MilestonesRepo[F[_]] {
   ): F[Unit]
 
   def clearMilestones(): F[Unit]
+
+  def updateExpireAt(): F[Unit]
+
+  def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): F[Unit]
 }
 
 class MongoMilestonesRepo(
@@ -58,7 +63,8 @@ class MongoMilestonesRepo(
                                                 indexes = Seq(
                                                   IndexModel(descending("expireAt"),
                                                              IndexOptions()
-                                                               .name("expireAtIdx")),
+                                                               .name("expireAtIdx")
+                                                               .expireAfter(0, TimeUnit.SECONDS)),
                                                   IndexModel(ascending("nino"),
                                                              IndexOptions().name("ninoIdx").unique(false).sparse(true))
                                                 ),
@@ -86,12 +92,35 @@ class MongoMilestonesRepo(
     collection
       .findOneAndUpdate(
         filter = and(equal("nino", nino.nino), equal("milestoneType", milestoneType), equal("isSeen", false)),
-        update = combine(set("isSeen", true), set("expireAt", LocalDateTime.now().plusMonths(6).toString))
+        update = combine(set("isSeen", true), set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(6)))
       )
       .toFutureOption()
       .void
 
   override def clearMilestones(): Future[Unit] =
     collection.deleteMany(filter = Document()).toFuture.void
+
+  override def updateExpireAt(): Future[Unit] =
+    collection
+      .updateMany(
+        filter = Document(),
+        update = combine(set("updateRequired", true),
+                         set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54)),
+                         set("generatedDate", LocalDateTime.now(ZoneOffset.UTC)))
+      )
+      .toFutureOption()
+      .void
+
+  override def updateExpireAt(
+    nino:     Nino,
+    expireAt: LocalDateTime
+  ): Future[Unit] =
+    collection
+      .updateMany(
+        filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
+        update = combine(set("updateRequired", false), set("expireAt", expireAt))
+      )
+      .toFutureOption()
+      .void
 
 }
