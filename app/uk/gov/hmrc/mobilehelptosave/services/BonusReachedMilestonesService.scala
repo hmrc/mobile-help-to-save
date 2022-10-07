@@ -25,7 +25,7 @@ import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 trait BonusReachedMilestonesService[F[_]] {
 

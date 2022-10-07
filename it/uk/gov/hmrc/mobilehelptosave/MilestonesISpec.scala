@@ -805,8 +805,6 @@ class MilestonesISpec
 
       response.status shouldBe 204
 
-      println(Json.prettyPrint(milestones.json))
-
       milestones.status                                                       shouldBe 200
       (milestones.json \ "milestones" \ 0 \ "milestoneType").asOpt[String]    shouldBe None
       (milestones.json \ "milestones" \ 0 \ "milestoneKey").asOpt[String]     shouldBe None

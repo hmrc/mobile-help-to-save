@@ -71,6 +71,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -96,6 +97,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -120,6 +122,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -151,6 +154,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -178,10 +182,10 @@ class AccountServiceSpec
               helpToSaveAccount.copy(
                 balance           = BigDecimal("0"),
                 paidInThisMonth   = BigDecimal("50"),
-                canPayInThisMonth = BigDecimal("0")         ,
-                  thisMonthEndDate = LocalDate.of(YearMonth.now().getYear, 6, 28),
+                canPayInThisMonth = BigDecimal("0"),
+                thisMonthEndDate  = LocalDate.of(YearMonth.now().getYear, 6, 28),
                 bonusTerms = Seq(bonusTerms1.copy(bonusEstimate = BigDecimal("600"), bonusPaid = BigDecimal("600")),
-                  bonusTerms2.copy(bonusEstimate = BigDecimal("0")))
+                                 bonusTerms2.copy(bonusEstimate = BigDecimal("0")))
               )
             )
           )
@@ -198,6 +202,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -233,6 +238,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -251,9 +257,9 @@ class AccountServiceSpec
           Right(
             Some(
               helpToSaveAccount.copy(
-                balance         = BigDecimal("650"),
-                openedYearMonth = YearMonth.now().minusYears(1),
-                paidInThisMonth = BigDecimal("50"),
+                balance           = BigDecimal("650"),
+                openedYearMonth   = YearMonth.now().minusYears(1),
+                paidInThisMonth   = BigDecimal("50"),
                 canPayInThisMonth = BigDecimal("0"),
                 bonusTerms = Seq(
                   HelpToSaveBonusTerm(
@@ -284,6 +290,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -307,6 +314,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -329,6 +337,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -362,6 +371,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -383,6 +393,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -403,6 +414,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -423,6 +435,7 @@ class AccountServiceSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -563,6 +576,24 @@ class AccountServiceSpec
         name:   Option[String],
         date:   LocalDate
       ): TestF[Unit] = ???
+
+      override def updateExpireAt(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] = F.unit
+
+      override def updateExpireAt(): TestF[Unit] = F.unit
+
+    }
+
+  private def fakeMongoUpdateService: MongoUpdateService[TestF] =
+    new MongoUpdateService[TestF] {
+
+      override def updateExpireAtByNino(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] =
+        F.pure()
 
     }
 

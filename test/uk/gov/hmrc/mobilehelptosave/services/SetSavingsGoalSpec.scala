@@ -69,6 +69,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -91,6 +92,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -113,6 +115,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -139,6 +142,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -161,6 +165,7 @@ class SetSavingsGoalSpec
                                      fakeBalanceMilestoneService,
                                      fakeBonusPeriodMilestoneService,
                                      fakeBonusReachedMilestoneService,
+                                     fakeMongoUpdateService,
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
@@ -300,7 +305,25 @@ class SetSavingsGoalSpec
       date:   LocalDate
     ): TestF[Unit] = ???
 
+    override def updateExpireAt(
+      nino:     Nino,
+      expireAt: LocalDateTime
+    ): TestF[Unit] = F.unit
+
+    override def updateExpireAt(): TestF[Unit] = F.unit
+
   }
+
+  private def fakeMongoUpdateService: MongoUpdateService[TestF] =
+    new MongoUpdateService[TestF] {
+
+      override def updateExpireAtByNino(
+        nino:     Nino,
+        expireAt: LocalDateTime
+      ): TestF[Unit] =
+        F.pure()
+
+    }
 
   object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
 
