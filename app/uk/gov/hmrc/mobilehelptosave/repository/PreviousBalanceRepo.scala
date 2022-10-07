@@ -85,7 +85,7 @@ class MongoPreviousBalanceRepo(
         replacement = (PreviousBalance(nino,
                                        previousBalance,
                                        LocalDateTime.now(ZoneOffset.UTC),
-                                       finalBonusPaidByDate.plusMonths(16))),
+                                       finalBonusPaidByDate.plusMonths(6))),
         options = FindOneAndReplaceOptions().upsert(true)
       )
       .toFuture()
