@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import play.api.Logger
+import uk.gov.hmrc.mobilehelptosave.config.RunOnStartupConfig
 
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 import javax.inject.Singleton
@@ -24,20 +25,23 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RunOnStartup(
-  mongoMilestonesRepo:       MongoMilestonesRepo,
-  mongoSavingsGoalEventRepo: MongoSavingsGoalEventRepo,
-  mongoPreviousBalanceRepo:  MongoPreviousBalanceRepo
-)(implicit executionContext: ExecutionContext) {
+                    mongoMilestonesRepo:       MongoMilestonesRepo,
+                    mongoSavingsGoalEventRepo: MongoSavingsGoalEventRepo,
+                    mongoPreviousBalanceRepo:  MongoPreviousBalanceRepo,
+                    runOnStartupConfig:        RunOnStartupConfig
+                  )(implicit executionContext: ExecutionContext) {
   val logger: Logger = Logger(this.getClass)
 
-  val updateDB: Future[Unit] = for {
-    _ <- mongoMilestonesRepo.updateExpireAt()
-    _ <- mongoSavingsGoalEventRepo.updateExpireAt()
-    _ <- mongoPreviousBalanceRepo.updateExpireAt()
-  } yield (logger.info("Updated DB Sucessfully"))
+  if (runOnStartupConfig.runOnStartupEnabled) {
+    val updateDB: Future[Unit] = for {
+      _ <- mongoMilestonesRepo.updateExpireAt()
+      _ <- mongoSavingsGoalEventRepo.updateExpireAt()
+      _ <- mongoPreviousBalanceRepo.updateExpireAt()
+    } yield (logger.info("Updated DB Sucessfully"))
 
-  updateDB.recover {
-    case e => logger.warn("UPDATE FAILED" + e)
+    updateDB.recover {
+      case e => logger.warn("UPDATE FAILED" + e)
+    }
   }
 
 }
