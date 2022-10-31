@@ -1,0 +1,1401 @@
+openapi: 3.0.0
+info:
+  title: Mobile Help To Save
+  contact: {}
+  version: '1.0'
+servers:
+  - url: https://test-api.service.hmrc.gov.uk/mobile-help-to-save
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk/mobile-help-to-save
+    description: Production
+    variables: {}
+paths:
+  /individuals/mobile-help-to-save/savings-account/{nino}:
+    get:
+      tags:
+        - individuals
+      summary: Get account information
+      description: Retrieves the details of the Help to Save account
+      operationId: Getaccountinformation
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountresponse'
+                  - example:
+                      number: '1000000000001'
+                      isClosed: false
+                      blocked:
+                        payments: false
+                        withdrawals: false
+                        bonuses: false
+                      balance: 200
+                      openedYearMonth: 2018-01
+                      paidInThisMonth: 50
+                      canPayInThisMonth: 0
+                      maximumPaidInThisMonth: 50
+                      thisMonthEndDate: 2018-03-31
+                      daysRemainingInMonth: 1
+                      nextPaymentMonthStartDate: 2018-04-01
+                      accountHolderName: Testforename Testsurname
+                      accountHolderEmail: test@example.com
+                      bonusTerms:
+                        - bonusEstimate: 100
+                          bonusPaid: 0
+                          endDate: 2019-10-31
+                          bonusPaidOnOrAfterDate: 2019-11-01
+                          bonusPaidByDate: 2019-11-01
+                          balanceMustBeMoreThanForBonus: 0
+                        - bonusEstimate: 0
+                          bonusPaid: 0
+                          endDate: 2021-10-31
+                          bonusPaidOnOrAfterDate: 2021-11-01
+                          bonusPaidByDate: 2021-11-01
+                          balanceMustBeMoreThanForBonus: 200
+                      currentBonusTerm: First
+                      inAppPaymentsEnabled: false
+                      savingsGoalsEnabled: false
+                      savingsGoal:
+                        goalAmount: 21.5
+                      highestBalance: 200
+                      potentialBonus: 100
+              example:
+                number: '1000000000001'
+                isClosed: false
+                blocked:
+                  payments: false
+                  withdrawals: false
+                  bonuses: false
+                balance: 200
+                openedYearMonth: 2018-01
+                paidInThisMonth: 50
+                canPayInThisMonth: 0
+                maximumPaidInThisMonth: 50
+                thisMonthEndDate: 2018-03-31
+                daysRemainingInMonth: 1
+                nextPaymentMonthStartDate: 2018-04-01
+                accountHolderName: Testforename Testsurname
+                accountHolderEmail: test@example.com
+                bonusTerms:
+                  - bonusEstimate: 100
+                    bonusPaid: 0
+                    endDate: 2019-10-31
+                    bonusPaidOnOrAfterDate: 2019-11-01
+                    bonusPaidByDate: 2019-11-01
+                    balanceMustBeMoreThanForBonus: 0
+                  - bonusEstimate: 0
+                    bonusPaid: 0
+                    endDate: 2021-10-31
+                    bonusPaidOnOrAfterDate: 2021-11-01
+                    bonusPaidByDate: 2021-11-01
+                    balanceMustBeMoreThanForBonus: 200
+                currentBonusTerm: First
+                inAppPaymentsEnabled: false
+                savingsGoalsEnabled: false
+                savingsGoal:
+                  goalAmount: 21.5
+                highestBalance: 200
+                potentialBonus: 100
+        '404':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      description: No Help to Save account exists for the specified NINO.
+                      code: ACCOUNT_NOT_FOUND
+              example:
+                description: No Help to Save account exists for the specified NINO.
+                code: ACCOUNT_NOT_FOUND
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /individuals/mobile-help-to-save/savings-account/{nino}/transactions:
+    get:
+      tags:
+        - individuals
+      summary: Get transactions
+      description: Retrieve the details of the transaction activity that has taken place on the HTS Account associated with the NINO provided. All movements on the account across all terms will be returned. Transactions will be returned in the reverse of the order they were applied to the account (i.e. newest first).
+      operationId: Gettransactions
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountTransactionsresponse'
+                  - example:
+                      transactions:
+                        - amount: 3
+                          operation: credit
+                          transactionDate: 2018-02-18
+                          accountingDate: 2018-02-18
+                          balanceAfter: 3
+                        - amount: 6.67
+                          operation: debit
+                          transactionDate: 2018-02-20
+                          accountingDate: 2018-02-22
+                          balanceAfter: 9.67
+                        - amount: 5
+                          operation: debit
+                          transactionDate: 2018-02-25
+                          accountingDate: 2018-02-25
+                          balanceAfter: 4.67
+              example:
+                transactions:
+                  - amount: 3
+                    operation: credit
+                    transactionDate: 2018-02-18
+                    accountingDate: 2018-02-18
+                    balanceAfter: 3
+                  - amount: 6.67
+                    operation: debit
+                    transactionDate: 2018-02-20
+                    accountingDate: 2018-02-22
+                    balanceAfter: 9.67
+                  - amount: 5
+                    operation: debit
+                    transactionDate: 2018-02-25
+                    accountingDate: 2018-02-25
+                    balanceAfter: 4.67
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountTransactionsresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /individuals/mobile-help-to-save/savings-account/{nino}/goals/current-goal:
+    put:
+      tags:
+        - individuals
+      summary: Set a savings goal for the user
+      description: Set a savings goal for the user. This will replace any existing savings goal. The goal must be between £1 and £50 (or the whatever the remaining monthly savings headroom might be) and not contain any fractional pence values (e.g. £1.234)
+      operationId: Setasavingsgoalfortheuser
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalrequest'
+                - example:
+                    goalAmount: 21.5
+                    goalName: Goal Name UTF-16 Decoded
+            example:
+              goalAmount: 21.5
+              goalName: Goal Name UTF-16 Decoded
+        required: true
+      responses:
+        '204':
+          description: ''
+          headers: {}
+          content: {}
+        '422':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422'
+                  - example:
+                      error: goal amount should be in range 1 to 50
+              example:
+                error: goal amount should be in range 1 to 50
+            application/hal+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422'
+                  - example:
+                      error: goal amount should be in range 1 to 50
+              example:
+                error: goal amount should be in range 1 to 50
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+    delete:
+      tags:
+        - individuals
+      summary: Remove the users' current savings goal
+      description: Remove the users' current savings goal
+      operationId: Removetheusers'currentsavingsgoal
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+          headers: {}
+          content: {}
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /individuals/mobile-help-to-save/savings-account/{nino}/milestones:
+    get:
+      tags:
+        - individuals
+      summary: Get milestones
+      description: Retrieves key milestones about a user account, there can only be one milestone per milestone type at any one time and milestones marked as seen will not be retrieved
+      operationId: Getmilestones
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountMilestonesresponse'
+                  - example:
+                      milestones:
+                        - milestoneType: BalanceReached
+                          milestoneKey: BalanceReached1
+                          milestoneTitle: You've started saving
+                          milestoneMessage: Well done for making your first payment.
+              example:
+                milestones:
+                  - milestoneType: BalanceReached
+                    milestoneKey: BalanceReached1
+                    milestoneTitle: You've started saving
+                    milestoneMessage: Well done for making your first payment.
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountMilestonesresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /individuals/mobile-help-to-save/savings-account/{nino}/milestones/{milestoneType}/seen:
+    put:
+      tags:
+        - individuals
+      summary: Mark milestone as a seen
+      description: Marks a milestone as seen by the user, meaning it will not be retrieved in the future unless it is repeatable and hit again
+      operationId: Markmilestoneasaseen
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: milestoneType
+          in: path
+          description: ''
+          required: true
+          style: simple
+          schema:
+            type: string
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+          headers: {}
+          content: {}
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountMilestonesSeenresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+  /individuals/mobile-help-to-save/savings-update:
+    get:
+      tags:
+        - individuals
+      summary: Get savings update
+      description: Retrieves the savings update for the help to save account
+      operationId: Getsavingsupdate
+      parameters:
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsUpdateresponse'
+                  - example:
+                      reportStartDate: 2021-02-01
+                      reportEndDate: 2021-06-30
+                      accountOpenedYearMonth: 2020-02
+                      savingsUpdate:
+                        savedInPeriod: 100
+                        savedByMonth:
+                          numberOfMonths: 6
+                          monthsSaved: 4
+                        goalsReached:
+                          currentAmount: 25
+                          numberOfTimesReached: 2
+                        amountEarnedTowardsBonus: 50
+                      bonusUpdate:
+                        currentBonusTerm: First
+                        monthsUntilBonus: 8
+                        currentBonus: 75
+                        highestBalance: 200
+                        potentialBonusAtCurrentRate: 300
+                        potentialBonusWithFiveMore: 500
+                        maxBonus: 600
+              example:
+                reportStartDate: 2021-02-01
+                reportEndDate: 2021-06-30
+                accountOpenedYearMonth: 2020-02
+                savingsUpdate:
+                  savedInPeriod: 100
+                  savedByMonth:
+                    numberOfMonths: 6
+                    monthsSaved: 4
+                  goalsReached:
+                    currentAmount: 25
+                    numberOfTimesReached: 2
+                  amountEarnedTowardsBonus: 50
+                bonusUpdate:
+                  currentBonusTerm: First
+                  monthsUntilBonus: 8
+                  currentBonus: 75
+                  highestBalance: 200
+                  potentialBonusAtCurrentRate: 300
+                  potentialBonusWithFiveMore: 500
+                  maxBonus: 600
+        '404':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      description: No Help to Save account exists for the specified NINO.
+                      code: ACCOUNT_NOT_FOUND
+              example:
+                description: No Help to Save account exists for the specified NINO.
+                code: ACCOUNT_NOT_FOUND
+        '401':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsUpdateresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+components:
+  securitySchemes:
+    userRestricted:
+      type: oauth2
+      description: |
+        HMRC supports OAuth 2.0 for authenticating user-restricted API requests using an OAuth 2.0 Bearer Token in the
+        AUTHORIZATION header.
+        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
+          scopes:
+            read:native-apps-api-orchestration: Allow mobile apps to send audit messages to the platform
+  schemas:
+    errorResponse:
+      title: errorResponse
+      required:
+        - code
+      type: object
+      properties:
+        code:
+          type: string
+    Blocked:
+      title: Blocked
+      required:
+        - payments
+        - withdrawals
+        - bonuses
+      type: object
+      properties:
+        unspecified:
+          type: boolean
+          description: Some unspecified action(s) is/are blocked. More specific blocking flags may be added in a future version of the API.
+        payments:
+          type: boolean
+          description: Payments to this account are blocked.
+        withdrawals:
+          type: boolean
+          description: Withdrawals from this account are blocked.
+        bonuses:
+          type: boolean
+          description: Bonuses to this account are blocked.
+      description: Actions that are blocked for this account
+    BonusTerm:
+      title: BonusTerm
+      required:
+        - bonusEstimate
+        - bonusPaid
+        - endDate
+        - bonusPaidOnOrAfterDate
+        - balanceMustBeMoreThanForBonus
+      type: object
+      properties:
+        bonusEstimate:
+          type: number
+          description: The estimated value of the bonus to be applied
+        bonusPaid:
+          type: number
+          description: The actual value of the bonus applied
+        endDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: The date the bonus term ends
+        bonusPaidOnOrAfterDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: The earliest date the bonus will be paid (i.e. on or after the date specified)
+        bonusPaidByDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: The earliest date the bonus will be paid (i.e. on or after the date specified)
+        balanceMustBeMoreThanForBonus:
+          type: number
+          description: The savings amount that needs to be exceeded (in this term) to earn a bonus
+    BonusUpdate:
+      title: BonusUpdate
+      type: object
+      properties:
+        currentBonusTerm:
+          type: string
+          description: The current bonus term
+        monthsUntilBonus:
+          type: number
+          description: The number of months until the bonus will be paid
+        currentBonus:
+          type: number
+          description: The current estimated bonus
+        highestBalance:
+          type: number
+          description: The highest the balance has been during the reporting period
+        potentialBonusAtCurrentRate:
+          type: number
+          description: The potential end bonus based on the current rate of saving
+        potentialBonusWithFiveMore:
+          type: number
+          description: The potential end bonus if rate of saving is increased by 5 each month
+        maxBonus:
+          type: number
+          description: The maximum bonus that will be possible to achieve
+    GoalsReached:
+      title: GoalsReached
+      type: object
+      properties:
+        currentAmount:
+          type: number
+          description: The current goal amount set
+        numberOfTimesReached:
+          type: number
+          description: The number of times the savings goal has been met in the reporting period
+    IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalrequest:
+      title: IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalrequest
+      type: object
+      properties:
+        goalAmount:
+          type: number
+          description: The amount that the user wants to save each month. This must be a number between 1 and the monthly savings limit (currently £50)
+        goalName:
+          type: string
+          description: The name of the savings goal (Decoded to UTF-16)
+      description: The Help To Save account details
+    IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422:
+      title: IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422
+      required:
+        - error
+      type: object
+      properties:
+        error:
+          type: string
+      example:
+        error: goal amount should be in range 1 to 50
+    IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse521:
+      title: IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse521
+      required:
+        - shuttered
+        - title
+        - message
+      type: object
+      properties:
+        shuttered:
+          type: boolean
+          description: Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled
+        title:
+          type: string
+          description: Title to be shown to user
+        message:
+          type: string
+          description: Message to be shown to user
+    IndividualsMobileHelpToSaveSavingsAccountMilestonesresponse:
+      title: IndividualsMobileHelpToSaveSavingsAccountMilestonesresponse
+      required:
+        - milestones
+      type: object
+      properties:
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+          description: The list of milestones
+      description: Milestones that have been hit by a user
+    IndividualsMobileHelpToSaveSavingsAccountMilestonesresponse521:
+      title: IndividualsMobileHelpToSaveSavingsAccountMilestonesresponse521
+      required:
+        - shuttered
+        - title
+        - message
+      type: object
+      properties:
+        shuttered:
+          type: boolean
+          description: Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled
+        title:
+          type: string
+          description: Title to be shown to user
+        message:
+          type: string
+          description: Message to be shown to user
+    IndividualsMobileHelpToSaveSavingsAccountMilestonesSeenresponse521:
+      title: IndividualsMobileHelpToSaveSavingsAccountMilestonesSeenresponse521
+      required:
+        - shuttered
+        - title
+        - message
+      type: object
+      properties:
+        shuttered:
+          type: boolean
+          description: Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled
+        title:
+          type: string
+          description: Title to be shown to user
+        message:
+          type: string
+          description: Message to be shown to user
+    IndividualsMobileHelpToSaveSavingsAccountresponse:
+      title: IndividualsMobileHelpToSaveSavingsAccountresponse
+      required:
+        - isClosed
+        - blocked
+        - balance
+        - openedYearMonth
+        - paidInThisMonth
+        - canPayInThisMonth
+        - maximumPaidInThisMonth
+        - thisMonthEndDate
+        - accountHolderName
+        - bonusTerms
+        - currentBonusTerm
+        - inAppPaymentsEnabled
+        - highestBalance
+      type: object
+      properties:
+        number:
+          type: string
+          description: Help to Save account number
+        isClosed:
+          type: boolean
+          description: Is the account closed
+        blocked:
+          allOf:
+            - $ref: '#/components/schemas/Blocked'
+            - description: Actions that are blocked for this account
+        balance:
+          type: number
+          description: The current account balance
+        openedYearMonth:
+          maxLength: 7
+          minLength: 7
+          pattern: ^[0-9]{4}-[0-9]{2}$
+          type: string
+          description: The year and month the account was opened
+        paidInThisMonth:
+          type: number
+          description: The total money (credits) to the account this month
+        canPayInThisMonth:
+          type: number
+          description: The remaining amount that can be credited to the account this month
+        maximumPaidInThisMonth:
+          type: number
+          description: The maximum sum allowed to be paid (credited) in a month
+        thisMonthEndDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: The date the month ends
+        nextPaymentMonthStartDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: The date the month ends
+        accountHolderName:
+          type: string
+          description: The account holder's name
+        accountHolderEmail:
+          type: string
+          description: The account holder's email address
+        bonusTerms:
+          type: array
+          items:
+            $ref: '#/components/schemas/BonusTerm'
+          description: The bonus terms applicable for the account
+        closingBalance:
+          type: number
+          description: The balance before the final transaction to close the account (only present when isClosed=true)
+        closureDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: The date the account was closed (only present when isClosed=true)
+        currentBonusTerm:
+          type: string
+          description: What bonus term is the account currently in
+        nbaAccountNumber:
+          type: string
+          description: Account number for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details.
+        nbaPayee:
+          type: string
+          description: Payee for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details.
+        nbaRollNumber:
+          type: string
+          description: Roll number for Nominated Bank Account (withdrawals). Only present for Building Society Accounts. Field omitted if the customer has not entered details.
+        nbaSortCode:
+          type: string
+          description: Sort code for Nominated Bank Account (withdrawals). Field omitted if the customer has not entered details.
+        inAppPaymentsEnabled:
+          type: boolean
+          description: Are in-app payments enabled for this account?
+        savingsGoalsEnabled:
+          type: boolean
+          description: Are savings goals enabled for the application?
+        savingsGoal:
+          $ref: '#/components/schemas/SavingsGoal'
+        daysRemainingInMonth:
+          type: number
+          description: The number of days the user has left in the month if they want to make a payment, adjusted so that if today is the last day of the month then the value is 1.
+        highestBalance:
+          type: number
+          description: The highest balance this account has had
+        potentialBonus:
+          type: number
+          description: The potential bonus this account has could achieve
+      description: The Help To Save account details
+    IndividualsMobileHelpToSaveSavingsAccountresponse521:
+      title: IndividualsMobileHelpToSaveSavingsAccountresponse521
+      required:
+        - shuttered
+        - title
+        - message
+      type: object
+      properties:
+        shuttered:
+          type: boolean
+          description: Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled
+        title:
+          type: string
+          description: Title to be shown to user
+        message:
+          type: string
+          description: Message to be shown to user
+    IndividualsMobileHelpToSaveSavingsAccountTransactionsresponse:
+      title: IndividualsMobileHelpToSaveSavingsAccountTransactionsresponse
+      required:
+        - transactions
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+          description: ''
+    IndividualsMobileHelpToSaveSavingsAccountTransactionsresponse521:
+      title: IndividualsMobileHelpToSaveSavingsAccountTransactionsresponse521
+      required:
+        - shuttered
+        - title
+        - message
+      type: object
+      properties:
+        shuttered:
+          type: boolean
+          description: Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled
+        title:
+          type: string
+          description: Title to be shown to user
+        message:
+          type: string
+          description: Message to be shown to user
+    IndividualsMobileHelpToSaveSavingsUpdateresponse:
+      title: IndividualsMobileHelpToSaveSavingsUpdateresponse
+      required:
+        - reportStartDate
+        - reportEndDate
+        - accountOpenedYearMonth
+        - bonusUpdate
+      type: object
+      properties:
+        reportStartDate:
+          type: string
+          description: The start date the update relates to
+        reportEndDate:
+          type: string
+          description: The end date the update relates to
+        accountOpenedYearMonth:
+          type: string
+          description: The year and month the account was opened
+        savingsUpdate:
+          $ref: '#/components/schemas/SavingsUpdate'
+        bonusUpdate:
+          $ref: '#/components/schemas/BonusUpdate'
+    IndividualsMobileHelpToSaveSavingsUpdateresponse521:
+      title: IndividualsMobileHelpToSaveSavingsUpdateresponse521
+      required:
+        - shuttered
+        - title
+        - message
+      type: object
+      properties:
+        shuttered:
+          type: boolean
+          description: Whether the endpoint is shuttered - always true in all instances of this schema because responses that conform to this schema are only returned when shuttering is enabled
+        title:
+          type: string
+          description: Title to be shown to user
+        message:
+          type: string
+          description: Message to be shown to user
+    Milestone:
+      title: Milestone
+      required:
+        - milestoneType
+        - milestoneKey
+        - milestoneTitle
+        - milestoneMessage
+      type: object
+      properties:
+        milestoneType:
+          enum:
+            - BalanceReached
+          type: string
+          description: The type of milestone that has been hit by the user, there should only be one milestone per milestoneType at any one time
+        milestoneKey:
+          allOf:
+            - $ref: '#/components/schemas/MilestoneKey'
+            - description: The milestone key that determines the milestone title and message
+        milestoneTitle:
+          type: string
+          description: The title of the milestone
+        milestoneMessage:
+          type: string
+          description: The message relating to the milestone
+    MilestoneKey:
+      title: MilestoneKey
+      enum:
+        - BalanceReached1
+        - BalanceReached100
+        - BalanceReached200
+        - BalanceReached500
+        - BalanceReached750
+        - BalanceReached1000
+        - BalanceReached1500
+        - BalanceReached2000
+        - BalanceReached2400
+      type: string
+      description: The milestone key that determines the milestone title and message
+    SavingsGoal:
+      title: SavingsGoal
+      type: object
+      properties:
+        goalAmount:
+          type: number
+          description: The amount the user would like to save each month.
+    SavingsUpdate:
+      title: SavingsUpdate
+      type: object
+      properties:
+        savedInPeriod:
+          type: number
+          description: The amount saved during the reporting period
+        monthsSaved:
+          type: number
+          description: The number of months where savings have been debited
+        goalsReached:
+          $ref: '#/components/schemas/GoalsReached'
+        amountEarnedTowardsBonus:
+          type: number
+          description: The amount earned towards the current bonus in this reporting period
+    Transaction:
+      title: Transaction
+      required:
+        - amount
+        - operation
+        - transactionDate
+        - accountingDate
+        - balanceAfter
+      type: object
+      properties:
+        amount:
+          type: number
+          description: The transaction value
+        operation:
+          maxLength: 16
+          minLength: 1
+          pattern: ^(credit|debit)$
+          type: string
+          description: Credit or debit
+        transactionDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: Date that the transaction occurred
+        accountingDate:
+          maxLength: 10
+          minLength: 10
+          pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          type: string
+          description: Date that the transaction was applied to the account.
+        balanceAfter:
+          type: number
+          description: The account balance after this transaction was applied
+tags:
+  - name: individuals
+    description: ''
