@@ -62,9 +62,9 @@ class ApiDefinitionISpec
     }
   }
 
-  "GET /api/conf/1.0/application.raml" should {
+  "GET /api/conf/1.0/application.yaml" should {
     "return RAML" in {
-      val response = await(wsUrl("/api/conf/1.0/application.raml").get())
+      val response = await(wsUrl("/api/conf/1.0/application.yaml").get())
       response.status shouldBe 200
     }
   }
