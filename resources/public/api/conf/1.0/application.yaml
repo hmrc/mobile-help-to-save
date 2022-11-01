@@ -329,133 +329,6 @@ paths:
         - userRestricted:
             - read:native-apps-api-orchestration
   /individuals/mobile-help-to-save/savings-account/{nino}/goals/current-goal:
-    put:
-      tags:
-        - individuals
-      summary: Set a savings goal for the user
-      description: Set a savings goal for the user. This will replace any existing savings goal. The goal must be between £1 and £50 (or the whatever the remaining monthly savings headroom might be) and not contain any fractional pence values (e.g. £1.234)
-      operationId: Setasavingsgoalfortheuser
-      parameters:
-        - name: nino
-          in: path
-          description: Savings account holder's National Insurance Number
-          required: true
-          style: simple
-          schema:
-            type: string
-            example: AA000003D
-        - name: journeyId
-          in: query
-          description: ''
-          required: true
-          style: form
-          explode: true
-          schema:
-            type: string
-      requestBody:
-        description: ''
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalrequest'
-                - example:
-                    goalAmount: 21.5
-                    goalName: Goal Name UTF-16 Decoded
-            example:
-              goalAmount: 21.5
-              goalName: Goal Name UTF-16 Decoded
-        required: true
-      responses:
-        '204':
-          description: ''
-          headers: {}
-          content: {}
-        '422':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422'
-                  - example:
-                      error: goal amount should be in range 1 to 50
-              example:
-                error: goal amount should be in range 1 to 50
-            application/hal+json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422'
-                  - example:
-                      error: goal amount should be in range 1 to 50
-              example:
-                error: goal amount should be in range 1 to 50
-        '401':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/errorResponse'
-                  - example:
-                      code: INVALID_CREDENTIALS
-              examples:
-                invalidCredentials:
-                  description: Invalid Authentication information provided.
-                  value:
-                    code: INVALID_CREDENTIALS
-        '403':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/errorResponse'
-                  - example:
-                      code: NO_PERMISSION_ON_ACCOUNT_NINO
-              examples:
-                noPermissionOnAccountNino:
-                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
-                  value:
-                    code: NO_PERMISSION_ON_ACCOUNT_NINO
-        '400':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/errorResponse'
-                  - example:
-                      code: NINO_INVALID
-              examples:
-                ninoInvalid:
-                  description: Invalid NINO (incorrect format)
-                  value:
-                    code: NINO_INVALID
-        '521':
-          description: ''
-          headers: {}
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse521'
-                  - example:
-                      shuttered: true
-                      title: Service Unavailable
-                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
-              example:
-                shuttered: true
-                title: Service Unavailable
-                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
-      deprecated: false
-      security:
-        - userRestricted:
-            - read:native-apps-api-orchestration
     delete:
       tags:
         - individuals
@@ -532,6 +405,133 @@ paths:
         '521':
           description: ''
           headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse521'
+                  - example:
+                      shuttered: true
+                      title: Service Unavailable
+                      message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+              example:
+                shuttered: true
+                title: Service Unavailable
+                message: You’ll be able to use the Help to Save service at 9am on Monday 29 May 2017.
+      deprecated: false
+      security:
+        - userRestricted:
+            - read:native-apps-api-orchestration
+    put:
+      tags:
+        - individuals
+      summary: Set a savings goal for the user
+      description: Set a savings goal for the user. This will replace any existing savings goal. The goal must be between £1 and £50 (or the whatever the remaining monthly savings headroom might be) and not contain any fractional pence values (e.g. £1.234)
+      operationId: Setasavingsgoalfortheuser
+      parameters:
+        - name: nino
+          in: path
+          description: Savings account holder's National Insurance Number
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: AA000003D
+        - name: journeyId
+          in: query
+          description: ''
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalrequest'
+                - example:
+                    goalAmount: 21.5
+                    goalName: Goal Name UTF-16 Decoded
+            example:
+              goalAmount: 21.5
+              goalName: Goal Name UTF-16 Decoded
+        required: true
+      responses:
+        '204':
+          description: ''
+          headers: { }
+          content: { }
+        '422':
+          description: ''
+          headers: { }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422'
+                  - example:
+                      error: goal amount should be in range 1 to 50
+              example:
+                error: goal amount should be in range 1 to 50
+            application/hal+json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/IndividualsMobileHelpToSaveSavingsAccountGoalsCurrentGoalresponse422'
+                  - example:
+                      error: goal amount should be in range 1 to 50
+              example:
+                error: goal amount should be in range 1 to 50
+        '401':
+          description: ''
+          headers: { }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: INVALID_CREDENTIALS
+              examples:
+                invalidCredentials:
+                  description: Invalid Authentication information provided.
+                  value:
+                    code: INVALID_CREDENTIALS
+        '403':
+          description: ''
+          headers: { }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NO_PERMISSION_ON_ACCOUNT_NINO
+              examples:
+                noPermissionOnAccountNino:
+                  description: The logged in user is not permitted to access the Help to Save Savings Account for the specified NINO.
+                  value:
+                    code: NO_PERMISSION_ON_ACCOUNT_NINO
+        '400':
+          description: ''
+          headers: { }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NINO_INVALID
+              examples:
+                ninoInvalid:
+                  description: Invalid NINO (incorrect format)
+                  value:
+                    code: NINO_INVALID
+        '521':
+          description: ''
+          headers: { }
           content:
             application/json:
               schema:
