@@ -552,6 +552,7 @@ class MilestonessServiceSpec
 
   private def fakeMilestonesRepo(milestones: List[MongoMilestone] = List.empty) = new MilestonesRepo[TestF] {
     override def setMilestone(milestone: MongoMilestone): TestF[Unit]                 = F.unit
+    override def setTestMilestone(milestone: TestMilestone): TestF[Unit] = F.unit
     override def getMilestones(nino:     Nino):           TestF[List[MongoMilestone]] = F.pure(milestones)
 
     override def markAsSeen(
