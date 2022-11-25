@@ -25,7 +25,7 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.MongoMilestone
+import uk.gov.hmrc.mobilehelptosave.domain.{MongoMilestone, TestMilestone}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
@@ -35,6 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait MilestonesRepo[F[_]] {
   def setMilestone(milestone: MongoMilestone): F[Unit]
+
+  def setTestMilestone(milestone: TestMilestone): F[Unit]
 
   def getMilestones(nino: Nino): F[Seq[MongoMilestone]]
 
@@ -122,5 +124,18 @@ class MongoMilestonesRepo(
       )
       .toFutureOption()
       .void
+
+  override def setTestMilestone(milestone: TestMilestone): Future[Unit] =
+    collection.insertOne(
+      MongoMilestone(
+          nino = milestone.nino,
+          milestoneType = milestone.milestoneType,
+          milestone = milestone.milestone,
+          isSeen = milestone.isSeen,
+          isRepeatable = milestone.isRepeatable,
+          generatedDate = milestone.generatedDate.getOrElse(LocalDateTime.now(ZoneOffset.UTC)),
+          expireAt = milestone.expireAt.getOrElse(LocalDateTime.now(ZoneOffset.UTC).plusHours(1))
+      )
+    ).toFuture().void
 
 }

@@ -5,10 +5,10 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
-import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
+import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.OneServerPerSuiteWsClient
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 /**
   * Need two separate tests so that the servers can be run with different system
@@ -42,6 +42,7 @@ class TestOnlyRoutesWiredISpec
   val getGoalEventsUrl   = s"/mobile-help-to-save/test-only/goal-events/$nino"
   val clearMiletonesUrl  = "/mobile-help-to-save/test-only/clear-milestone-data"
   val createGoalUrl      = "/mobile-help-to-save/test-only/create-goal"
+  val addMilestoneUrl    = "/mobile-help-to-save/test-only/add-milestone"
 
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
@@ -67,6 +68,15 @@ class TestOnlyRoutesWiredISpec
           .put(Json.toJson(TestSavingsGoal(Nino(nino), Some(10.0), None, LocalDate.now().minusMonths(8))))
       ).status                                    shouldBe 201)
       await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200
+    }
+  }
+
+  s"PUT $addMilestoneUrl with $applicationRouterKey set to $testOnlyRoutes" should {
+    s"Return 201 " in {
+      (await(
+        wsUrl(addMilestoneUrl)
+          .put(Json.toJson(TestMilestone(Nino(nino), BonusReached, Milestone(FirstBonusReached150), true, false, Some(LocalDateTime.now().minusMonths(1)), Some(LocalDateTime.now().plusMinutes(10))))
+      )).status shouldBe 201)
     }
   }
 }
