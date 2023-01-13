@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,12 @@ class TestController(
     implicit request: Request[TestMilestone] =>
       milestonesRepo.setTestMilestone(request.body)
       Future successful Created("Milestone successfully created")
+  }
+
+  def addMilestones: Action[TestMilestone] = Action.async(parse.json[TestMilestone]) {
+    implicit request: Request[TestMilestone] =>
+      milestonesRepo.setTestMilestones(request.body)
+      Future successful Created("Milestones have all been successfully created")
   }
 
   def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) {
