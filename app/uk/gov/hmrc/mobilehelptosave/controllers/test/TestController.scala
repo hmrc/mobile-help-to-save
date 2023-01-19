@@ -59,9 +59,9 @@ class TestController(
       Future successful Created("Milestone successfully created")
   }
 
-  def addMilestones: Action[TestMilestone] = Action.async(parse.json[TestMilestone]) {
+  def addMilestones(amount: Int): Action[TestMilestone] = Action.async(parse.json[TestMilestone]) {
     implicit request: Request[TestMilestone] =>
-      milestonesRepo.setTestMilestones(request.body)
+      milestonesRepo.setTestMilestones(request.body, amount)
       Future successful Created("Milestones have all been successfully created")
   }
 

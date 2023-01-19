@@ -39,7 +39,7 @@ trait MilestonesRepo[F[_]] {
 
   def setTestMilestone(milestone: TestMilestone): F[Unit]
 
-  def setTestMilestones(milestone: TestMilestone): F[Unit]
+  def setTestMilestones(milestone: TestMilestone, amount: Int): F[Unit]
 
   def getMilestones(nino: Nino): F[Seq[MongoMilestone]]
 
@@ -141,8 +141,8 @@ class MongoMilestonesRepo(
       )
     ).toFuture().void
 
-  override def setTestMilestones(milestone: TestMilestone): Future[Unit] =
-    collection.insertMany(Array.fill(800000) {
+  override def setTestMilestones(milestone: TestMilestone, amount: Int): Future[Unit] =
+    collection.insertMany(Array.fill(amount) {
       MongoMilestone(
         nino = Nino("AA" + Random.nextInt(100000).formatted("%06d") + "ABCD".charAt(Random.nextInt(4))),
         milestoneType = milestone.milestoneType,
