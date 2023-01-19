@@ -4,3 +4,4 @@ GET        /goal-events/:nino           uk.gov.hmrc.mobilehelptosave.controllers
 GET        /clear-milestone-data        uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.clearMilestoneData
 PUT        /create-goal                 uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.putSavingsGoal
 PUT        /add-milestone               uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.addMilestone
+PUT        /add-milestones/:amount      uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.addMilestones(amount: Int)

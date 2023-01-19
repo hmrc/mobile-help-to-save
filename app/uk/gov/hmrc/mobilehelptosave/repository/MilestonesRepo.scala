@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,11 +32,14 @@ import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import java.time.{LocalDateTime, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 trait MilestonesRepo[F[_]] {
   def setMilestone(milestone: MongoMilestone): F[Unit]
 
   def setTestMilestone(milestone: TestMilestone): F[Unit]
+
+  def setTestMilestones(milestone: TestMilestone, amount: Int): F[Unit]
 
   def getMilestones(nino: Nino): F[Seq[MongoMilestone]]
 
@@ -138,4 +141,16 @@ class MongoMilestonesRepo(
       )
     ).toFuture().void
 
+  override def setTestMilestones(milestone: TestMilestone, amount: Int): Future[Unit] =
+    collection.insertMany(Array.fill(amount) {
+      MongoMilestone(
+        nino = Nino("AA" + Random.nextInt(100000).formatted("%06d") + "ABCD".charAt(Random.nextInt(4))),
+        milestoneType = milestone.milestoneType,
+        milestone = milestone.milestone,
+        isSeen = milestone.isSeen,
+        isRepeatable = milestone.isRepeatable,
+        generatedDate = milestone.generatedDate.getOrElse(LocalDateTime.now(ZoneOffset.UTC)),
+        expireAt = milestone.expireAt.getOrElse(LocalDateTime.now(ZoneOffset.UTC).plusHours(1))
+      )
+    }).toFuture().void
 }

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import jdk.jfr.DataAmount
+
 import java.time.{LocalDate, LocalDateTime}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -553,6 +555,7 @@ class MilestonessServiceSpec
   private def fakeMilestonesRepo(milestones: List[MongoMilestone] = List.empty) = new MilestonesRepo[TestF] {
     override def setMilestone(milestone: MongoMilestone): TestF[Unit]                 = F.unit
     override def setTestMilestone(milestone: TestMilestone): TestF[Unit] = F.unit
+    override def setTestMilestones(milestone: TestMilestone, amount: Int): TestF[Unit] = F.unit
     override def getMilestones(nino:     Nino):           TestF[List[MongoMilestone]] = F.pure(milestones)
 
     override def markAsSeen(
