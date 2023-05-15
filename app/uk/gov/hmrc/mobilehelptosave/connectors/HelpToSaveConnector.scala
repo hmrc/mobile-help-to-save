@@ -88,7 +88,6 @@ class HelpToSaveConnectorImpl(
 
   private def handleHttpAndJsonErrors[B](dataDescription: String): PartialFunction[Throwable, Either[ErrorInfo, B]] = {
     case ex: UpstreamErrorResponse if ex.statusCode == 429 =>
-      println("Am I hitting this")
       Left(ErrorInfo.MultipleRequests)
     case _: NotFoundException =>
       Left(ErrorInfo.AccountNotFound)
