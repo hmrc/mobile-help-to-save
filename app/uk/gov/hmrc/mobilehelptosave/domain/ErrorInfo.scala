@@ -27,6 +27,10 @@ object ErrorInfo {
   object AccountNotFound extends ErrorInfo("ACCOUNT_NOT_FOUND") {
     val message: String = "No Help to Save account exists for the specified NINO"
   }
+
+  object MultipleRequests extends ErrorInfo("TOO_MANY_REQUESTS") {
+    val message: String = "Too many requests have been made to Help to Save. Please try again later"
+  }
   case class ValidationError(message: String) extends ErrorInfo("VALIDATION_ERROR")
 
   implicit val writes: OWrites[ErrorInfo] = new OWrites[ErrorInfo] {
@@ -34,6 +38,7 @@ object ErrorInfo {
     override def writes(o: ErrorInfo): JsObject = o match {
       case General                  => obj("code" -> o.code)
       case AccountNotFound          => obj("code" -> o.code)
+      case MultipleRequests          => obj("code" -> o.code)
       case ValidationError(message) => obj("code" -> o.code, "message" -> message)
     }
   }

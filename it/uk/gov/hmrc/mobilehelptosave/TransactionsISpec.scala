@@ -119,6 +119,20 @@ class TransactionsISpec
       checkTransactionsResponseInvariants(response)
     }
 
+    "respond with a 429 if the user's has made too many requests" in {
+      ShutteringStub.stubForShutteringDisabled()
+      AuthStub.userIsLoggedIn(nino)
+      HelpToSaveStub.userAccountsTooManyRequests(nino)
+
+      val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
+
+      response.status shouldBe 429
+      val jsonBody: JsValue = response.json
+      (jsonBody \ "code").as[String] shouldBe "TOO_MANY_REQUESTS"
+      (jsonBody \ "message").as[String] shouldBe "Too many requests have been made to Help to Save. Please try again later"
+      checkTransactionsResponseInvariants(response)
+    }
+
     "return 401 when the user is not logged in" in {
       ShutteringStub.stubForShutteringDisabled()
       AuthStub.userIsNotLoggedIn()
