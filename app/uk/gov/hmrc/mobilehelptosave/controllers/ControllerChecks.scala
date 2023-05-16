@@ -21,6 +21,7 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Shuttering}
 
 import scala.concurrent.Future
@@ -58,10 +59,15 @@ trait ControllerChecks extends Results {
     Json.toJson(ErrorBody("ACCOUNT_NOT_FOUND", "No Help to Save account exists for the specified NINO"))
   )
 
+  protected final val MultipleRequests = TooManyRequests(
+    Json.toJson(ErrorBody("TOO_MANY_REQUESTS","Too many requests have been made to Help to Save. Please try again later"))
+  )
+
   private def errorHandler(errorInfo: ErrorInfo): Result = errorInfo match {
     case ErrorInfo.AccountNotFound        => AccountNotFound
     case v @ ErrorInfo.ValidationError(_) => UnprocessableEntity(Json.toJson[ErrorInfo](v))
     case ErrorInfo.General                => InternalServerError(Json.toJson[ErrorInfo](ErrorInfo.General))
+    case ErrorInfo.MultipleRequests       => MultipleRequests
   }
 
   /**

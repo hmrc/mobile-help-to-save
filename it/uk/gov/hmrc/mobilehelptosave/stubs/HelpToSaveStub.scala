@@ -130,6 +130,15 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
         )
     )
 
+  def tooManyRequestsHaveBeenMade(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.TOO_MANY_REQUESTS)
+        )
+    )
+
   def userAccountNotFound(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(urlPathEqualTo(s"/help-to-save/$nino/account"))
@@ -138,6 +147,16 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
             .withStatus(Status.NOT_FOUND)
         )
     )
+
+  def userAccountsTooManyRequests(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
+    wireMockServer.stubFor(
+      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+        .willReturn(
+          aResponse()
+            .withStatus(Status.TOO_MANY_REQUESTS)
+        )
+    )
+
 
   private def getAccountUrlPathPattern(nino: Nino) =
     urlPathEqualTo(s"/help-to-save/$nino/account")

@@ -87,9 +87,10 @@ class HelpToSaveConnectorImpl(
   }
 
   private def handleHttpAndJsonErrors[B](dataDescription: String): PartialFunction[Throwable, Either[ErrorInfo, B]] = {
+    case ex: UpstreamErrorResponse if ex.statusCode == 429 =>
+      Left(ErrorInfo.MultipleRequests)
     case _: NotFoundException =>
       Left(ErrorInfo.AccountNotFound)
-
     case e @ (_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException |
         _: JsonParseException) =>
       logger.warn(s"Couldn't get $dataDescription from help-to-save service", e)
