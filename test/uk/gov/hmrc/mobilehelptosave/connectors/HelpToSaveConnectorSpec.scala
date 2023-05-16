@@ -165,9 +165,8 @@ class HelpToSaveConnectorSpec
 
       val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, HttpResponse(429)))
 
-      await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
+      await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.MultipleRequests)
 
-      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify (errorMessage, throwableWithMessageContaining("429"))
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
@@ -219,9 +218,8 @@ class HelpToSaveConnectorSpec
       val connector =
         new HelpToSaveConnectorImpl(logger, config, httpGet(isTransactionsUrlForNino _, HttpResponse(429)))
 
-      await(connector.getTransactions(nino)) shouldBe Left(ErrorInfo.General)
+      await(connector.getTransactions(nino)) shouldBe Left(ErrorInfo.MultipleRequests)
 
-      (slf4jLoggerStub.warn(_: String, _: Throwable)) verify (errorMessage, throwableWithMessageContaining("429"))
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
@@ -276,12 +274,8 @@ class HelpToSaveConnectorSpec
 
       val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("enrolment-status", HttpResponse(429)))
 
-      await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
+      await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.MultipleRequests)
 
-      (slf4jLoggerStub
-        .warn(_: String, _: Throwable)) verify ("""Couldn't get enrolment status from help-to-save service""", throwableWithMessageContaining(
-        "429"
-      ))
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
@@ -326,12 +320,7 @@ class HelpToSaveConnectorSpec
 
       val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("eligibility-check", HttpResponse(429)))
 
-      await(connector.checkEligibility()) shouldBe Left(ErrorInfo.General)
-
-      (slf4jLoggerStub
-        .warn(_: String, _: Throwable)) verify ("""Couldn't get eligibility from help-to-save service""", throwableWithMessageContaining(
-        "429"
-      ))
+      await(connector.checkEligibility()) shouldBe Left(ErrorInfo.MultipleRequests)
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
