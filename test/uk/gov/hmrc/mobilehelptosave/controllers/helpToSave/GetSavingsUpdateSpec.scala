@@ -138,7 +138,7 @@ class GetSavingsUpdateSpec
         (jsonBody \ "message")
           .as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
-        (slf4jLoggerStub.warn(_: String)) verify * never ()
+        (slf4jLoggerStub.warn(_: String)) verify * never
       }
     }
 

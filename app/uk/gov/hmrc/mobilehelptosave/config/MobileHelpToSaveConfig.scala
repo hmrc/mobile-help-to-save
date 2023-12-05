@@ -17,11 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.config
 
 import java.net.URL
-
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
+import scala.collection.mutable
 
 case class MobileHelpToSaveConfig(
   environment:    Environment,
@@ -36,7 +36,6 @@ case class MobileHelpToSaveConfig(
     with UserServiceConfig
     with ReportingServiceConfig
     with MilestonesConfig
-    with RunOnStartupConfig
     with MongoConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
@@ -63,8 +62,6 @@ case class MobileHelpToSaveConfig(
   override def bonusReachedMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.bonusReachedMilestoneCheckEnabled")
 
-  override def runOnStartupEnabled: Boolean = configBoolean("runOnStartupEnabled")
-
   override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
   override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
@@ -72,7 +69,7 @@ case class MobileHelpToSaveConfig(
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType:              String      = accessConfig.getString("type")
-  override val apiWhiteListApplicationIds: Seq[String] = accessConfig.getStringList("white-list.applicationIds").asScala
+  override val apiWhiteListApplicationIds = accessConfig.getStringList("white-list.applicationIds").asScala
 
   protected def configBaseUrl(serviceName: String): URL = new URL(servicesConfig.baseUrl(serviceName))
 
@@ -107,7 +104,7 @@ trait SandboxDataConfig {
 
 trait DocumentationControllerConfig {
   def apiAccessType:              String
-  def apiWhiteListApplicationIds: Seq[String]
+  def apiWhiteListApplicationIds: mutable.Buffer[String]
 }
 
 trait HelpToSaveConnectorConfig {
@@ -123,10 +120,6 @@ trait StartupControllerConfig {
 
 trait ShutteringConnectorConfig {
   def shutteringBaseUrl: URL
-}
-
-trait RunOnStartupConfig {
-  def runOnStartupEnabled: Boolean
 }
 
 trait MongoConfig {

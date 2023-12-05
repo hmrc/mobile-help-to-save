@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -50,8 +48,6 @@ class AuthorisedWithIdsSpec
 
   private val generator = new Generator(0)
   private val testNino  = generator.nextNino
-  implicit val system:       ActorSystem       = ActorSystem()
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   "AuthorisedWithIds" should {
     shutteringDisabled

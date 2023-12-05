@@ -25,6 +25,8 @@ import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 
+import scala.collection.mutable
+
 class DocumentationControllerSpec
     extends AnyWordSpecLike
     with Matchers
@@ -47,5 +49,5 @@ class DocumentationControllerSpec
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
   override def apiAccessType              = "PRIVATE"
-  override def apiWhiteListApplicationIds = Seq.empty[String]
+  override def apiWhiteListApplicationIds = mutable.Buffer.empty[String]
 }

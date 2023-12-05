@@ -81,7 +81,6 @@ class SandboxControllerSpec
 
     def balanceAfter(transactionIndex: Int): BigDecimal =
       ((json \ "transactions")(transactionIndex) \ "balanceAfter").as[BigDecimal]
-    def transactionCount(): Int = (json \ "transactions").as[JsArray].value.length
   }
 
   "Sandbox getTransactions" should {
@@ -93,7 +92,7 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      json transactionCount () shouldBe 18
+      (json \ "transactions").as[JsArray].value.length shouldBe 18
 
       var atIndex = 0
       json operation atIndex       shouldBe "credit"

@@ -320,7 +320,7 @@ class AccountServiceSpec
                                      testMilestonesConfig)
       service.account(nino).unsafeGet shouldBe Right(None)
 
-      (slf4jLoggerStub.warn(_: String)) verify * never ()
+      (slf4jLoggerStub.warn(_: String)) verify * never
     }
 
     "return None and log a warning when user is enrolled according to help-to-save but no account exists in NS&I" in {

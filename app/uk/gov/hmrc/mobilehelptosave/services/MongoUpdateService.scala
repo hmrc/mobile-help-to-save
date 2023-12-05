@@ -50,11 +50,11 @@ class HtsMongoUpdateService[F[_]](
 
     val processUpdates = for {
       updateRequired <- mongoPreviousBalanceRepo.getPreviousBalanceUpdateRequired(nino)
-      _              <- if (updateRequired.isDefined) mongoMilestonesRepo.updateExpireAt(nino, expireAt) else Future successful Unit
+      _              <- if (updateRequired.isDefined) mongoMilestonesRepo.updateExpireAt(nino, expireAt) else Future successful ()
       _ <- if (updateRequired.isDefined) mongoSavingsGoalEventRepo.updateExpireAt(nino, expireAt)
-          else Future successful Unit
+          else Future successful ()
       _ <- if (updateRequired.isDefined) mongoPreviousBalanceRepo.updateExpireAt(nino, expireAt)
-          else Future successful Unit
+          else Future successful ()
     } yield (if (updateRequired.isDefined) logger.info("expireAt fields updated for user"))
 
     processUpdates.recover {

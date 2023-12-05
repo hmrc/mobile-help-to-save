@@ -52,7 +52,7 @@ class ReportingService(
   def getPenceInCurrentSavingsGoals(): Future[JsObject] =
     getCurrentSavingsGoalsEvents()
       .map(goal => goal.flatMap(goal => goal.amount))
-      .map((listOfGoals: List[Double]) => listOfGoals.filter(!_.isWhole()))
+      .map((listOfGoals: List[Double]) => listOfGoals.filter(!_.isWhole))
       .map(p =>
         Json.obj(
           "count"  -> p.size,

@@ -21,7 +21,6 @@ import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorBody, ErrorInfo, Shuttering}
 
 import scala.concurrent.Future

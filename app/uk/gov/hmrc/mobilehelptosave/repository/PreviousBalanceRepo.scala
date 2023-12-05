@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.{LocalDateTime, ZoneOffset, ZonedDateTime}
+import java.time.{LocalDateTime, ZoneOffset}
 import cats.instances.future._
 import cats.syntax.functor._
 import org.mongodb.scala.Document

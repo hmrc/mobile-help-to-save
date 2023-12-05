@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import cats.instances.future._
 import cats.syntax.functor._
-import com.mongodb.client.model.Indexes.text
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
@@ -26,7 +25,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
