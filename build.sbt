@@ -1,7 +1,6 @@
 import TestPhases.oneForkedJvmPerTest
-import sbt.{CrossVersion, Resolver}
+import sbt.Resolver
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "mobile-help-to-save"
 
@@ -13,7 +12,7 @@ lazy val scoverageSettings = {
     ScoverageKeys.coverageMinimumStmtTotal := 90,
     ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true,
-    parallelExecution in Test := false
+    Test / parallelExecution := false
   )
 }
 
@@ -22,13 +21,12 @@ lazy val microservice = Project(appName, file("."))
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(scoverageSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(publishingSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(AppDependencies.appDependencies: _*)
   .settings(
     majorVersion := 0,
-    scalaVersion := "2.12.15",
-    unmanagedResourceDirectories in Compile += baseDirectory.value / "resources",
+    scalaVersion := "2.13.8",
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
     // based on https://tpolecat.github.io/2017/04/25/scalac-flags.html but cut down for scala 2.11
     scalacOptions ++= Seq(
@@ -38,25 +36,20 @@ lazy val microservice = Project(appName, file("."))
       "-language:higherKinds",
       "-language:postfixOps",
       "-feature",
-      "-Ypartial-unification",
       "-Ywarn-dead-code",
-      "-Ywarn-inaccessible",
-      "-Ywarn-infer-any",
-      "-Ywarn-nullary-override",
-      "-Ywarn-nullary-unit",
+      "-Ywarn-value-discard",
       "-Ywarn-numeric-widen",
-      //"-Ywarn-unused-import", - does not work well with fatal-warnings because of play-generated sources
-      //"-Xfatal-warnings",
-      "-Xlint"
+      "-Xlint",
+      "-Ymacro-annotations"
     ),
     addCommandAlias("testAll", ";reload;test;it:test")
   )
-  .settings(evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false))
-  .settings(unmanagedSourceDirectories in Test += baseDirectory.value / "testcommon")
+  .settings(update / evictionWarningOptions := EvictionWarningOptions.default.withWarnScalaVersionEviction(false))
+  .settings(Test / unmanagedSourceDirectories += baseDirectory.value / "testcommon")
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
-    unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest)(base =>
+    IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory)(base =>
       Seq(
         base / "it",
         base / "testcommon"
@@ -64,10 +57,10 @@ lazy val microservice = Project(appName, file("."))
     ).value: _*
   )
   .settings(
-    Keys.fork in IntegrationTest := false,
+    IntegrationTest / Keys.fork := false,
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    testGrouping in IntegrationTest := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
-    parallelExecution in IntegrationTest := false
+    IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
+    IntegrationTest / parallelExecution := false
   )
   .settings(
     routesImport ++= Seq(
@@ -79,7 +72,6 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(
     resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hmrc-mobile", "mobile-releases")),
-    addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.9"),
-    addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.2.4"),
-    addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.1" cross CrossVersion.full)
+    addCompilerPlugin("org.typelevel"  %% "kind-projector"     % "0.10.3"),
+    addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.3.1")
   )

@@ -69,7 +69,7 @@ class SavingsGoalSpec
 
       "translate a validation error to a 422 Unprocessable Entity" in new AuthorisedTestScenario
         with HelpToSaveMocking {
-        val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue() + 1
+        val amount  = mobileHelpToSaveAccount.maximumPaidInThisMonth.doubleValue + 1
         val request = FakeRequest().withBody(SavingsGoal(Some(amount)))
 
         setSavingsGoalReturns(nino, Some(amount), ErrorInfo.ValidationError("error message").asLeft)

@@ -23,14 +23,14 @@ import uk.gov.hmrc.mobilehelptosave.domain.{TestMilestone, TestSavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class TestController(
   savingsGoalEventRepo:     SavingsGoalEventRepo[Future],
   milestonesRepo:           MilestonesRepo[Future],
   previousBalanceRepo:      PreviousBalanceRepo[Future],
-  val controllerComponents: ControllerComponents)
+  val controllerComponents: ControllerComponents
+)(implicit ec:              ExecutionContext)
     extends BackendBaseController {
 
   def clearGoalEvents(): Action[AnyContent] = Action.async {
@@ -67,7 +67,8 @@ class TestController(
 
   def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) {
     implicit request: Request[TestSavingsGoal] =>
-      savingsGoalEventRepo.setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
+      savingsGoalEventRepo
+        .setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
       Future successful Created("Goal successfully created")
   }
 

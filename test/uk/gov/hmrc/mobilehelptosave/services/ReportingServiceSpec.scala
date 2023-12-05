@@ -58,7 +58,7 @@ class ReportingServiceSpec
   val penceInCurrentSavingsGoals =
     Json.obj(
       "count"  -> 3,
-      "values" -> List(49.5, 20.52, 1.55)
+      "values" -> List(49.5, 1.55, 20.52)
     )
 
   val currentSavingsGoalRangeCounts =

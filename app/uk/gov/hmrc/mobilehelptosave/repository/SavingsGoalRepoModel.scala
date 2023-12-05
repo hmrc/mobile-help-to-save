@@ -35,20 +35,40 @@ object SavingsGoalRepoModel {
     Format(reads, writes)
 }
 
-sealed trait SavingsGoalEventType extends EnumEntry
-
-object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercaseJsonEnum[SavingsGoalEventType] {
-  //noinspection TypeAnnotation
-  val values = findValues
-
-  case object Delete extends SavingsGoalEventType
-  case object Set extends SavingsGoalEventType
-}
-
+//sealed trait SavingsGoalEventType extends EnumEntry
+//
+//object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercaseJsonEnum[SavingsGoalEventType] {
+//  //noinspection TypeAnnotation
+//  val values = findValues
+//
+//  case object Delete extends SavingsGoalEventType
+//  case object Set extends SavingsGoalEventType
+//}
+//
 sealed trait SavingsGoalEvent {
   def nino: Nino
   def date: LocalDateTime
 
+}
+
+sealed trait SavingsGoalEventType
+
+object SavingsGoalEventType {
+
+  case object Delete extends SavingsGoalEventType
+  case object Set extends SavingsGoalEventType
+
+  implicit val format: Format[SavingsGoalEventType] = new Format[SavingsGoalEventType] {
+
+    override def reads(json: JsValue): JsResult[SavingsGoalEventType] = json.as[String] match {
+      case "delete" => JsSuccess(Delete)
+      case "set"    => JsSuccess(Set)
+      case _        => JsError("Invalid savings goal type")
+    }
+
+    override def writes(savingsGoalType: SavingsGoalEventType): JsString =
+      JsString(savingsGoalType.toString.toLowerCase())
+  }
 }
 
 case class SavingsGoalSetEvent(
@@ -68,9 +88,9 @@ case class SavingsGoalDeleteEvent(
     extends SavingsGoalEvent
 
 object SavingsGoalEvent {
-  implicit val dateFormat: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
-  val setEventFormat:    OFormat[SavingsGoalSetEvent]    = Json.format
-  val deleteEventFormat: OFormat[SavingsGoalDeleteEvent] = Json.format
+  implicit val dateFormat: Format[LocalDateTime]           = MongoJavatimeFormats.localDateTimeFormat
+  val setEventFormat:      OFormat[SavingsGoalSetEvent]    = Json.format
+  val deleteEventFormat:   OFormat[SavingsGoalDeleteEvent] = Json.format
 
   val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
 

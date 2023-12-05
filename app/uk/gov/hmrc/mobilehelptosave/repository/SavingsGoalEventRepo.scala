@@ -23,7 +23,7 @@ import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.Updates._
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Updates}
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}

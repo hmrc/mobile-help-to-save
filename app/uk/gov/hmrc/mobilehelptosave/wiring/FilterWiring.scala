@@ -15,19 +15,20 @@
  */
 
 package uk.gov.hmrc.mobilehelptosave.wiring
-import com.kenshoo.play.metrics.{Metrics, MetricsFilterImpl, MetricsImpl}
 import com.softwaremill.macwire.wire
 import play.api.BuiltInComponents
 import play.api.mvc.EssentialFilter
+import uk.gov.hmrc.play.audit.{DefaultAuditChannel, DefaultAuditConnector}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, Counter, DatastreamMetrics}
-import uk.gov.hmrc.play.bootstrap.audit.{DefaultAuditChannel, DefaultAuditConnector, EnabledDatastreamMetricsProvider}
+import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
+import uk.gov.hmrc.play.bootstrap.audit.EnabledDatastreamMetricsProvider
 import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider, ControllerConfigs, DefaultHttpAuditEvent, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters._
-import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, BackendFilters, DefaultBackendAuditFilter}
+import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, BackendFilters, BackendMdcFilter, DefaultBackendAuditFilter}
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpAuditing
+import uk.gov.hmrc.play.bootstrap.metrics.{Metrics, MetricsFilterImpl, MetricsImpl}
 
 trait FilterWiring {
   self: BuiltInComponents =>
@@ -48,7 +49,7 @@ trait FilterWiring {
   lazy val microserviceAuditFilter: BackendAuditFilter = wire[DefaultBackendAuditFilter]
   lazy val loggingFilter:           LoggingFilter      = wire[DefaultLoggingFilter]
   lazy val cacheControlFilter:      CacheControlFilter = wire[CacheControlFilter]
-  lazy val MDCFilter:               MDCFilter          = wire[MDCFilter]
+  lazy val MDCFilter:               MDCFilter          = wire[BackendMdcFilter]
   lazy val backendFilters:          BackendFilters     = wire[BackendFilters]
 
   lazy val auditConnector:                 AuditConnector                 = wire[DefaultAuditConnector]

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.wiring
 
 import cats.implicits._
-import com.kenshoo.play.metrics._
 import com.softwaremill.macwire.wire
 import controllers.AssetsComponents
 import play.api.ApplicationLoader.Context
@@ -105,13 +104,11 @@ class ServiceComponents(context: Context)
   lazy val eventRepo:           MongoSavingsGoalEventRepo = wire[MongoSavingsGoalEventRepo]
   lazy val previousBalanceRepo: MongoPreviousBalanceRepo  = wire[MongoPreviousBalanceRepo]
   lazy val milestonesRepo:      MongoMilestonesRepo       = wire[MongoMilestonesRepo]
-  val loadOnStartupModule:      RunOnStartup              = wire[RunOnStartup]
 
   lazy val startupController:       StartupController       = wire[StartupController]
   lazy val helpToSaveController:    HelpToSaveController    = wire[HelpToSaveController]
   lazy val milestonesController:    MilestonesController    = wire[MilestonesController]
   lazy val documentationController: DocumentationController = wire[DocumentationController]
-  lazy val metricsController:       MetricsController       = wire[MetricsController]
   lazy val sandboxController:       SandboxController       = wire[SandboxController]
   lazy val testController:          TestController          = wire[TestController]
 
