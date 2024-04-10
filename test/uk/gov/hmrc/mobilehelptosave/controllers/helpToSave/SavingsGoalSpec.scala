@@ -25,7 +25,6 @@ import org.scalatest.{OneInstancePerTest, OptionValues}
 import play.api.test.Helpers.{contentAsString, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
@@ -33,7 +32,6 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 class SavingsGoalSpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with FutureAwaits
     with OptionValues
     with TransactionTestData

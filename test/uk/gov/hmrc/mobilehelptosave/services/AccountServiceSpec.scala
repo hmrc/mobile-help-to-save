@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import cats.MonadError
 import cats.syntax.applicativeError._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -30,9 +29,8 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.math.MathContext
 import java.time.{LocalDate, LocalDateTime, YearMonth}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class AccountServiceSpec
     extends AnyWordSpecLike
@@ -558,7 +556,7 @@ class AccountServiceSpec
         goalsOrException match {
           case Right(events) =>
             F.pure {
-              events.sortBy(_.date)(localDateTimeOrdering.reverse).headOption.flatMap {
+              events.sortBy(_.date)(InstantOrdering.reverse).headOption.flatMap {
                 case SavingsGoalSetEvent(_, amount, _, name, _, _) => Some(SavingsGoal(amount))
                 case _                                             => None
               }

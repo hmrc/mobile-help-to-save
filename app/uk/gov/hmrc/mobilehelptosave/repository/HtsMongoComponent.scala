@@ -21,8 +21,12 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import uk.gov.hmrc.mobilehelptosave.config.MongoConfig
 import uk.gov.hmrc.mongo.MongoComponent
 
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
+
 class HtsMongoComponent(config: MongoConfig) extends MongoComponent {
   override def client: MongoClient = MongoClient(config.mongoUri)
 
   override def database: MongoDatabase = client.getDatabase(new ConnectionString(config.mongoUri).getDatabase)
+
+  override def initTimeout: FiniteDuration = 5.seconds
 }

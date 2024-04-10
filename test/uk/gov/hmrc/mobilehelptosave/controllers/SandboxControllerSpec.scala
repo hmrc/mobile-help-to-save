@@ -31,7 +31,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.FixedFakeClock
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, NumberVerification, TransactionTestData}
@@ -43,7 +42,6 @@ import scala.concurrent.Future
 class SandboxControllerSpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with MockFactory
     with OneInstancePerTest
     with LoggerStub

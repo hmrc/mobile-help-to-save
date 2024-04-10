@@ -18,9 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
 import java.time.{LocalDate, YearMonth}
-
 import com.fasterxml.jackson.core.JsonParseException
-import io.lemonlabs.uri.dsl._
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -105,12 +103,11 @@ class HelpToSaveConnectorImpl(
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
 
   private def accountUrl(nino: Nino): URL =
-    new URL(config.helpToSaveBaseUrl,
-            s"/help-to-save/${encodePathSegment(nino.value)}/account" ? ("systemId" -> SystemId))
+    new URL(config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account?systemId=$SystemId")
 
   private def transactionsUrl(nino: Nino): URL =
     new URL(config.helpToSaveBaseUrl,
-            s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
+            s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions?systemId=$SystemId")
 
   private def eligibilityUrl: URL =
     new URL(config.helpToSaveBaseUrl, s"/help-to-save/eligibility-check")

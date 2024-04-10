@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.{LocalDateTime, ZoneOffset}
-import enumeratum.{Enum, EnumEntry, PlayLowercaseJsonEnum}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
+import java.time.temporal.ChronoUnit
+
 case class SavingsGoalRepoModel(
   nino:      Nino,
   amount:    Double,
-  createdAt: LocalDateTime)
+  createdAt: Instant)
 
 object SavingsGoalRepoModel {
   implicit val reads:  Reads[SavingsGoalRepoModel]   = Json.reads[SavingsGoalRepoModel]
@@ -35,20 +36,9 @@ object SavingsGoalRepoModel {
     Format(reads, writes)
 }
 
-//sealed trait SavingsGoalEventType extends EnumEntry
-//
-//object SavingsGoalEventType extends Enum[SavingsGoalEventType] with PlayLowercaseJsonEnum[SavingsGoalEventType] {
-//  //noinspection TypeAnnotation
-//  val values = findValues
-//
-//  case object Delete extends SavingsGoalEventType
-//  case object Set extends SavingsGoalEventType
-//}
-//
 sealed trait SavingsGoalEvent {
   def nino: Nino
-  def date: LocalDateTime
-
+  def date: Instant
 }
 
 sealed trait SavingsGoalEventType
@@ -74,21 +64,21 @@ object SavingsGoalEventType {
 case class SavingsGoalSetEvent(
   nino:           Nino,
   amount:         Option[Double] = None,
-  date:           LocalDateTime,
+  date:           Instant,
   name:           Option[String] = None,
-  expireAt:       LocalDateTime = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54),
+  expireAt:       Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
   updateRequired: Boolean = false)
     extends SavingsGoalEvent
 
 case class SavingsGoalDeleteEvent(
   nino:           Nino,
-  date:           LocalDateTime,
-  expireAt:       LocalDateTime = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54),
+  date:           Instant,
+  expireAt:       Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
   updateRequired: Boolean = false)
     extends SavingsGoalEvent
 
 object SavingsGoalEvent {
-  implicit val dateFormat: Format[LocalDateTime]           = MongoJavatimeFormats.localDateTimeFormat
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
   val setEventFormat:      OFormat[SavingsGoalSetEvent]    = Json.format
   val deleteEventFormat:   OFormat[SavingsGoalDeleteEvent] = Json.format
 

@@ -8,7 +8,7 @@ import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.support.OneServerPerSuiteWsClient
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 /**
   * Need two separate tests so that the servers can be run with different system
@@ -76,8 +76,20 @@ class TestOnlyRoutesWiredISpec
     s"Return 201 " in {
       (await(
         wsUrl(addMilestoneUrl)
-          .put(Json.toJson(TestMilestone(Nino(nino), BonusReached, Milestone(FirstBonusReached150), true, false, Some(LocalDateTime.now().minusMonths(1)), Some(LocalDateTime.now().plusMinutes(10))))
-      )).status shouldBe 201)
+          .put(
+            Json.toJson(
+              TestMilestone(
+                Nino(nino),
+                BonusReached,
+                Milestone(FirstBonusReached150),
+                true,
+                false,
+                Some(LocalDateTime.now().minusMonths(1).toInstant(ZoneOffset.UTC)),
+                Some(LocalDateTime.now().plusMinutes(10).toInstant(ZoneOffset.UTC))
+              )
+            )
+          )
+      ).status shouldBe 201)
     }
   }
 
@@ -85,8 +97,20 @@ class TestOnlyRoutesWiredISpec
     s"Return 201 " in {
       (await(
         wsUrl(addMilestonesUrl)
-          .put(Json.toJson(TestMilestone(Nino(nino), BonusReached, Milestone(FirstBonusReached150), true, false, Some(LocalDateTime.now().minusMonths(1)), Some(LocalDateTime.now().plusMinutes(10))))
-          )).status shouldBe 201)
+          .put(
+            Json.toJson(
+              TestMilestone(
+                Nino(nino),
+                BonusReached,
+                Milestone(FirstBonusReached150),
+                true,
+                false,
+                Some(LocalDateTime.now().minusMonths(1).toInstant(ZoneOffset.UTC)),
+                Some(LocalDateTime.now().plusMinutes(10).toInstant(ZoneOffset.UTC))
+              )
+            )
+          )
+      ).status shouldBe 201)
     }
   }
 }

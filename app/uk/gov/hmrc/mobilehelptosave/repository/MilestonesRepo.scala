@@ -29,7 +29,8 @@ import uk.gov.hmrc.mobilehelptosave.domain.{MongoMilestone, TestMilestone}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
@@ -136,8 +137,8 @@ class MongoMilestonesRepo(
           milestone = milestone.milestone,
           isSeen = milestone.isSeen,
           isRepeatable = milestone.isRepeatable,
-          generatedDate = milestone.generatedDate.getOrElse(LocalDateTime.now(ZoneOffset.UTC)),
-          expireAt = milestone.expireAt.getOrElse(LocalDateTime.now(ZoneOffset.UTC).plusHours(1))
+          generatedDate = milestone.generatedDate.getOrElse(Instant.now()),
+          expireAt = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
       )
     ).toFuture().void
 
@@ -149,8 +150,8 @@ class MongoMilestonesRepo(
         milestone = milestone.milestone,
         isSeen = milestone.isSeen,
         isRepeatable = milestone.isRepeatable,
-        generatedDate = milestone.generatedDate.getOrElse(LocalDateTime.now(ZoneOffset.UTC)),
-        expireAt = milestone.expireAt.getOrElse(LocalDateTime.now(ZoneOffset.UTC).plusHours(1))
+        generatedDate = milestone.generatedDate.getOrElse(Instant.now()),
+        expireAt = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
       )
     }).toFuture().void
 }

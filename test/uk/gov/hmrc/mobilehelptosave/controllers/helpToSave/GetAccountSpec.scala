@@ -28,7 +28,6 @@ import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
@@ -40,7 +39,6 @@ import scala.concurrent.Future
 class GetAccountSpec
   extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with FutureAwaits
     with OptionValues
     with TransactionTestData

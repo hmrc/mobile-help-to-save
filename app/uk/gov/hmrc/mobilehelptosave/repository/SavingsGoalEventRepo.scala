@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.{LocalDate, LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
 import cats.instances.future._
 import cats.syntax.functor._
 import org.mongodb.scala.Document
@@ -104,8 +104,8 @@ class MongoSavingsGoalEventRepo(
           nino     = nino,
           amount   = amount,
           name     = name,
-          date     = LocalDateTime.now,
-          expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay()
+          date     = Instant.now,
+          expireAt = secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay().toInstant(ZoneOffset.UTC)
         )
       )
       .toFuture()
@@ -122,8 +122,8 @@ class MongoSavingsGoalEventRepo(
         SavingsGoalSetEvent(nino     = nino,
                             amount   = amount,
                             name     = name,
-                            date     = date.atStartOfDay(),
-                            expireAt = date.plusMonths(1).atStartOfDay())
+                            date     = date.atStartOfDay().toInstant(ZoneOffset.UTC),
+                            expireAt = date.plusMonths(1).atStartOfDay().toInstant(ZoneOffset.UTC))
       )
       .toFuture()
       .void
@@ -136,8 +136,8 @@ class MongoSavingsGoalEventRepo(
       .insertOne(
         SavingsGoalDeleteEvent(
           nino,
-          LocalDateTime.now,
-          secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay()
+          Instant.now,
+          secondPeriodBonusPaidByDate.plusMonths(6).atStartOfDay().toInstant(ZoneOffset.UTC)
         )
       )
       .toFuture()
@@ -190,8 +190,8 @@ class MongoSavingsGoalEventRepo(
       .updateMany(
         filter = Document(),
         update = combine(set("updateRequired", true),
-                         set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54)),
-                         set("date", LocalDateTime.now(ZoneOffset.UTC)))
+                         set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC)),
+                         set("date", Instant.now()))
       )
       .toFutureOption()
       .void
@@ -203,7 +203,7 @@ class MongoSavingsGoalEventRepo(
     collection
       .updateMany(
         filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
-        update = combine(set("updateRequired", false), set("expireAt", expireAt))
+        update = combine(set("updateRequired", false), set("expireAt", expireAt.toInstant(ZoneOffset.UTC)))
       )
       .toFutureOption()
       .void

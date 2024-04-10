@@ -25,19 +25,16 @@ import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 import java.time.{LocalDate, YearMonth}
 import java.time.temporal.TemporalAdjusters
-import java.util.UUID.randomUUID
 
 class SavingsUpdateISpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with TransactionTestData
     with FutureAwaits
     with DefaultAwaitTimeout

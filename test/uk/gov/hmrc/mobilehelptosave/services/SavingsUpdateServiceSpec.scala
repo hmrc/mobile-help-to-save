@@ -26,7 +26,7 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
 
-import java.time.{LocalDate, LocalDateTime, YearMonth}
+import java.time.{Instant, LocalDate, LocalDateTime, YearMonth}
 
 class SavingsUpdateServiceSpec
     extends AnyWordSpecLike
@@ -93,7 +93,7 @@ class SavingsUpdateServiceSpec
                                                     openedYearMonth  = YearMonth.now().minusMonths(30),
                                                     savingsGoal      = Some(SavingsGoal(Some(10), Some("Holiday")))),
           transactionsDateDynamic,
-          List(SavingsGoalSetEvent(Nino("CS700100A"), Some(10), LocalDateTime.now()))
+          List(SavingsGoalSetEvent(Nino("CS700100A"), Some(10), Instant.now()))
         )
       savingsUpdate.savingsUpdate.isDefined                       shouldBe true
       savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty shouldBe true

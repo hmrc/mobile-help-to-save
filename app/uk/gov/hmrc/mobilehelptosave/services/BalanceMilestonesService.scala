@@ -26,7 +26,8 @@ import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 trait BalanceMilestonesService[F[_]] {
 
@@ -153,7 +154,7 @@ class HtsBalanceMilestonesService[F[_]](
       milestoneType = BalanceReached,
       milestone     = Milestone(milestoneKey),
       isRepeatable  = isRepeatable,
-      expireAt      = finalBonusPaidByDate.plusMonths(6)
+      expireAt      = finalBonusPaidByDate.plusMonths(6).toInstant(ZoneOffset.UTC)
     )
 
 }

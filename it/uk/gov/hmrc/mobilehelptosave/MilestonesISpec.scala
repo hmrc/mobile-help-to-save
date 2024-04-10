@@ -25,7 +25,6 @@ import play.api.libs.json.Json
 import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -34,7 +33,6 @@ import scala.util.Random
 class MilestonesISpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with FutureAwaits
     with DefaultAwaitTimeout
     with WireMockSupport

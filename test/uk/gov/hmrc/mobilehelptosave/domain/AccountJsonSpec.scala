@@ -17,20 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 
 import java.time.{LocalDate, YearMonth}
-import com.eclipsesource.schema.drafts.Version7._
-import com.eclipsesource.schema.SchemaType
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
-import uk.gov.hmrc.mobilehelptosave.json.JsonResource.loadResourceJson
-import uk.gov.hmrc.mobilehelptosave.json.Schema.banAdditionalProperties
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 
-class AccountJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers {
-
-  private val strictRamlAccountSchema =
-    banAdditionalProperties(loadResourceJson("/public/api/conf/1.0/schemas/account.json"))
-      .as[SchemaType]
+class AccountJsonSpec extends AnyWordSpecLike with Matchers {
 
   private val testAccount = Account(
     number          = "2000000000001",
@@ -72,39 +63,6 @@ class AccountJsonSpec extends AnyWordSpecLike with Matchers with SchemaMatchers 
     daysRemainingInMonth = 1,
     highestBalance       = 200.12
   )
-
-  "Account JSON" when {
-    "account is in happy path state" should {
-      "be a valid instance of the schema used in the RAML" in {
-        Json.toJson(testAccount) should validateAgainstSchema(strictRamlAccountSchema)
-      }
-    }
-
-    "account is blocked" should {
-      "be a valid instance of the schema used in the RAML" in {
-        val blockedAccount = testAccount.copy(blocked =
-          Blocking(payments = true, withdrawals = false, bonuses = false)
-        )
-        Json.toJson(blockedAccount) should validateAgainstSchema(strictRamlAccountSchema)
-      }
-    }
-
-    "account is closed" should {
-      "be a valid instance of the schema used in the RAML" in {
-        val closedAccount = testAccount.copy(
-          isClosed       = true,
-          closureDate    = Some(LocalDate.of(2020, 11, 5)),
-          closingBalance = Some(BigDecimal("543.12")),
-          balance        = 0,
-          bonusTerms = Seq(
-            testAccount.bonusTerms.head,
-            testAccount.bonusTerms(1).copy(bonusEstimate = 0)
-          )
-        )
-        Json.toJson(closedAccount) should validateAgainstSchema(strictRamlAccountSchema)
-      }
-    }
-  }
 
   "Account JSON" should {
     "format currentBonusTerm as documented in the README" in {

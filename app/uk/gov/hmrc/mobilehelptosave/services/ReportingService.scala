@@ -43,7 +43,7 @@ class ReportingService(
               .filter(event =>
                 event.date == grouped._2
                   .map(_.date)
-                  .max(localDateTimeOrdering)
+                  .max(InstantOrdering)
               )
           )
           .toList

@@ -19,7 +19,6 @@ package uk.gov.hmrc.mobilehelptosave
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.util.UUID.randomUUID
 import org.scalatest.OptionValues
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -27,13 +26,11 @@ import play.api.libs.ws.WSResponse
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, SavingsUpdateResponse, Transactions}
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
 
 class SandboxISpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with OptionValues
     with TransactionTestData
     with FutureAwaits

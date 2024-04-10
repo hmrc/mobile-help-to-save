@@ -27,7 +27,6 @@ import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
@@ -36,7 +35,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SavingsGoalsISpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with TransactionTestData
     with FutureAwaits
     with DefaultAwaitTimeout

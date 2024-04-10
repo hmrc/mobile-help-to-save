@@ -51,7 +51,7 @@ class HtsMilestonesService[F[_]](
       .groupBy(_.milestoneType)
       .flatMap(grouped =>
         grouped._2
-          .filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(localDateTimeOrdering))
+          .filter(milestone => milestone.generatedDate == grouped._2.map(_.generatedDate).max(InstantOrdering))
       )
       .toList
 

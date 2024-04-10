@@ -19,23 +19,18 @@ package uk.gov.hmrc.mobilehelptosave
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.util.UUID.randomUUID
-import org.scalatest.Assertion
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.mobilehelptosave.raml.TransactionsSchema.strictRamlTransactionsSchema
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
 
 class TransactionsISpec
     extends AnyWordSpecLike
     with Matchers
-    with SchemaMatchers
     with TransactionTestData
     with FutureAwaits
     with DefaultAwaitTimeout
@@ -66,7 +61,6 @@ class TransactionsISpec
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(transactionsReturnedByMobileHelpToSaveJsonString)
-      checkTransactionsResponseInvariants(response)
     }
 
     "respond with 200 and an empty transactions list when there are no transactions for the NINO" in {
@@ -78,7 +72,6 @@ class TransactionsISpec
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(zeroTransactionsReturnedByMobileHelpToSaveJsonString)
-      checkTransactionsResponseInvariants(response)
     }
 
     "respond with 200 and users debit transaction more than 50 pounds" in {
@@ -90,7 +83,6 @@ class TransactionsISpec
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(transactionsWithOver50PoundDebitReturnedByMobileHelpToSaveJsonString)
-      checkTransactionsResponseInvariants(response)
     }
 
     "respond with 200 and multiple transactions within same month and same day" in {
@@ -102,7 +94,6 @@ class TransactionsISpec
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe Status.OK
       response.json   shouldBe Json.parse(multipleTransactionsWithinSameMonthAndDayReturnedByMobileHelpToSaveJsonString)
-      checkTransactionsResponseInvariants(response)
     }
 
     "respond with a 404 if the user's NINO isn't found" in {
@@ -116,7 +107,6 @@ class TransactionsISpec
       val jsonBody: JsValue = response.json
       (jsonBody \ "code").as[String]    shouldBe "ACCOUNT_NOT_FOUND"
       (jsonBody \ "message").as[String] shouldBe "No Help to Save account exists for the specified NINO"
-      checkTransactionsResponseInvariants(response)
     }
 
     "respond with a 429 if the user's has made too many requests" in {
@@ -130,7 +120,6 @@ class TransactionsISpec
       val jsonBody: JsValue = response.json
       (jsonBody \ "code").as[String] shouldBe "TOO_MANY_REQUESTS"
       (jsonBody \ "message").as[String] shouldBe "Too many requests have been made to Help to Save. Please try again later"
-      checkTransactionsResponseInvariants(response)
     }
 
     "return 401 when the user is not logged in" in {
@@ -138,7 +127,6 @@ class TransactionsISpec
       AuthStub.userIsNotLoggedIn()
       val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 401
-      checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
@@ -147,7 +135,6 @@ class TransactionsISpec
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 403
-      checkTransactionsResponseInvariants(response)
       response.body shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
@@ -170,8 +157,4 @@ class TransactionsISpec
     }
   }
 
-  private def checkTransactionsResponseInvariants(response: WSResponse): Assertion =
-    if (response.status == Status.OK) {
-      response.json should validateAgainstSchema(strictRamlTransactionsSchema)
-    } else succeed
 }

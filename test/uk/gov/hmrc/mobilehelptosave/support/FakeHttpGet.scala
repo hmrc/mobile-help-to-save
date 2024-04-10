@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.typesafe.config.Config
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.http.hooks.HttpHook
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpResponse}
+import uk.gov.hmrc.http.{HttpGet, HttpResponse}
 import scala.concurrent.{ExecutionContext, Future}
 
 class FakeHttpGet(

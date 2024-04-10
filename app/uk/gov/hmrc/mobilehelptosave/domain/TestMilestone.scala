@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.domain.Nino
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 case class TestMilestone (
                            nino: Nino,
@@ -27,8 +27,8 @@ case class TestMilestone (
                            milestone: Milestone,
                            isSeen: Boolean = false,
                            isRepeatable: Boolean = true,
-                           generatedDate: Option[LocalDateTime],
-                           expireAt: Option[LocalDateTime])
+                           generatedDate: Option[Instant],
+                           expireAt: Option[Instant])
 
 object TestMilestone {
   implicit val formats: OFormat[TestMilestone] = Json.format

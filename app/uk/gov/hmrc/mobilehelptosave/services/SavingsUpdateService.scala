@@ -20,8 +20,8 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
 
 import java.time.temporal.ChronoUnit.MONTHS
-import java.time.{LocalDate, LocalDateTime, Month, YearMonth, ZoneOffset}
-import java.time.temporal.TemporalAdjusters
+import java.time.{LocalDate, LocalDateTime, Month, YearMonth, ZoneId, ZoneOffset}
+import java.time.temporal.{ChronoField, TemporalAdjusters}
 import scala.annotation.tailrec
 
 trait SavingsUpdateService {
@@ -63,7 +63,8 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
         reportEndDate.plusDays(1)
       )
     )
-    val filteredGoalEvents = goalEvents.filter(_.date.isBefore(reportEndDate.plusDays(1).atStartOfDay()))
+    val filteredGoalEvents =
+      goalEvents.filter(_.date.isBefore(reportEndDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)))
     SavingsUpdateResponse(
       reportStartDate,
       reportEndDate,
@@ -176,7 +177,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       val totalSavedEachMonth: Map[Month, BigDecimal] =
         groupTransactionsByMonth(transactions).map(t => Map(t._1 -> t._2.map(_.amount).sum)).flatten.toMap
 
-      if (sortedEvents.last.date.isBefore(reportStartDate.atStartOfDay())) {
+      if (sortedEvents.last.date.isBefore(reportStartDate.atStartOfDay().toInstant(ZoneOffset.UTC))) {
         val monthsWhereGoalWasMet: Map[Month, BigDecimal] = totalSavedEachMonth.filter(t => t._2 >= currentGoalValue)
         Some(GoalsReached(currentGoalValue, currentGoalName, monthsWhereGoalWasMet.size))
       } else {
@@ -185,19 +186,22 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
           .map(LocalDate.ofEpochDay)
           .filter(_.getDayOfMonth == 1)
           .sortBy(_.atStartOfDay())
-        val lowestGoalEachMonth: Map[Month, Double] =
+        val lowestGoalEachMonth: Map[Int, Double] =
           sortedEvents
-            .groupBy(_.date.getMonth)
+            .groupBy(event => LocalDateTime.ofInstant(event.date, ZoneId.of("UTC")).getMonthValue)
             .map(e => Map(e._1 -> e._2.map(_.amount.getOrElse(50.0)).min))
             .flatten
             .toMap
         var currentGoal: Option[Double] =
-          sortedEvents.filter(_.date.isBefore(reportStartDate.atStartOfDay())).lastOption.map(_.amount.getOrElse(50.0))
+          sortedEvents
+            .filter(_.date.isBefore(reportStartDate.atStartOfDay().toInstant(ZoneOffset.UTC)))
+            .lastOption
+            .map(_.amount.getOrElse(50.0))
 
         val numberOfTimesGoalHit = datesInRange
           .map { date =>
-            if (lowestGoalEachMonth.contains(date.getMonth)) {
-              currentGoal = lowestGoalEachMonth.get(date.getMonth)
+            if (lowestGoalEachMonth.contains(date.get(ChronoField.MONTH_OF_YEAR))) {
+              currentGoal = lowestGoalEachMonth.get(date.get(ChronoField.MONTH_OF_YEAR))
             }
             if (currentGoal.isDefined && totalSavedEachMonth
                   .getOrElse(date.getMonth, BigDecimal(0))
