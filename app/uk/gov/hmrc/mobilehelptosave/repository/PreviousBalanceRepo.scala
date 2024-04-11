@@ -30,7 +30,6 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -96,7 +95,7 @@ class MongoPreviousBalanceRepo(
     collection.find(equal("nino", nino.nino)).headOption()
 
   override def clearPreviousBalance(): Future[Unit] =
-    collection.deleteMany(filter = Document()).toFuture.void
+    collection.deleteMany(filter = Document()).toFuture().void
 
   override def updateExpireAt(): Future[Unit] =
     collection

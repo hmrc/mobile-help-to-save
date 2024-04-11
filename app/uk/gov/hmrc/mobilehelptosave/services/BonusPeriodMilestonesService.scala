@@ -230,7 +230,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
 
   private def createBonusPeriodMongoMilestone(
     milestoneKey:         MilestoneKey,
-    values:               Option[Map[String, String]] = None,
+    values:               Option[Map[String, String]],
     finalBonusPaidByDate: LocalDateTime
   )(implicit nino:        Nino
   ): MongoMilestone =

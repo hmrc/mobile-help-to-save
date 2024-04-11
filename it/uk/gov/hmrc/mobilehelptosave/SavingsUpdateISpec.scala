@@ -16,31 +16,20 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSRequest, WSResponse}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
-import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 import java.time.{LocalDate, YearMonth}
 import java.time.temporal.TemporalAdjusters
 
-class SavingsUpdateISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with TransactionTestData
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSupport
-    with OneServerPerSuiteWsClient
-    with ComponentSupport {
+class SavingsUpdateISpec extends BaseISpec with ComponentSupport {
 
   override implicit lazy val app: Application = appBuilder.build()
   val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
@@ -60,7 +49,7 @@ class SavingsUpdateISpec
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 
   s"GET $clearGoalEventsUrl with $applicationRouterKey set to $testOnlyRoutes" should {
-    s"Return 200 " in (await(requestWithAuthHeaders(clearGoalEventsUrl).get).status shouldBe 200)
+    s"Return 200 " in (await(requestWithAuthHeaders(clearGoalEventsUrl).get()).status shouldBe 200)
   }
 
   "GET /savings-account/savings-update" should {
@@ -109,7 +98,7 @@ class SavingsUpdateISpec
       (response.json \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 238.14
       (response.json \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 522.79
 
-      await(requestWithAuthHeaders(clearGoalEventsUrl).get).status shouldBe 200
+      await(requestWithAuthHeaders(clearGoalEventsUrl).get()).status shouldBe 200
     }
 
     "respond with 200 and no savings update section if no transactions are found" in {
@@ -135,7 +124,7 @@ class SavingsUpdateISpec
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userAccountNotFound(nino)
-      stubForShutteringDisabled
+      stubForShutteringDisabled()
 
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
 

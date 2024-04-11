@@ -17,21 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.domain
 
 import java.time.{LocalDate, YearMonth}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveBonusTerm
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
-class AccountSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with AccountTestData
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub {
+class AccountSpec extends BaseSpec with AccountTestData {
 
   private val accountOpenedInJan2018 = helpToSaveAccount.copy(
     openedYearMonth = YearMonth.of(2018, 1),

@@ -26,7 +26,7 @@ class TestOnlyRoutesNotWiredISpec
   System.clearProperty(applicationRouterKey)
 
   s"GET $clearGoalEventsUrl  without '" + applicationRouterKey + "' set" should {
-    "Return 404" in (await(wsUrl(clearGoalEventsUrl).get).status shouldBe 404)
+    "Return 404" in (await(wsUrl(clearGoalEventsUrl).get()).status shouldBe 404)
   }
 }
 
@@ -51,15 +51,15 @@ class TestOnlyRoutesWiredISpec
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 
   s"GET $clearGoalEventsUrl with $applicationRouterKey set to $testOnlyRoutes" should {
-    s"Return 200 " in (await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200)
+    s"Return 200 " in (await(wsUrl(clearGoalEventsUrl).get()).status shouldBe 200)
   }
 
   s"GET $getGoalEventsUrl with $applicationRouterKey set to $testOnlyRoutes" should {
-    s"Return 200 " in (await(wsUrl(getGoalEventsUrl).get).status shouldBe 200)
+    s"Return 200 " in (await(wsUrl(getGoalEventsUrl).get()).status shouldBe 200)
   }
 
   s"GET $clearMiletonesUrl with $applicationRouterKey set to $testOnlyRoutes" should {
-    s"Return 200 " in (await(wsUrl(clearMiletonesUrl).get).status shouldBe 200)
+    s"Return 200 " in (await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200)
   }
 
   s"PUT $createGoalUrl with $applicationRouterKey set to $testOnlyRoutes" should {
@@ -68,7 +68,7 @@ class TestOnlyRoutesWiredISpec
         wsUrl(createGoalUrl)
           .put(Json.toJson(TestSavingsGoal(Nino(nino), Some(10.0), None, LocalDate.now().minusMonths(8))))
       ).status                                    shouldBe 201)
-      await(wsUrl(clearGoalEventsUrl).get).status shouldBe 200
+      await(wsUrl(clearGoalEventsUrl).get()).status shouldBe 200
     }
   }
 

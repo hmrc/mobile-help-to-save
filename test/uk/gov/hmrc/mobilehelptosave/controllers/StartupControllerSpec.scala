@@ -16,33 +16,20 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import play.api.libs.json.JsObject
 import play.api.test.Helpers._
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.HtsUserService
-import uk.gov.hmrc.mobilehelptosave.support.ShutteringMocking
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class StartupControllerSpec
-  extends AnyWordSpecLike
-    with Matchers
-    with MockFactory
-    with OneInstancePerTest
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with ShutteringMocking {
-
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
+class StartupControllerSpec extends BaseSpec with ShutteringMocking {
 
   private val generator = new Generator(0)
   private val nino      = generator.nextNino

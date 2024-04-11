@@ -17,33 +17,19 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MilestonesControllerSpec
-  extends AnyWordSpecLike
-    with Matchers
-    with MockFactory
-    with OneInstancePerTest
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with LoggerStub
-    with TestF {
-
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
+class MilestonesControllerSpec extends BaseSpec with TestF {
 
   private val generator             = new Generator(0)
   private val nino                  = generator.nextNino

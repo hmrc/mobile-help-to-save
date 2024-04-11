@@ -16,23 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.api
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.HttpErrorHandler
 import play.api.mvc.Result
 import play.api.test.Helpers._
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
+import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
 import scala.collection.mutable
 
-class DocumentationControllerSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with MockFactory {
+class DocumentationControllerSpec extends BaseSpec {
   "definition" should {
     "have content type = application/json" in {
       val controller = new DocumentationController(

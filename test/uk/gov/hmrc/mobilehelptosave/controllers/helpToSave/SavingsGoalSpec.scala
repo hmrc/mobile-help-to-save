@@ -18,30 +18,22 @@ package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import cats.syntax.either._
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{OneInstancePerTest, OptionValues}
+import org.scalatest.OptionValues
 import play.api.test.Helpers.{contentAsString, status}
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 //noinspection TypeAnnotation
 class SavingsGoalSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
+    extends BaseSpec
     with OptionValues
     with TransactionTestData
     with AccountTestData
-    with DefaultAwaitTimeout
-    with MockFactory
-    with LoggerStub
-    with OneInstancePerTest
     with TestSupport
     with ShutteringMocking {
+
   "putSavingsGoal" when {
     "logged in user's NINO matches NINO in URL" should {
       "set the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
@@ -56,7 +48,6 @@ class SavingsGoalSpec
 
       "set the goal Bad Request if both amount and name are missing" in new AuthorisedTestScenario
         with HelpToSaveMocking {
-        val amount  = 21.50
         val request = FakeRequest().withBody(SavingsGoal())
 
         val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)

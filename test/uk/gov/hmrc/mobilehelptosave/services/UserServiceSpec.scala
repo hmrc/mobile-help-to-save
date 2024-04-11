@@ -16,35 +16,21 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{EitherValues, OneInstancePerTest}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import org.scalatest.EitherValues
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UserServiceSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
-    with EitherValues {
+class UserServiceSpec extends BaseSpec with EitherValues {
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
-  private val generator  = new Generator(0)
-  private val nino       = generator.nextNino
   private val testConfig = TestUserServiceConfig(eligibilityCheckEnabled = true)
 
   private class UserServiceWithTestDefaults(
@@ -87,7 +73,7 @@ class UserServiceSpec
         fakeEligibilityRepo(None)
       )
 
-      val user: UserDetails = await(service.userDetails(nino)).right.value
+      val user: UserDetails = await(service.userDetails(nino)).value
       user.state shouldBe UserState.Enrolled
     }
 
@@ -98,7 +84,7 @@ class UserServiceSpec
         fakeEligibilityRepo(None)
       )
 
-      val user: UserDetails = await(service.userDetails(nino)).right.value
+      val user: UserDetails = await(service.userDetails(nino)).value
       user.state shouldBe UserState.NotEnrolled
     }
 
@@ -109,7 +95,7 @@ class UserServiceSpec
         fakeEligibilityRepo(None)
       )
 
-      val user: UserDetails = await(service.userDetails(nino)).right.value
+      val user: UserDetails = await(service.userDetails(nino)).value
       user.state shouldBe UserState.NotEnrolledButEligible
     }
 
@@ -122,7 +108,7 @@ class UserServiceSpec
         fakeEligibilityRepo(None)
       )
 
-      val user: UserDetails = await(service.userDetails(nino)).right.value
+      val user: UserDetails = await(service.userDetails(nino)).value
       user.state shouldBe UserState.NotEnrolled
     }
 

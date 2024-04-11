@@ -18,27 +18,15 @@ package uk.gov.hmrc.mobilehelptosave
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
-import play.api.libs.json.Json
 import play.api.libs.ws.{WSRequest, WSResponse}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
-import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 import scala.util.Random
 
-class MilestonesISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSupport
-    with OneServerPerSuiteWsClient
-    with NumberVerification
-    with ComponentSupport {
+class MilestonesISpec extends BaseISpec with NumberVerification with ComponentSupport {
 
   override implicit lazy val app: Application = appBuilder.build()
 
@@ -876,6 +864,7 @@ class MilestonesISpec
     AuthStub.userIsLoggedIn(nino)
     HelpToSaveStub.currentUserIsEnrolled()
     HelpToSaveStub.accountExists(balance, nino, firstTermBonusPaid)
+    HelpToSaveStub.zeroTransactionsExistForUser(nino)
   }
 
   private def loginWithBalanceAndBonusTerms(
@@ -904,5 +893,6 @@ class MilestonesISpec
       secondPeriodEndDate,
       isClosed
     )
+    HelpToSaveStub.zeroTransactionsExistForUser(nino)
   }
 }

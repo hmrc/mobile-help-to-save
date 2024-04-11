@@ -17,33 +17,19 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.applicativeError._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
 
 import java.time.{LocalDate, LocalDateTime, YearMonth}
 import scala.concurrent.Future
 
-class AccountServiceSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with AccountTestData
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
-    with TestF
-    with TransactionTestData {
+class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with TransactionTestData {
 
-  private val generator  = new Generator(0)
-  private val nino       = generator.nextNino
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
 
   private val testMilestonesConfig =
@@ -565,7 +551,7 @@ class AccountServiceSpec
         }
 
       // This should never get called as part of the account service
-      override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
+      override def getGoalSetEvents: TestF[List[SavingsGoalSetEvent]] = ???
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
 
       override def setTestGoal(

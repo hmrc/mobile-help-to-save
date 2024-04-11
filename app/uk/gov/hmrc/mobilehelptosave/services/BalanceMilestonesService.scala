@@ -25,8 +25,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
-
-import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 trait BalanceMilestonesService[F[_]] {

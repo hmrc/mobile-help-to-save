@@ -50,7 +50,7 @@ object Milestones {
       if (milestones.isEmpty) List.empty[MongoMilestone] else List(milestones.min)
   }
 
-  implicit def prioritise(milestones: List[MongoMilestone]) = new PriorityMilestones(milestones)
+  implicit def prioritise(milestones: List[MongoMilestone]): PriorityMilestones = new PriorityMilestones(milestones)
 
   implicit val milestoneWrites: Writes[MongoMilestone] = new Writes[MongoMilestone] {
 

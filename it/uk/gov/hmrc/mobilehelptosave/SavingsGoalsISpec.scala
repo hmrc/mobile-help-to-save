@@ -17,31 +17,22 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.OptionValues
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json._
 import play.api.libs.ws.{WSRequest, WSResponse}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
-import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, MongoSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport, MongoSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SavingsGoalsISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with TransactionTestData
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSupport
+    extends BaseISpec
     with MongoSupport
     with OptionValues
-    with OneServerPerSuiteWsClient
     with ComponentSupport
     with NumberVerification {
 
@@ -68,13 +59,16 @@ class SavingsGoalsISpec
     nino: Nino,
     json: JsValue
   ): WSResponse =
-    await(requestWithAuthHeaders(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=$journeyId").put(json))
+    await(
+      requestWithAuthHeaders(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=$journeyId").put(json)
+    )
 
   trait LoggedInUserScenario {
     ShutteringStub.stubForShutteringDisabled()
     HelpToSaveStub.currentUserIsEnrolled()
     HelpToSaveStub.accountExistsWithNoEmail(nino)
     AuthStub.userIsLoggedIn(nino)
+    HelpToSaveStub.zeroTransactionsExistForUser(nino)
   }
 
   "PUT /savings-account/{nino}/goals/current-goal" should {
@@ -109,7 +103,8 @@ class SavingsGoalsISpec
 
       val response: WSResponse = await {
         for {
-          _    <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
+          _ <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
+                .put(validGoalJson)
           resp <- requestWithAuthHeaders(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
       }
@@ -123,8 +118,10 @@ class SavingsGoalsISpec
 
       val response: WSResponse = await {
         for {
-          _    <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
-          _    <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJsonWithName)
+          _ <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
+                .put(validGoalJson)
+          _ <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
+                .put(validGoalJsonWithName)
           resp <- requestWithAuthHeaders(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
       }
@@ -175,8 +172,9 @@ class SavingsGoalsISpec
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse =
         await(
-          requestWithAuthHeaders(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
-            .put(validGoalJson)
+          requestWithAuthHeaders(
+            s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId"
+          ).put(validGoalJson)
         )
       response.status shouldBe 400
     }
@@ -184,8 +182,9 @@ class SavingsGoalsISpec
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse =
         await(
-          requestWithAuthHeaders(s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
-            .put(inVaalidGoalJson)
+          requestWithAuthHeaders(
+            s"/savings-account/${nino.toString}/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId"
+          ).put(inVaalidGoalJson)
         )
       response.status shouldBe 400
     }
@@ -203,7 +202,8 @@ class SavingsGoalsISpec
 
       val response: WSResponse = await {
         for {
-          _    <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").put(validGoalJson)
+          _ <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId")
+                .put(validGoalJson)
           _    <- requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=$journeyId").delete()
           resp <- requestWithAuthHeaders(s"/savings-account/$nino?journeyId=$journeyId").get()
         } yield resp
@@ -230,7 +230,10 @@ class SavingsGoalsISpec
     "return 400 when invalid journeyId is supplied" in new LoggedInUserScenario {
 
       val response: WSResponse =
-        await(requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId").delete())
+        await(
+          requestWithAuthHeaders(s"/savings-account/$nino/goals/current-goal?journeyId=ThisIsAnInvalidJourneyId")
+            .delete()
+        )
       response.status shouldBe 400
     }
 

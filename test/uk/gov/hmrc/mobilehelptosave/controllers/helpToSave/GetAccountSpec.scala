@@ -17,19 +17,16 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{OneInstancePerTest, OptionValues}
+import org.scalatest.OptionValues
 import play.api.libs.json.Json
-import play.api.test.Helpers.{contentAsJson, status, _}
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.Helpers._
+import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,16 +34,10 @@ import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetAccountSpec
-  extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
+    extends BaseSpec
     with OptionValues
     with TransactionTestData
     with AccountTestData
-    with DefaultAwaitTimeout
-    with MockFactory
-    with LoggerStub
-    with OneInstancePerTest
     with TestSupport
     with ShutteringMocking {
 
@@ -77,7 +68,7 @@ class GetAccountSpec
 
         val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(accountData) shouldBe OK
-        val account = contentAsJson(accountData).validate[Account]
+        contentAsJson(accountData).validate[Account]
       }
     }
 
@@ -121,9 +112,9 @@ class GetAccountSpec
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService = mock[AccountService[Future]]
+        val accountService            = mock[AccountService[Future]]
         val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
-        val savingsGoalEventRepo = mock[SavingsGoalEventRepo[Future]]
+        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
         val controller = new HelpToSaveController(
           logger,
           accountService,
@@ -138,36 +129,38 @@ class GetAccountSpec
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "title").as[String] shouldBe "Shuttered"
+        (jsonBody \ "title").as[String]      shouldBe "Shuttered"
         (jsonBody \ "message")
           .as[String] shouldBe "HTS is currently not available"
       }
     }
 
     "nba account details are associated with the NINO" should {
-      "return the nbaAccountNumber, nbaPayee, nbaRolNumber and nbaSortCode in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "return the nbaAccountNumber, nbaPayee, nbaRolNumber and nbaSortCode in the account structure" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
         val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).as[Account]
         account.nbaAccountNumber shouldBe Some("123456789")
-        account.nbaPayee shouldBe Some("Mr Testfore Testur")
-        account.nbaRollNumber shouldBe Some("RN136912")
-        account.nbaSortCode shouldBe Some("12-34-56")
+        account.nbaPayee         shouldBe Some("Mr Testfore Testur")
+        account.nbaRollNumber    shouldBe Some("RN136912")
+        account.nbaSortCode      shouldBe Some("12-34-56")
       }
     }
     "nba account details are not associated with the NINO" should {
-      "return nothing for nbaAccountNumber, nbaPayee, nbaRolNumber and nbaSortCode in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
+      "return nothing for nbaAccountNumber, nbaPayee, nbaRolNumber and nbaSortCode in the account structure" in new AuthorisedTestScenario
+        with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccountNoNbaDetails)))
 
         val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).as[Account]
         account.nbaAccountNumber shouldBe None
-        account.nbaPayee shouldBe None
-        account.nbaRollNumber shouldBe None
-        account.nbaSortCode shouldBe None
+        account.nbaPayee         shouldBe None
+        account.nbaRollNumber    shouldBe None
+        account.nbaSortCode      shouldBe None
       }
     }
   }

@@ -89,7 +89,7 @@ class HelpToSaveConnectorImpl(
       Left(ErrorInfo.MultipleRequests)
     case _: NotFoundException =>
       Left(ErrorInfo.AccountNotFound)
-    case e @ (_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException |
+    case e @ (_: HttpException | _: UpstreamErrorResponse | _: JsValidationException |
         _: JsonParseException) =>
       logger.warn(s"Couldn't get $dataDescription from help-to-save service", e)
       Left(ErrorInfo.General)

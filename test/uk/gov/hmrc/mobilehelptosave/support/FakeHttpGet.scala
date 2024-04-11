@@ -36,7 +36,7 @@ class FakeHttpGet(
     if (urlPredicate(url))
       responseF
     else
-      Future successful HttpResponse(404)
+      Future successful HttpResponse(404, "Not Found")
 
   override def configuration:         Config =  Configuration.load(Environment.simple()).underlying
   override val hooks:                 Seq[HttpHook]  = Seq.empty

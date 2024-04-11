@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.data._
 import cats.implicits._
-import org.joda.time.DateTime
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -29,7 +28,6 @@ import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
 import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
-import java.time.temporal.{ChronoField, ChronoUnit}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait UserService {

@@ -17,34 +17,19 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import java.time.{Instant, LocalDate, LocalDateTime}
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import play.api.libs.json.Json
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
-import uk.gov.hmrc.mobilehelptosave.support.LoggerStub
+import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ReportingServiceSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
-    with FutureAwaits
-    with DefaultAwaitTimeout {
+class ReportingServiceSpec extends BaseSpec {
 
   private val testConfig =
     TestReportingServiceConfig(penceInCurrentSavingsGoalsEnabled = true, currentSavingsGoalRangeCountsEnabled = true)
-
-  private implicit val passedHc: HeaderCarrier = HeaderCarrier()
 
   val savingsGoalSetEvents = List(
     SavingsGoalSetEvent(Nino("AA000000B"), Some(50), Instant.parse("2019-01-16T10:15:30Z")),
@@ -135,7 +120,7 @@ class ReportingServiceSpec
       override def clearGoalEvents(): Future[Boolean] = ???
       override def getGoal(nino: Nino): Future[Option[SavingsGoal]] = ???
 
-      override def getGoalSetEvents(): Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
+      override def getGoalSetEvents: Future[List[SavingsGoalSetEvent]] = Future.successful(goalSetEvents)
 
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] =
         Future.successful(Right(goalSetEvents))

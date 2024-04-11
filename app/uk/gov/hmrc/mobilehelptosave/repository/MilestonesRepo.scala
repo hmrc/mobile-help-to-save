@@ -104,7 +104,7 @@ class MongoMilestonesRepo(
       .void
 
   override def clearMilestones(): Future[Unit] =
-    collection.deleteMany(filter = Document()).toFuture.void
+    collection.deleteMany(filter = Document()).toFuture().void
 
   override def updateExpireAt(): Future[Unit] =
     collection
@@ -145,7 +145,7 @@ class MongoMilestonesRepo(
   override def setTestMilestones(milestone: TestMilestone, amount: Int): Future[Unit] =
     collection.insertMany(Array.fill(amount) {
       MongoMilestone(
-        nino = Nino("AA" + Random.nextInt(100000).formatted("%06d") + "ABCD".charAt(Random.nextInt(4))),
+        nino = Nino("AA" + "%06d".format(Random.nextInt(100000)) + "ABCD".charAt(Random.nextInt(4))),
         milestoneType = milestone.milestoneType,
         milestone = milestone.milestone,
         isSeen = milestone.isSeen,

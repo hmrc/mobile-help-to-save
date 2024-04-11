@@ -166,7 +166,7 @@ class MongoSavingsGoalEventRepo(
     }
   }
 
-  override def getGoalSetEvents(): Future[Seq[SavingsGoalSetEvent]] =
+  override def getGoalSetEvents: Future[Seq[SavingsGoalSetEvent]] =
     collection
       .find(equal("type", "set"))
       .map {

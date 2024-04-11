@@ -16,24 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
 
-import java.time.{Instant, LocalDate, LocalDateTime, YearMonth}
+import java.time.{Instant, LocalDate, YearMonth}
 
 class SavingsUpdateServiceSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
+    extends BaseSpec
     with TestF
     with AccountTestData
     with TransactionTestData

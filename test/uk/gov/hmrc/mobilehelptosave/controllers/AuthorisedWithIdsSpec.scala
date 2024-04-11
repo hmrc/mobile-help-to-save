@@ -16,35 +16,21 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import play.api.mvc.Results
 import play.api.test.Helpers._
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthorisedWithIdsSpec
-  extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
-    with Retrievals
-    with Results
-    with ShutteringMocking {
+class AuthorisedWithIdsSpec extends BaseSpec with Retrievals with Results with ShutteringMocking {
 
   private val generator = new Generator(0)
   private val testNino  = generator.nextNino

@@ -17,25 +17,14 @@
 package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.mobilehelptosave.support.FakeHttpGet
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, FakeHttpGet}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ShutteringConnectorSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with MockFactory
-    with OneInstancePerTest {
+class ShutteringConnectorSpec extends BaseSpec {
 
   private val config: ShutteringConnectorConfig = new ShutteringConnectorConfig {
     override val shutteringBaseUrl: URL = new URL("http:///")
