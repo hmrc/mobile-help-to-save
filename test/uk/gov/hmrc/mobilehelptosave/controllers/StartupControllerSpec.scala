@@ -31,9 +31,6 @@ import scala.concurrent.Future
 
 class StartupControllerSpec extends BaseSpec with ShutteringMocking {
 
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-
   private val mockUserService = mock[HtsUserService]
 
   private val config = TestStartupControllerConfig(

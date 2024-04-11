@@ -42,7 +42,7 @@ class HelpToSaveConnectorSpec
   private val baseUrl = "http://help-to-save-service"
 
   private val ninoString = "AA000000A"
-  private val nino       = Nino(ninoString)
+  override val nino       = Nino(ninoString)
 
   private def isAccountUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
     case AbsoluteUrl("http",

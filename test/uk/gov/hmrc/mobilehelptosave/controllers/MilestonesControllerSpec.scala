@@ -31,8 +31,6 @@ import scala.concurrent.Future
 
 class MilestonesControllerSpec extends BaseSpec with TestF {
 
-  private val generator             = new Generator(0)
-  private val nino                  = generator.nextNino
   private val mockMilestonesService = mock[MilestonesService[Future]]
 
   "getMilestones" should {

@@ -1,12 +1,8 @@
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.support.OneServerPerSuiteWsClient
+import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
@@ -14,12 +10,7 @@ import java.time.{LocalDate, LocalDateTime, ZoneOffset}
   * Need two separate tests so that the servers can be run with different system
   * property settings for the router
   */
-class TestOnlyRoutesNotWiredISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with OneServerPerSuiteWsClient {
+class TestOnlyRoutesNotWiredISpec extends BaseISpec {
   val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
   private val applicationRouterKey = "application.router"
 
@@ -30,14 +21,7 @@ class TestOnlyRoutesNotWiredISpec
   }
 }
 
-class TestOnlyRoutesWiredISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with OneServerPerSuiteWsClient {
-  val generator          = new Generator(0)
-  val nino               = generator.nextNino.nino
+class TestOnlyRoutesWiredISpec extends BaseISpec {
   val clearGoalEventsUrl = "/mobile-help-to-save/test-only/clear-goal-events"
   val getGoalEventsUrl   = s"/mobile-help-to-save/test-only/goal-events/$nino"
   val clearMiletonesUrl  = "/mobile-help-to-save/test-only/clear-milestone-data"
@@ -66,8 +50,8 @@ class TestOnlyRoutesWiredISpec
     s"Return 201 " in {
       (await(
         wsUrl(createGoalUrl)
-          .put(Json.toJson(TestSavingsGoal(Nino(nino), Some(10.0), None, LocalDate.now().minusMonths(8))))
-      ).status                                    shouldBe 201)
+          .put(Json.toJson(TestSavingsGoal(nino, Some(10.0), None, LocalDate.now().minusMonths(8))))
+      ).status                                      shouldBe 201)
       await(wsUrl(clearGoalEventsUrl).get()).status shouldBe 200
     }
   }
@@ -79,11 +63,11 @@ class TestOnlyRoutesWiredISpec
           .put(
             Json.toJson(
               TestMilestone(
-                Nino(nino),
+                nino,
                 BonusReached,
                 Milestone(FirstBonusReached150),
-                true,
-                false,
+                isSeen       = true,
+                isRepeatable = false,
                 Some(LocalDateTime.now().minusMonths(1).toInstant(ZoneOffset.UTC)),
                 Some(LocalDateTime.now().plusMinutes(10).toInstant(ZoneOffset.UTC))
               )
@@ -100,11 +84,11 @@ class TestOnlyRoutesWiredISpec
           .put(
             Json.toJson(
               TestMilestone(
-                Nino(nino),
+                nino,
                 BonusReached,
                 Milestone(FirstBonusReached150),
-                true,
-                false,
+                isSeen       = true,
+                isRepeatable = false,
                 Some(LocalDateTime.now().minusMonths(1).toInstant(ZoneOffset.UTC)),
                 Some(LocalDateTime.now().plusMinutes(10).toInstant(ZoneOffset.UTC))
               )

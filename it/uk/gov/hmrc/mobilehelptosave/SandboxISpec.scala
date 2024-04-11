@@ -20,16 +20,12 @@ import org.scalatest.OptionValues
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, SavingsUpdateResponse, Transactions}
 import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 
 class SandboxISpec extends BaseISpec with OptionValues {
 
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
-  private val generator            = new Generator(0)
-  private val nino                 = generator.nextNino
-  private val journeyId            = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {

@@ -18,27 +18,14 @@ package uk.gov.hmrc.mobilehelptosave
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import play.api.Application
-import play.api.libs.ws.{WSRequest, WSResponse}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import play.api.libs.ws.WSResponse
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
-import scala.util.Random
-
 class MilestonesISpec extends BaseISpec with NumberVerification with ComponentSupport {
 
-  override implicit lazy val app: Application = appBuilder.build()
-
-  private val generator  = new Generator(Random.nextInt())
-  private val journeyId  = "27085215-69a4-4027-8f72-b04b10ec16b0"
   private val dateFormat = DateTimeFormatter.ofPattern("d MMMM yyyy")
-
-  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
-  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
-
-  private def requestWithAuthHeaders(url: String): WSRequest =
-    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
 
   "GET /savings-account/:nino/milestones" should {
     "respond with 200 and empty list as JSON when there are no unseen milestones" in {

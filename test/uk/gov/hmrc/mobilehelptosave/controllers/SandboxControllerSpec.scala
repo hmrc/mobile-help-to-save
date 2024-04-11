@@ -22,7 +22,6 @@ import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.FakeRequest
-import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
@@ -41,8 +40,6 @@ class SandboxControllerSpec
     with NumberVerification
     with ShutteringMocking {
 
-  private val generator   = new Generator(0)
-  private val nino        = generator.nextNino
   private val currentTime = LocalDateTime.of(2022, 4, 11, 12, 30)
   private val fixedClock  = new FixedFakeClock(currentTime)
 

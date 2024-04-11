@@ -17,7 +17,6 @@
 package uk.gov.hmrc.mobilehelptosave.api
 
 import org.scalatest.concurrent.Eventually
-import play.api.Application
 import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, BaseISpec, ComponentSupport}
 
 class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport {
@@ -27,8 +26,6 @@ class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport
                                                   "00090002-0003-0004-0005-000600070008"),
     "api.access.type" -> "TEST_ACCESS_TYPE"
   )
-
-  override implicit lazy val app: Application = appBuilder.build()
 
   "GET /api/definition" should {
 

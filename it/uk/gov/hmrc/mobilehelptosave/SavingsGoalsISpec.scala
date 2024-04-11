@@ -17,12 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.OptionValues
-import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json._
-import play.api.libs.ws.{WSRequest, WSResponse}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import play.api.libs.ws.WSResponse
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport, MongoSupport}
@@ -36,24 +35,12 @@ class SavingsGoalsISpec
     with ComponentSupport
     with NumberVerification {
 
-  override implicit lazy val app: Application = appBuilder.build()
-
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-
   private val savingsGoal1          = SavingsGoal(Some(20))
   private val savingsGoalBad        = SavingsGoal(Some(20))
   private val validGoalJson         = toJson(savingsGoal1)
   private val inVaalidGoalJson      = toJson(savingsGoalBad)
   private val savingsGoal2          = SavingsGoal(goalAmount = Some(30), goalName = Some("\uD83C\uDFE1 New home"))
   private val validGoalJsonWithName = toJson(savingsGoal2)
-  private val journeyId             = "27085215-69a4-4027-8f72-b04b10ec16b0"
-
-  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
-  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
-
-  private def requestWithAuthHeaders(url: String): WSRequest =
-    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
 
   private def setSavingsGoal(
     nino: Nino,

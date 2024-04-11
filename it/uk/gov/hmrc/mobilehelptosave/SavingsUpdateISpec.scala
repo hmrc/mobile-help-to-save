@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.{WSRequest, WSResponse}
-import uk.gov.hmrc.domain.Generator
+import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
@@ -30,21 +28,10 @@ import java.time.{LocalDate, YearMonth}
 import java.time.temporal.TemporalAdjusters
 
 class SavingsUpdateISpec extends BaseISpec with ComponentSupport {
-
-  override implicit lazy val app: Application = appBuilder.build()
   val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
   val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
-  private val generator            = new Generator(0)
-  private val nino                 = generator.nextNino
-  private val journeyId            = "27085215-69a4-4027-8f72-b04b10ec16b0"
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
-
-  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
-  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
-
-  private def requestWithAuthHeaders(url: String): WSRequest =
-    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
 
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 

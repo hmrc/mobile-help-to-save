@@ -34,4 +34,5 @@ trait BaseSpec
 
   val generator = new Generator(0)
   val nino: Nino = generator.nextNino
+  val otherNino: Nino = generator.nextNino
 }

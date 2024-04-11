@@ -16,25 +16,10 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import play.api.Application
-import play.api.libs.ws.WSRequest
-import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 class StartupISpec extends BaseISpec with ComponentSupport with NumberVerification {
-
-  override implicit lazy val app: Application = appBuilder
-    .build()
-
-  private val generator = new Generator(0)
-  private val nino      = generator.nextNino
-
-  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
-  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
-
-  private def requestWithAuthHeaders(url: String): WSRequest =
-    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
 
   "GET /mobile-help-to-save/startup" should {
 

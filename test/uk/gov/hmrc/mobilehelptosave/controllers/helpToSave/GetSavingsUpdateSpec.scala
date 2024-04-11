@@ -17,15 +17,18 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
-import org.scalatest.OptionValues
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, OptionValues}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers._
-import play.api.test.FakeRequest
+import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
+import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 
 import java.time.{LocalDate, Month, YearMonth}
@@ -36,13 +39,19 @@ import scala.concurrent.Future
 
 //noinspection TypeAnnotation
 class GetSavingsUpdateSpec
-    extends BaseSpec
-    with OptionValues
-    with TransactionTestData
-    with AccountTestData
-    with TestSupport
-    with ShutteringMocking
-    with SavingsGoalTestData {
+    extends AnyWordSpecLike
+      with Matchers
+      with FutureAwaits
+      with OptionValues
+      with TransactionTestData
+      with AccountTestData
+      with DefaultAwaitTimeout
+      with MockFactory
+      with LoggerStub
+      with OneInstancePerTest
+      with TestSupport
+      with ShutteringMocking
+      with SavingsGoalTestData {
 
   "getSavingsUpdate" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
