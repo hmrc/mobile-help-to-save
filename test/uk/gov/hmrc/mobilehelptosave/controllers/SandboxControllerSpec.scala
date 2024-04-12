@@ -18,22 +18,15 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.{LocalDate, LocalDateTime, YearMonth}
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
 import play.api.test.Helpers._
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.services.FixedFakeClock
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, NumberVerification, TransactionTestData}
 
 import java.time.temporal.TemporalAdjusters
@@ -41,22 +34,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SandboxControllerSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with SchemaMatchers
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
-    with FutureAwaits
+    extends BaseSpec
     with TransactionTestData
     with AccountTestData
-    with DefaultAwaitTimeout
     with NumberVerification
     with ShutteringMocking {
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val generator   = new Generator(0)
-  private val nino        = generator.nextNino
   private val currentTime = LocalDateTime.of(2022, 4, 11, 12, 30)
   private val fixedClock  = new FixedFakeClock(currentTime)
 
@@ -258,9 +241,9 @@ class SandboxControllerSpec
       val secondBonusTermJson = (json \ "bonusTerms")(1)
       shouldBeBigDecimal(secondBonusTermJson \ "bonusEstimate", BigDecimal(0))
       shouldBeBigDecimal(secondBonusTermJson \ "bonusPaid", BigDecimal(0))
-      (secondBonusTermJson \ "endDate").as[String]                    shouldBe "2024-10-31"
-      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String]     shouldBe "2024-11-01"
-      (secondBonusTermJson \ "bonusPaidByDate").as[String]            shouldBe "2024-11-01"
+      (secondBonusTermJson \ "endDate").as[String]                shouldBe "2024-10-31"
+      (secondBonusTermJson \ "bonusPaidOnOrAfterDate").as[String] shouldBe "2024-11-01"
+      (secondBonusTermJson \ "bonusPaidByDate").as[String]        shouldBe "2024-11-01"
 
       (json \ "inAppPaymentsEnabled").as[Boolean] shouldBe false
     }
@@ -283,7 +266,7 @@ class SandboxControllerSpec
       status(response) shouldBe OK
       val json: JsValue = contentAsJson(response)
 
-      val milestone = (json \ "milestones").isEmpty
+      (json \ "milestones").isEmpty shouldBe false
     }
 
     "return a shuttered response when the service is shuttered" in {

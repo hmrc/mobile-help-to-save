@@ -17,7 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.support
 
 import play.api.ApplicationLoader.Context
-import play.api.{Application, ApplicationLoader, Configuration, Environment}
+import play.api.{Application, Configuration, Environment}
 import uk.gov.hmrc.mobilehelptosave.wiring.ServiceComponents
 
 trait ApplicationBuilder {
@@ -25,8 +25,7 @@ trait ApplicationBuilder {
   def configure(conf: (String, Any)*): ApplicationBuilder
 }
 
-class ComponentApplicationBuilder(context: Context = ApplicationLoader.createContext(Environment.simple()))
-    extends ApplicationBuilder {
+class ComponentApplicationBuilder(context: Context = Context.create(Environment.simple())) extends ApplicationBuilder {
 
   override def build(): Application =
     new ServiceComponents(context).application

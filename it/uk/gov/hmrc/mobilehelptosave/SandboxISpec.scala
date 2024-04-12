@@ -16,35 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-
-import java.util.UUID.randomUUID
 import org.scalatest.OptionValues
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, SavingsUpdateResponse, Transactions}
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
-import uk.gov.hmrc.mobilehelptosave.support.{OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 
-class SandboxISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with SchemaMatchers
-    with OptionValues
-    with TransactionTestData
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSupport
-    with OneServerPerSuiteWsClient {
+class SandboxISpec extends BaseISpec with OptionValues {
 
   private val sandboxRoutingHeader = "X-MOBILE-USER-ID" -> "208606423740"
-  private val generator            = new Generator(0)
-  private val nino                 = generator.nextNino
-  private val journeyId            = "27085215-69a4-4027-8f72-b04b10ec16b0"
 
   "GET /savings-account/{nino}/transactions with sandbox header" should {
     "Return OK response containing valid Transactions JSON" in {
@@ -53,7 +34,7 @@ class SandboxISpec
           wsUrl(s"/savings-account/$nino/transactions?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get()
         )
       response.status                      shouldBe Status.OK
-      response.json.validate[Transactions] shouldBe 'success
+      response.json.validate[Transactions] shouldBe Symbol("success")
     }
     "Return 400 when journeyId not supplied" in {
       val response: WSResponse =
@@ -77,7 +58,7 @@ class SandboxISpec
         await(wsUrl(s"/savings-account/$nino?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe Status.OK
       val accountV = response.json.validate[Account]
-      accountV                                          shouldBe 'success
+      accountV                                          shouldBe Symbol("success")
       accountV.asOpt.value.savingsGoal.value.goalAmount shouldBe Some(25.0)
     }
     "Return 400 when journeyId not supplied" in {
@@ -212,7 +193,7 @@ class SandboxISpec
         await(wsUrl(s"/savings-update?journeyId=$journeyId").addHttpHeaders(sandboxRoutingHeader).get())
       response.status shouldBe Status.OK
       val updateV = response.json.validate[SavingsUpdateResponse]
-      updateV                                                              shouldBe 'success
+      updateV                                                              shouldBe Symbol("success")
       updateV.asOpt.value.savingsUpdate.get.amountEarnedTowardsBonus.value shouldBe 50
     }
     "Return 400 when journeyId not supplied" in {

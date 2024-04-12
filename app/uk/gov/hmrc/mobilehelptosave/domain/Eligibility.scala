@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import org.joda.time.DateTime
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mongo.play.json.formats.MongoJodaFormats
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import java.time.Instant
 
 case class EligibilityCheckResult(
   result:     String,
@@ -46,11 +47,11 @@ object EligibilityCheckResponse {
 case class Eligibility(
   nino:     Nino,
   eligible: Boolean,
-  expireAt: DateTime)
+  expireAt: Instant)
 
 object Eligibility {
 
-  private implicit val dateFormat = MongoJodaFormats.dateTimeFormat
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
   implicit val format: Format[Eligibility] = Json.format[Eligibility]
 

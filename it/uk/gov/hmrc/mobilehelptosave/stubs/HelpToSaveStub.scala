@@ -83,7 +83,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   )(implicit wireMockServer: WireMockServer
   ): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -93,7 +93,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def zeroTransactionsExistForUser(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -103,7 +103,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def transactionsWithOver50PoundDebit(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -113,7 +113,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def multipleTransactionsWithinSameMonthAndDay(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.OK)
@@ -123,7 +123,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def userDoesNotHaveAnHtsAccount(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.NOT_FOUND)
@@ -132,7 +132,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def tooManyRequestsHaveBeenMade(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.TOO_MANY_REQUESTS)
@@ -141,7 +141,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def userAccountNotFound(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account"))
+      get(urlEqualTo(s"/help-to-save/$nino/account?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.NOT_FOUND)
@@ -150,7 +150,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
   def userAccountsTooManyRequests(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
-      get(urlPathEqualTo(s"/help-to-save/$nino/account/transactions"))
+      get(urlEqualTo(s"/help-to-save/$nino/account/transactions?systemId=MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(Status.TOO_MANY_REQUESTS)
@@ -159,7 +159,7 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
 
 
   private def getAccountUrlPathPattern(nino: Nino) =
-    urlPathEqualTo(s"/help-to-save/$nino/account")
+    urlEqualTo(s"/help-to-save/$nino/account?systemId=MDTP-MOBILE")
 
   def accountShouldNotHaveBeenCalled(nino: Nino)(implicit wireMockServer: WireMockServer): Unit =
     wireMockServer.verify(0, getRequestedFor(getAccountUrlPathPattern(nino)))
@@ -173,7 +173,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   ): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -190,7 +189,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   ): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -214,7 +212,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   ): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -238,7 +235,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def accountExistsWithNoEmail(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -249,7 +245,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def closedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -260,7 +255,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def paymentsBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -271,7 +265,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def withdrawalsBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -282,7 +275,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def bonusesBlockedAccountExists(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -293,7 +285,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def accountReturnsInvalidJson(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -304,7 +295,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def accountReturnsBadlyFormedJson(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(200)
@@ -317,7 +307,6 @@ object HelpToSaveStub extends AccountTestData with TransactionTestData {
   def accountReturnsInternalServerError(nino: Nino)(implicit wireMockServer: WireMockServer): StubMapping =
     wireMockServer.stubFor(
       get(getAccountUrlPathPattern(nino))
-        .withQueryParam("systemId", equalTo("MDTP-MOBILE"))
         .willReturn(
           aResponse()
             .withStatus(500)

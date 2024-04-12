@@ -1,45 +1,109 @@
 {
-  "number": "1000000000001",
-  "isClosed": false,
-  "blocked": {
-    "payments": false,
-    "withdrawals": false,
-    "bonuses": false
-  },
-  "balance": 200,
-  "openedYearMonth": "2018-01",
-  "paidInThisMonth": 50,
-  "canPayInThisMonth": 0,
-  "maximumPaidInThisMonth": 50,
-  "thisMonthEndDate": "2018-03-31",
-  "daysRemainingInMonth": 1,
-  "nextPaymentMonthStartDate": "2018-04-01",
-  "accountHolderName": "Testforename Testsurname",
-  "accountHolderEmail": "test@example.com",
-  "bonusTerms": [
+  "taxYear": 2023,
+  "employments": [
     {
-      "bonusEstimate": 100,
-      "bonusPaid": 0,
-      "endDate": "2019-10-31",
-      "bonusPaidOnOrAfterDate": "2019-11-01",
-      "bonusPaidByDate": "2019-11-01",
-      "balanceMustBeMoreThanForBonus": 0
-    },
-    {
-      "bonusEstimate": 0,
-      "bonusPaid": 0,
-      "endDate": "2021-10-31",
-      "bonusPaidOnOrAfterDate": "2021-11-01",
-      "bonusPaidByDate": "2021-11-01",
-      "balanceMustBeMoreThanForBonus": 200
+      "name": "HMRC LongBenton",
+      "status": "Live",
+      "taxCode": "K804",
+      "amount": 33488,
+      "payeNumber": "65/TZ99924",
+      "incomeDetailsLink": "/check-income-tax/income-details/1",
+      "yourIncomeCalculationDetailsLink": "/check-income-tax/your-income-calculation-details/1",
+      "updateIncomeLink": "/check-income-tax/update-income/load/1",
+      "updateEmployerLink": "/check-income-tax/update-remove-employment/decision/1",
+      "employmentBenefits": {
+        "benefits": [
+          {
+            "benefitType": "CarBenefit",
+            "amount": 2222
+          },
+          {
+            "benefitType": "MedicalInsurance",
+            "amount": 1143
+          },
+          {
+            "benefitType": "OtherBenefits",
+            "amount": 3685
+          }
+        ],
+        "changeCarBenefitLink": "/paye/company-car/details",
+        "changeMedicalBenefitLink": "/paye/benefits/medical-benefit",
+        "changeOtherBenefitLink": "/digital-forms/form/tell-us-about-company-benefits/draft/guide"
+      }
     }
   ],
-  "currentBonusTerm": "First",
-  "inAppPaymentsEnabled": false,
-  "savingsGoalsEnabled": false,
-  "savingsGoal": {
-    "goalAmount": 21.50
+  "otherIncomes": [
+    {
+      "name": "STATE PENSION",
+      "amount": 23000
+    },
+    {
+      "name": "OCCUPATIONAL PENSION",
+      "amount": 4265
+    }
+  ],
+  "taxCodeChange": {
+    "hasChanged": false
   },
-  "highestBalance": 200,
-  "potentialBonus": 100
+  "simpleAssessment": {
+    "taxYears": [
+      {
+        "taxYear": 2022,
+        "reconciliations": [
+          {
+            "reconciliationId": 1,
+            "reconciliationStatus": 5,
+            "cumulativeAmount": 1000,
+            "taxLiabilityAmount": 7799.54,
+            "taxPaidAmount": 6799.54,
+            "reconciliationTimeStamp": "2023-05-12 12:34:56",
+            "p800Status": "ISSUED",
+            "collectionMethod": 61,
+            "multiYearRecIndicator": false,
+            "p800Reasons": [
+              {
+                "reasonType": "OVERPAYMENT",
+                "reasonCode": 1,
+                "estimatedAmount": 650,
+                "actualAmount": 550
+              }
+            ],
+            "businessReason": "P302",
+            "eligibility": false,
+            "totalAmountOwed": 800,
+            "chargeReference": "FG007049205117",
+            "dueDate": "2018-01-31",
+            "dunningLock": false,
+            "receivableStatus": "OUTSTANDING",
+            "receipts": [
+              {
+                "receiptAmount": 200,
+                "receiptDate": "2016-05-21",
+                "receiptMethod": "WRITE-OFF",
+                "receiptStatus": "REVENUE LOSS",
+                "receiptDescription": "WRITTEN-OFF"
+              }
+            ]
+          }
+        ],
+        "cardPaymentFallbackUrl": "/tax-you-paid/2022-2023/paid-too-little"
+      }
+    ]
+  },
+  "taxFreeAmount": -30952,
+  "taxFreeAmountLink": "/check-income-tax/tax-free-allowance",
+  "estimatedTaxAmount": 10245,
+  "estimatedTaxAmountLink": "/check-income-tax/paye-income-tax-estimate",
+  "understandYourTaxCodeLink": "/check-income-tax/tax-codes",
+  "addMissingEmployerLink": "/check-income-tax/add-employment/employment-name",
+  "addMissingPensionLink": "/check-income-tax/add-pension-provider/name",
+  "addMissingIncomeLink": "/digital-forms/form/tell-us-about-other-income/draft/guide",
+  "addMissingBenefitLink": "/digital-forms/form/tell-us-about-company-benefits/draft/guide",
+  "addMissingCompanyCarLink": "/paye/company-car/do-you-pay-towards-car/",
+  "previousTaxYearLink": "/check-income-tax/income-tax-history",
+  "updateEstimatedIncomeLink": "/check-income-tax/update-income/start",
+  "updateEmployerLink": "/check-income-tax/update-remove-employment/decision-page",
+  "currentYearPlusOneLink": "/check-income-tax/income-tax-comparison",
+  "taxCodeLocation": "rUK",
+  "incomeTaxHistoricPayeUrl": "/check-income-tax/historic-paye/"
 }

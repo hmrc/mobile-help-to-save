@@ -17,21 +17,10 @@
 package uk.gov.hmrc.mobilehelptosave.api
 
 import org.scalatest.concurrent.Eventually
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, BaseISpec, ComponentSupport}
 
-class ApiDefinitionISpec
-  extends AnyWordSpecLike
-    with Matchers
-    with Eventually
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSupport
-    with OneServerPerSuiteWsClient
-    with ComponentSupport {
+class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport {
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
     "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008",

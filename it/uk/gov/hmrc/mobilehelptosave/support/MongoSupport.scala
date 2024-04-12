@@ -4,7 +4,6 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.ServerProvider
 import org.scalatestplus.play.components.WithApplicationComponents
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Random, Try}
 
 /**

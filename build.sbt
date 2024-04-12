@@ -25,7 +25,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(AppDependencies.appDependencies: _*)
   .settings(
     majorVersion := 0,
-    scalaVersion := "2.13.8",
+    scalaVersion := "2.13.12",
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
     // based on https://tpolecat.github.io/2017/04/25/scalac-flags.html but cut down for scala 2.11

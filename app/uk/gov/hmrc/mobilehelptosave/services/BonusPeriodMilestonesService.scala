@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import java.time.{LocalDate, LocalDateTime, ZoneId}
+import java.time.{LocalDate, LocalDateTime, ZoneId, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import cats.MonadError
@@ -230,7 +230,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
 
   private def createBonusPeriodMongoMilestone(
     milestoneKey:         MilestoneKey,
-    values:               Option[Map[String, String]] = None,
+    values:               Option[Map[String, String]],
     finalBonusPaidByDate: LocalDateTime
   )(implicit nino:        Nino
   ): MongoMilestone =
@@ -239,7 +239,7 @@ class HtsBonusPeriodMilestonesService[F[_]](
       milestoneType = BonusPeriod,
       milestone     = Milestone(milestoneKey, values),
       isRepeatable  = false,
-      expireAt      = finalBonusPaidByDate.plusMonths(6)
+      expireAt      = finalBonusPaidByDate.plusMonths(6).toInstant(ZoneOffset.UTC)
     )
 
 }

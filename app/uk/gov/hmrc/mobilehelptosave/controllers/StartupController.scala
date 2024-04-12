@@ -46,7 +46,7 @@ class StartupController(
                 infoUrlSso       = Some(config.helpToSaveInfoUrlSso),
                 accessAccountUrl = Some(config.helpToSaveAccessAccountUrl),
                 accountPayInUrl  = Some(config.helpToSaveAccountPayInUrl),
-                user             = userOrError.right.toOption,
+                user             = userOrError.toOption,
                 userError        = userOrError.left.toOption
               )
             }

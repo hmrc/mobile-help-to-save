@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 package object services {
 
-  val localDateTimeOrdering: Ordering[LocalDateTime] = new Ordering[LocalDateTime] {
+  val InstantOrdering: Ordering[Instant] = new Ordering[Instant] {
 
     override def compare(
-      x: LocalDateTime,
-      y: LocalDateTime
+      x: Instant,
+      y: Instant
     ): Int = x.compareTo(y)
   }
 }

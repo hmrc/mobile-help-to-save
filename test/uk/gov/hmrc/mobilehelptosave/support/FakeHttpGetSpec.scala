@@ -20,34 +20,33 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class FakeHttpGetSpec extends AnyWordSpecLike with Matchers with FutureAwaits with DefaultAwaitTimeout {
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "doGet" should {
     "return the specified response when the URL matches expectedUrl" in {
-      val response = HttpResponse(200, Some(Json.obj("this" -> "that")))
+      val response = HttpResponse(200, Json.obj("this" -> "that"), Map.empty)
 
       await(FakeHttpGet("http://example.com/expected", response).doGet("http://example.com/expected")) shouldBe response
     }
 
     "return 404 for other URLs" in {
-      val response = HttpResponse(200, Some(Json.obj("this" -> "that")))
+      val response = HttpResponse(200, Json.obj("this" -> "that"), Map.empty)
 
       await(FakeHttpGet("http://example.com/expected", response).doGet("http://example.com/not-expected")).status shouldBe 404
     }
 
     "return the specified response when the URL predicate returns true" in {
-      val response = HttpResponse(200, Some(Json.obj("this" -> "that")))
+      val response = HttpResponse(200, Json.obj("this" -> "that"), Map.empty)
 
       await(FakeHttpGet((_: String) => true, response).doGet("http://example.com/expected")) shouldBe response
     }
 
     "return 404 for other when the URL predicate returns false" in {
-      val response = HttpResponse(200, Some(Json.obj("this" -> "that")))
+      val response = HttpResponse(200, Json.obj("this" -> "that"), Map.empty)
 
       await(FakeHttpGet((_: String) => false, response).doGet("http://example.com/not-expected")).status shouldBe 404
     }

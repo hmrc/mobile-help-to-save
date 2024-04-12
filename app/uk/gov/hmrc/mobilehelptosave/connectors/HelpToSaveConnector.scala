@@ -18,9 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.URL
 import java.time.{LocalDate, YearMonth}
-
 import com.fasterxml.jackson.core.JsonParseException
-import io.lemonlabs.uri.dsl._
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
@@ -91,7 +89,7 @@ class HelpToSaveConnectorImpl(
       Left(ErrorInfo.MultipleRequests)
     case _: NotFoundException =>
       Left(ErrorInfo.AccountNotFound)
-    case e @ (_: HttpException | _: Upstream4xxResponse | _: Upstream5xxResponse | _: JsValidationException |
+    case e @ (_: HttpException | _: UpstreamErrorResponse | _: JsValidationException |
         _: JsonParseException) =>
       logger.warn(s"Couldn't get $dataDescription from help-to-save service", e)
       Left(ErrorInfo.General)
@@ -105,12 +103,11 @@ class HelpToSaveConnectorImpl(
   private lazy val enrolmentStatusUrl: URL = new URL(config.helpToSaveBaseUrl, "/help-to-save/enrolment-status")
 
   private def accountUrl(nino: Nino): URL =
-    new URL(config.helpToSaveBaseUrl,
-            s"/help-to-save/${encodePathSegment(nino.value)}/account" ? ("systemId" -> SystemId))
+    new URL(config.helpToSaveBaseUrl, s"/help-to-save/${encodePathSegment(nino.value)}/account?systemId=$SystemId")
 
   private def transactionsUrl(nino: Nino): URL =
     new URL(config.helpToSaveBaseUrl,
-            s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions" ? ("systemId" -> SystemId))
+            s"/help-to-save/${encodePathSegment(nino.value)}/account/transactions?systemId=$SystemId")
 
   private def eligibilityUrl: URL =
     new URL(config.helpToSaveBaseUrl, s"/help-to-save/eligibility-check")

@@ -17,33 +17,20 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.either._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{EitherValues, OneInstancePerTest}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import org.scalatest.EitherValues
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
-import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.Future
 
-class SetSavingsGoalSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with TestF
-    with AccountTestData
-    with EitherValues
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub {
+class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with EitherValues {
 
-  private val generator  = new Generator(0)
-  private val nino       = generator.nextNino
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
 
   private val testMilestonesConfig =
@@ -295,7 +282,7 @@ class SetSavingsGoalSpec
 
     // These should never get called as part of setting a savings goal
     override def getGoal(nino: Nino): TestF[Option[SavingsGoal]] = ???
-    override def getGoalSetEvents(): TestF[List[SavingsGoalSetEvent]] = ???
+    override def getGoalSetEvents: TestF[List[SavingsGoalSetEvent]] = ???
     override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
 
     override def setTestGoal(

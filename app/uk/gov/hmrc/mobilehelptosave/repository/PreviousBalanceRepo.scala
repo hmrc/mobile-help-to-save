@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import cats.instances.future._
 import cats.syntax.functor._
 import org.mongodb.scala.Document
@@ -84,8 +84,8 @@ class MongoPreviousBalanceRepo(
         filter = equal("nino", nino.nino),
         replacement = (PreviousBalance(nino,
                                        previousBalance,
-                                       LocalDateTime.now(ZoneOffset.UTC),
-                                       finalBonusPaidByDate.plusMonths(6))),
+                                       Instant.now,
+                                       finalBonusPaidByDate.plusMonths(6) toInstant (ZoneOffset.UTC))),
         options = FindOneAndReplaceOptions().upsert(true)
       )
       .toFuture()
@@ -95,15 +95,15 @@ class MongoPreviousBalanceRepo(
     collection.find(equal("nino", nino.nino)).headOption()
 
   override def clearPreviousBalance(): Future[Unit] =
-    collection.deleteMany(filter = Document()).toFuture.void
+    collection.deleteMany(filter = Document()).toFuture().void
 
   override def updateExpireAt(): Future[Unit] =
     collection
       .updateMany(
         filter = Document(),
         update = combine(set("updateRequired", true),
-                         set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54)),
-                         set("date", LocalDateTime.now(ZoneOffset.UTC)))
+                         set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC)),
+                         set("date", Instant.now()))
       )
       .toFutureOption()
       .void
@@ -127,12 +127,12 @@ class MongoPreviousBalanceRepo(
 case class PreviousBalance(
   nino:            Nino,
   previousBalance: BigDecimal,
-  date:            LocalDateTime,
-  expireAt:        LocalDateTime = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54),
+  date:            Instant,
+  expireAt:        Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
   updateRequired:  Boolean = false)
 
 object PreviousBalance {
-  implicit val dateFormat: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
   implicit val formats: OFormat[PreviousBalance] = Json.format
 }

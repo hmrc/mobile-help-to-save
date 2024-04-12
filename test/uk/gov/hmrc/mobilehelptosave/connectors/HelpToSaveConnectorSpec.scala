@@ -18,17 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import java.net.{ConnectException, URL}
 import io.lemonlabs.uri._
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.OneInstancePerTest
 import play.api.libs.json.{JsObject, Json}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.{EligibilityCheckResponse, EligibilityCheckResult, ErrorInfo}
-import uk.gov.hmrc.mobilehelptosave.support.{FakeHttpGet, LoggerStub, ThrowableWithMessageContaining}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, FakeHttpGet, ThrowableWithMessageContaining}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
 import java.time.YearMonth
@@ -37,13 +32,7 @@ import scala.concurrent.Future
 import scala.concurrent.Future._
 
 class HelpToSaveConnectorSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
+    extends BaseSpec
     with ThrowableWithMessageContaining
     with AccountTestData
     with TransactionTestData {
@@ -53,7 +42,7 @@ class HelpToSaveConnectorSpec
   private val baseUrl = "http://help-to-save-service"
 
   private val ninoString = "AA000000A"
-  private val nino       = Nino(ninoString)
+  override val nino       = Nino(ninoString)
 
   private def isAccountUrlForNino(urlString: String): Boolean = Url.parse(urlString) match {
     case AbsoluteUrl("http",
@@ -115,9 +104,13 @@ class HelpToSaveConnectorSpec
           isAccountUrlForNino _,
           HttpResponse(
             200,
-            Some(
-              Json.parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99, openedYearMonth = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1)))
-            )
+            Json.parse(
+              accountReturnedByHelpToSaveJsonString(123.45,
+                                                    90.99,
+                                                    openedYearMonth =
+                                                      YearMonth.of(YearMonth.now().minusYears(3).getYear, 1))
+            ),
+            Map.empty
           )
         )
 
@@ -129,9 +122,14 @@ class HelpToSaveConnectorSpec
     "return a Right (with Account) when the help-to-save service returns a 2xx response with optional fields omitted" in {
 
       val accountReturnedByHelpToSaveJson = Json
-          .parse(accountReturnedByHelpToSaveJsonString(123.45, 90.99, openedYearMonth = YearMonth.of(YearMonth.now().minusYears(3).getYear, 1)))
+          .parse(
+            accountReturnedByHelpToSaveJsonString(123.45,
+                                                  90.99,
+                                                  openedYearMonth =
+                                                    YearMonth.of(YearMonth.now().minusYears(3).getYear, 1))
+          )
           .as[JsObject] - "accountHolderEmail"
-      val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, Some(accountReturnedByHelpToSaveJson)))
+      val okResponse = httpGet(isAccountUrlForNino _, HttpResponse(200, accountReturnedByHelpToSaveJson, Map.empty))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
@@ -140,7 +138,7 @@ class HelpToSaveConnectorSpec
 
     "return Right(None) when the help-to-save service returns a 404 response" in {
 
-      val notFoundResponse = httpGet(isAccountUrlForNino _, HttpResponse(404))
+      val notFoundResponse = httpGet(isAccountUrlForNino _, HttpResponse(404, "Not Found"))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, notFoundResponse)
 
@@ -163,7 +161,10 @@ class HelpToSaveConnectorSpec
 
     "return a Left when the help-to-save service returns a 4xx error" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, HttpResponse(429)))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet(isAccountUrlForNino _, HttpResponse(429, "Too Many requests")))
 
       await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.MultipleRequests)
 
@@ -171,7 +172,10 @@ class HelpToSaveConnectorSpec
 
     "return a Left when the help-to-save service returns a 5xx error" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet(isAccountUrlForNino _, HttpResponse(500)))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet(isAccountUrlForNino _, HttpResponse(500, "Internal Server Error")))
 
       await(connector.getAccount(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -181,7 +185,7 @@ class HelpToSaveConnectorSpec
     "return a Left[ErrorInfo] when help-to-save returns JSON that is missing fields that are required according to get_account_by_nino_RESP_schema_V1.0.json" in {
       val invalidJsonHttp =
         FakeHttpGet(isAccountUrlForNino _,
-                    HttpResponse(200, Some(Json.parse(accountReturnedByHelpToSaveInvalidJsonString))))
+                    HttpResponse(200, Json.parse(accountReturnedByHelpToSaveInvalidJsonString), Map.empty))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, invalidJsonHttp)
 
@@ -216,7 +220,9 @@ class HelpToSaveConnectorSpec
     "return a Left when the help-to-save service returns a 4xx error" in {
 
       val connector =
-        new HelpToSaveConnectorImpl(logger, config, httpGet(isTransactionsUrlForNino _, HttpResponse(429)))
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet(isTransactionsUrlForNino _, HttpResponse(429, "Too Many requests")))
 
       await(connector.getTransactions(nino)) shouldBe Left(ErrorInfo.MultipleRequests)
 
@@ -225,7 +231,9 @@ class HelpToSaveConnectorSpec
     "return a Left when the help-to-save service returns a 5xx error" in {
 
       val connector =
-        new HelpToSaveConnectorImpl(logger, config, httpGet(isTransactionsUrlForNino _, HttpResponse(500)))
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet(isTransactionsUrlForNino _, HttpResponse(500, "Internal Server Error")))
 
       await(connector.getTransactions(nino)) shouldBe Left(ErrorInfo.General)
 
@@ -235,7 +243,7 @@ class HelpToSaveConnectorSpec
     "return a Right (with Transactions) when the help-to-save service returns a 2xx response" in {
 
       val okResponse = httpGet(isTransactionsUrlForNino _,
-                               HttpResponse(200, Some(Json.parse(transactionsReturnedByHelpToSaveJsonString))))
+                               HttpResponse(200, Json.parse(transactionsReturnedByHelpToSaveJsonString), Map.empty))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
@@ -244,7 +252,7 @@ class HelpToSaveConnectorSpec
 
     "return Left(AccountNotFound) when the help-to-save service returns a 404 response" in {
 
-      val notFoundResponse = httpGet(isTransactionsUrlForNino _, HttpResponse(404))
+      val notFoundResponse = httpGet(isTransactionsUrlForNino _, HttpResponse(404, "Not Found"))
 
       val connector = new HelpToSaveConnectorImpl(logger, config, notFoundResponse)
 
@@ -272,7 +280,8 @@ class HelpToSaveConnectorSpec
 
     "return a Left when the help-to-save service returns a 4xx error" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("enrolment-status", HttpResponse(429)))
+      val connector =
+        new HelpToSaveConnectorImpl(logger, config, httpGet("enrolment-status", HttpResponse(429, "Too Many requests")))
 
       await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.MultipleRequests)
 
@@ -280,7 +289,10 @@ class HelpToSaveConnectorSpec
 
     "return a Left when the help-to-save service returns a 5xx error" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("enrolment-status", HttpResponse(500)))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet("enrolment-status", HttpResponse(500, "Internal Server Error")))
 
       await(connector.enrolmentStatus()) shouldBe Left(ErrorInfo.General)
 
@@ -292,7 +304,7 @@ class HelpToSaveConnectorSpec
 
     "return a Right when the help-to-save service returns a 2xx response" in {
 
-      val okResponse = httpGet("enrolment-status", HttpResponse(200, Some(Json.parse("""{ "enrolled": true }"""))))
+      val okResponse = httpGet("enrolment-status", HttpResponse(200, Json.parse("""{ "enrolled": true }"""), Map.empty))
       val connector  = new HelpToSaveConnectorImpl(logger, config, okResponse)
 
       await(connector.enrolmentStatus()) shouldBe Right(true)
@@ -318,14 +330,19 @@ class HelpToSaveConnectorSpec
 
     "return a Left when the help-to-save service returns a 4xx error" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("eligibility-check", HttpResponse(429)))
+      val connector = new HelpToSaveConnectorImpl(logger,
+                                                  config,
+                                                  httpGet("eligibility-check", HttpResponse(429, "Too Many requests")))
 
       await(connector.checkEligibility()) shouldBe Left(ErrorInfo.MultipleRequests)
     }
 
     "return a Left when the help-to-save service returns a 5xx error" in {
 
-      val connector = new HelpToSaveConnectorImpl(logger, config, httpGet("eligibility-check", HttpResponse(500)))
+      val connector =
+        new HelpToSaveConnectorImpl(logger,
+                                    config,
+                                    httpGet("eligibility-check", HttpResponse(500, "Internal Server Error")))
 
       await(connector.checkEligibility()) shouldBe Left(ErrorInfo.General)
 
@@ -341,14 +358,15 @@ class HelpToSaveConnectorSpec
         "eligibility-check",
         HttpResponse(
           200,
-          Some(Json.parse(s"""{
-                             |"eligibilityCheckResult": {
-                             |"result": "",
-                             |"resultCode": 1,
-                             |"reason": "",
-                             |"reasonCode": 6
-                             |}
-                 }""".stripMargin))
+          Json.parse(s"""{
+                        |"eligibilityCheckResult": {
+                        |"result": "",
+                        |"resultCode": 1,
+                        |"reason": "",
+                        |"reasonCode": 6
+                        |}
+                 }""".stripMargin),
+          Map.empty
         )
       )
       val connector = new HelpToSaveConnectorImpl(logger, config, okResponse)

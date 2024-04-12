@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,23 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
-import org.scalatest.matchers.{MatchResult, Matcher}
-import play.api.libs.json.{JsError, JsResult, JsSuccess}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.OneInstancePerTest
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import uk.gov.hmrc.domain.{Generator, Nino}
 
-trait JsonMatchers {
+trait BaseSpec
+    extends AnyWordSpecLike
+    with Matchers
+    with MockFactory
+    with OneInstancePerTest
+    with LoggerStub
+    with FutureAwaits
+    with DefaultAwaitTimeout {
 
-  val beJsSuccess: Matcher[JsResult[_]] = new Matcher[JsResult[_]] {
-
-    override def apply(left: JsResult[_]): MatchResult = left match {
-      case JsSuccess(_, _) => MatchResult(matches = true, "JsResult was an error", "JsResult was successful")
-      case JsError(errors) => MatchResult(matches = false, s"JsResult was an error: $errors", "JsResult was successful")
-    }
-  }
+  val generator = new Generator(0)
+  val nino: Nino = generator.nextNino
+  val otherNino: Nino = generator.nextNino
 }

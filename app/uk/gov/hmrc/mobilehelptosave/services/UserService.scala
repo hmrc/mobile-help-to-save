@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.data._
 import cats.implicits._
-import org.joda.time.DateTime
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,6 +27,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait UserService {
@@ -76,7 +76,7 @@ class HtsUserService(
           .value
     }
 
-  protected def firstDayOfNextMonth: DateTime =
-    DateTime.now.plusMonths(1).withDayOfMonth(1)
+  private def firstDayOfNextMonth: Instant =
+    LocalDateTime.now(ZoneId.of("UTC")).plusMonths(1).withDayOfMonth(1).toInstant(ZoneOffset.UTC)
 
 }

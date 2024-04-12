@@ -16,54 +16,29 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.{WSRequest, WSResponse}
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import uk.gov.hmrc.domain.Generator
+import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.mobilehelptosave.domain.TestSavingsGoal
-import uk.gov.hmrc.mobilehelptosave.scalatest.SchemaMatchers
 import uk.gov.hmrc.mobilehelptosave.stubs.ShutteringStub.stubForShutteringDisabled
-import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
-import uk.gov.hmrc.mobilehelptosave.support.{ComponentSupport, OneServerPerSuiteWsClient, WireMockSupport}
+import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub}
+import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 import java.time.{LocalDate, YearMonth}
 import java.time.temporal.TemporalAdjusters
-import java.util.UUID.randomUUID
 
-class SavingsUpdateISpec
-    extends AnyWordSpecLike
-    with Matchers
-    with SchemaMatchers
-    with TransactionTestData
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with WireMockSupport
-    with OneServerPerSuiteWsClient
-    with ComponentSupport {
-
+class SavingsUpdateISpec extends BaseISpec with ComponentSupport {
   override implicit lazy val app: Application = appBuilder.build()
   val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
   val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
-  private val generator            = new Generator(0)
-  private val nino                 = generator.nextNino
-  private val journeyId            = "27085215-69a4-4027-8f72-b04b10ec16b0"
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
-
-  private val acceptJsonHeader:        (String, String) = "Accept"        -> "application/vnd.hmrc.1.0+json"
-  private val authorisationJsonHeader: (String, String) = "AUTHORIZATION" -> "Bearer 123"
-
-  private def requestWithAuthHeaders(url: String): WSRequest =
-    wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
 
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 
   s"GET $clearGoalEventsUrl with $applicationRouterKey set to $testOnlyRoutes" should {
-    s"Return 200 " in (await(requestWithAuthHeaders(clearGoalEventsUrl).get).status shouldBe 200)
+    s"Return 200 " in (await(requestWithAuthHeaders(clearGoalEventsUrl).get()).status shouldBe 200)
   }
 
   "GET /savings-account/savings-update" should {
@@ -112,7 +87,7 @@ class SavingsUpdateISpec
       (response.json \ "bonusUpdate" \ "potentialBonusWithFiveMore").as[BigDecimal]       shouldBe 238.14
       (response.json \ "bonusUpdate" \ "maxBonus").as[BigDecimal]                         shouldBe 522.79
 
-      await(requestWithAuthHeaders(clearGoalEventsUrl).get).status shouldBe 200
+      await(requestWithAuthHeaders(clearGoalEventsUrl).get()).status shouldBe 200
     }
 
     "respond with 200 and no savings update section if no transactions are found" in {
@@ -138,7 +113,7 @@ class SavingsUpdateISpec
 
       AuthStub.userIsLoggedIn(nino)
       HelpToSaveStub.userAccountNotFound(nino)
-      stubForShutteringDisabled
+      stubForShutteringDisabled()
 
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-update?journeyId=$journeyId").get())
 

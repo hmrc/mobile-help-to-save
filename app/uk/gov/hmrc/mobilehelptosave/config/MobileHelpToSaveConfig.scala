@@ -34,7 +34,6 @@ case class MobileHelpToSaveConfig(
     with SandboxDataConfig
     with StartupControllerConfig
     with UserServiceConfig
-    with ReportingServiceConfig
     with MilestonesConfig
     with MongoConfig {
 
@@ -46,12 +45,6 @@ case class MobileHelpToSaveConfig(
   override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
-
-  override def penceInCurrentSavingsGoalsEnabled: Boolean =
-    configBoolean("helpToSave.reporting.penceInCurrentSavingsGoalsEnabled")
-
-  override def currentSavingsGoalRangeCountsEnabled: Boolean =
-    configBoolean("helpToSave.reporting.currentSavingsGoalRangeCountsEnabled")
 
   override def balanceMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.balanceMilestoneCheckEnabled")
@@ -85,11 +78,6 @@ trait AccountServiceConfig {
 
 trait UserServiceConfig {
   def eligibilityCheckEnabled: Boolean
-}
-
-trait ReportingServiceConfig {
-  def penceInCurrentSavingsGoalsEnabled:    Boolean
-  def currentSavingsGoalRangeCountsEnabled: Boolean
 }
 
 trait MilestonesConfig {
