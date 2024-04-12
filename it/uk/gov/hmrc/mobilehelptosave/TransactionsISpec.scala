@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
@@ -23,6 +24,8 @@ import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringS
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 class TransactionsISpec extends BaseISpec with ComponentSupport {
+
+  override implicit lazy val app: Application = appBuilder.build()
 
   "GET /savings-account/{nino}/transactions" should {
 

@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import play.api.Application
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 class StartupISpec extends BaseISpec with ComponentSupport with NumberVerification {
+
+  override implicit lazy val app: Application = appBuilder.build()
 
   "GET /mobile-help-to-save/startup" should {
 

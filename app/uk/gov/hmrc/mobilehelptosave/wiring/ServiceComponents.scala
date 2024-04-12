@@ -67,8 +67,6 @@ class ServiceComponents(context: Context)
       testOnlyRoutes
     } else prodRoutes
 
-  val reportingService: ReportingService = wire[ReportingService]
-
   lazy val servicesConfig: ServicesConfig = wire[ServicesConfig]
 
   lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import play.api.Application
 import play.api.libs.json.JsObject
 import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.domain.Nino
@@ -25,6 +26,8 @@ import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 import java.time.YearMonth
 
 class AccountsISpec extends BaseISpec with NumberVerification with ComponentSupport {
+
+  override implicit lazy val app: Application = appBuilder.build()
 
   private def loggedInAndEnrolled(nino: Nino) = {
     ShutteringStub.stubForShutteringDisabled()

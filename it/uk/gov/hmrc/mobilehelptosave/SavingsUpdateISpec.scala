@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSResponse
@@ -28,6 +29,7 @@ import java.time.{LocalDate, YearMonth}
 import java.time.temporal.TemporalAdjusters
 
 class SavingsUpdateISpec extends BaseISpec with ComponentSupport {
+  override implicit lazy val app: Application = appBuilder.build()
   val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
   val createGoalUrl                = "/mobile-help-to-save/test-only/create-goal"
   private val applicationRouterKey = "application.router"

@@ -20,7 +20,7 @@ import eu.timepit.refined.auto._
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.FakeRequest
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService

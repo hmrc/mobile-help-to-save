@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import org.scalatest.OptionValues
+import play.api.Application
 import play.api.http.Status
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json._
@@ -35,6 +36,7 @@ class SavingsGoalsISpec
     with ComponentSupport
     with NumberVerification {
 
+  override implicit lazy val app: Application = appBuilder.build()
   private val savingsGoal1          = SavingsGoal(Some(20))
   private val savingsGoalBad        = SavingsGoal(Some(20))
   private val validGoalJson         = toJson(savingsGoal1)

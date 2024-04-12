@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.mobilehelptosave
 
+import play.api.Application
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import play.api.libs.ws.WSResponse
@@ -25,6 +27,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
 
 class MilestonesISpec extends BaseISpec with NumberVerification with ComponentSupport {
 
+  override implicit lazy val app: Application = appBuilder.build()
   private val dateFormat = DateTimeFormatter.ofPattern("d MMMM yyyy")
 
   "GET /savings-account/:nino/milestones" should {
