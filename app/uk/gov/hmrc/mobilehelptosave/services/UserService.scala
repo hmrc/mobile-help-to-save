@@ -27,7 +27,8 @@ import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
-import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
+import java.time.temporal.ChronoUnit
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 trait UserService {
@@ -70,13 +71,12 @@ class HtsUserService(
           )
           .flatMap(e =>
             EitherT.liftF[Future, ErrorInfo, Boolean](
-              eligibilityStatusRepo.setEligibility(Eligibility(nino, e, firstDayOfNextMonth)).map(_ => e)
+              eligibilityStatusRepo.setEligibility(Eligibility(nino, e, expireAtTime)).map(_ => e)
             )
           )
           .value
     }
 
-  private def firstDayOfNextMonth: Instant =
-    LocalDateTime.now(ZoneId.of("UTC")).plusMonths(1).withDayOfMonth(1).toInstant(ZoneOffset.UTC)
+  private def expireAtTime: Instant = Instant.now().plus(28, ChronoUnit.DAYS)
 
 }
