@@ -4,9 +4,30 @@
 
 This microservice contains server-side endpoints that supports mobile app-specific Help to Save functionality.
 
-## API
+## Development Setup
+- Run locally: `sbt run` which runs on port `8248` by default
+- Run with test endpoints: `sbt 'run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes'`
 
-### GET /mobile-help-to-save/startup
+##  Service Manager Profiles
+The service can be run locally from Service Manager, using the following profiles:
+
+| Profile Details                  | Command                                                                                                           |
+|----------------------------------|:------------------------------------------------------------------------------------------------------------------|
+| MOBILE_HELP_TO_SAVE_TESTS          | sm2 --start MOBILE_HELP_TO_SAVE_TESTS --appendArgs '{"MOBILE_HELP_TO_SAVE":["-Dapplication.router=testOnlyDoNotUseInAppConf.Routes"]}'                                                                    |
+
+
+## Run Tests
+- Run Unit Tests:  `sbt test`
+- Run Integration Tests: `sbt it:test`
+- Run Unit and Integration Tests: `sbt test it:test`
+- Run Unit and Integration Tests with coverage report: `sbt clean compile coverage test it:test coverageReport dependencyUpdates`
+
+
+
+
+## API
+~~
+~~### GET /mobile-help-to-save/startup
 
 Returns information that the mobile app is likely to need each time it starts.
 

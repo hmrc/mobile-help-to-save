@@ -1,6 +1,6 @@
-import TestPhases.oneForkedJvmPerTest
+
 import sbt.Resolver
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, oneForkedJvmPerTest}
 
 val appName = "mobile-help-to-save"
 
@@ -17,7 +17,7 @@ lazy val scoverageSettings = {
 }
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(scoverageSettings: _*)
   .settings(scalaSettings: _*)
