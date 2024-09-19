@@ -1,6 +1,6 @@
-import TestPhases.oneForkedJvmPerTest
+
 import sbt.Resolver
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, oneForkedJvmPerTest}
 
 val appName = "mobile-help-to-save"
 
