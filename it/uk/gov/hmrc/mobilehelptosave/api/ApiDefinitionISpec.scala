@@ -23,8 +23,6 @@ import uk.gov.hmrc.mobilehelptosave.support.{ApplicationBuilder, BaseISpec, Comp
 class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport {
 
   override protected def appBuilder: ApplicationBuilder = super.appBuilder.configure(
-    "api.access.white-list.applicationIds" -> Seq("00010002-0003-0004-0005-000600070008",
-                                                  "00090002-0003-0004-0005-000600070008"),
     "api.access.type" -> "TEST_ACCESS_TYPE"
   )
 
@@ -44,9 +42,7 @@ class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport
       val accessConfigs = definition \ "api" \ "versions" \\ "access"
       accessConfigs.length should be > 0
       accessConfigs.foreach { accessConfig =>
-        (accessConfig \ "type").as[String]                           shouldBe "TEST_ACCESS_TYPE"
-        (accessConfig \ "whitelistedApplicationIds").head.as[String] shouldBe "00010002-0003-0004-0005-000600070008"
-        (accessConfig \ "whitelistedApplicationIds")(1).as[String]   shouldBe "00090002-0003-0004-0005-000600070008"
+        (accessConfig \ "type").as[String] shouldBe "TEST_ACCESS_TYPE"
       }
     }
   }

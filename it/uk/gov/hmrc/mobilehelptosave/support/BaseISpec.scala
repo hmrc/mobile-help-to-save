@@ -2,7 +2,6 @@ package uk.gov.hmrc.mobilehelptosave.support
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.Application
 import play.api.libs.ws.WSRequest
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}

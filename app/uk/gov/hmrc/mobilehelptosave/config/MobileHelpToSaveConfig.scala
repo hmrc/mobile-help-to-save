@@ -21,7 +21,6 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.jdk.CollectionConverters._
-import scala.collection.mutable
 
 case class MobileHelpToSaveConfig(
   environment:    Environment,
@@ -62,7 +61,6 @@ case class MobileHelpToSaveConfig(
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType:              String      = accessConfig.getString("type")
-  override val apiWhiteListApplicationIds = accessConfig.getStringList("white-list.applicationIds").asScala
 
   protected def configBaseUrl(serviceName: String): URL = new URL(servicesConfig.baseUrl(serviceName))
 
@@ -92,7 +90,6 @@ trait SandboxDataConfig {
 
 trait DocumentationControllerConfig {
   def apiAccessType:              String
-  def apiWhiteListApplicationIds: mutable.Buffer[String]
 }
 
 trait HelpToSaveConnectorConfig {
