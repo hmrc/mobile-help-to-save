@@ -23,8 +23,6 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
-import scala.collection.mutable
-
 class DocumentationControllerSpec extends BaseSpec {
   "definition" should {
     "have content type = application/json" in {
@@ -42,5 +40,4 @@ class DocumentationControllerSpec extends BaseSpec {
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
   override def apiAccessType              = "PRIVATE"
-  override def apiWhiteListApplicationIds = mutable.Buffer.empty[String]
 }

@@ -26,22 +26,20 @@ import uk.gov.hmrc.mobilehelptosave.views.txt
 import javax.inject.Inject
 import scala.collection.mutable
 
-case class ApiAccess(
-  `type`:                    String,
-  whitelistedApplicationIds: mutable.Buffer[String])
+case class ApiAccess(`type`: String)
 
 object ApiAccess {
   implicit val writes: OWrites[ApiAccess] = Json.writes[ApiAccess]
 }
 
-class DocumentationController @Inject()(
+class DocumentationController @Inject() (
   errorHandler: HttpErrorHandler,
   config:       DocumentationControllerConfig,
   cc:           ControllerComponents,
   assets:       Assets)
     extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
 
-  private lazy val apiAccess = ApiAccess(config.apiAccessType, config.apiWhiteListApplicationIds)
+  private lazy val apiAccess = ApiAccess(config.apiAccessType)
 
   override def definition(): Action[AnyContent] = Action {
     Ok(txt.definition(apiAccess)).as(JSON)
