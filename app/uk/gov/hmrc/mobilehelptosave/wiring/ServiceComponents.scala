@@ -16,14 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.wiring
 
-import cats.implicits._
 import com.softwaremill.macwire.wire
 import controllers.AssetsComponents
 import play.api.ApplicationLoader.Context
 import play.api.libs.ws.ahc.AhcWSComponents
 import play.api.routing.Router
-import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike}
+import play.api.{BuiltInComponentsFromContext, Logger, LoggerLike, inject}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
+import uk.gov.hmrc.http.hooks.{HttpHook, RequestData, ResponseData}
 import uk.gov.hmrc.mobilehelptosave.api.DocumentationController
 import uk.gov.hmrc.mobilehelptosave.config.MobileHelpToSaveConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveConnectorImpl, ShutteringConnector}
@@ -35,9 +37,10 @@ import uk.gov.hmrc.mobilehelptosave.services._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.play.bootstrap.auth.DefaultAuthConnector
 import uk.gov.hmrc.play.bootstrap.config._
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpAuditing, HttpClientV2Provider}
 import uk.gov.hmrc.play.health.HealthController
 
+import java.net.URL
 import scala.concurrent.{ExecutionContext, Future}
 
 class ServiceComponents(context: Context)
@@ -69,7 +72,19 @@ class ServiceComponents(context: Context)
 
   lazy val servicesConfig: ServicesConfig = wire[ServicesConfig]
 
-  lazy val ws: DefaultHttpClient = wire[DefaultHttpClient]
+  lazy val httpHook: Seq[HttpHook] = Seq(new HttpHook() {
+
+    override def apply(
+      verb:        String,
+      url:         URL,
+      request:     RequestData,
+      responseF:   Future[ResponseData]
+    )(implicit hc: HeaderCarrier,
+      ec:          ExecutionContext
+    ): Unit = ()
+  })
+
+  lazy val httpClientV2: HttpClientV2 = wire[HttpClientV2Impl]
 
   lazy val clock: Clock = wire[ClockImpl]
 

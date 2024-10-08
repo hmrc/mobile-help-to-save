@@ -17,6 +17,7 @@
 package uk.gov.hmrc.mobilehelptosave.wiring
 import com.softwaremill.macwire.wire
 import play.api.BuiltInComponents
+import play.api.http.NoHttpFilters.filters
 import play.api.mvc.EssentialFilter
 import uk.gov.hmrc.play.audit.{DefaultAuditChannel, DefaultAuditConnector}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
@@ -29,8 +30,7 @@ import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, BackendMd
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpAuditing
 import uk.gov.hmrc.play.bootstrap.metrics.{Metrics, MetricsFilterImpl, MetricsImpl}
-import play.api.http.EnabledFilters
-
+import play.api.http.{DefaultHttpFilters, EnabledFilters}
 
 trait FilterWiring {
   self: BuiltInComponents =>
@@ -52,14 +52,13 @@ trait FilterWiring {
   lazy val loggingFilter:           LoggingFilter      = wire[DefaultLoggingFilter]
   lazy val cacheControlFilter:      CacheControlFilter = wire[CacheControlFilter]
   lazy val MDCFilter:               MDCFilter          = wire[BackendMdcFilter]
-  lazy val backendFilters:          EnabledFilters     = wire[EnabledFilters]
 
-  lazy val auditConnector:                 AuditConnector                 = wire[DefaultAuditConnector]
-  lazy val httpAuditing:                   HttpAuditing                   = wire[DefaultHttpAuditing]
-  lazy val auditChannel:                   AuditChannel                   = wire[DefaultAuditChannel]
-  lazy val datastreamMetrics:              DatastreamMetrics              = wire[EnabledDatastreamMetricsProvider].get()
+  lazy val auditConnector:    AuditConnector    = wire[DefaultAuditConnector]
+  lazy val httpAuditing:      HttpAuditing      = wire[DefaultHttpAuditing]
+  lazy val auditChannel:      AuditChannel      = wire[DefaultAuditChannel]
+  lazy val datastreamMetrics: DatastreamMetrics = wire[EnabledDatastreamMetricsProvider].get()
 
-  //lazy val httpAuditingConfig: AuditingConfig = wire[AuditingConfigProvider].get
+  lazy val httpAuditingConfig: AuditingConfig = AuditingConfig.fromConfig(configuration)
 
-  override def httpFilters: Seq[EssentialFilter] = backendFilters.filters
+  override def httpFilters: Seq[EssentialFilter] = filters
 }
