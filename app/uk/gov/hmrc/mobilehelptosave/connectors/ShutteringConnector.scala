@@ -38,9 +38,10 @@ class ShutteringConnector @Inject() (
   )(implicit headerCarrier: HeaderCarrier,
     ex:                     ExecutionContext
   ): Future[Shuttering] =
-
     http
-      .get(url"${(s"/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId")}")
+      .get(
+        url"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId"
+      )
       .execute[Shuttering]
       .map(s => s)
       .recover {
