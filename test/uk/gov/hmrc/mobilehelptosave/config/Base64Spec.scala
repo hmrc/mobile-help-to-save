@@ -21,15 +21,15 @@ import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 class Base64Spec extends BaseSpec {
   "decode" should {
     "decode simple values" in {
-      Base64.decode("YXNkZg==") shouldBe "asdf"
+      Base64.decode("YXNkZg==") mustBe "asdf"
     }
 
     "decode non-ASCII characters using UTF-8 encoding" in {
-      Base64.decode("4oCcc21hcnQgcXVvdGVz4oCd") shouldBe "\u201csmart quotes\u201d"
+      Base64.decode("4oCcc21hcnQgcXVvdGVz4oCd") mustBe "\u201csmart quotes\u201d"
     }
 
     "decode empty value to empty string" in {
-      Base64.decode("") shouldBe ""
+      Base64.decode("") mustBe ""
     }
   }
 }

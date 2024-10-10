@@ -24,21 +24,21 @@ import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 class YearMonthJsonSpec extends BaseSpec {
   "YearMonth JSON writes" should {
     "write in format YYYY-MM" in {
-      Json.toJson(YearMonth.of(1999, 12)) shouldBe JsString("1999-12")
+      Json.toJson(YearMonth.of(1999, 12)) mustBe JsString("1999-12")
     }
   }
 
   "YearMonth JSON reads" should {
     "read from YYYY-MM string" in {
-      JsString("1999-12").validate[YearMonth] shouldBe JsSuccess(YearMonth.of(1999, 12))
+      JsString("1999-12").validate[YearMonth] mustBe JsSuccess(YearMonth.of(1999, 12))
     }
 
     "reject non-String values with an error.expected.yearmonth error" in {
-      JsNumber(1999).validate[YearMonth] shouldBe JsError("error.expected.yearmonth")
+      JsNumber(1999).validate[YearMonth] mustBe JsError("error.expected.yearmonth")
     }
 
     "reject badly formatted strings with an error.expected.yearmonth.format error" in {
-      JsString("not a yearmonth").validate[YearMonth] shouldBe JsError(
+      JsString("not a yearmonth").validate[YearMonth] mustBe JsError(
         JsonValidationError("error.expected.yearmonth.format")
       )
     }

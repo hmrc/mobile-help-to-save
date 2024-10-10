@@ -33,11 +33,11 @@ class DocumentationControllerSpec extends BaseSpec {
         null // nasty, but there's not apparent way to create a test `Assets` and the test does not use it, so...
       )
       val result: Result = await(controller.definition()(FakeRequest()))
-      result.body.contentType shouldBe Some("application/json;charset=utf-8")
+      result.body.contentType mustBe Some("application/json;charset=utf-8")
     }
   }
 }
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
-  override def apiAccessType              = "PRIVATE"
+  override def apiAccessType = "PRIVATE"
 }
