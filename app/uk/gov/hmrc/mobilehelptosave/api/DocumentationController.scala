@@ -37,7 +37,7 @@ class DocumentationController @Inject() (
   config:       DocumentationControllerConfig,
   cc:           ControllerComponents,
   assets:       Assets)
-    extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
+  extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
 
   private lazy val apiAccess = ApiAccess(config.apiAccessType)
 

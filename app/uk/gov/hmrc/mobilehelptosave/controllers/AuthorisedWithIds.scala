@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import jakarta.inject.Inject
 import play.api.LoggerLike
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
@@ -36,7 +37,7 @@ class RequestWithIds[+A](
 
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds, AnyContent] with ActionRefiner[Request, RequestWithIds]
 
-class AuthorisedWithIdsImpl(
+class AuthorisedWithIdsImpl (
   logger:                        LoggerLike,
   authConnector:                 AuthConnector,
   shutteringConnector:           ShutteringConnector,

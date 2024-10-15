@@ -14,56 +14,42 @@
  * limitations under the License.
  */
 
-///*
-// * Copyright 2023 HM Revenue & Customs
-// *
-// * Licensed under the Apache License, Version 2.0 (the "License");
-// * you may not use this file except in compliance with the License.
-// * You may obtain a copy of the License at
-// *
-// *     http://www.apache.org/licenses/LICENSE-2.0
-// *
-// * Unless required by applicable law or agreed to in writing, software
-// * distributed under the License is distributed on an "AS IS" BASIS,
-// * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// * See the License for the specific language governing permissions and
-// * limitations under the License.
-// */
 //
 //package uk.gov.hmrc.mobilehelptosave.controllers
 //
-//import org.scalamock.scalatest.MockFactory
+//import org.mockito.Mockito.when
 //import org.scalatest.OneInstancePerTest
 //import org.scalatest.matchers.should.Matchers
-//import org.scalatest.wordspec.AnyWordSpecLike
+//import play.api.http.AcceptEncoding.AcceptEncodingParser.any
 //import play.api.mvc.Results
 //import play.api.test.Helpers._
 //import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-//import uk.gov.hmrc.auth.core._
+//import uk.gov.hmrc.auth.core.{AuthConnector, _}
 //import uk.gov.hmrc.auth.core.authorise.Predicate
 //import uk.gov.hmrc.auth.core.retrieve.Retrieval
 //import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 //import uk.gov.hmrc.domain.{Generator, Nino}
 //import uk.gov.hmrc.http.HeaderCarrier
+//import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
 //import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 //
 //import scala.concurrent.ExecutionContext.Implicits.global
 //import scala.concurrent.{ExecutionContext, Future}
 //
 //class AuthorisedWithIdsSpec
-//    extends AnyWordSpecLike
+//    extends HttpClientV2Helper
 //    with Matchers
 //    with FutureAwaits
 //    with DefaultAwaitTimeout
-//    with MockFactory
 //    with OneInstancePerTest
-//    with LoggerStub
 //    with Retrievals
-//    with Results
+//    with Results with LoggerStub
 //    with ShutteringMocking {
 //
 //  private val generator = new Generator(0)
 //  private val testNino  = generator.nextNino
+//
+//
 //
 //  "AuthorisedWithIds" should {
 //    shutteringDisabled
@@ -147,13 +133,21 @@
 //  private def authConnectorStubThatWillReturn(nino: Option[String]): AuthConnector =
 //    authConnectorStubThatWillReturn(Future successful nino)
 //
+//
 //  private def authConnectorStubThatWillReturn(futureNino: Future[Option[String]]): AuthConnector = {
-//    val authConnectorStub = stub[AuthConnector]
-//    (authConnectorStub
+//    val authConnectorStub = mock[AuthConnector]
+//    when(authConnectorStub
 //      .authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
-//      .when(ConfidenceLevel.L200, nino, *, *)
-//      .returns(futureNino)
+//      .thenReturn(Future.successful(authConnectorStub))
 //    authConnectorStub
+//
+//    private def authConnectorStubThatWillReturn(futureNino: Future[Option[String]]): AuthConnector = {
+//          val authConnectorStub = stub[AuthConnector]
+//          (authConnectorStub
+//            .authorise[Option[String]](_: Predicate, _: Retrieval[Option[String]])(_: HeaderCarrier, _: ExecutionContext))
+//            .when(ConfidenceLevel.L200, nino, *, *)
+//            .returns(futureNino)
+//          authConnectorStub
 //  }
 //
 //}

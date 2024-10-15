@@ -18,7 +18,6 @@ package uk.gov.hmrc.mobilehelptosave.support
 
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.client.HttpClientV2
 

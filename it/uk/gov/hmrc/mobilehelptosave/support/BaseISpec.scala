@@ -23,6 +23,7 @@ trait BaseISpec
   val generator = new Generator(0)
   val nino: Nino = generator.nextNino
 
-  def requestWithAuthHeaders(url: String): WSRequest =
+  def requestWithAuthHeaders(url: String): WSRequest = {
     wsUrl(url).addHttpHeaders(acceptJsonHeader, authorisationJsonHeader)
+  }
 }
