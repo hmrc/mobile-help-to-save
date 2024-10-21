@@ -1,6 +1,6 @@
 
 import sbt.Resolver
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, oneForkedJvmPerTest}
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 
 val appName = "mobile-help-to-save"
 
@@ -59,7 +59,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     IntegrationTest / Keys.fork := false,
     addTestReportOption(IntegrationTest, "int-test-reports"),
-    IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
     IntegrationTest / parallelExecution := false
   )
   .settings(
