@@ -34,7 +34,7 @@ class ComponentApplicationBuilder(context: Context = Context.create(Environment.
     configure(conf.toMap)
 
   final def configure(conf: Configuration): ComponentApplicationBuilder =
-    new ComponentApplicationBuilder(context.copy(initialConfiguration = context.initialConfiguration withFallback conf))
+    new ComponentApplicationBuilder(context.copy(initialConfiguration = context.initialConfiguration ++ conf))
 
   /**
     * Add additional configuration.

@@ -7,6 +7,7 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.mobilehelptosave.TransactionTestData
 
+
 trait BaseISpec
     extends AnyWordSpecLike
     with Matchers

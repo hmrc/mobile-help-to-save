@@ -59,7 +59,7 @@ class HelpToSaveConnectorImpl @Inject() (
     with HelpToSaveEligibility[Future] {
 
   def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
-    http.get(url"$enrolmentStatusUrl.toString").execute.map { response =>
+    http.get(url"$enrolmentStatusUrl").execute.map { response =>
       Right((response.json \ "enrolled").as[Boolean])
     } recover handleEnrolmentStatusHttpErrors
 
