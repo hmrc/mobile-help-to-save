@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
+import org.mockito.Mockito.verify
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, status, _}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
@@ -35,7 +36,6 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-//noinspection TypeAnnotation
 class GetTransactionsSpec
     extends AnyWordSpecLike
       with Matchers
@@ -44,7 +44,7 @@ class GetTransactionsSpec
       with TransactionTestData
       with AccountTestData
       with DefaultAwaitTimeout
-      with MockFactory
+      with MockitoSugar
       with LoggerStub
       with OneInstancePerTest
       with TestSupport
@@ -102,7 +102,7 @@ class GetTransactionsSpec
 
         val resultF = controller.getTransactions(otherNino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 403
-        (slf4jLoggerStub.warn(_: String)) verify s"Attempt by $nino to access $otherNino's data"
+        verify(slf4jLoggerStub).warn(s"Attempt by $nino to access $otherNino's data")
       }
     }
 

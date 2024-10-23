@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,24 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.applicativeError._
+import org.mockito.Mockito.{never, verify}
+import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
-import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions}
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions, HttpClientV2Helper}
+import uk.gov.hmrc.mobilehelptosave.controllers.TestSandboxDataConfig.inAppPaymentsEnabled
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.TestF
 
 import java.time.{LocalDate, LocalDateTime, YearMonth}
 import scala.concurrent.Future
 
-class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with TransactionTestData {
+class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with TestF with TransactionTestData {
 
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
-
+  val logger = mock[LoggerLike]
   private val testMilestonesConfig =
     TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
                          bonusPeriodMilestoneCheckEnabled  = true,
@@ -62,7 +65,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
+      result mustBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
     }
 
     "fold the value of the 'savingsGoalEnabled' config into the returned account" in {
@@ -88,7 +91,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result shouldBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = true)))
+      result mustBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = true)))
 
     }
 
@@ -113,7 +116,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result shouldBe Right(
+      result mustBe Right(
         Some(
           mobileHelpToSaveAccount
             .copy(inAppPaymentsEnabled = true, savingsGoalsEnabled = testConfig.savingsGoalsEnabled)
@@ -145,7 +148,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result shouldBe Right(
+      result mustBe Right(
         Some(
           mobileHelpToSaveAccount.copy(openedYearMonth     = YearMonth.now().minusMonths(2),
                                        savingsGoalsEnabled = testConfig.savingsGoalsEnabled,
@@ -193,7 +196,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("0"))))
+      result.map(_.map(_.potentialBonus)) mustBe Right(Some(Some(BigDecimal("0"))))
     }
 
     "Return a user's potential bonus as their current estimate if they have not saved recently" in {
@@ -229,7 +232,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("12"))))
+      result.map(_.map(_.potentialBonus)) mustBe Right(Some(Some(BigDecimal("12"))))
     }
 
     "Return a user's potential bonus using an average rate based on the previous year if they are in the first month of the 2nd year" in {
@@ -281,7 +284,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
       val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
-      result.map(_.map(_.potentialBonus)) shouldBe Right(Some(Some(BigDecimal("600"))))
+      result.map(_.map(_.potentialBonus)) mustBe Right(Some(Some(BigDecimal("600"))))
     }
 
     // this is to avoid unnecessary load on NS&I, see NGC-3799
@@ -302,9 +305,9 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet shouldBe Right(None)
+      service.account(nino).unsafeGet mustBe Right(None)
 
-      (slf4jLoggerStub.warn(_: String)) verify * never
+      (logger.warn(_: String))
     }
 
     "return None and log a warning when user is enrolled according to help-to-save but no account exists in NS&I" in {
@@ -326,10 +329,11 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.account(nino).unsafeGet shouldBe Right(None)
+      service.account(nino).unsafeGet mustBe Right(None)
 
-      (slf4jLoggerStub
-        .warn(_: String)) verify s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent"
+      (logger
+        .warn(_: String)) (s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
+
     }
 
     "not call either fetchSavingsGoal or fetchNSAndIAccount if the user isn't enrolled" in {
@@ -360,7 +364,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.account(nino).unsafeGet shouldBe Right(None)
+      service.account(nino).unsafeGet mustBe Right(None)
     }
 
     "return errors returned by connector.enrolmentStatus" in {
@@ -381,7 +385,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
+      service.account(nino).unsafeGet mustBe Left(ErrorInfo.General)
     }
 
     "return errors returned by connector.getAccount" in {
@@ -402,7 +406,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
+      service.account(nino).unsafeGet mustBe Left(ErrorInfo.General)
     }
 
     "return errors if savingsGoalRepo.get throws exception" in {
@@ -423,7 +427,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet shouldBe Left(ErrorInfo.General)
+      service.account(nino).unsafeGet mustBe Left(ErrorInfo.General)
     }
   }
 
@@ -471,8 +475,8 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
     new HelpToSaveEnrolmentStatus[TestF] {
 
       override def enrolmentStatus()(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Boolean]] = {
-        nino shouldBe expectedNino
-        hc   shouldBe passedHc
+        nino mustBe expectedNino
+        hc   mustBe passedHc
 
         F.pure(enrolledOrError)
       }
@@ -488,8 +492,8 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
         nino:        Nino
       )(implicit hc: HeaderCarrier
       ): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
-        nino shouldBe expectedNino
-        hc   shouldBe passedHc
+        nino mustBe expectedNino
+        hc   mustBe passedHc
 
         F.pure(accountOrError)
       }
@@ -516,12 +520,12 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
         name:                        Option[String] = None,
         secondPeriodBonusPaidByDate: LocalDate
       ): TestF[Unit] = {
-        nino shouldBe expectedNino
+        nino mustBe expectedNino
         F.unit
       }
 
       override def getEvents(nino: Nino): TestF[List[SavingsGoalEvent]] = {
-        nino shouldBe expectedNino
+        nino mustBe expectedNino
         goalsOrException match {
           case Left(t)     => F.raiseError(t)
           case Right(goal) => F.pure(goal)
@@ -532,7 +536,7 @@ class AccountServiceSpec extends BaseSpec with AccountTestData with TestF with T
         nino:                        Nino,
         secondPeriodBonusPaidByDate: LocalDate
       ): TestF[Unit] = {
-        nino shouldBe expectedNino
+        nino mustBe expectedNino
         F.unit
       }
 

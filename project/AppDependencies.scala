@@ -8,9 +8,9 @@ object AppDependencies {
     resolvers += "emueller-bintray" at "https://dl.bintray.com/emueller/maven"
   )
 
-  private val hmrcMongoVersion     = "1.8.0"
-  private val bootstrapVersion     = "8.5.0"
-  private val domainVersion        = "9.0.0"
+  private val hmrcMongoVersion     = "2.2.0"
+  private val bootstrapVersion     = "9.5.0"
+  private val domainVersion        = "10.0.0"
   private val catsCoreVersion      = "2.9.0"
   private val catsParVersion       = "1.0.0-RC2"
   private val scalaUriVersion      = "4.0.3"

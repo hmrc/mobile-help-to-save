@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{never, verify}
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
@@ -46,7 +48,7 @@ class GetSavingsUpdateSpec
       with TransactionTestData
       with AccountTestData
       with DefaultAwaitTimeout
-      with MockFactory
+      with MockitoSugar
       with LoggerStub
       with OneInstancePerTest
       with TestSupport
@@ -135,8 +137,7 @@ class GetSavingsUpdateSpec
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
         (jsonBody \ "message")
           .as[String] shouldBe "No Help to Save account exists for the specified NINO"
-
-        (slf4jLoggerStub.warn(_: String)) verify * never
+        verify(slf4jLoggerStub, never()).warn(any[String])
       }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.syntax.either._
 import org.scalatest.EitherValues
+import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
@@ -32,7 +33,7 @@ import scala.concurrent.Future
 class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with EitherValues {
 
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
-
+  val logger = mock[LoggerLike]
   private val testMilestonesConfig =
     TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
                          bonusPeriodMilestoneCheckEnabled  = true,
@@ -61,7 +62,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet shouldBe Right(())
+      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet mustBe Right(())
     }
 
     "return a ValidationError if the goal is < 1.0" in {
@@ -84,7 +85,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(Some(0.99))).unsafeGet.left.value shouldBe a[ErrorInfo.ValidationError]
+      service.setSavingsGoal(nino, SavingsGoal(Some(0.99))).unsafeGet.left.value mustBe a[ErrorInfo.ValidationError]
     }
 
     "return a ValidationError if the goal is > maximum for month" in {
@@ -111,7 +112,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
         .setSavingsGoal(nino, SavingsGoal(Some(helpToSaveAccount.maximumPaidInThisMonth.toDouble + 0.01)))
         .unsafeGet
         .left
-        .value shouldBe a[ErrorInfo.ValidationError]
+        .value mustBe a[ErrorInfo.ValidationError]
     }
 
     "return an AccountNotFound if the nino does not have an account with NS&I" in {
@@ -134,7 +135,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.AccountNotFound
+      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value mustBe ErrorInfo.AccountNotFound
     }
 
     "return a General error if the repo throws a Non-Fatal exception" in {
@@ -157,7 +158,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value shouldBe ErrorInfo.General
+      service.setSavingsGoal(nino, SavingsGoal(Some(1.0))).unsafeGet.left.value mustBe ErrorInfo.General
     }
   }
 
@@ -204,8 +205,8 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
     new HelpToSaveEnrolmentStatus[TestF] {
 
       override def enrolmentStatus()(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Boolean]] = {
-        nino shouldBe expectedNino
-        hc   shouldBe passedHc
+        nino mustBe expectedNino
+        hc   mustBe passedHc
 
         F.pure(enrolledOrError)
       }
@@ -221,8 +222,8 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
         nino:        Nino
       )(implicit hc: HeaderCarrier
       ): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
-        nino shouldBe expectedNino
-        hc   shouldBe passedHc
+        nino mustBe expectedNino
+        hc   mustBe passedHc
 
         F.pure(accountOrError)
       }
@@ -252,7 +253,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
       name:                        Option[String] = None,
       secondPeriodBonusPaidByDate: LocalDate
     ): TestF[Unit] = {
-      nino shouldBe expectedNino
+      nino mustBe expectedNino
       setGoalResponse match {
         case Left(t)  => F.raiseError(t)
         case Right(_) => fUnit
@@ -260,7 +261,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
     }
 
     override def getEvents(nino: Nino): TestF[List[SavingsGoalEvent]] = {
-      nino shouldBe expectedNino
+      nino mustBe expectedNino
       goalsOrException match {
         case Left(t)     => F.raiseError(t)
         case Right(goal) => F.pure(goal)
@@ -271,7 +272,7 @@ class SetSavingsGoalSpec extends BaseSpec with TestF with AccountTestData with E
       nino:                        Nino,
       secondPeriodBonusPaidByDate: LocalDate
     ): TestF[Unit] = {
-      nino shouldBe expectedNino
+      nino mustBe expectedNino
       deleteGoalResponse match {
         case Left(t)  => F.raiseError(t)
         case Right(_) => fUnit

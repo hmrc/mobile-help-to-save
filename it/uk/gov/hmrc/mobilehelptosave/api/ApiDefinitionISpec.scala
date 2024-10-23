@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package uk.gov.hmrc.mobilehelptosave.api
 
 import org.scalatest.concurrent.Eventually
@@ -33,12 +32,9 @@ class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport
     "provide definition with configurable whitelist" in {
       val response = await(wsUrl("/api/definition").get())
       response.status shouldBe 200
-
       response.header("Content-Type") shouldBe Some("application/json")
-
       val definition = response.json
       (definition \\ "version").map(_.as[String]).head shouldBe "1.0"
-
       val accessConfigs = definition \ "api" \ "versions" \\ "access"
       accessConfigs.length should be > 0
       accessConfigs.foreach { accessConfig =>

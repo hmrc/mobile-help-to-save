@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import com.google.inject.Inject
 import play.api.LoggerLike
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
@@ -54,7 +55,7 @@ trait HelpToSaveActions {
   def getSavingsUpdate(journeyId: JourneyId): Action[AnyContent]
 }
 
-class HelpToSaveController(
+class HelpToSaveController @Inject() (
   val logger:                LoggerLike,
   accountService:            AccountService[Future],
   helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],

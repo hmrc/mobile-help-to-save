@@ -25,11 +25,11 @@ class AccountJsonSpec extends BaseSpec with AccountTestData {
   "Account JSON" should {
     "format currentBonusTerm as documented in the README" in {
       (Json.toJson(mobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.First)) \ "currentBonusTerm")
-        .as[String] shouldBe "First"
+        .as[String] mustBe "First"
       (Json.toJson(mobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.Second)) \ "currentBonusTerm")
-        .as[String] shouldBe "Second"
+        .as[String] mustBe "Second"
       (Json.toJson(mobileHelpToSaveAccount.copy(currentBonusTerm = CurrentBonusTerm.AfterFinalTerm)) \ "currentBonusTerm")
-        .as[String] shouldBe "AfterFinalTerm"
+        .as[String] mustBe "AfterFinalTerm"
     }
   }
 }

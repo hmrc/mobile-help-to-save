@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -27,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ShutteringConnector @Inject() (
-  http:   CoreGet,
+  http:   HttpClientV2,
   config: ShutteringConnectorConfig) {
 
   val logger: Logger = Logger(this.getClass)
@@ -38,9 +39,10 @@ class ShutteringConnector @Inject() (
     ex:                     ExecutionContext
   ): Future[Shuttering] =
     http
-      .GET[Shuttering](
-        s"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId"
+      .get(
+        url"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId"
       )
+      .execute[Shuttering]
       .map(s => s)
       .recover {
         case e: UpstreamErrorResponse =>

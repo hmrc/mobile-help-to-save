@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,22 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
+import play.api.LoggerLike
+
 import java.time.{Instant, LocalDate, LocalDateTime}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository._
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.TestF
 
 import scala.concurrent.Future
 
-class MilestonessServiceSpec extends BaseSpec with TestF {
+class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
 
   private val now       = LocalDate.now()
-
+  val logger = mock[LoggerLike]
   private val testConfig =
     TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
                          bonusPeriodMilestoneCheckEnabled  = true,
@@ -71,7 +74,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.getMilestones(nino).unsafeGet
-      result shouldBe milestones
+      result mustBe milestones
     }
 
     "filter out any milestones with the same milestoneType that have not been seen, only retrieving the most recent one" in {
@@ -95,7 +98,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.getMilestones(nino).unsafeGet
-      result shouldBe List(milestone.copy(generatedDate = Instant.parse("2019-01-17T10:15:30Z")))
+      result mustBe List(milestone.copy(generatedDate = Instant.parse("2019-01-17T10:15:30Z")))
     }
 
     "retrieve a list of unseen milestones not including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to false" in {
@@ -116,7 +119,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
                                  previousBalanceRepo)
 
       val result = service.getMilestones(nino).unsafeGet
-      result shouldBe List.empty
+      result mustBe List.empty
     }
   }
 
@@ -134,7 +137,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.setMilestone(milestone).unsafeGet
-      result shouldBe (())
+      result mustBe (())
     }
   }
 
@@ -147,7 +150,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.balanceMilestoneCheck(nino, 0, now).unsafeGet
-      result shouldBe CouldNotCheck
+      result mustBe CouldNotCheck
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneNotHit if the BalanceReached1 milestone has not been hit" in {
@@ -158,7 +161,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.balanceMilestoneCheck(nino, 0, now).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneHit if the BalanceReached1 milestone has been hit" in {
@@ -169,7 +172,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.balanceMilestoneCheck(nino, 1, now).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
   }
 
@@ -182,7 +185,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.markAsSeen(nino, "TestMilestoneType").unsafeGet
-      result shouldBe (())
+      result mustBe (())
     }
   }
 
@@ -195,7 +198,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.bonusPeriodMilestoneCheck(nino, baseBonusTerms, 100, CurrentBonusTerm.First, false).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "check if the current date is within 20 days of the bonus period end date and return MilestoneNotHit if the bonus estimate is 0" in {
@@ -208,7 +211,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
       val bonusTerms = Seq(baseBonusTerms(0).copy(bonusEstimate = 0), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 200, CurrentBonusTerm.First, false).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "check if the current date is within 20 days of the bonus period end date and if not, then return MilestoneNotHit" in {
@@ -221,7 +224,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
       val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().plusDays(21)), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.First, false).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "check if the current date is 90 or less days since the end of the first bonus period end date and if there are no bonus estimates or paid bonuses, then return MilestoneHit" in {
@@ -240,7 +243,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
       )
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "check if the current date is 90 or less days since the end of the first bonus period end date and if there are any bonus estimates or paid bonuses, then return MilestoneNotHit" in {
@@ -254,7 +257,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "check if the current date is withing 20 days of the second bonus period end date, then return MilestoneHit" in {
@@ -269,7 +272,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
             baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "check if the current term is after the first and if a first term bonus was paid then return MilestoneHit" in {
@@ -283,7 +286,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "check if the current term is after the first and if a first term bonus was not paid then return MilestoneNotHit" in {
@@ -297,7 +300,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "check if the current term is before the first and if a first term bonus was paid then return MilestoneNotHit" in {
@@ -312,7 +315,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
             baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.First, false).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "check if the current term is after the second and if a final term bonus was paid then return MilestoneHit" in {
@@ -330,7 +333,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
 
       val result =
         service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.AfterFinalTerm, true).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "check if the current term is after the second and if a final term bonus was not paid then return MilestoneNotHit" in {
@@ -348,7 +351,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
 
       val result =
         service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.AfterFinalTerm, true).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "check if the current term is the second and if a final term bonus was paid then return MilestoneNotHit" in {
@@ -365,7 +368,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
   }
 
@@ -378,7 +381,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val result = service.bonusReachedMilestoneCheck(nino, baseBonusTerms, CurrentBonusTerm.First).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached150 milestone has been hit" in {
@@ -395,7 +398,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached300 milestone has been hit" in {
@@ -412,7 +415,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached600 milestone has been hit" in {
@@ -429,7 +432,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneNotHit if a milestone has not been hit" in {
@@ -446,7 +449,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached75 milestone has been hit" in {
@@ -463,7 +466,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached200 milestone has been hit" in {
@@ -480,7 +483,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached300 milestone has been hit" in {
@@ -497,7 +500,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached500 milestone has been hit" in {
@@ -514,7 +517,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
-      result shouldBe MilestoneHit
+      result mustBe MilestoneHit
     }
 
     "If in the after final term period return MilestoneNotHit" in {
@@ -531,7 +534,7 @@ class MilestonessServiceSpec extends BaseSpec with TestF {
         )
 
       val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.AfterFinalTerm).unsafeGet
-      result shouldBe MilestoneNotHit
+      result mustBe MilestoneNotHit
     }
   }
 

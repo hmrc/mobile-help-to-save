@@ -19,10 +19,12 @@ package uk.gov.hmrc.mobilehelptosave.connectors
 import java.net.URL
 import java.time.{LocalDate, YearMonth}
 import com.fasterxml.jackson.core.JsonParseException
+import jakarta.inject.Inject
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, JsValidationException, NotFoundException, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mobilehelptosave.config.HelpToSaveConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.config.SystemId.SystemId
 import uk.gov.hmrc.mobilehelptosave.domain._
@@ -46,19 +48,19 @@ trait HelpToSaveEligibility[F[_]] {
   def checkEligibility()(implicit hc: HeaderCarrier): F[Either[ErrorInfo, EligibilityCheckResponse]]
 }
 
-class HelpToSaveConnectorImpl(
+class HelpToSaveConnectorImpl @Inject() (
   logger:      LoggerLike,
   config:      HelpToSaveConnectorConfig,
-  http:        CoreGet
+  http:        HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HelpToSaveGetTransactions[Future]
     with HelpToSaveGetAccount[Future]
     with HelpToSaveEnrolmentStatus[Future]
     with HelpToSaveEligibility[Future] {
 
-  override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
-    http.GET[JsValue](enrolmentStatusUrl.toString) map { json: JsValue =>
-      Right((json \ "enrolled").as[Boolean])
+  def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
+    http.get(url"$enrolmentStatusUrl").execute.map { response =>
+      Right((response.json \ "enrolled").as[Boolean])
     } recover handleEnrolmentStatusHttpErrors
 
   override def getAccount(
@@ -66,17 +68,20 @@ class HelpToSaveConnectorImpl(
   )(implicit hc: HeaderCarrier
   ): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
     val string = accountUrl(nino).toString
-    http.GET[HelpToSaveAccount](string) map (account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
+    http
+      .get(url"$string")
+      .execute[HelpToSaveAccount]
+      .map(account => Right(Some(account))) recover (mapNotFoundToNone orElse handleAccountHttpErrors)
   }
 
   override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Transactions]] = {
     val string = transactionsUrl(nino).toString
-    http.GET[Transactions](string) map (Right(_)) recover handleTransactionsHttpErrors
+    http.get(url"$string").execute[Transactions].map(Right(_)) recover handleTransactionsHttpErrors
   }
 
   override def checkEligibility()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
     val string = eligibilityUrl.toString
-    http.GET[EligibilityCheckResponse](string) map (Right(_)) recover handleEligibilityHttpErrors
+    http.get(url"$string").execute[EligibilityCheckResponse].map(Right(_)) recover handleEligibilityHttpErrors
   }
 
   private val mapNotFoundToNone: PartialFunction[Throwable, Either[ErrorInfo, Option[Nothing]]] = {
@@ -89,8 +94,7 @@ class HelpToSaveConnectorImpl(
       Left(ErrorInfo.MultipleRequests)
     case _: NotFoundException =>
       Left(ErrorInfo.AccountNotFound)
-    case e @ (_: HttpException | _: UpstreamErrorResponse | _: JsValidationException |
-        _: JsonParseException) =>
+    case e @ (_: HttpException | _: UpstreamErrorResponse | _: JsValidationException | _: JsonParseException) =>
       logger.warn(s"Couldn't get $dataDescription from help-to-save service", e)
       Left(ErrorInfo.General)
   }

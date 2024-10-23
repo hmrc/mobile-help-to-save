@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import org.mockito.Mockito.verify
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import org.scalatest.matchers.should.Matchers
@@ -123,8 +124,7 @@ class AuthorisedWithIdsSpec
       val resultF = action(FakeRequest())
       status(resultF)          shouldBe FORBIDDEN
       contentAsString(resultF) shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
-      (slf4jLoggerStub
-        .warn(_: String)) verify "Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381."
+      verify(slf4jLoggerStub).warn(s"Forbidding access due to insufficient confidence level. User will see an error screen. To fix this see NGC-3381.")
     }
   }
 
@@ -139,5 +139,4 @@ class AuthorisedWithIdsSpec
       .returns(futureNino)
     authConnectorStub
   }
-
 }

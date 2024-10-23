@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,16 @@
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{never, verify}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveGetTransactions, HttpClientV2Helper}
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
@@ -35,7 +37,6 @@ import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-//noinspection TypeAnnotation
 class GetAccountSpec
     extends AnyWordSpecLike
       with Matchers
@@ -44,10 +45,10 @@ class GetAccountSpec
       with TransactionTestData
       with AccountTestData
       with DefaultAwaitTimeout
-      with MockFactory
-      with LoggerStub
+      with MockitoSugar
       with OneInstancePerTest
       with TestSupport
+      with LoggerStub
       with ShutteringMocking {
 
   "getAccount" should {
@@ -93,7 +94,7 @@ class GetAccountSpec
         (jsonBody \ "message")
           .as[String] shouldBe "No Help to Save account exists for the specified NINO"
 
-        (slf4jLoggerStub.warn(_: String)) verify * never
+        verify(slf4jLoggerStub, never()).warn(any[String])
       }
     }
 
@@ -114,8 +115,7 @@ class GetAccountSpec
 
         val resultF = controller.getAccount(otherNino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
         status(resultF) shouldBe 403
-        (slf4jLoggerStub
-          .warn(_: String)) verify s"Attempt by $nino to access $otherNino's data"
+        verify(slf4jLoggerStub).warn(s"Attempt by $nino to access $otherNino's data")
       }
     }
 
@@ -128,7 +128,7 @@ class GetAccountSpec
           logger,
           accountService,
           helpToSaveGetTransactions,
-          new AlwaysAuthorisedWithIds(nino, trueShuttering),
+          new AlwaysAuthorisedWithIds(nino,  trueShuttering),
           new HtsSavingsUpdateService,
           savingsGoalEventRepo,
           stubControllerComponents()

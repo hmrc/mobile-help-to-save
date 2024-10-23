@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import org.scalatest.EitherValues
+import play.api.LoggerLike
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
@@ -30,7 +32,7 @@ import scala.concurrent.Future
 class UserServiceSpec extends BaseSpec with EitherValues {
 
   private implicit val passedHc: HeaderCarrier = HeaderCarrier()
-
+  val logger = mock[LoggerLike]
   private val testConfig = TestUserServiceConfig(eligibilityCheckEnabled = true)
 
   private class UserServiceWithTestDefaults(
@@ -74,7 +76,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
       )
 
       val user: UserDetails = await(service.userDetails(nino)).value
-      user.state shouldBe UserState.Enrolled
+      user.state mustBe UserState.Enrolled
     }
 
     "return state=NotEnrolled when the current user is not enrolled in Help to Save and not eligible" in {
@@ -85,7 +87,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
       )
 
       val user: UserDetails = await(service.userDetails(nino)).value
-      user.state shouldBe UserState.NotEnrolled
+      user.state mustBe UserState.NotEnrolled
     }
 
     "return state=NotEnrolledButEligible when the current user is not enrolled in Help to Save but is eligible" in {
@@ -96,7 +98,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
       )
 
       val user: UserDetails = await(service.userDetails(nino)).value
-      user.state shouldBe UserState.NotEnrolledButEligible
+      user.state mustBe UserState.NotEnrolledButEligible
     }
 
     "allow eligibilityCheckEnabled to be overridden in configuration" in {
@@ -109,7 +111,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
       )
 
       val user: UserDetails = await(service.userDetails(nino)).value
-      user.state shouldBe UserState.NotEnrolled
+      user.state mustBe UserState.NotEnrolled
     }
 
     "return an error when the HelpToSaveConnector returns an error" in {
@@ -120,7 +122,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
         fakeEligibilityRepo(None)
       )
 
-      await(service.userDetails(nino)) shouldBe Left(error)
+      await(service.userDetails(nino))  mustBe Left(error)
     }
   }
 
@@ -128,7 +130,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
     new HelpToSaveEnrolmentStatus[Future] {
 
       override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
-        hc shouldBe passedHc
+        hc mustBe passedHc
 
         Future successful userIsEnrolledInHelpToSave
       }
@@ -140,7 +142,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
       override def checkEligibility(
       )(implicit hc: HeaderCarrier
       ): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
-        hc shouldBe passedHc
+        hc mustBe passedHc
 
         Future successful userIsEligibleForHelpToSave
       }

@@ -16,23 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.OneInstancePerTest
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.http.client.HttpClientV2
 
-trait BaseSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with MockFactory
-    with OneInstancePerTest
-    with LoggerStub
-    with FutureAwaits
-    with DefaultAwaitTimeout {
+trait BaseSpec extends PlaySpec with MockitoSugar {
 
   val generator = new Generator(0)
-  val nino: Nino = generator.nextNino
-  val otherNino: Nino = generator.nextNino
+  val nino:           Nino         = generator.nextNino
+  val otherNino:      Nino         = generator.nextNino
+  val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
 }

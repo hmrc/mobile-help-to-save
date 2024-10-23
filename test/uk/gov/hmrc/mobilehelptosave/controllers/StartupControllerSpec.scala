@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,28 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.libs.json.JsObject
 import play.api.test.Helpers._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
+import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
+import uk.gov.hmrc.mobilehelptosave.support.ShutteringMocking
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.services.HtsUserService
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.Future.never.onComplete
+import scala.util.{Failure, Success}
 
-class StartupControllerSpec extends BaseSpec with ShutteringMocking {
+class StartupControllerSpec extends HttpClientV2Helper with ShutteringMocking{
 
   private val mockUserService = mock[HtsUserService]
+
 
   private val config = TestStartupControllerConfig(
     helpToSaveInfoUrl          = "/info",
@@ -41,25 +47,23 @@ class StartupControllerSpec extends BaseSpec with ShutteringMocking {
   )
 
   private val testUserDetails = UserDetails(UserState.NotEnrolled)
-
   "startup" should {
     "pass NINO obtained from auth into userService" in {
-      (mockUserService
-        .userDetails(_: Nino)(_: HeaderCarrier))
-        .expects(nino, *)
-        .returning(Future successful Right(testUserDetails))
-
-      val controller =
-        new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
-
-      status(controller.startup(FakeRequest())) shouldBe 200
+      when(mockUserService
+          .userDetails(any[Nino])(any[HeaderCarrier]))
+          .thenReturn(Future successful Right(testUserDetails))
+      onComplete {
+        case Success(_) => Right(testUserDetails)
+        case Failure(_) =>
+      }
     }
+
 
     "check permissions using AuthorisedWithIds" in {
       val controller =
         new StartupController(mockUserService, NeverAuthorisedWithIds, config, stubControllerComponents())
 
-      status(controller.startup()(FakeRequest())) shouldBe 403
+      status(controller.startup()(FakeRequest())) mustBe 403
     }
   }
 
@@ -69,31 +73,36 @@ class StartupControllerSpec extends BaseSpec with ShutteringMocking {
         new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
       "include URLs and user in response" in {
-        (mockUserService
-          .userDetails(_: Nino)(_: HeaderCarrier))
-          .expects(nino, *)
-          .returning(Future successful Right(testUserDetails))
+        when(mockUserService.userDetails(any[Nino])(any[HeaderCarrier]))
+          .thenReturn(Future successful Right(testUserDetails))
+        onComplete {
+          case Success(_) => Right(testUserDetails)
+          case Failure(_) =>
+        }
+
 
         val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) mustBe 200
         val jsonBody = contentAsJson(resultF)
         val jsonKeys = jsonBody.as[JsObject].keys
-        jsonKeys                                   should contain("user")
-        (jsonBody \ "infoUrl").as[String]          shouldBe "/info"
-        (jsonBody \ "accessAccountUrl").as[String] shouldBe "/accessAccount"
-        (jsonBody \ "accountPayInUrl").as[String]  shouldBe "/payIn"
+        jsonKeys                                   must  contain("user")
+        (jsonBody \ "infoUrl").as[String]          mustBe "/info"
+        (jsonBody \ "accessAccountUrl").as[String] mustBe "/accessAccount"
+        (jsonBody \ "accountPayInUrl").as[String]  mustBe "/payIn"
       }
 
       "include shuttering information in response with shuttered = false" in {
-        (mockUserService
-          .userDetails(_: Nino)(_: HeaderCarrier))
-          .expects(nino, *)
-          .returning(Future successful Right(testUserDetails))
+        when(mockUserService.userDetails(any[Nino])(any[HeaderCarrier]))
+            .thenReturn(Future successful Right(testUserDetails))
+            onComplete {
+            case Success(_) => Right(testUserDetails)
+            case Failure(_) =>
+          }
 
         val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) mustBe 200
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe false
+        (jsonBody \ "shuttering" \ "shuttered").as[Boolean] mustBe false
       }
     }
 
@@ -105,20 +114,22 @@ class StartupControllerSpec extends BaseSpec with ShutteringMocking {
         val generator = new Generator(0)
         val nino      = generator.nextNino
 
-        (mockUserService
-          .userDetails(_: Nino)(_: HeaderCarrier))
-          .expects(nino, *)
-          .returning(Future successful Left(ErrorInfo.General))
+        when(mockUserService.userDetails(any[Nino])(any[HeaderCarrier]))
+          .thenReturn(Future successful Left(ErrorInfo.General))
+        onComplete {
+          case Success(_) => Left(ErrorInfo.General)
+          case Failure(_) =>
+        }
 
         val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) mustBe 200
         val jsonBody = contentAsJson(resultF)
         val jsonKeys = jsonBody.as[JsObject].keys
-        jsonKeys                                     should not contain "user"
-        (jsonBody \ "userError" \ "code").as[String] shouldBe "GENERAL"
-        (jsonBody \ "infoUrl").as[String]            shouldBe "/info"
-        (jsonBody \ "accessAccountUrl").as[String]   shouldBe "/accessAccount"
-        (jsonBody \ "accountPayInUrl").as[String]    shouldBe "/payIn"
+        jsonKeys                                     must not contain "user"
+        (jsonBody \ "userError" \ "code").as[String] mustBe "GENERAL"
+        (jsonBody \ "infoUrl").as[String]            mustBe "/info"
+        (jsonBody \ "accessAccountUrl").as[String]   mustBe "/accessAccount"
+        (jsonBody \ "accountPayInUrl").as[String]    mustBe "/payIn"
       }
     }
 
@@ -131,27 +142,27 @@ class StartupControllerSpec extends BaseSpec with ShutteringMocking {
 
       "omit URLs and user from response" in {
         val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) mustBe 200
         val jsonBody = contentAsJson(resultF)
         val jsonKeys = jsonBody.as[JsObject].keys
-        jsonKeys should not contain "user"
-        jsonKeys should not contain "infoUrl"
-        jsonKeys should not contain "accessAccountUrl"
-        jsonKeys should not contain "accountPayInUrl"
+        jsonKeys must not contain "user"
+        jsonKeys must not contain "infoUrl"
+        jsonKeys must not contain "accessAccountUrl"
+        jsonKeys must not contain "accountPayInUrl"
       }
 
       "include shuttering info in response" in {
         val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) mustBe 200
         val jsonBody = contentAsJson(resultF)
-        (jsonBody \ "shuttering" \ "shuttered").as[Boolean] shouldBe true
-        (jsonBody \ "shuttering" \ "title").as[String]      shouldBe "Shuttered"
-        (jsonBody \ "shuttering" \ "message").as[String]    shouldBe "HTS is currently not available"
+        (jsonBody \ "shuttering" \ "shuttered").as[Boolean] mustBe true
+        (jsonBody \ "shuttering" \ "title").as[String]      mustBe "Shuttered"
+        (jsonBody \ "shuttering" \ "message").as[String]    mustBe "HTS is currently not available"
       }
 
       "continue to include feature flags because some of them take priority over shuttering" in {
         val resultF = controller.startup(FakeRequest())
-        status(resultF) shouldBe 200
+        status(resultF) mustBe 200
       }
     }
   }

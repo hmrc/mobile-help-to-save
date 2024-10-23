@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
+import play.api.LoggerLike
+
 import java.time.{LocalDate, YearMonth}
 import uk.gov.hmrc.mobilehelptosave.AccountTestData
-import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveBonusTerm
-import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
+import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveBonusTerm, HttpClientV2Helper}
 
-class AccountSpec extends BaseSpec with AccountTestData {
 
+class AccountSpec extends HttpClientV2Helper with AccountTestData {
+
+  val logger = mock[LoggerLike]
   private val accountOpenedInJan2018 = helpToSaveAccount.copy(
     openedYearMonth = YearMonth.of(2018, 1),
     bonusTerms = Seq(
@@ -54,7 +57,7 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.nextPaymentMonthStartDate shouldBe Some(LocalDate.of(2021, 12, 1))
+      account.nextPaymentMonthStartDate mustBe Some(LocalDate.of(2021, 12, 1))
     }
 
     "omit nextPaymentMonthStartDate when payments will not be possible next month because it will be after the last bonus term" in {
@@ -68,7 +71,7 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.nextPaymentMonthStartDate shouldBe None
+      account.nextPaymentMonthStartDate mustBe None
     }
 
     "return currentBonusTerm = *first* when current month is first month of *first* term" in {
@@ -82,7 +85,7 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.currentBonusTerm shouldBe CurrentBonusTerm.First
+      account.currentBonusTerm mustBe CurrentBonusTerm.First
     }
 
     "return currentBonusTerm = *first* when current month is last month of *first* term" in {
@@ -96,7 +99,7 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.currentBonusTerm shouldBe CurrentBonusTerm.First
+      account.currentBonusTerm mustBe CurrentBonusTerm.First
     }
 
     "return currentBonusTerm = *second* when current month is first month of *second* term" in {
@@ -110,7 +113,7 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.currentBonusTerm shouldBe CurrentBonusTerm.Second
+      account.currentBonusTerm mustBe CurrentBonusTerm.Second
     }
 
     "return currentBonusTerm = *second* when current month is last month of *second* term" in {
@@ -124,7 +127,7 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.currentBonusTerm shouldBe CurrentBonusTerm.Second
+      account.currentBonusTerm mustBe CurrentBonusTerm.Second
     }
 
     "return currentBonusTerm = *afterFinalTerm* when current month is after end of second term" in {
@@ -138,20 +141,20 @@ class AccountSpec extends BaseSpec with AccountTestData {
                             logger,
                             now,
                             None)
-      account.currentBonusTerm shouldBe CurrentBonusTerm.AfterFinalTerm
+      account.currentBonusTerm mustBe CurrentBonusTerm.AfterFinalTerm
     }
 
     // balanceMustBeMoreThanForBonus is always 0 for the first term, we only include it for consistency with the second term
     "return balanceMustBeMoreThanForBonus = 0 for the first bonus term" in {
       val account =
         Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
-      account.bonusTerms.head.balanceMustBeMoreThanForBonus shouldBe 0
+      account.bonusTerms.head.balanceMustBeMoreThanForBonus mustBe 0
     }
 
     "calculate the second bonus term's balanceMustBeMoreThanForBonus from the first term's bonusEstimate" in {
       val account =
         Account(accountOpenedInJan2018, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
-      account.bonusTerms(1).balanceMustBeMoreThanForBonus shouldBe BigDecimal("181.98")
+      account.bonusTerms(1).balanceMustBeMoreThanForBonus mustBe BigDecimal("181.98")
     }
 
     "log a warning and truncate the bonusTerms list when the source data contains more than 2 bonus terms, rather than returning an incorrect balanceMustBeMoreThanForBonus in the third term" in {
@@ -182,10 +185,10 @@ class AccountSpec extends BaseSpec with AccountTestData {
 
       val account =
         Account(accountWith3Terms, inAppPaymentsEnabled = false, savingsGoalsEnabled = false, logger, now, None)
-      account.bonusTerms.size shouldBe 2
+      account.bonusTerms.size mustBe 2
       // check that the first 2 terms were retained
-      account.bonusTerms.head.endDate shouldBe LocalDate.of(2019, 12, 31)
-      account.bonusTerms(1).endDate   shouldBe LocalDate.of(2021, 12, 31)
+      account.bonusTerms.head.endDate mustBe LocalDate.of(2019, 12, 31)
+      account.bonusTerms(1).endDate   mustBe LocalDate.of(2021, 12, 31)
     }
   }
 }

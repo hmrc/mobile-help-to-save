@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,7 @@ class AccountsISpec extends BaseISpec with NumberVerification with ComponentSupp
     "respond with 200 and the users account data" in {
       loggedInAndEnrolled(nino)
       HelpToSaveStub.accountExists(123.45, nino = nino)
-
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino?journeyId=$journeyId").get())
-
       response.status shouldBe 200
 
       (response.json \ "number").as[String]                   shouldBe "1000000000001"

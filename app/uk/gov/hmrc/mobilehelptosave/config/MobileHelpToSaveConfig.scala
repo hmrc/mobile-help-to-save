@@ -20,8 +20,6 @@ import java.net.URL
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.jdk.CollectionConverters._
-
 case class MobileHelpToSaveConfig(
   environment:    Environment,
   configuration:  Configuration,

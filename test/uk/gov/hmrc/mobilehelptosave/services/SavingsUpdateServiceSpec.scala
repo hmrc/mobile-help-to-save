@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ class SavingsUpdateServiceSpec
         service.getSavingsUpdateResponse(savingsUpdateMobileHelpToSaveAccount,
                                          transactionsSortedInMobileHelpToSaveOrder,
                                          dateDynamicSavingsGoalData)
-      savingsUpdate.savingsUpdate.isEmpty shouldBe true
+      savingsUpdate.savingsUpdate.isEmpty mustBe true
     }
 
     "calculate amount saved in reporting period correctly in savings update" in {
@@ -49,8 +49,8 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.savedInPeriod) shouldBe Some(BigDecimal(137.61))
+      savingsUpdate.savingsUpdate.isDefined                mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.savedInPeriod) mustBe Some(BigDecimal(137.61))
     }
 
     "calculate months saved in reporting period correctly in savings update" in {
@@ -60,10 +60,10 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                           shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.savedByMonth).isDefined   shouldBe true
-      savingsUpdate.savingsUpdate.get.savedByMonth.get.monthsSaved    shouldBe 4
-      savingsUpdate.savingsUpdate.get.savedByMonth.get.numberOfMonths shouldBe 6
+      savingsUpdate.savingsUpdate.isDefined                           mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.savedByMonth).isDefined   mustBe true
+      savingsUpdate.savingsUpdate.get.savedByMonth.get.monthsSaved    mustBe 4
+      savingsUpdate.savingsUpdate.get.savedByMonth.get.numberOfMonths mustBe 6
     }
 
     "not return goalsReached if user does not have a goal set currently" in {
@@ -74,8 +74,8 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                       shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty shouldBe true
+      savingsUpdate.savingsUpdate.isDefined                       mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty mustBe true
     }
 
     "not return goalsReached if user has set their first goal in the current month" in {
@@ -87,8 +87,8 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           List(SavingsGoalSetEvent(Nino("CS700100A"), Some(10), Instant.now()))
         )
-      savingsUpdate.savingsUpdate.isDefined                       shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty shouldBe true
+      savingsUpdate.savingsUpdate.isDefined                       mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isEmpty mustBe true
     }
 
     "calculate the number of times the goal has been hit against the current goal if no changes have been made during the reporting period" in {
@@ -100,10 +100,10 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           noChangeInPeriodSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                                 shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         shouldBe true
-      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        shouldBe 10.0
-      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached shouldBe 3
+      savingsUpdate.savingsUpdate.isDefined                                 mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         mustBe true
+      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        mustBe 10.0
+      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached mustBe 3
     }
 
     "calculate the number of times a goal has been hit if a goal change has been made during the reporting period" in {
@@ -115,10 +115,10 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           singleChangeSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                                 shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         shouldBe true
-      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        shouldBe 50.0
-      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached shouldBe 3
+      savingsUpdate.savingsUpdate.isDefined                                 mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         mustBe true
+      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        mustBe 50.0
+      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached mustBe 3
     }
 
     "calculate the number of times a goal has been hit if several goal changes have been made during the reporting period" in {
@@ -130,10 +130,10 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           multipleChangeSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                                 shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         shouldBe true
-      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        shouldBe 50.0
-      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached shouldBe 2
+      savingsUpdate.savingsUpdate.isDefined                                 mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         mustBe true
+      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        mustBe 50.0
+      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached mustBe 2
     }
 
     "calculate the number of times a goal has been hit using the lowest goal amount if changed multiple times in a month" in {
@@ -145,10 +145,10 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           multipleChangeInMonthSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.isDefined                                 shouldBe true
-      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         shouldBe true
-      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        shouldBe 50.0
-      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached shouldBe 3
+      savingsUpdate.savingsUpdate.isDefined                                 mustBe true
+      savingsUpdate.savingsUpdate.flatMap(_.goalsReached).isDefined         mustBe true
+      savingsUpdate.savingsUpdate.get.goalsReached.get.currentAmount        mustBe 50.0
+      savingsUpdate.savingsUpdate.get.goalsReached.get.numberOfTimesReached mustBe 3
     }
 
     "Calculate amount earned towards next bonus correctly for user in first term" in {
@@ -158,7 +158,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) shouldBe Some(120.00)
+      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) mustBe Some(120.00)
     }
 
     "Calculate amount earned towards next bonus correctly for user in second term" in {
@@ -168,7 +168,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) shouldBe Some(120.00)
+      savingsUpdate.savingsUpdate.flatMap(_.amountEarnedTowardsBonus) mustBe Some(120.00)
     }
 
     "return months until next bonus correctly for user in first term" in {
@@ -178,7 +178,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.monthsUntilBonus shouldBe 19
+      savingsUpdate.bonusUpdate.monthsUntilBonus mustBe 19
     }
 
     "return months until next bonus correctly for user in second term" in {
@@ -188,7 +188,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.monthsUntilBonus shouldBe 7
+      savingsUpdate.bonusUpdate.monthsUntilBonus mustBe 7
     }
 
     "round up months correctly" in {
@@ -221,7 +221,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.monthsUntilBonus shouldBe 1
+      savingsUpdate.bonusUpdate.monthsUntilBonus mustBe 1
     }
 
     "return current bonus estimate correctly for user in first term" in {
@@ -231,7 +231,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.currentBonus shouldBe Some(BigDecimal(90.99))
+      savingsUpdate.bonusUpdate.currentBonus mustBe Some(BigDecimal(90.99))
     }
 
     "return current bonus estimate correctly for user in second term" in {
@@ -242,7 +242,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.currentBonus shouldBe Some(BigDecimal(12))
+      savingsUpdate.bonusUpdate.currentBonus mustBe Some(BigDecimal(12))
     }
 
     "calculate highest balance correctly for user in first term" in {
@@ -252,7 +252,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(300.00))
+      savingsUpdate.bonusUpdate.highestBalance mustBe Some(BigDecimal(300.00))
     }
 
     "calculate highest balance correctly for user in final term" in {
@@ -263,7 +263,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.highestBalance shouldBe Some(BigDecimal(300.00))
+      savingsUpdate.bonusUpdate.highestBalance mustBe Some(BigDecimal(300.00))
     }
 
     "calculate potential bonus correctly for user in first term" in {
@@ -273,7 +273,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(268.14))
+      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate mustBe Some(BigDecimal(268.14))
     }
 
     "calculate potential bonus correctly for user in second term" in {
@@ -283,7 +283,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(80.53))
+      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate mustBe Some(BigDecimal(80.53))
     }
 
     "don't return potential bonus if average savings amount is 0" in {
@@ -293,7 +293,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe None
+      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate mustBe None
     }
 
     "calculate potential bonus with 5 increase correctly for user in first term" in {
@@ -303,7 +303,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore shouldBe Some(BigDecimal(313.17))
+      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore mustBe Some(BigDecimal(313.17))
     }
 
     "calculate potential bonus with 5 increase correctly for user in second term" in {
@@ -313,7 +313,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore shouldBe Some(BigDecimal(95.56))
+      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore mustBe Some(BigDecimal(95.56))
     }
 
     "don't return potential bonus with 5 increase if average savings amount is > 45" in {
@@ -323,8 +323,8 @@ class SavingsUpdateServiceSpec
           transactionsWithAverageSavingsRate(BigDecimal(45.01)),
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate shouldBe Some(BigDecimal(475.38))
-      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore  shouldBe None
+      savingsUpdate.bonusUpdate.potentialBonusAtCurrentRate mustBe Some(BigDecimal(475.38))
+      savingsUpdate.bonusUpdate.potentialBonusWithFiveMore  mustBe None
     }
 
     "Calculate maximum bonus possible correctly for user in the first term" in {
@@ -334,7 +334,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.maxBonus shouldBe Some(BigDecimal(522.79))
+      savingsUpdate.bonusUpdate.maxBonus mustBe Some(BigDecimal(522.79))
     }
 
     "Calculate maximum bonus possible correctly for user in the second term" in {
@@ -344,7 +344,7 @@ class SavingsUpdateServiceSpec
           transactionsDateDynamic,
           dateDynamicSavingsGoalData
         )
-      savingsUpdate.bonusUpdate.maxBonus shouldBe Some(BigDecimal(172.79))
+      savingsUpdate.bonusUpdate.maxBonus mustBe Some(BigDecimal(172.79))
     }
 
   }

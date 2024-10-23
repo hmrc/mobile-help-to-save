@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@ class DocumentationControllerSpec extends BaseSpec {
         null // nasty, but there's not apparent way to create a test `Assets` and the test does not use it, so...
       )
       val result: Result = await(controller.definition()(FakeRequest()))
-      result.body.contentType shouldBe Some("application/json;charset=utf-8")
+      result.body.contentType mustBe Some("application/json;charset=utf-8")
     }
   }
 }
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
-  override def apiAccessType              = "PRIVATE"
+  override def apiAccessType = "PRIVATE"
 }

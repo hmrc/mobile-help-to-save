@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,16 @@ package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
 import cats.syntax.either._
 import eu.timepit.refined.auto._
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers.{contentAsString, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 
-//noinspection TypeAnnotation
 class SavingsGoalSpec
     extends AnyWordSpecLike
       with Matchers
@@ -37,7 +36,7 @@ class SavingsGoalSpec
       with TransactionTestData
       with AccountTestData
       with DefaultAwaitTimeout
-      with MockFactory
+      with MockitoSugar
       with LoggerStub
       with OneInstancePerTest
       with TestSupport

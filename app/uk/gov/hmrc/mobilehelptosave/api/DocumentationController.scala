@@ -24,7 +24,7 @@ import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.views.txt
 
 import javax.inject.Inject
-import scala.collection.mutable
+
 
 case class ApiAccess(`type`: String)
 
@@ -37,7 +37,7 @@ class DocumentationController @Inject() (
   config:       DocumentationControllerConfig,
   cc:           ControllerComponents,
   assets:       Assets)
-    extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
+  extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
 
   private lazy val apiAccess = ApiAccess(config.apiAccessType)
 

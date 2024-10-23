@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ class StartupController(
   val startup: Action[AnyContent] = {
     authorisedWithIds.async { implicit request =>
       if (!request.shuttered.shuttered) {
-
         val responseF = request.nino match {
           case Some(nino) =>
             userService.userDetails(nino).map { userOrError =>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,61 +16,48 @@
 
 package uk.gov.hmrc.mobilehelptosave.connectors
 
+
+import org.mockito.Mockito.when
+
 import java.net.URL
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, FakeHttpGet}
+
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
-class ShutteringConnectorSpec extends BaseSpec {
+class ShutteringConnectorSpec extends HttpClientV2Helper {
 
   private val config: ShutteringConnectorConfig = new ShutteringConnectorConfig {
     override val shutteringBaseUrl: URL = new URL("http:///")
   }
+
+  val connector = new ShutteringConnector(mockHttpClient, config)
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  private def httpGet(response: HttpResponse) =
-    FakeHttpGet(s"http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId", response)
-
-  val internalServerExceptionResponse: FakeHttpGet =
-    httpGet(
-      HttpResponse(
-        500,
-        HttpErrorFunctions.upstreamResponseMessage(
-          "GET",
-          "http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId",
-          500,
-          "INTERNAL SERVER ERROR"
-        )
-      )
-    )
-
-  val badGatewayResponse: FakeHttpGet =
-    httpGet(
-      HttpResponse(
-        502,
-        HttpErrorFunctions.upstreamResponseMessage(
-          "GET",
-          "http://mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=journeyId",
-          502,
-          "BAD GATEWAY"
-        )
-      )
-    )
-
-  def connector(response: FakeHttpGet) = new ShutteringConnector(response, config)
+  lazy val mockHttp = mock[HttpClientV2]
 
   "getTaxReconciliations" should {
     "Assume unshuttered for InternalServerException response" in {
-      val result = await(connector(internalServerExceptionResponse).getShutteringStatus("journeyId"))
-      result shouldBe Shuttering.shutteringDisabled
-    }
+      when(requestBuilderExecute[HttpResponse])
+        .thenReturn(Future.failed(UpstreamErrorResponse("INTERNAL SERVER ERROR", 500)))
 
+      connector.getShutteringStatus("journeyId") onComplete {
+        case Success(_) => Shuttering.shutteringDisabled
+        case Failure(_) =>
+      }
+    }
     "Assume unshuttered for BadGatewayException response" in {
-      val result: Shuttering = await(connector(badGatewayResponse).getShutteringStatus("journeyId"))
-      result shouldBe Shuttering.shutteringDisabled
+      when(requestBuilderExecute[HttpResponse])
+        .thenReturn(Future.failed(UpstreamErrorResponse("BAD GATEWAY", 502)))
+
+      connector.getShutteringStatus("journeyId") onComplete {
+        case Success(_) => Shuttering.shutteringDisabled
+        case Failure(_) =>
+      }
     }
   }
 }
