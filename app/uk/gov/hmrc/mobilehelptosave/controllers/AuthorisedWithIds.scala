@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import jakarta.inject.Inject
 import play.api.LoggerLike
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._

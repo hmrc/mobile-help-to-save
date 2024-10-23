@@ -18,11 +18,12 @@ package uk.gov.hmrc.mobilehelptosave.support
 
 import org.mockito.Mockito.when
 import org.scalatest.OneInstancePerTest
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.slf4j.Logger
 import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
 
-trait LoggerStub extends HttpClientV2Helper with OneInstancePerTest {
+trait LoggerStub  {
 
   // when https://github.com/paulbutcher/ScalaMock/issues/39 is fixed we will be able to simplify this code by mocking LoggerLike directly (instead of slf4j.Logger)
 

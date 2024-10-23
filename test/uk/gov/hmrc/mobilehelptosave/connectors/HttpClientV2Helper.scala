@@ -36,7 +36,6 @@ trait HttpClientV2Helper extends BaseSpec with ScalaFutures {
   when(mockHttpClient.put(any[URL])(any[HeaderCarrier])).thenReturn(requestBuilder)
   when(requestBuilder.transform(any())).thenReturn(requestBuilder)
   when(requestBuilder.withBody(any[JsValue])(any(), any(), any())).thenReturn(requestBuilder)
-  //when(mockServicesConfig.baseUrl(any[String])).thenReturn("http://example.com")
 
   def requestBuilderExecute[A] = requestBuilder.execute[A](any[HttpReads[A]], any[ExecutionContext])
 

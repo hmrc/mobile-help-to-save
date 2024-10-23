@@ -18,12 +18,9 @@ class ApiDefinitionISpec extends BaseISpec with Eventually with ComponentSupport
     "provide definition with configurable whitelist" in {
       val response = await(wsUrl("/api/definition").get())
       response.status shouldBe 200
-      println(response.body)
       response.header("Content-Type") shouldBe Some("application/json")
-      println(response)
       val definition = response.json
       (definition \\ "version").map(_.as[String]).head shouldBe "1.0"
-      println(definition)
       val accessConfigs = definition \ "api" \ "versions" \\ "access"
       accessConfigs.length should be > 0
       accessConfigs.foreach { accessConfig =>

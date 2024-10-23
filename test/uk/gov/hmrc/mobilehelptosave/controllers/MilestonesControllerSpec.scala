@@ -38,7 +38,7 @@ class MilestonesControllerSpec extends HttpClientV2Helper with TestF {
 
   private val logger = mock[LoggerLike]
   private val mockMilestonesService = mock[MilestonesService[Future]]
-  //private val nino = new Nino(any())
+
 
 
 

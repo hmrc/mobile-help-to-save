@@ -34,13 +34,15 @@ package uk.gov.hmrc.mobilehelptosave.support
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HttpClientV2Helper, ShutteringConnector}
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
+
 import scala.concurrent.{ExecutionContext, Future}
 
 
-trait ShutteringMocking extends HttpClientV2Helper{
+trait ShutteringMocking {
 
   val trueShuttering      = Shuttering(shuttered = true, Some("Shuttered"), Some("HTS is currently not available"))
   val falseShuttering     = Shuttering.shutteringDisabled
