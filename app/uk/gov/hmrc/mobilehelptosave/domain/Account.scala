@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import ai.x.play.json.Encoders.encoder
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
 import play.api.libs.json._
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
-import ai.x.play.json.Jsonx
 
 case class BonusTerm(
   bonusEstimate:                 BigDecimal,
@@ -60,7 +58,7 @@ object CurrentBonusTerm extends Enumeration {
   val First, Second, AfterFinalTerm = Value
 
   implicit val reads:  Reads[Value]  = Reads.enumNameReads(CurrentBonusTerm)
-  implicit val writes: Writes[Value] = Writes.enumNameWrites
+  implicit val writes: Writes[Value] = Writes.enumNameWrites[CurrentBonusTerm.type]
 }
 
 case class Account(
@@ -94,8 +92,10 @@ case class Account(
   potentialBonus:       Option[BigDecimal] = None)
 
 object Account {
+  
+  
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
-  implicit val format:          OFormat[Account]  = Jsonx.formatCaseClass[Account]
+  implicit val format:          OFormat[Account]  = Json.format[Account]
 
   def apply(
     h:                    HelpToSaveAccount,

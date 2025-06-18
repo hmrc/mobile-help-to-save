@@ -157,19 +157,19 @@ class HtsAccountService[F[_]](
               _ <- if (milestonesConfig.balanceMilestoneCheckEnabled)
                     balanceMilestonesService.balanceMilestoneCheck(nino,
                                                                    account.balance,
-                                                                   account.bonusTerms(1).bonusPaidByDate)
+                                                                   account.bonusTerms(1).bonusPaidByDate).void
                   else F.pure(())
               _ <- if (milestonesConfig.bonusPeriodMilestoneCheckEnabled)
                     bonusPeriodMilestonesService.bonusPeriodMilestoneCheck(nino,
                                                                            account.bonusTerms,
                                                                            account.balance,
                                                                            account.currentBonusTerm,
-                                                                           account.isClosed)
+                                                                           account.isClosed).void
                   else F.pure(())
               _ <- if (milestonesConfig.bonusReachedMilestoneCheckEnabled)
                     bonusReachedMilestonesService.bonusReachedMilestoneCheck(nino,
                                                                              account.bonusTerms,
-                                                                             account.currentBonusTerm)
+                                                                             account.currentBonusTerm).void
                   else F.pure(())
               potentialBonus <- getPotentialBonus(nino, account)
             } yield Some(account.copy(potentialBonus = potentialBonus)))

@@ -22,9 +22,10 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.ShutteringConnector
 import uk.gov.hmrc.mobilehelptosave.domain.SavingsGoal
-import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
+import org.apache.pekko.util.Helpers.Requiring
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,7 +45,7 @@ class SandboxController(
     journeyId: JourneyId
   ): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future successful Ok(
             Json.toJson(
@@ -60,7 +61,7 @@ class SandboxController(
     journeyId: JourneyId
   ): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future successful Ok(Json.toJson(sandboxData.accountWithPotentialBonus))
         }
@@ -72,7 +73,7 @@ class SandboxController(
     journeyId: JourneyId
   ): Action[SavingsGoal] =
     Action.async(parse.json[SavingsGoal]) { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future.successful(NoContent)
         }
@@ -84,7 +85,7 @@ class SandboxController(
     journeyId: JourneyId
   ): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future.successful(NoContent)
         }
@@ -96,7 +97,7 @@ class SandboxController(
     journeyId: JourneyId
   ): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future successful Ok(Json.toJson(sandboxData.milestones))
         }
@@ -109,7 +110,7 @@ class SandboxController(
     journeyId:   JourneyId
   ): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future.successful(NoContent)
         }
@@ -118,7 +119,7 @@ class SandboxController(
 
   override def getSavingsUpdate(journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      shutteringConnector.getShutteringStatus(journeyId.value).flatMap { shuttered =>
+      shutteringConnector.getShutteringStatus(journeyId.value.toString).flatMap { shuttered =>
         withShuttering(shuttered) {
           Future successful Ok(Json.toJson(sandboxData.savingsUpdate))
         }

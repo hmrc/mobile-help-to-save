@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{never, verify}
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
@@ -34,7 +35,7 @@ import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 
 import java.time.{LocalDate, Month, YearMonth}
-import java.time.temporal.ChronoUnit._
+import java.time.temporal.ChronoUnit.*
 import java.time.temporal.TemporalAdjusters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -55,11 +56,13 @@ class GetSavingsUpdateSpec
       with ShutteringMocking
       with SavingsGoalTestData {
 
+  val jid: JourneyId = JourneyId.from("02940b73-19cc-4c31-80d3-f4deb851c707").toOption.get
+
   "getSavingsUpdate" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       if (MONTHS.between(YearMonth.of(2020, 2), YearMonth.now()) > 12)
         isForbiddenIfNotAuthorisedForUser { controller =>
-          status(controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())) shouldBe FORBIDDEN
+          status(controller.getSavingsUpdate(jid)(FakeRequest())) shouldBe FORBIDDEN
         }
     }
   }
@@ -78,7 +81,7 @@ class GetSavingsUpdateSpec
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsDateDynamic))
         getGoalSetEvents(Future successful Right(dateDynamicSavingsGoalData))
 
-        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val savingsUpdate = controller.getSavingsUpdate(jid)(FakeRequest())
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
         (jsonBody \ "reportStartDate")
@@ -114,7 +117,7 @@ class GetSavingsUpdateSpec
             LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.firstDayOfYear())
           else LocalDate.now().`with`(TemporalAdjusters.firstDayOfYear())
 
-        val savingsUpdate = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val savingsUpdate = controller.getSavingsUpdate(jid)(FakeRequest())
         status(savingsUpdate) shouldBe OK
         val jsonBody = contentAsJson(savingsUpdate)
         (jsonBody \ "reportStartDate")
@@ -131,7 +134,7 @@ class GetSavingsUpdateSpec
 
         accountReturns(Right(None))
 
-        val resultF = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getSavingsUpdate(jid)(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
@@ -146,7 +149,7 @@ class GetSavingsUpdateSpec
 
         accountReturns(Left(ErrorInfo.General))
 
-        val resultF = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getSavingsUpdate(jid)(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
@@ -168,7 +171,7 @@ class GetSavingsUpdateSpec
           stubControllerComponents()
         )
 
-        val resultF = controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getSavingsUpdate(jid)(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true

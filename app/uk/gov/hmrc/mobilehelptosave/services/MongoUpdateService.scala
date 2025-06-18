@@ -61,7 +61,7 @@ class HtsMongoUpdateService[F[_]](
       case e => logger.warn("ExpireAt update failed: " + e)
     }
 
-    F.pure()
+    F.pure(())
 
   }
 }

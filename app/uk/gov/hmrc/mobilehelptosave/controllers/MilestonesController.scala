@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Milestones
-import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 

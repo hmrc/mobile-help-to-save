@@ -26,6 +26,8 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
+
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}

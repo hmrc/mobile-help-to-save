@@ -209,7 +209,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
               Map(date.getMonth -> currentGoal.getOrElse(50.0))
             else None
           }
-          .count(_.canEqual())
+          .count(_.canEqual(Some))
         Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
       }
     }

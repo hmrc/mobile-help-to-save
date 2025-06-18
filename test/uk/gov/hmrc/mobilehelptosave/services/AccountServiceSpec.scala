@@ -581,7 +581,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
         nino:     Nino,
         expireAt: LocalDateTime
       ): TestF[Unit] =
-        F.pure()
+        F.pure(())
 
     }
 

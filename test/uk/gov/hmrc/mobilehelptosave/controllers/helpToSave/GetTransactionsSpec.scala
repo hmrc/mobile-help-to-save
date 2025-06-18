@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import org.mockito.Mockito.verify
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Json
-import play.api.test.Helpers.{contentAsJson, status, _}
+import play.api.test.Helpers.{contentAsJson, status, *}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
 import uk.gov.hmrc.mobilehelptosave.domain.ErrorInfo
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
@@ -50,10 +51,12 @@ class GetTransactionsSpec
       with TestSupport
       with ShutteringMocking {
 
+  val jid: JourneyId = JourneyId.from("02940b73-19cc-4c31-80d3-f4deb851c707").toOption.get
+
   "getTransactions" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       isForbiddenIfNotAuthorisedForUser { controller =>
-        status(controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())) shouldBe FORBIDDEN
+        status(controller.getTransactions(nino, jid)(FakeRequest())) shouldBe FORBIDDEN
       }
     }
   }
@@ -65,7 +68,7 @@ class GetTransactionsSpec
 
         helpToSaveGetTransactionsReturns(Future successful Right(transactionsSortedInHelpToSaveOrder))
 
-        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getTransactions(nino, jid)(FakeRequest())
         status(resultF) shouldBe 200
         val jsonBody = contentAsJson(resultF)
         jsonBody shouldBe Json.toJson(transactionsSortedInMobileHelpToSaveOrder)
@@ -77,7 +80,7 @@ class GetTransactionsSpec
 
         helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo.AccountNotFound))
 
-        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getTransactions(nino, jid)(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String]    shouldBe "ACCOUNT_NOT_FOUND"
@@ -90,7 +93,7 @@ class GetTransactionsSpec
 
         helpToSaveGetTransactionsReturns(Future successful Left(ErrorInfo.General))
 
-        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getTransactions(nino, jid)(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
@@ -100,7 +103,7 @@ class GetTransactionsSpec
     "the NINO in the URL does not match the logged in user's NINO" should {
       "return 403" in new AuthorisedTestScenario {
 
-        val resultF = controller.getTransactions(otherNino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getTransactions(otherNino, jid)(FakeRequest())
         status(resultF) shouldBe 403
         verify(slf4jLoggerStub).warn(s"Attempt by $nino to access $otherNino's data")
       }
@@ -121,7 +124,7 @@ class GetTransactionsSpec
           stubControllerComponents()
         )
 
-        val resultF = controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getTransactions(nino, jid)(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true

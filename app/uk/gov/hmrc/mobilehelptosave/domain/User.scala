@@ -20,6 +20,7 @@ import play.api.libs.json.{Json, Writes}
 
 object UserState extends Enumeration {
   val NotEnrolled, NotEnrolledButEligible, Enrolled = Value
+  implicit val userStateWrites: Writes[UserState.Value] = Writes.enumNameWrites[UserState.type]
 }
 
 case class UserDetails(state: UserState.Value)
