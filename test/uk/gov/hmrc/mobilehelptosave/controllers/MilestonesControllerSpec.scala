@@ -26,19 +26,19 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.services.MilestonesService
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
 import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 
 import scala.util.{Failure, Success}
-class MilestonesControllerSpec extends HttpClientV2Helper with TestF {
+class MilestonesControllerSpec extends HttpClientV2Helper {
 
   private val logger = mock[LoggerLike]
-  private val mockMilestonesService = mock[MilestonesService[Future]]
+  private val mockMilestonesService = mock[MilestonesService]
   val jid: JourneyId = JourneyId.from("02940b73-19cc-4c31-80d3-f4deb851c707").toOption.get
 
 
@@ -51,9 +51,9 @@ class MilestonesControllerSpec extends HttpClientV2Helper with TestF {
                        milestone     = Milestone(BalanceReached1),
                        isRepeatable  = false)
       )
-      when(mockMilestonesService.getMilestones(any[Nino])(any[HeaderCarrier]))
+      when(mockMilestonesService.getMilestones(any[Nino])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(milestones))
-      mockMilestonesService.getMilestones(any[Nino])(any[HeaderCarrier]) onComplete {
+      mockMilestonesService.getMilestones(any[Nino])(any[HeaderCarrier], any[ExecutionContext]) onComplete {
         case Success(_) => Right(Some(milestones))
         case Failure(_) =>
       }

@@ -28,6 +28,7 @@ trait SandboxRequestRouting {
                                   router,
                                   httpErrorHandler,
                                   httpConfiguration,
-                                  new DefaultHttpFilters(httpFilters: _*),
-                                  configuration)
+                                  new DefaultHttpFilters(httpFilters*),
+                                  configuration
+                                 )
 }

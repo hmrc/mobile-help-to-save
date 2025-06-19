@@ -22,10 +22,8 @@ import uk.gov.hmrc.mobilehelptosave.domain.{Account, BonusTerm}
 
 import java.time.LocalDate
 
-class CalculatorService(
-  account:        Account,
-  regularSavings: Double) {
-  val now:             LocalDate = LocalDate.now()
+class CalculatorService(account: Account, regularSavings: Double) {
+  val now: LocalDate = LocalDate.now()
   val finalBonusTerms: BonusTerm = account.bonusTerms.last
 
   def getFirstBonusTermCalculation: FirstBonusCalculatorResponse =
@@ -40,7 +38,7 @@ class CalculatorService(
     new YearMonthDayInput(date.getYear, date.getMonthValue, date.lengthOfMonth())
 
   private def getFirstBonusInput(
-    account:            Account,
+    account: Account,
     averageSavingsRate: Double
   ): FirstBonusInput = {
 
@@ -57,7 +55,7 @@ class CalculatorService(
   }
 
   private def getFinalBonusInput(
-    account:            Account,
+    account: Account,
     averageSavingsRate: Double
   ): FinalBonusInput =
     new FinalBonusInput(

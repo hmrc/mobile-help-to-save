@@ -17,20 +17,20 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.libs.json.Json
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.services.UserService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class StartupController(
-  userService:              UserService,
-  authorisedWithIds:        AuthorisedWithIds,
-  config:                   StartupControllerConfig,
+  userService: UserService,
+  authorisedWithIds: AuthorisedWithIds,
+  config: StartupControllerConfig,
   val controllerComponents: ControllerComponents
-)(implicit ec:              ExecutionContext)
+)(implicit ec: ExecutionContext)
     extends BackendBaseController {
 
   val startup: Action[AnyContent] = {

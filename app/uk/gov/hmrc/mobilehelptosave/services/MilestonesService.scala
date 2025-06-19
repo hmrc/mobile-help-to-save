@@ -17,34 +17,34 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.MonadError
-import cats.syntax.functor._
+import cats.syntax.functor.*
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
-import uk.gov.hmrc.mobilehelptosave.domain.Milestones._
-import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository._
+import uk.gov.hmrc.mobilehelptosave.domain.Milestones.*
+import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.repository.*
 
-trait MilestonesService[F[_]] {
-  def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): F[Unit]
+import scala.concurrent.{ExecutionContext, Future}
 
-  def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]]
+trait MilestonesService {
+  def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): Future[Unit]
+
+  def getMilestones(nino: Nino)(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[List[MongoMilestone]]
 
   def markAsSeen(
-    nino:        Nino,
+    nino: Nino,
     milestoneId: String
-  )(implicit hc: HeaderCarrier
-  ): F[Unit]
+  )(implicit hc: HeaderCarrier): Future[Unit]
 }
 
-class HtsMilestonesService[F[_]](
-  logger:              LoggerLike,
-  config:              MilestonesConfig,
-  milestonesRepo:      MilestonesRepo[F],
-  previousBalanceRepo: PreviousBalanceRepo[F]
-)(implicit F:          MonadError[F, Throwable])
-    extends MilestonesService[F] {
+class HtsMilestonesService(
+  logger: LoggerLike,
+  config: MilestonesConfig,
+  milestonesRepo: MilestonesRepo,
+  previousBalanceRepo: PreviousBalanceRepo
+) extends MilestonesService {
 
   protected def filterDuplicateMilestoneTypes(milestones: Seq[MongoMilestone]): List[MongoMilestone] =
     milestones
@@ -55,12 +55,10 @@ class HtsMilestonesService[F[_]](
       )
       .toList
 
-  override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier): F[List[MongoMilestone]] =
+  override def getMilestones(nino: Nino)(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[List[MongoMilestone]] =
     milestonesRepo.getMilestones(nino).map { milestones =>
       val filteredMilestones = filterDuplicateMilestoneTypes(milestones)
-      (config.balanceMilestoneCheckEnabled,
-       config.bonusPeriodMilestoneCheckEnabled,
-       config.bonusReachedMilestoneCheckEnabled) match {
+      (config.balanceMilestoneCheckEnabled, config.bonusPeriodMilestoneCheckEnabled, config.bonusReachedMilestoneCheckEnabled) match {
         case (false, false, false) => List.empty
         case (false, true, true)   => filteredMilestones.filter(_.milestoneType != BalanceReached).highestPriority
         case (true, false, true)   => filteredMilestones.filter(_.milestoneType != BonusPeriod).highestPriority
@@ -72,13 +70,12 @@ class HtsMilestonesService[F[_]](
       }
     }
 
-  override def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): F[Unit] =
+  override def setMilestone(milestone: MongoMilestone)(implicit hc: HeaderCarrier): Future[Unit] =
     milestonesRepo.setMilestone(milestone)
 
   override def markAsSeen(
-    nino:          Nino,
+    nino: Nino,
     milestoneType: String
-  )(implicit hc:   HeaderCarrier
-  ): F[Unit] = milestonesRepo.markAsSeen(nino, milestoneType)
+  )(implicit hc: HeaderCarrier): Future[Unit] = milestonesRepo.markAsSeen(nino, milestoneType)
 
 }

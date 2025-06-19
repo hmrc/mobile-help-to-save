@@ -24,7 +24,7 @@ import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport}
-
+import play.api.libs.ws.writeableOf_String
 class MilestonesISpec extends BaseISpec with NumberVerification with ComponentSupport {
 
   override implicit lazy val app: Application = appBuilder.build()

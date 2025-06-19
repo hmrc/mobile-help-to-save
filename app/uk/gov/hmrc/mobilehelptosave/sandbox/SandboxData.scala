@@ -21,21 +21,18 @@ import java.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.services.Clock
 
-case class SandboxData(
-  logger: LoggerLike,
-  clock:  Clock,
-  config: SandboxDataConfig) {
+case class SandboxData(logger: LoggerLike, clock: Clock, config: SandboxDataConfig) {
 
-  private def today:             LocalDate = clock.now().toLocalDate
-  private def openedDate:        LocalDate = today.minusMonths(17)
-  private def endOfMonth:        LocalDate = today.`with`(TemporalAdjusters.lastDayOfMonth())
-  private def startOfFirstTerm:  LocalDate = openedDate.`with`(TemporalAdjusters.firstDayOfMonth())
-  private def endOfFirstTerm:    LocalDate = startOfFirstTerm.plusYears(2).minusDays(1)
+  private def today: LocalDate = clock.now().toLocalDate
+  private def openedDate: LocalDate = today.minusMonths(17)
+  private def endOfMonth: LocalDate = today.`with`(TemporalAdjusters.lastDayOfMonth())
+  private def startOfFirstTerm: LocalDate = openedDate.`with`(TemporalAdjusters.firstDayOfMonth())
+  private def endOfFirstTerm: LocalDate = startOfFirstTerm.plusYears(2).minusDays(1)
   private def startOfSecondTerm: LocalDate = startOfFirstTerm.plusYears(2)
-  private def endOfSecondTerm:   LocalDate = startOfSecondTerm.plusYears(2).minusDays(1)
+  private def endOfSecondTerm: LocalDate = startOfSecondTerm.plusYears(2).minusDays(1)
 
   val account: Account = {
     Account(
@@ -73,7 +70,7 @@ case class SandboxData(
 
   val accountWithPotentialBonus = account.copy(potentialBonus = Some(225))
 
-  val transactions = Transactions({
+  val transactions = Transactions {
     Seq(
       (0L, 30.00, 130.00),
       (1L, 50.00, 100.00),
@@ -92,14 +89,12 @@ case class SandboxData(
       (12L, 25.00, 100.00),
       (13L, 25.00, 75.00),
       (14L, 25.00, 50.00),
-      (15L, 25.00, 25.00),
-
-    ) map {
-      case (monthsAgo, creditAmount, balance) =>
-        val date = today.minusMonths(monthsAgo)
-        Transaction(Credit, BigDecimal(creditAmount), date, date, BigDecimal(balance))
+      (15L, 25.00, 25.00)
+    ) map { case (monthsAgo, creditAmount, balance) =>
+      val date = today.minusMonths(monthsAgo)
+      Transaction(Credit, BigDecimal(creditAmount), date, date, BigDecimal(balance))
     }
-  })
+  }
 
   val milestones = Milestones(
     List[MongoMilestone]()

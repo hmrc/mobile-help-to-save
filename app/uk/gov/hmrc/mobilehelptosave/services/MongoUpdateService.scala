@@ -24,27 +24,26 @@ import uk.gov.hmrc.mobilehelptosave.repository.{MongoMilestonesRepo, MongoPrevio
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MongoUpdateService[F[_]] {
+trait MongoUpdateService {
 
   def updateExpireAtByNino(
-    nino:     Nino,
+    nino: Nino,
     expireAt: LocalDateTime
-  ): F[Unit]
+  ): Future[Unit]
 
 }
 
-class HtsMongoUpdateService[F[_]](
-  mongoMilestonesRepo:       MongoMilestonesRepo,
+class HtsMongoUpdateService(
+  mongoMilestonesRepo: MongoMilestonesRepo,
   mongoSavingsGoalEventRepo: MongoSavingsGoalEventRepo,
-  mongoPreviousBalanceRepo:  MongoPreviousBalanceRepo
-)(implicit executionContext: ExecutionContext,
-  F:                         MonadError[F, Throwable])
-    extends MongoUpdateService[F] {
+  mongoPreviousBalanceRepo: MongoPreviousBalanceRepo
+)(implicit executionContext: ExecutionContext)
+    extends MongoUpdateService {
 
   override def updateExpireAtByNino(
-    nino:     Nino,
+    nino: Nino,
     expireAt: LocalDateTime
-  ): F[Unit] = {
+  ): Future[Unit] = {
 
     val logger: Logger = Logger(this.getClass)
 
@@ -52,16 +51,16 @@ class HtsMongoUpdateService[F[_]](
       updateRequired <- mongoPreviousBalanceRepo.getPreviousBalanceUpdateRequired(nino)
       _              <- if (updateRequired.isDefined) mongoMilestonesRepo.updateExpireAt(nino, expireAt) else Future successful ()
       _ <- if (updateRequired.isDefined) mongoSavingsGoalEventRepo.updateExpireAt(nino, expireAt)
-          else Future successful ()
+           else Future successful ()
       _ <- if (updateRequired.isDefined) mongoPreviousBalanceRepo.updateExpireAt(nino, expireAt)
-          else Future successful ()
-    } yield (if (updateRequired.isDefined) logger.info("expireAt fields updated for user"))
+           else Future successful ()
+    } yield if (updateRequired.isDefined) logger.info("expireAt fields updated for user")
 
-    processUpdates.recover {
-      case e => logger.warn("ExpireAt update failed: " + e)
+    processUpdates.recover { case e =>
+      logger.warn("ExpireAt update failed: " + e)
     }
 
-    F.pure(())
+    Future.successful(())
 
   }
 }

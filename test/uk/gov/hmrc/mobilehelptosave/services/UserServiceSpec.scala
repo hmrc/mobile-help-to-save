@@ -36,9 +36,9 @@ class UserServiceSpec extends BaseSpec with EitherValues {
   private val testConfig = TestUserServiceConfig(eligibilityCheckEnabled = true)
 
   private class UserServiceWithTestDefaults(
-    helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
-    helpToSaveEligibility:     HelpToSaveEligibility[Future],
-    eligibilityStatusRepo:     EligibilityRepo[Future])
+    helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
+    helpToSaveEligibility:     HelpToSaveEligibility,
+    eligibilityStatusRepo:     EligibilityRepo)
       extends HtsUserService(
         logger,
         testConfig,
@@ -127,7 +127,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
   }
 
   private def fakeHelpToSaveEnrolmentStatus(userIsEnrolledInHelpToSave: Either[ErrorInfo, Boolean]) =
-    new HelpToSaveEnrolmentStatus[Future] {
+    new HelpToSaveEnrolmentStatus {
 
       override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         hc mustBe passedHc
@@ -137,7 +137,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
     }
 
   private def fakeHelpToSaveEligibility(userIsEligibleForHelpToSave: Either[ErrorInfo, EligibilityCheckResponse]) =
-    new HelpToSaveEligibility[Future] {
+    new HelpToSaveEligibility {
 
       override def checkEligibility(
       )(implicit hc: HeaderCarrier
@@ -149,7 +149,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
     }
 
   private def fakeEligibilityRepo(eligibility: Option[Eligibility]) =
-    new EligibilityRepo[Future] {
+    new EligibilityRepo {
       override def setEligibility(eligibility: Eligibility): Future[Unit]                = Future.successful(())
       override def getEligibility(nino:        Nino):        Future[Option[Eligibility]] = Future.successful(eligibility)
     }

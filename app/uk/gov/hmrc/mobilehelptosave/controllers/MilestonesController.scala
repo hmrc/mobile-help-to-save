@@ -30,29 +30,29 @@ import scala.concurrent.{ExecutionContext, Future}
 trait MilestonesActions {
 
   def getMilestones(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent]
 
   def markAsSeen(
-    nino:        Nino,
+    nino: Nino,
     milestoneId: String,
-    journeyId:   JourneyId
+    journeyId: JourneyId
   ): Action[AnyContent]
 }
 
 class MilestonesController(
-  val logger:               LoggerLike,
-  milestonesService:        MilestonesService[Future],
-  authorisedWithIds:        AuthorisedWithIds,
+  val logger: LoggerLike,
+  milestonesService: MilestonesService,
+  authorisedWithIds: AuthorisedWithIds,
   val controllerComponents: ControllerComponents
-)(implicit ec:              ExecutionContext)
+)(implicit ec: ExecutionContext)
     extends BackendBaseController
     with ControllerChecks
     with MilestonesActions {
 
   override def getMilestones(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     verifyingMatchingNino(nino, request.shuttered) { nino =>
@@ -63,9 +63,9 @@ class MilestonesController(
   }
 
   override def markAsSeen(
-    nino:          Nino,
+    nino: Nino,
     milestoneType: String,
-    journeyId:     JourneyId
+    journeyId: JourneyId
   ): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     verifyingMatchingNino(nino, request.shuttered) { nino =>
       milestonesService.markAsSeen(nino, milestoneType).map(_ => NoContent)

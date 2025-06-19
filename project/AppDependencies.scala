@@ -14,13 +14,13 @@ object AppDependencies {
   private val catsCoreVersion      = "2.13.0"
   private val scalaUriVersion      = "4.0.3"
   private val playHmrcVersion      = "8.2.0"
-  private val enumeratumVersion    = "1.8.2"
+  private val enumeratumVersion    = "1.9.0"
   private val macrosVersion        = "2.6.6"
   private val refinedVersion       = "0.11.3"
   private val htsKalcVersion       = "0.8.1"
-  private val jacksonModuleVersion = "2.14.2"
+  private val jacksonModuleVersion = "2.19.1"
 
-  private val scalaMockVersion = "6.2.0"
+  private val scalaMockVersion = "7.3.2"
 
   private val pegdownVersion            = "1.6.0"
   private val playJsonVersion = "2.10.6"
@@ -41,7 +41,8 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = testCommon("test") ++ Seq(
-      "org.scalamock" %% "scalamock" % scalaMockVersion % "test"
+      "org.scalamock" %% "scalamock" % scalaMockVersion % "test",
+      "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoVersion      % "test"
     )
 
   val integrationTest: Seq[ModuleID] = testCommon("it") ++ Seq.empty

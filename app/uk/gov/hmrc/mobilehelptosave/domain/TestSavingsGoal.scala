@@ -21,11 +21,7 @@ import uk.gov.hmrc.domain.Nino
 
 import java.time.LocalDate
 
-case class TestSavingsGoal(
-  nino:       Nino,
-  goalAmount: Option[Double] = None,
-  goalName:   Option[String] = None,
-  date:       LocalDate = LocalDate.now())
+case class TestSavingsGoal(nino: Nino, goalAmount: Option[Double] = None, goalName: Option[String] = None, date: LocalDate = LocalDate.now())
 
 object TestSavingsGoal {
   implicit val formats: OFormat[TestSavingsGoal] = Json.format

@@ -111,9 +111,9 @@ class GetTransactionsSpec
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService            = mock[AccountService[Future]]
-        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
-        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
+        val accountService            = mock[AccountService]
+        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo]
         val controller = new HelpToSaveController(
           logger,
           accountService,

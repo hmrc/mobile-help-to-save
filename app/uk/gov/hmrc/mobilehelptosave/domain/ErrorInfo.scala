@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json.Json._
+import play.api.libs.json.Json.*
 import play.api.libs.json.{JsObject, OWrites}
 
 sealed abstract class ErrorInfo(val code: String)
@@ -38,7 +38,7 @@ object ErrorInfo {
     override def writes(o: ErrorInfo): JsObject = o match {
       case General                  => obj("code" -> o.code)
       case AccountNotFound          => obj("code" -> o.code)
-      case MultipleRequests          => obj("code" -> o.code)
+      case MultipleRequests         => obj("code" -> o.code)
       case ValidationError(message) => obj("code" -> o.code, "message" -> message)
     }
   }

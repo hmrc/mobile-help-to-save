@@ -16,39 +16,31 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, YearMonth}
 import play.api.LoggerLike
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm}
 
-case class BonusTerm(
-  bonusEstimate:                 BigDecimal,
-  bonusPaid:                     BigDecimal,
-  endDate:                       LocalDate,
-  bonusPaidOnOrAfterDate:        LocalDate,
-  bonusPaidByDate:               LocalDate,
-  balanceMustBeMoreThanForBonus: BigDecimal)
+case class BonusTerm(bonusEstimate: BigDecimal,
+                     bonusPaid: BigDecimal,
+                     endDate: LocalDate,
+                     bonusPaidOnOrAfterDate: LocalDate,
+                     bonusPaidByDate: LocalDate,
+                     balanceMustBeMoreThanForBonus: BigDecimal
+                    )
 
 object BonusTerm {
   implicit val format: OFormat[BonusTerm] = Json.format[BonusTerm]
 }
 
-case class HtsBlocking(
-  payments:    Boolean,
-  withdrawals: Boolean,
-  bonuses:     Boolean)
+case class HtsBlocking(payments: Boolean, withdrawals: Boolean, bonuses: Boolean)
 
 object HtsBlocking {
   implicit val format: OFormat[HtsBlocking] = Json.format[HtsBlocking]
 }
 
-case class Blocking(
-  unspecified: Boolean = false,
-  payments:    Boolean,
-  withdrawals: Boolean,
-  bonuses:     Boolean)
+case class Blocking(unspecified: Boolean = false, payments: Boolean, withdrawals: Boolean, bonuses: Boolean)
 
 object Blocking {
   implicit val format: OFormat[Blocking] = Json.format[Blocking]
@@ -57,53 +49,52 @@ object Blocking {
 object CurrentBonusTerm extends Enumeration {
   val First, Second, AfterFinalTerm = Value
 
-  implicit val reads:  Reads[Value]  = Reads.enumNameReads(CurrentBonusTerm)
+  implicit val reads: Reads[Value] = Reads.enumNameReads(CurrentBonusTerm)
   implicit val writes: Writes[Value] = Writes.enumNameWrites[CurrentBonusTerm.type]
 }
 
-case class Account(
-  number:                    String,
-  openedYearMonth:           YearMonth,
-  isClosed:                  Boolean,
-  blocked:                   Blocking,
-  balance:                   BigDecimal,
-  paidInThisMonth:           BigDecimal,
-  canPayInThisMonth:         BigDecimal,
-  maximumPaidInThisMonth:    BigDecimal,
-  thisMonthEndDate:          LocalDate,
-  nextPaymentMonthStartDate: Option[LocalDate],
-  accountHolderName:         String,
-  accountHolderEmail:        Option[String],
-  bonusTerms:                Seq[BonusTerm],
-  currentBonusTerm:          CurrentBonusTerm.Value,
-  closureDate:               Option[LocalDate] = None,
-  closingBalance:            Option[BigDecimal] = None,
-  nbaAccountNumber:          Option[String],
-  nbaPayee:                  Option[String],
-  nbaRollNumber:             Option[String],
-  nbaSortCode:               Option[String],
-  inAppPaymentsEnabled:      Boolean,
-  // This field is populated from the application config
-  savingsGoalsEnabled: Boolean = false,
-  // This field is populated from the mongo repository
-  savingsGoal:          Option[SavingsGoal] = None,
-  daysRemainingInMonth: Long,
-  highestBalance:       BigDecimal,
-  potentialBonus:       Option[BigDecimal] = None)
+case class Account(number: String,
+                   openedYearMonth: YearMonth,
+                   isClosed: Boolean,
+                   blocked: Blocking,
+                   balance: BigDecimal,
+                   paidInThisMonth: BigDecimal,
+                   canPayInThisMonth: BigDecimal,
+                   maximumPaidInThisMonth: BigDecimal,
+                   thisMonthEndDate: LocalDate,
+                   nextPaymentMonthStartDate: Option[LocalDate],
+                   accountHolderName: String,
+                   accountHolderEmail: Option[String],
+                   bonusTerms: Seq[BonusTerm],
+                   currentBonusTerm: CurrentBonusTerm.Value,
+                   closureDate: Option[LocalDate] = None,
+                   closingBalance: Option[BigDecimal] = None,
+                   nbaAccountNumber: Option[String],
+                   nbaPayee: Option[String],
+                   nbaRollNumber: Option[String],
+                   nbaSortCode: Option[String],
+                   inAppPaymentsEnabled: Boolean,
+                   // This field is populated from the application config
+                   savingsGoalsEnabled: Boolean = false,
+                   // This field is populated from the mongo repository
+                   savingsGoal: Option[SavingsGoal] = None,
+                   daysRemainingInMonth: Long,
+                   highestBalance: BigDecimal,
+                   potentialBonus: Option[BigDecimal] = None
+                  )
 
 object Account {
-  
-  
+
   implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
-  implicit val format:          OFormat[Account]  = Json.format[Account]
+  implicit val format: OFormat[Account] = Json.format[Account]
 
   def apply(
-    h:                    HelpToSaveAccount,
+    h: HelpToSaveAccount,
     inAppPaymentsEnabled: Boolean,
-    savingsGoalsEnabled:  Boolean,
-    logger:               LoggerLike,
-    now:                  LocalDate,
-    savingsGoal:          Option[SavingsGoal]
+    savingsGoalsEnabled: Boolean,
+    logger: LoggerLike,
+    now: LocalDate,
+    savingsGoal: Option[SavingsGoal]
   ): Account = Account(
     number                    = h.accountNumber,
     openedYearMonth           = h.openedYearMonth,
@@ -132,20 +123,18 @@ object Account {
     highestBalance            = highestBalance(bonusTerms(h, logger), currentBonusTerm(h))
   )
 
-  /**
-    * Calculate the number of days between the current date and the end of month date. We're doing this to supply that
-    * number to the apps as part of the Account structure because the app devs want to vary the messages displayed
-    * based on how much time the user has left to make payments in the month and they are unwilling to write this code
-    * themselves.
+  /** Calculate the number of days between the current date and the end of month date. We're doing this to supply that number to the apps as part of
+    * the Account structure because the app devs want to vary the messages displayed based on how much time the user has left to make payments in the
+    * month and they are unwilling to write this code themselves.
     *
     * The returned value will be 1-indexed, i.e. if the supplied date is today then the result will be "1 day left"
     *
-    * @return - calculated number of days between now and the end of month, plus one (so if the supplied date is today
-    *         the result will be 1)
+    * @return
+    *   \- calculated number of days between now and the end of month, plus one (so if the supplied date is today the result will be 1)
     */
   private def calculateDaysRemainingInMonth(
     now: LocalDate,
-    h:   HelpToSaveAccount
+    h: HelpToSaveAccount
   ): Long =
     ChronoUnit.DAYS.between(now, h.thisMonthEndDate) + 1
 
@@ -166,12 +155,12 @@ object Account {
     }
 
   private def bonusTerms(
-    h:      HelpToSaveAccount,
+    h: HelpToSaveAccount,
     logger: LoggerLike
   ): Seq[BonusTerm] = {
 
     def bonusTerm(
-      htsTerm:                       HelpToSaveBonusTerm,
+      htsTerm: HelpToSaveBonusTerm,
       balanceMustBeMoreThanForBonus: BigDecimal
     ) = BonusTerm(
       bonusEstimate                 = htsTerm.bonusEstimate,
@@ -197,7 +186,7 @@ object Account {
   }
 
   private def highestBalance(
-    bonusTerms:       Seq[BonusTerm],
+    bonusTerms: Seq[BonusTerm],
     currentBonusTerm: CurrentBonusTerm.Value
   ): BigDecimal = {
     val finalBonusTerms = bonusTerms.last
