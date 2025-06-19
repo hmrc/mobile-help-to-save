@@ -69,6 +69,4 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId._"
     )
   )
-  .settings(
-    resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hmrc-mobile", "mobile-releases"))
-  )
+

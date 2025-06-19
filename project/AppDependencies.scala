@@ -4,8 +4,7 @@ import sbt.{ModuleID, _}
 object AppDependencies {
 
   def appDependencies: Seq[Setting[_]] = Seq(
-    libraryDependencies ++= compile ++ test ++ integrationTest,
-    resolvers += "emueller-bintray" at "https://dl.bintray.com/emueller/maven"
+    libraryDependencies ++= compile ++ test ++ integrationTest
   )
 
   private val hmrcMongoVersion     = "2.6.0"
@@ -22,7 +21,7 @@ object AppDependencies {
 
   private val scalaMockVersion = "7.3.2"
 
-  private val pegdownVersion            = "1.6.0"
+  private val flexmarkVersion            = "0.64.8"
   private val playJsonVersion = "2.10.6"
 
   val compile: Seq[ModuleID] = Seq(
@@ -49,7 +48,7 @@ object AppDependencies {
 
   def testCommon(scope: String): Seq[ModuleID] = Seq(
     "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootstrapVersion % scope,
-    "org.pegdown" % "pegdown"                 % pegdownVersion   % scope,
+    "com.vladsch.flexmark" % "flexmark-all"                 % flexmarkVersion   % scope,
     // workaround for version clash in IntelliJ where without this line both jetty-util-9.2.15.v20160210 and jetty-util-9.2.22.v20170606 are brought in
     // which results in a NoSuchMethodError when running StartupISpec
     "org.eclipse.jetty.websocket" % "websocket-client" % "9.4.57.v20241219" % scope
