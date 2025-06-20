@@ -22,22 +22,18 @@ import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mobilehelptosave.config.ShutteringConnectorConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Shuttering
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ShutteringConnector @Inject() (
-  http:   HttpClientV2,
-  config: ShutteringConnectorConfig) {
+class ShutteringConnector @Inject() (http: HttpClientV2, config: ShutteringConnectorConfig) {
 
   val logger: Logger = Logger(this.getClass)
 
   def getShutteringStatus(
-    journeyId:              String
-  )(implicit headerCarrier: HeaderCarrier,
-    ex:                     ExecutionContext
-  ): Future[Shuttering] =
+    journeyId: String
+  )(implicit headerCarrier: HeaderCarrier, ex: ExecutionContext): Future[Shuttering] =
     http
       .get(
         url"${config.shutteringBaseUrl}/mobile-shuttering/service/mobile-help-to-save/shuttered-status?journeyId=$journeyId"

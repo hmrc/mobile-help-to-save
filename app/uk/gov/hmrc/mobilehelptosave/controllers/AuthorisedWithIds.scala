@@ -17,8 +17,8 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import play.api.LoggerLike
-import play.api.mvc._
-import uk.gov.hmrc.auth.core._
+import play.api.mvc.*
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,19 +28,15 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class RequestWithIds[+A](
-  request:       Request[A],
-  val nino:      Option[Nino],
-  val shuttered: Shuttering)
-    extends WrappedRequest[A](request)
+class RequestWithIds[+A](request: Request[A], val nino: Option[Nino], val shuttered: Shuttering) extends WrappedRequest[A](request)
 
 trait AuthorisedWithIds extends ActionBuilder[RequestWithIds, AnyContent] with ActionRefiner[Request, RequestWithIds]
 
-class AuthorisedWithIdsImpl (
-  logger:                        LoggerLike,
-  authConnector:                 AuthConnector,
-  shutteringConnector:           ShutteringConnector,
-  cc:                            ControllerComponents
+class AuthorisedWithIdsImpl(
+  logger: LoggerLike,
+  authConnector: AuthConnector,
+  shutteringConnector: ShutteringConnector,
+  cc: ControllerComponents
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedWithIds
     with Results {
@@ -53,19 +49,19 @@ class AuthorisedWithIdsImpl (
     for {
       shutteredResponse <- shutteringConnector.getShutteringStatus("27085215-69a4-4027-8f72-b04b10ec16b0")
       auth: Either[Result, Option[Nino]] <- if (shutteredResponse.shuttered) {
-                                             Future.successful(Right(None))
-                                           } else {
-                                             authenticateNino()
-                                           }
+                                              Future.successful(Right(None))
+                                            } else {
+                                              authenticateNino()
+                                            }
 
       response = auth match {
-        case Right(None) if (shutteredResponse.shuttered) =>
-          Right(new RequestWithIds(request, None, shuttered = shutteredResponse))
-        case Right(None)       => Left(Forbidden("NINO not found"))
-        case Right(Some(nino)) => Right(new RequestWithIds(request, Some(nino), shuttered = shutteredResponse))
-        case Left(result)      => Left(result)
-        case _                 => Left(BadRequest("Unexpected response from Nino authentication"))
-      }
+                   case Right(None) if shutteredResponse.shuttered =>
+                     Right(new RequestWithIds(request, None, shuttered = shutteredResponse))
+                   case Right(None)       => Left(Forbidden("NINO not found"))
+                   case Right(Some(nino)) => Right(new RequestWithIds(request, Some(nino), shuttered = shutteredResponse))
+                   case Left(result)      => Left(result)
+                   case _                 => Left(BadRequest("Unexpected response from Nino authentication"))
+                 }
     } yield response
   }
 

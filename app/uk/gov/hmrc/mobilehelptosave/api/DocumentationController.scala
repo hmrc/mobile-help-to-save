@@ -25,19 +25,18 @@ import uk.gov.hmrc.mobilehelptosave.views.txt
 
 import javax.inject.Inject
 
-
 case class ApiAccess(`type`: String)
 
 object ApiAccess {
   implicit val writes: OWrites[ApiAccess] = Json.writes[ApiAccess]
 }
 
-class DocumentationController @Inject() (
-  errorHandler: HttpErrorHandler,
-  config:       DocumentationControllerConfig,
-  cc:           ControllerComponents,
-  assets:       Assets)
-  extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
+class DocumentationController @Inject() (errorHandler: HttpErrorHandler,
+                                         config: DocumentationControllerConfig,
+                                         cc: ControllerComponents,
+                                         assets: Assets
+                                        )
+    extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
 
   private lazy val apiAccess = ApiAccess(config.apiAccessType)
 

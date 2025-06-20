@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
 
 import java.time.temporal.ChronoUnit.MONTHS
@@ -27,20 +27,20 @@ import scala.annotation.tailrec
 trait SavingsUpdateService {
 
   def getSavingsUpdateResponse(
-    account:      Account,
+    account: Account,
     transactions: Transactions,
-    goalEvents:   Seq[SavingsGoalSetEvent]
+    goalEvents: Seq[SavingsGoalSetEvent]
   ): SavingsUpdateResponse
 
   def calculateMaxBonus(account: Account): Option[BigDecimal]
 
   def calculatePotentialBonus(
     averageSavingsRate: Double,
-    account:            Account
+    account: Account
   ): Option[Double]
 
   def calculateAverageSavingRate(
-    transactions:    Seq[Transaction],
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate
   ): Double
 
@@ -52,9 +52,9 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
   val reportEndDate: LocalDate = LocalDate.now().minusMonths(1).`with`(TemporalAdjusters.lastDayOfMonth())
 
   def getSavingsUpdateResponse(
-    account:      Account,
+    account: Account,
     transactions: Transactions,
-    goalEvents:   Seq[SavingsGoalSetEvent]
+    goalEvents: Seq[SavingsGoalSetEvent]
   ): SavingsUpdateResponse = {
     val reportStartDate = calculateReportStartDate(account.openedYearMonth)
 
@@ -80,7 +80,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
 
   def calculatePotentialBonus(
     averageSavingsRate: Double,
-    account:            Account
+    account: Account
   ): Option[Double] =
     if (averageSavingsRate < 1) None
     else {
@@ -99,11 +99,11 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     }
 
   def calculateAverageSavingRate(
-    transactions:    Seq[Transaction],
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate
   ): Double = {
     val totalMonths = MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1
-    val totalSaved  = calculateTotalSaved(transactions)
+    val totalSaved = calculateTotalSaved(transactions)
     if (totalMonths == 0) 0 else (totalSaved.getOrElse(BigDecimal(0)) / totalMonths).toDouble
   }
 
@@ -115,11 +115,11 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       LocalDate.of(accountStartDate.getYear, accountStartDate.getMonth, 1)
 
   private def getSavingsUpdate(
-    account:            Account,
-    transactions:       Transactions,
+    account: Account,
+    transactions: Transactions,
     reportTransactions: Seq[Transaction],
-    goalEvents:         Seq[SavingsGoalSetEvent],
-    reportStartDate:    LocalDate
+    goalEvents: Seq[SavingsGoalSetEvent],
+    reportStartDate: LocalDate
   ): Option[SavingsUpdate] =
     if (reportTransactions.isEmpty) None
     else
@@ -134,8 +134,8 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
       )
 
   private def getBonusUpdate(
-    account:         Account,
-    transactions:    Seq[Transaction],
+    account: Account,
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate
   ): BonusUpdate =
     BonusUpdate(
@@ -154,26 +154,26 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
   }
 
   private def getMonthsSaved(
-    transactions:    Seq[Transaction],
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate
   ): Option[SavedByMonth] = {
     val creditTransactionsByMonth = groupTransactionsByMonth(transactions)
-    val totalMonths               = MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1
+    val totalMonths = MONTHS.between(YearMonth.from(reportStartDate), YearMonth.from(reportEndDate)).toInt + 1
     if (creditTransactionsByMonth.nonEmpty) Some(SavedByMonth(totalMonths, creditTransactionsByMonth.size)) else None
   }
 
   private def calculateGoalsReached(
-    currentGoal:     Option[SavingsGoal],
-    goalEvents:      Seq[SavingsGoalSetEvent],
-    transactions:    Seq[Transaction],
+    currentGoal: Option[SavingsGoal],
+    goalEvents: Seq[SavingsGoalSetEvent],
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate
   ): Option[GoalsReached] = {
     implicit def ord: Ordering[LocalDateTime] = Ordering.by(_.toInstant(ZoneOffset.UTC))
     if (currentGoal.isEmpty || currentGoal.get.goalAmount.isEmpty) None
     else {
-      val currentGoalValue: Double                   = currentGoal.get.goalAmount.get
-      val currentGoalName:  Option[String]           = currentGoal.get.goalName
-      val sortedEvents:     Seq[SavingsGoalSetEvent] = goalEvents.sortBy(_.date)
+      val currentGoalValue: Double = currentGoal.get.goalAmount.get
+      val currentGoalName: Option[String] = currentGoal.get.goalName
+      val sortedEvents: Seq[SavingsGoalSetEvent] = goalEvents.sortBy(_.date)
       val totalSavedEachMonth: Map[Month, BigDecimal] =
         groupTransactionsByMonth(transactions).map(t => Map(t._1 -> t._2.map(_.amount).sum)).flatten.toMap
 
@@ -203,13 +203,15 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
             if (lowestGoalEachMonth.contains(date.get(ChronoField.MONTH_OF_YEAR))) {
               currentGoal = lowestGoalEachMonth.get(date.get(ChronoField.MONTH_OF_YEAR))
             }
-            if (currentGoal.isDefined && totalSavedEachMonth
-                  .getOrElse(date.getMonth, BigDecimal(0))
-                  .toDouble >= currentGoal.getOrElse(50.0))
+            if (
+              currentGoal.isDefined && totalSavedEachMonth
+                .getOrElse(date.getMonth, BigDecimal(0))
+                .toDouble >= currentGoal.getOrElse(50.0)
+            )
               Map(date.getMonth -> currentGoal.getOrElse(50.0))
             else None
           }
-          .count(_.canEqual())
+          .count(_.canEqual(Some))
         Some(GoalsReached(currentGoalValue, currentGoalName, numberOfTimesGoalHit))
       }
     }
@@ -223,9 +225,9 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     }
 
   private def calculateAmountEarnedTowardsBonus(
-    transactions:       Transactions,
+    transactions: Transactions,
     reportTransactions: Seq[Transaction],
-    reportStartDate:    LocalDate
+    reportStartDate: LocalDate
   ): Option[BigDecimal] = {
     val transactionsBeforeReport: Seq[Transaction] = transactions.transactions.filter(transaction =>
       transaction.transactionDate.isBefore(
@@ -235,7 +237,7 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     val highestBalanceAtStartOfReport =
       if (transactionsBeforeReport.isEmpty) BigDecimal(0) else transactionsBeforeReport.map(_.balanceAfter).max
     val highestBalanceDuringReportingPeriod = reportTransactions.map(_.balanceAfter).max
-    val amountEarned                        = (highestBalanceDuringReportingPeriod - highestBalanceAtStartOfReport) / 2
+    val amountEarned = (highestBalanceDuringReportingPeriod - highestBalanceAtStartOfReport) / 2
     if (amountEarned > 0) Some(amountEarned.setScale(2, BigDecimal.RoundingMode.HALF_UP)) else None
   }
 
@@ -252,17 +254,17 @@ class HtsSavingsUpdateService extends SavingsUpdateService {
     else None
 
   private def calculatePotentialBonusAtCurrentRate(
-    transactions:    Seq[Transaction],
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate,
-    account:         Account
+    account: Account
   ): Option[BigDecimal] =
     calculatePotentialBonus(calculateAverageSavingRate(transactions, reportStartDate), account)
       .map(BigDecimal(_).setScale(2, BigDecimal.RoundingMode.HALF_UP))
 
   private def calculatePotentialBonusWithFiveMore(
-    transactions:    Seq[Transaction],
+    transactions: Seq[Transaction],
     reportStartDate: LocalDate,
-    account:         Account
+    account: Account
   ): Option[BigDecimal] = {
     val averageSavingsRate = calculateAverageSavingRate(transactions, reportStartDate)
     if (averageSavingsRate <= 45.0) {

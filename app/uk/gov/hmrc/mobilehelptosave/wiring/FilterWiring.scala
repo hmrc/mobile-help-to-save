@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
 import uk.gov.hmrc.play.bootstrap.audit.EnabledDatastreamMetricsProvider
 import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs, DefaultHttpAuditEvent, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters._
+import uk.gov.hmrc.play.bootstrap.filters.*
 import uk.gov.hmrc.play.bootstrap.backend.filters.{BackendAuditFilter, BackendMdcFilter, DefaultBackendAuditFilter}
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpAuditing
@@ -39,7 +39,7 @@ trait FilterWiring {
 
   lazy val metrics: Metrics = wire[MetricsImpl]
 
-  lazy val controllerConfigs:  ControllerConfigs  = ControllerConfigs.fromConfig(configuration)
+  lazy val controllerConfigs: ControllerConfigs = ControllerConfigs.fromConfig(configuration)
   lazy val cacheControlConfig: CacheControlConfig = CacheControlConfig.fromConfig(configuration)
 
   lazy val graphiteConfig: GraphiteReporterProviderConfig =
@@ -47,15 +47,15 @@ trait FilterWiring {
 
   lazy val httpAuditEvent: HttpAuditEvent = wire[DefaultHttpAuditEvent]
 
-  lazy val metricsFilter:           MetricsFilterImpl  = wire[MetricsFilterImpl]
+  lazy val metricsFilter: MetricsFilterImpl = wire[MetricsFilterImpl]
   lazy val microserviceAuditFilter: BackendAuditFilter = wire[DefaultBackendAuditFilter]
-  lazy val loggingFilter:           LoggingFilter      = wire[DefaultLoggingFilter]
-  lazy val cacheControlFilter:      CacheControlFilter = wire[CacheControlFilter]
-  lazy val MDCFilter:               MDCFilter          = wire[BackendMdcFilter]
+  lazy val loggingFilter: LoggingFilter = wire[DefaultLoggingFilter]
+  lazy val cacheControlFilter: CacheControlFilter = wire[CacheControlFilter]
+  lazy val MDCFilter: MDCFilter = wire[BackendMdcFilter]
 
-  lazy val auditConnector:    AuditConnector    = wire[DefaultAuditConnector]
-  lazy val httpAuditing:      HttpAuditing      = wire[DefaultHttpAuditing]
-  lazy val auditChannel:      AuditChannel      = wire[DefaultAuditChannel]
+  lazy val auditConnector: AuditConnector = wire[DefaultAuditConnector]
+  lazy val httpAuditing: HttpAuditing = wire[DefaultHttpAuditing]
+  lazy val auditChannel: AuditChannel = wire[DefaultAuditChannel]
   lazy val datastreamMetrics: DatastreamMetrics = wire[EnabledDatastreamMetricsProvider].get()
 
   lazy val httpAuditingConfig: AuditingConfig = AuditingConfig.fromConfig(configuration)

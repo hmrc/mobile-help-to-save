@@ -18,9 +18,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 
 import play.api.libs.json.{Json, OWrites}
 
-case class ErrorBody(
-  code:    String,
-  message: String)
+case class ErrorBody(code: String, message: String)
 
 object ErrorBody {
   implicit val writes: OWrites[ErrorBody] = Json.writes[ErrorBody]

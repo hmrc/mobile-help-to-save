@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers
 
-import cats.syntax.either._
+import cats.syntax.either.*
 import play.api.LoggerLike
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
@@ -35,7 +35,7 @@ trait ControllerChecks extends Results {
   def withShuttering(shuttering: Shuttering)(fn: => Future[Result]): Future[Result] =
     if (shuttering.shuttered) successful(WebServerIsDown(Json.toJson(shuttering))) else fn
 
-  def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[_]): Future[Result] =
+  def withMatchingNinos(nino: Nino)(fn: Nino => Future[Result])(implicit request: RequestWithIds[?]): Future[Result] =
     if (request.nino.contains(nino)) fn(nino)
     else {
       logger.warn(s"Attempt by ${request.nino.getOrElse("")} to access ${nino.value}'s data")
@@ -43,11 +43,9 @@ trait ControllerChecks extends Results {
     }
 
   def verifyingMatchingNino(
-    nino:             Nino,
-    shuttering:       Shuttering
-  )(fn:               Nino => Future[Result]
-  )(implicit request: RequestWithIds[_]
-  ): Future[Result] =
+    nino: Nino,
+    shuttering: Shuttering
+  )(fn: Nino => Future[Result])(implicit request: RequestWithIds[?]): Future[Result] =
     withShuttering(shuttering) {
       withMatchingNinos(nino) { verifiedUserNino =>
         fn(verifiedUserNino)
@@ -59,7 +57,7 @@ trait ControllerChecks extends Results {
   )
 
   protected final val MultipleRequests = TooManyRequests(
-    Json.toJson(ErrorBody("TOO_MANY_REQUESTS","Too many requests have been made to Help to Save. Please try again later"))
+    Json.toJson(ErrorBody("TOO_MANY_REQUESTS", "Too many requests have been made to Help to Save. Please try again later"))
   )
 
   private def errorHandler(errorInfo: ErrorInfo): Result = errorInfo match {
@@ -69,8 +67,7 @@ trait ControllerChecks extends Results {
     case ErrorInfo.MultipleRequests       => MultipleRequests
   }
 
-  /**
-    * Standardise the mapping of ErrorInfo values to http responses
+  /** Standardise the mapping of ErrorInfo values to http responses
     */
   def handlingErrors[T](rightHandler: T => Result)(a: Either[ErrorInfo, T]): Result =
     a.bimap(errorHandler, rightHandler).merge

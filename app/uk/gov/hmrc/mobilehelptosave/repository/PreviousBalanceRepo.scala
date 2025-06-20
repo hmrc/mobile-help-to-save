@@ -17,76 +17,75 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import cats.instances.future._
-import cats.syntax.functor._
+import cats.instances.future.*
+import cats.syntax.functor.*
 import org.mongodb.scala.Document
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.Updates.{combine, set}
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-trait PreviousBalanceRepo[F[_]] {
+trait PreviousBalanceRepo {
 
   def setPreviousBalance(
-    nino:                 Nino,
-    previousBalance:      BigDecimal,
+    nino: Nino,
+    previousBalance: BigDecimal,
     finalBonusPaidByDate: LocalDateTime
-  ): F[Unit]
+  ): Future[Unit]
 
-  def getPreviousBalance(nino: Nino): F[Option[PreviousBalance]]
+  def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]]
 
   def clearPreviousBalance(): Future[Unit]
 
-  def updateExpireAt(): F[Unit]
+  def updateExpireAt(): Future[Unit]
 
   def updateExpireAt(
-    nino:     Nino,
+    nino: Nino,
     expireAt: LocalDateTime
-  ): F[Unit]
+  ): Future[Unit]
 
-  def getPreviousBalanceUpdateRequired(nino: Nino): F[Option[PreviousBalance]]
+  def getPreviousBalanceUpdateRequired(nino: Nino): Future[Option[PreviousBalance]]
 
 }
 
 class MongoPreviousBalanceRepo(
-  mongo:        MongoComponent
-)(implicit ec:  ExecutionContext,
-  mongoFormats: Format[PreviousBalance])
-    extends PlayMongoRepository[PreviousBalance](collectionName = "previousBalance",
-                                                 mongoComponent = mongo,
-                                                 domainFormat   = mongoFormats,
-                                                 indexes = Seq(
-                                                   IndexModel(descending("expireAt"),
-                                                              IndexOptions()
-                                                                .name("expireAtIdx")
-                                                                .expireAfter(0, TimeUnit.SECONDS)),
-                                                   IndexModel(ascending("nino"),
-                                                              IndexOptions().name("ninoIdx").unique(false).sparse(true))
-                                                 ),
-                                                 replaceIndexes = true)
-    with PreviousBalanceRepo[Future] {
+  mongo: MongoComponent
+)(implicit ec: ExecutionContext, mongoFormats: Format[PreviousBalance])
+    extends PlayMongoRepository[PreviousBalance](
+      collectionName = "previousBalance",
+      mongoComponent = mongo,
+      domainFormat   = mongoFormats,
+      indexes = Seq(
+        IndexModel(descending("expireAt"),
+                   IndexOptions()
+                     .name("expireAtIdx")
+                     .expireAfter(0, TimeUnit.SECONDS)
+                  ),
+        IndexModel(ascending("nino"), IndexOptions().name("ninoIdx").unique(false).sparse(true))
+      ),
+      replaceIndexes = true
+    )
+    with PreviousBalanceRepo {
 
   override def setPreviousBalance(
-    nino:                 Nino,
-    previousBalance:      BigDecimal,
+    nino: Nino,
+    previousBalance: BigDecimal,
     finalBonusPaidByDate: LocalDateTime
   ): Future[Unit] =
     collection
       .findOneAndReplace(
-        filter = equal("nino", nino.nino),
-        replacement = (PreviousBalance(nino,
-                                       previousBalance,
-                                       Instant.now,
-                                       finalBonusPaidByDate.plusMonths(6) toInstant (ZoneOffset.UTC))),
-        options = FindOneAndReplaceOptions().upsert(true)
+        filter      = equal("nino", nino.nino),
+        replacement = PreviousBalance(nino, previousBalance, Instant.now, finalBonusPaidByDate.plusMonths(6) toInstant (ZoneOffset.UTC)),
+        options     = FindOneAndReplaceOptions().upsert(true)
       )
       .toFuture()
       .void
@@ -103,13 +102,14 @@ class MongoPreviousBalanceRepo(
         filter = Document(),
         update = combine(set("updateRequired", true),
                          set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC)),
-                         set("date", Instant.now()))
+                         set("date", Instant.now())
+                        )
       )
       .toFutureOption()
       .void
 
   override def updateExpireAt(
-    nino:     Nino,
+    nino: Nino,
     expireAt: LocalDateTime
   ): Future[Unit] =
     collection
@@ -124,12 +124,12 @@ class MongoPreviousBalanceRepo(
     collection.find(and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true))).headOption()
 }
 
-case class PreviousBalance(
-  nino:            Nino,
-  previousBalance: BigDecimal,
-  date:            Instant,
-  expireAt:        Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
-  updateRequired:  Boolean = false)
+case class PreviousBalance(nino: Nino,
+                           previousBalance: BigDecimal,
+                           date: Instant,
+                           expireAt: Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
+                           updateRequired: Boolean = false
+                          )
 
 object PreviousBalance {
   implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat

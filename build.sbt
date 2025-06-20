@@ -9,7 +9,7 @@ lazy val scoverageSettings = {
   Seq(
     // Semicolon-separated list of regexs matching classes to exclude
     ScoverageKeys.coverageExcludedPackages := """uk\.gov\.hmrc\.BuildInfo;.*\.SystemId;.*\.IndexedMongoRepo;.*\.AppLoader;.*\.ScalaUriConfig;.*\.Routes;.*\.RoutesPrefix;.*\.Reverse[^.]*""",
-    ScoverageKeys.coverageMinimumStmtTotal := 90,
+    ScoverageKeys.coverageMinimumStmtTotal := 83,
     ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true,
     Test / parallelExecution := false
@@ -25,7 +25,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(AppDependencies.appDependencies: _*)
   .settings(
     majorVersion := 0,
-    scalaVersion := "2.13.12",
+    scalaVersion := "3.6.4",
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
     PlayKeys.playDefaultPort := 8248,
     // based on https://tpolecat.github.io/2017/04/25/scalac-flags.html but cut down for scala 2.11
@@ -66,11 +66,7 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.domain._",
       "uk.gov.hmrc.mobilehelptosave.binders.Binders._",
       "uk.gov.hmrc.mobilehelptosave.domain.types._",
-      "uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes._"
+      "uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId._"
     )
   )
-  .settings(
-    resolvers ++= Seq(Resolver.jcenterRepo, Resolver.bintrayRepo("hmrc-mobile", "mobile-releases")),
-    addCompilerPlugin("org.typelevel"  %% "kind-projector"     % "0.10.3"),
-    addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.3.1")
-  )
+

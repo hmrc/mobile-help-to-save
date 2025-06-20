@@ -24,12 +24,12 @@ object Binders {
   implicit def ninoBinder(implicit stringBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
 
     def unbind(
-      key:  String,
+      key: String,
       nino: Nino
     ): String = stringBinder.unbind(key, nino.value)
 
     def bind(
-      key:   String,
+      key: String,
       value: String
     ): Either[String, Nino] =
       if (Nino.isValid(value)) Right(Nino(value))

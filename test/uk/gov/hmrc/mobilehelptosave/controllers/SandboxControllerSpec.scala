@@ -17,15 +17,16 @@
 package uk.gov.hmrc.mobilehelptosave.controllers
 
 import java.time.{LocalDate, LocalDateTime, YearMonth}
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import play.api.LoggerLike
 import play.api.libs.json.{JsArray, JsValue}
 import play.api.mvc.Result
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.config.SandboxDataConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.sandbox.SandboxData
 import uk.gov.hmrc.mobilehelptosave.services.FixedFakeClock
 import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, ShutteringMocking}
@@ -45,7 +46,7 @@ class SandboxControllerSpec
   private val currentTime = LocalDateTime.of(2022, 4, 11, 12, 30)
   private val fixedClock  = new FixedFakeClock(currentTime)
   private val logger = mock[LoggerLike]
-
+  val jid: JourneyId = JourneyId.from("02940b73-19cc-4c31-80d3-f4deb851c707").toOption.get
   private val controller: SandboxController =
     new SandboxController(logger,
                           shutteringConnector,
@@ -73,7 +74,7 @@ class SandboxControllerSpec
     "return the sandbox transaction data" in {
       shutteringDisabled
       val response: Future[Result] =
-        controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        controller.getTransactions(nino, jid)(FakeRequest())
 
       status(response) mustBe OK
       val json: JsValue = contentAsJson(response)
@@ -210,7 +211,7 @@ class SandboxControllerSpec
     "return a shuttered response when the service is shuttered" in {
       shutteringEnabled
       val response: Future[Result] =
-        controller.getTransactions(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        controller.getTransactions(nino, jid)(FakeRequest())
       status(response) mustBe 521
       contentAsJson(response)
         .as[Shuttering] mustBe shuttered
@@ -220,7 +221,7 @@ class SandboxControllerSpec
   "Sandbox getAccount" should {
     "return the sandbox account data" in {
       shutteringDisabled
-      val response: Future[Result] = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      val response: Future[Result] = controller.getAccount(nino, jid)(FakeRequest())
 
       status(response) mustBe OK
       val json: JsValue = contentAsJson(response)
@@ -252,7 +253,7 @@ class SandboxControllerSpec
 
     "return a shuttered response when the service is shuttered" in {
       shutteringEnabled
-      val response: Future[Result] = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+      val response: Future[Result] = controller.getAccount(nino, jid)(FakeRequest())
       status(response) mustBe 521
       contentAsJson(response)
         .as[Shuttering] mustBe shuttered
@@ -263,7 +264,7 @@ class SandboxControllerSpec
     "return the sandbox milestones data" in {
       shutteringDisabled
       val response: Future[Result] =
-        controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        controller.getMilestones(nino, jid)(FakeRequest())
 
       status(response) mustBe OK
       val json: JsValue = contentAsJson(response)
@@ -274,7 +275,7 @@ class SandboxControllerSpec
     "return a shuttered response when the service is shuttered" in {
       shutteringEnabled
       val response: Future[Result] =
-        controller.getMilestones(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        controller.getMilestones(nino, jid)(FakeRequest())
       status(response) mustBe 521
       contentAsJson(response)
         .as[Shuttering] mustBe shuttered
@@ -285,7 +286,7 @@ class SandboxControllerSpec
     "return the sandbox savings update data" in {
       shutteringDisabled
       val savingsUpdate: Future[Result] =
-        controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        controller.getSavingsUpdate(jid)(FakeRequest())
 
       status(savingsUpdate) mustBe OK
       val jsonBody = contentAsJson(savingsUpdate)
@@ -317,7 +318,7 @@ class SandboxControllerSpec
     "return a shuttered response when the service is shuttered" in {
       shutteringEnabled
       val response: Future[Result] =
-        controller.getSavingsUpdate("02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        controller.getSavingsUpdate(jid)(FakeRequest())
       status(response) mustBe 521
       contentAsJson(response)
         .as[Shuttering] mustBe shuttered

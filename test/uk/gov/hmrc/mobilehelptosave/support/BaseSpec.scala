@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.mobilehelptosave.support
 
+import org.scalatest.Outcome
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 trait BaseSpec extends PlaySpec with MockitoSugar {
 

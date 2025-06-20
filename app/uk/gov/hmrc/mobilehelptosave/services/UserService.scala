@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import cats.data._
-import cats.implicits._
+import cats.data.*
+import cats.implicits.*
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
-import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply => _, _}
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.UserState.{apply as _, *}
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
 import java.time.temporal.ChronoUnit
@@ -36,24 +36,24 @@ trait UserService {
 }
 
 class HtsUserService(
-  logger:                    LoggerLike,
-  config:                    UserServiceConfig,
-  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus[Future],
-  helpToSaveEligibility:     HelpToSaveEligibility[Future],
-  eligibilityStatusRepo:     EligibilityRepo[Future]
-)(implicit ec:               ExecutionContext)
+  logger: LoggerLike,
+  config: UserServiceConfig,
+  helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
+  helpToSaveEligibility: HelpToSaveEligibility,
+  eligibilityStatusRepo: EligibilityRepo
+)(implicit ec: ExecutionContext)
     extends UserService {
 
   def userDetails(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, UserDetails]] =
     (for {
       isEnrolled <- EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
       isEligible <- if (!isEnrolled && config.eligibilityCheckEnabled) EitherT(checkEligibility(nino))
-                   else EitherT(Future.successful(false.asRight[ErrorInfo]))
+                    else EitherT(Future.successful(false.asRight[ErrorInfo]))
       userDetails = (isEnrolled, isEligible) match {
-        case (true, _) => UserDetails(Enrolled)
-        case (_, true) => UserDetails(NotEnrolledButEligible)
-        case (_, _)    => UserDetails(NotEnrolled)
-      }
+                      case (true, _) => UserDetails(Enrolled)
+                      case (_, true) => UserDetails(NotEnrolledButEligible)
+                      case (_, _)    => UserDetails(NotEnrolled)
+                    }
     } yield userDetails).value
 
   protected def checkEligibility(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =

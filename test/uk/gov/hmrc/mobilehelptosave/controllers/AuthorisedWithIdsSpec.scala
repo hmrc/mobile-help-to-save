@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.mvc.Results
-import play.api.test.Helpers._
+import play.api.mvc.{AnyContent, Results}
+import play.api.test.Helpers.*
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -60,9 +60,10 @@ class AuthorisedWithIdsSpec
         new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
       var capturedNino: Option[Nino] = None
-      val action = authorised { request =>
-        capturedNino = request.nino
-        Ok
+      val action = authorised {( request: RequestWithIds[AnyContent])  => {
+          capturedNino = request.nino
+          Ok
+      }
       }
 
       await(action(FakeRequest())) shouldBe Ok
@@ -75,7 +76,7 @@ class AuthorisedWithIdsSpec
       val authorised =
         new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
-      val action = authorised { _ =>
+      val action = authorised { (_:RequestWithIds[AnyContent])  =>
         Ok
       }
 
@@ -88,7 +89,7 @@ class AuthorisedWithIdsSpec
       val authorised =
         new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
-      val action = authorised { _ =>
+      val action = authorised { (_:RequestWithIds[AnyContent]) =>
         Ok
       }
 
@@ -102,7 +103,7 @@ class AuthorisedWithIdsSpec
       val authorised =
         new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
-      val action = authorised { _ =>
+      val action = authorised { (_:RequestWithIds[AnyContent]) =>
         Ok
       }
 
@@ -117,7 +118,7 @@ class AuthorisedWithIdsSpec
       val authorised =
         new AuthorisedWithIdsImpl(logger, authConnectorStub, shutteringConnector, stubControllerComponents())
 
-      val action = authorised { _ =>
+      val action = authorised { (_:RequestWithIds[AnyContent]) =>
         Ok
       }
 

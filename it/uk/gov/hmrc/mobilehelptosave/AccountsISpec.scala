@@ -254,7 +254,7 @@ class AccountsISpec extends BaseISpec with NumberVerification with ComponentSupp
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 401
-      response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
+      response.body.toString   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
@@ -262,7 +262,7 @@ class AccountsISpec extends BaseISpec with NumberVerification with ComponentSupp
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response: WSResponse = await(requestWithAuthHeaders(s"/savings-account/$nino?journeyId=$journeyId").get())
       response.status shouldBe 403
-      response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+      response.body.toString   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 400 when no journeyId is supplied" in {

@@ -21,14 +21,14 @@ import uk.gov.hmrc.domain.Nino
 
 import java.time.Instant
 
-case class TestMilestone (
-                           nino: Nino,
-                           milestoneType: MilestoneType,
-                           milestone: Milestone,
-                           isSeen: Boolean = false,
-                           isRepeatable: Boolean = true,
-                           generatedDate: Option[Instant],
-                           expireAt: Option[Instant])
+case class TestMilestone(nino: Nino,
+                         milestoneType: MilestoneType,
+                         milestone: Milestone,
+                         isSeen: Boolean = false,
+                         isRepeatable: Boolean = true,
+                         generatedDate: Option[Instant],
+                         expireAt: Option[Instant]
+                        )
 
 object TestMilestone {
   implicit val formats: OFormat[TestMilestone] = Json.format

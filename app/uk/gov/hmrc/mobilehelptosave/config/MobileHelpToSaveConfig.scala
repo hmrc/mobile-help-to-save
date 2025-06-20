@@ -20,10 +20,7 @@ import java.net.URL
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-case class MobileHelpToSaveConfig(
-  environment:    Environment,
-  configuration:  Configuration,
-  servicesConfig: ServicesConfig)
+case class MobileHelpToSaveConfig(environment: Environment, configuration: Configuration, servicesConfig: ServicesConfig)
     extends AccountServiceConfig
     with DocumentationControllerConfig
     with HelpToSaveConnectorConfig
@@ -35,12 +32,12 @@ case class MobileHelpToSaveConfig(
     with MongoConfig {
 
   // These are eager vals so that missing or invalid configuration will be detected on startup
-  override val helpToSaveBaseUrl: URL    = configBaseUrl("help-to-save")
-  override val shutteringBaseUrl: URL    = configBaseUrl("mobile-shuttering")
-  override val mongoUri:          String = configString("mongodb.uri")
+  override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
+  override val shutteringBaseUrl: URL = configBaseUrl("mobile-shuttering")
+  override val mongoUri: String = configString("mongodb.uri")
 
-  override def savingsGoalsEnabled:     Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
-  override val inAppPaymentsEnabled:    Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
+  override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
+  override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
 
   override def balanceMilestoneCheckEnabled: Boolean =
@@ -52,13 +49,13 @@ case class MobileHelpToSaveConfig(
   override def bonusReachedMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.bonusReachedMilestoneCheckEnabled")
 
-  override val helpToSaveInfoUrl:          String = configString("helpToSave.infoUrl")
-  override val helpToSaveInfoUrlSso:       String = configString("helpToSave.infoUrlSso")
+  override val helpToSaveInfoUrl: String = configString("helpToSave.infoUrl")
+  override val helpToSaveInfoUrlSso: String = configString("helpToSave.infoUrlSso")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
-  override val helpToSaveAccountPayInUrl:  String = configString("helpToSave.accountPayInUrl")
+  override val helpToSaveAccountPayInUrl: String = configString("helpToSave.accountPayInUrl")
 
   private val accessConfig = configuration.underlying.getConfig("api.access")
-  override val apiAccessType:              String      = accessConfig.getString("type")
+  override val apiAccessType: String = accessConfig.getString("type")
 
   protected def configBaseUrl(serviceName: String): URL = new URL(servicesConfig.baseUrl(serviceName))
 
@@ -69,7 +66,7 @@ case class MobileHelpToSaveConfig(
 
 trait AccountServiceConfig {
   def inAppPaymentsEnabled: Boolean
-  def savingsGoalsEnabled:  Boolean
+  def savingsGoalsEnabled: Boolean
 }
 
 trait UserServiceConfig {
@@ -77,8 +74,8 @@ trait UserServiceConfig {
 }
 
 trait MilestonesConfig {
-  def balanceMilestoneCheckEnabled:      Boolean
-  def bonusPeriodMilestoneCheckEnabled:  Boolean
+  def balanceMilestoneCheckEnabled: Boolean
+  def bonusPeriodMilestoneCheckEnabled: Boolean
   def bonusReachedMilestoneCheckEnabled: Boolean
 }
 
@@ -87,7 +84,7 @@ trait SandboxDataConfig {
 }
 
 trait DocumentationControllerConfig {
-  def apiAccessType:              String
+  def apiAccessType: String
 }
 
 trait HelpToSaveConnectorConfig {
@@ -95,10 +92,10 @@ trait HelpToSaveConnectorConfig {
 }
 
 trait StartupControllerConfig {
-  def helpToSaveInfoUrl:          String
-  def helpToSaveInfoUrlSso:       String
+  def helpToSaveInfoUrl: String
+  def helpToSaveInfoUrlSso: String
   def helpToSaveAccessAccountUrl: String
-  def helpToSaveAccountPayInUrl:  String
+  def helpToSaveAccountPayInUrl: String
 }
 
 trait ShutteringConnectorConfig {
