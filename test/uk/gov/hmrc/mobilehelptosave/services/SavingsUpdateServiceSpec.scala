@@ -20,13 +20,12 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, SavingsGoalTestData, TransactionTestData}
 import uk.gov.hmrc.mobilehelptosave.domain._
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalSetEvent
-import uk.gov.hmrc.mobilehelptosave.support.{BaseSpec, TestF}
+import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
 import java.time.{Instant, LocalDate, YearMonth}
 
 class SavingsUpdateServiceSpec
     extends BaseSpec
-    with TestF
     with AccountTestData
     with TransactionTestData
     with SavingsGoalTestData {

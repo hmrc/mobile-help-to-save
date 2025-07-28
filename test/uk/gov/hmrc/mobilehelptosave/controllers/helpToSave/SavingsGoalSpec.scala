@@ -16,14 +16,15 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
-import cats.syntax.either._
-import eu.timepit.refined.auto._
+import cats.syntax.either.*
+import eu.timepit.refined.auto.*
 import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers.{contentAsString, status}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.domain.{ErrorInfo, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
@@ -42,6 +43,9 @@ class SavingsGoalSpec
       with TestSupport
       with ShutteringMocking {
 
+  val jid: JourneyId = JourneyId.from("02940b73-19cc-4c31-80d3-f4deb851c707").toOption.get
+
+
   "putSavingsGoal" when {
     "logged in user's NINO matches NINO in URL" should {
       "set the goal value in the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
@@ -49,7 +53,7 @@ class SavingsGoalSpec
         val request = FakeRequest().withBody(SavingsGoal(Some(amount)))
 
         setSavingsGoalReturns(nino, Some(amount), ().asRight)
-        val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
+        val resultF = controller.putSavingsGoal(nino, jid)(request)
 
         status(resultF) shouldBe 204
       }
@@ -58,7 +62,7 @@ class SavingsGoalSpec
         with HelpToSaveMocking {
         val request = FakeRequest().withBody(SavingsGoal())
 
-        val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
+        val resultF = controller.putSavingsGoal(nino, jid)(request)
 
         status(resultF)          shouldBe 400
         contentAsString(resultF) shouldBe "Invalid savings goal combination"
@@ -71,7 +75,7 @@ class SavingsGoalSpec
 
         setSavingsGoalReturns(nino, Some(amount), ErrorInfo.ValidationError("error message").asLeft)
 
-        val resultF = controller.putSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(request)
+        val resultF = controller.putSavingsGoal(nino, jid)(request)
 
         status(resultF) shouldBe 422
       }
@@ -83,7 +87,7 @@ class SavingsGoalSpec
       "delete the goal value from the repo and respond with 204" in new AuthorisedTestScenario with HelpToSaveMocking {
         deleteSavingsGoalExpects(nino)
 
-        val resultF = controller.deleteSavingsGoal(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.deleteSavingsGoal(nino, jid)(FakeRequest())
         status(resultF) shouldBe 204
       }
     }

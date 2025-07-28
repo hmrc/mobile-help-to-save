@@ -26,6 +26,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, SavingsGoal}
 import uk.gov.hmrc.mobilehelptosave.stubs.{AuthStub, HelpToSaveStub, ShutteringStub}
 import uk.gov.hmrc.mobilehelptosave.support.{BaseISpec, ComponentSupport, MongoSupport}
+import play.api.libs.ws.writeableOf_JsValue
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -71,21 +72,21 @@ class SavingsGoalsISpec
 
       val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(Some(30.123))))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
-      response.body   should include("goal amount should be a valid monetary amount")
+      response.body.toString   should include("goal amount should be a valid monetary amount")
     }
 
     "respond with 422 when putting a value that is not a valid savings goal" in new LoggedInUserScenario {
 
       val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(Some(0.10))))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
-      response.body   should include("goal amount should be a valid monetary amount")
+      response.body.toString   should include("goal amount should be a valid monetary amount")
     }
 
     "respond with 422 when putting a value that is greater than the monthly savings goal" in new LoggedInUserScenario {
 
       val response: WSResponse = setSavingsGoal(nino, toJson(SavingsGoal(Some(51))))
       response.status shouldBe Status.UNPROCESSABLE_ENTITY
-      response.body   should include("goal amount should be in range 1 to 50")
+      response.body.toString   should include("goal amount should be in range 1 to 50")
     }
 
     "set the goal" in new LoggedInUserScenario {
@@ -139,7 +140,7 @@ class SavingsGoalsISpec
       AuthStub.userIsNotLoggedIn()
       val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 401
-      response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
+      response.body.toString   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
@@ -147,7 +148,7 @@ class SavingsGoalsISpec
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response: WSResponse = setSavingsGoal(nino, validGoalJson)
       response.status shouldBe 403
-      response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+      response.body.toString   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 400 when journeyId is not supplied" in {

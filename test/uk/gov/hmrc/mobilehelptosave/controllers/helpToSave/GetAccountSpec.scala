@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.controllers.helpToSave
 
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{never, verify}
 import org.scalatestplus.mockito.MockitoSugar
@@ -24,10 +24,11 @@ import org.scalatest.{OneInstancePerTest, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveGetTransactions, HttpClientV2Helper}
 import uk.gov.hmrc.mobilehelptosave.controllers.{AlwaysAuthorisedWithIds, HelpToSaveController}
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, ErrorInfo}
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, HtsSavingsUpdateService}
@@ -51,10 +52,12 @@ class GetAccountSpec
       with LoggerStub
       with ShutteringMocking {
 
+  val jid: JourneyId = JourneyId.from("02940b73-19cc-4c31-80d3-f4deb851c707").toOption.get
+  
   "getAccount" should {
     "ensure user is logged in and has a NINO by checking permissions using AuthorisedWithIds" in {
       isForbiddenIfNotAuthorisedForUser { controller =>
-        status(controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())) shouldBe FORBIDDEN
+        status(controller.getAccount(nino, jid)(FakeRequest())) shouldBe FORBIDDEN
       }
     }
   }
@@ -65,7 +68,7 @@ class GetAccountSpec
         with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val accountData = controller.getAccount(nino, jid)(FakeRequest())
         status(accountData) shouldBe OK
         val jsonBody = contentAsJson(accountData)
         jsonBody shouldBe Json.toJson(mobileHelpToSaveAccount)
@@ -76,7 +79,7 @@ class GetAccountSpec
       "return the savings goal in the account structure" in new AuthorisedTestScenario with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val accountData = controller.getAccount(nino, jid)(FakeRequest())
         status(accountData) shouldBe OK
         contentAsJson(accountData).validate[Account]
       }
@@ -87,7 +90,7 @@ class GetAccountSpec
 
         accountReturns(Right(None))
 
-        val resultF = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getAccount(nino, jid)(FakeRequest())
         status(resultF) shouldBe 404
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe "ACCOUNT_NOT_FOUND"
@@ -103,7 +106,7 @@ class GetAccountSpec
 
         accountReturns(Left(ErrorInfo.General))
 
-        val resultF = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getAccount(nino, jid)(FakeRequest())
         status(resultF) shouldBe 500
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "code").as[String] shouldBe ErrorInfo.General.code
@@ -113,7 +116,7 @@ class GetAccountSpec
     "the NINO in the URL does not match the logged in user's NINO" should {
       "return 403" in new AuthorisedTestScenario {
 
-        val resultF = controller.getAccount(otherNino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getAccount(otherNino, jid)(FakeRequest())
         status(resultF) shouldBe 403
         verify(slf4jLoggerStub).warn(s"Attempt by $nino to access $otherNino's data")
       }
@@ -121,9 +124,9 @@ class GetAccountSpec
 
     "helpToSaveShuttered = true" should {
       """return 521 "shuttered": true""" in {
-        val accountService            = mock[AccountService[Future]]
-        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions[Future]]
-        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo[Future]]
+        val accountService            = mock[AccountService]
+        val helpToSaveGetTransactions = mock[HelpToSaveGetTransactions]
+        val savingsGoalEventRepo      = mock[SavingsGoalEventRepo]
         val controller = new HelpToSaveController(
           logger,
           accountService,
@@ -134,7 +137,7 @@ class GetAccountSpec
           stubControllerComponents()
         )
 
-        val resultF = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val resultF = controller.getAccount(nino, jid)(FakeRequest())
         status(resultF) shouldBe 521
         val jsonBody = contentAsJson(resultF)
         (jsonBody \ "shuttered").as[Boolean] shouldBe true
@@ -149,7 +152,7 @@ class GetAccountSpec
         with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccount)))
 
-        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val accountData = controller.getAccount(nino, jid)(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).as[Account]
         account.nbaAccountNumber shouldBe Some("123456789")
@@ -163,7 +166,7 @@ class GetAccountSpec
         with HelpToSaveMocking {
         accountReturns(Right(Some(mobileHelpToSaveAccountNoNbaDetails)))
 
-        val accountData = controller.getAccount(nino, "02940b73-19cc-4c31-80d3-f4deb851c707")(FakeRequest())
+        val accountData = controller.getAccount(nino, jid)(FakeRequest())
         status(accountData) shouldBe OK
         val account = contentAsJson(accountData).as[Account]
         account.nbaAccountNumber shouldBe None

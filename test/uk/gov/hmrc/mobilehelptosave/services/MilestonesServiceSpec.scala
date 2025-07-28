@@ -22,16 +22,16 @@ import java.time.{Instant, LocalDate, LocalDateTime}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
-import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository._
-import uk.gov.hmrc.mobilehelptosave.support.TestF
+import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.repository.*
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
+class MilestonessServiceSpec extends HttpClientV2Helper {
 
   private val now       = LocalDate.now()
   val logger = mock[LoggerLike]
+  implicit val ex: ExecutionContext = ExecutionContext.global
   private val testConfig =
     TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
                          bonusPeriodMilestoneCheckEnabled  = true,
@@ -73,7 +73,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.getMilestones(nino).unsafeGet
+      val result = service.getMilestones(nino).futureValue
       result mustBe milestones
     }
 
@@ -97,7 +97,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.getMilestones(nino).unsafeGet
+      val result = service.getMilestones(nino).futureValue
       result mustBe List(milestone.copy(generatedDate = Instant.parse("2019-01-17T10:15:30Z")))
     }
 
@@ -118,7 +118,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
                                  milestonesRepo,
                                  previousBalanceRepo)
 
-      val result = service.getMilestones(nino).unsafeGet
+      val result = service.getMilestones(nino).futureValue
       result mustBe List.empty
     }
   }
@@ -136,7 +136,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.setMilestone(milestone).unsafeGet
+      val result = service.setMilestone(milestone).futureValue
       result mustBe (())
     }
   }
@@ -149,7 +149,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.balanceMilestoneCheck(nino, 0, now).unsafeGet
+      val result = service.balanceMilestoneCheck(nino, 0, now).futureValue
       result mustBe CouldNotCheck
     }
 
@@ -160,7 +160,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.balanceMilestoneCheck(nino, 0, now).unsafeGet
+      val result = service.balanceMilestoneCheck(nino, 0, now).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -171,7 +171,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsBalanceMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.balanceMilestoneCheck(nino, 1, now).unsafeGet
+      val result = service.balanceMilestoneCheck(nino, 1, now).futureValue
       result mustBe MilestoneHit
     }
   }
@@ -184,7 +184,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.markAsSeen(nino, "TestMilestoneType").unsafeGet
+      val result = service.markAsSeen(nino, "TestMilestoneType").futureValue
       result mustBe (())
     }
   }
@@ -197,7 +197,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.bonusPeriodMilestoneCheck(nino, baseBonusTerms, 100, CurrentBonusTerm.First, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, baseBonusTerms, 100, CurrentBonusTerm.First, false).futureValue
       result mustBe MilestoneHit
     }
 
@@ -210,7 +210,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(bonusEstimate = 0), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 200, CurrentBonusTerm.First, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 200, CurrentBonusTerm.First, false).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -223,7 +223,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
 
       val bonusTerms = Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().plusDays(21)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.First, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.First, false).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -242,7 +242,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
         baseBonusTerms(1).copy(bonusEstimate          = 0)
       )
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneHit
     }
 
@@ -256,7 +256,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -271,7 +271,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
         Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)),
             baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneHit
     }
 
@@ -285,7 +285,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneHit
     }
 
@@ -299,7 +299,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val bonusTerms =
         Seq(baseBonusTerms(0).copy(bonusPaid = 0, endDate = LocalDate.now().minusDays(1)), baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -314,7 +314,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
         Seq(baseBonusTerms(0).copy(bonusEstimate = 0, bonusPaid = 100, endDate = LocalDate.now().plusDays(1)),
             baseBonusTerms(1))
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.First, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.First, false).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -332,7 +332,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
         )
 
       val result =
-        service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.AfterFinalTerm, true).unsafeGet
+        service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.AfterFinalTerm, true).futureValue
       result mustBe MilestoneHit
     }
 
@@ -350,7 +350,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
         )
 
       val result =
-        service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.AfterFinalTerm, true).unsafeGet
+        service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.AfterFinalTerm, true).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -367,7 +367,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1).copy(bonusEstimate = 0, bonusPaid = 1000, endDate = LocalDate.now().plusDays(21))
         )
 
-      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).unsafeGet
+      val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneNotHit
     }
   }
@@ -380,7 +380,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
       val service =
         new HtsBonusReachedMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
-      val result = service.bonusReachedMilestoneCheck(nino, baseBonusTerms, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, baseBonusTerms, CurrentBonusTerm.First).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -397,7 +397,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1)
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).futureValue
       result mustBe MilestoneHit
     }
 
@@ -414,7 +414,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1)
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).futureValue
       result mustBe MilestoneHit
     }
 
@@ -431,7 +431,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1)
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.First).futureValue
       result mustBe MilestoneHit
     }
 
@@ -448,7 +448,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1)
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).futureValue
       result mustBe MilestoneNotHit
     }
 
@@ -465,7 +465,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(75))
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).futureValue
       result mustBe MilestoneHit
     }
 
@@ -482,7 +482,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(200))
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).futureValue
       result mustBe MilestoneHit
     }
 
@@ -499,7 +499,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(300))
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).futureValue
       result mustBe MilestoneHit
     }
 
@@ -516,7 +516,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(500))
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.Second).futureValue
       result mustBe MilestoneHit
     }
 
@@ -533,57 +533,57 @@ class MilestonessServiceSpec extends HttpClientV2Helper with TestF {
           baseBonusTerms(1).copy(bonusEstimate   = BigDecimal(500))
         )
 
-      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.AfterFinalTerm).unsafeGet
+      val result = service.bonusReachedMilestoneCheck(nino, bonusTerms, CurrentBonusTerm.AfterFinalTerm).futureValue
       result mustBe MilestoneNotHit
     }
   }
 
-  private def fakeMilestonesRepo(milestones: List[MongoMilestone] = List.empty) = new MilestonesRepo[TestF] {
-    override def setMilestone(milestone:     MongoMilestone): TestF[Unit] = F.unit
-    override def setTestMilestone(milestone: TestMilestone):  TestF[Unit] = F.unit
+  private def fakeMilestonesRepo(milestones: List[MongoMilestone] = List.empty) = new MilestonesRepo {
+    override def setMilestone(milestone:     MongoMilestone): Future[Unit] = Future.unit
+    override def setTestMilestone(milestone: TestMilestone):  Future[Unit] = Future.unit
 
     override def setTestMilestones(
       milestone: TestMilestone,
       amount:    Int
-    ): TestF[Unit] = F.unit
-    override def getMilestones(nino: Nino): TestF[List[MongoMilestone]] = F.pure(milestones)
+    ): Future[Unit] = Future.unit
+    override def getMilestones(nino: Nino): Future[List[MongoMilestone]] = Future.successful(milestones)
 
     override def markAsSeen(
       nino:        Nino,
       milestoneId: String
-    ):                              TestF[Unit] = F.unit
-    override def clearMilestones(): TestF[Unit] = ???
+    ):                              Future[Unit] = Future.unit
+    override def clearMilestones(): Future[Unit] = ???
 
     override def updateExpireAt(
       nino:     Nino,
       expireAt: LocalDateTime
-    ): TestF[Unit] = F.unit
+    ): Future[Unit] = Future.unit
 
-    override def updateExpireAt(): TestF[Unit] = F.unit
+    override def updateExpireAt(): Future[Unit] = Future.unit
 
   }
 
   private def fakePreviousBalanceRepo(previousBalance: Option[PreviousBalance] = None) =
-    new PreviousBalanceRepo[TestF] {
+    new PreviousBalanceRepo {
 
       override def setPreviousBalance(
         nino:                 Nino,
         previousBalance:      BigDecimal,
         finalBonusPaidByDate: LocalDateTime
-      ): TestF[Unit] = F.unit
-      override def getPreviousBalance(nino: Nino): TestF[Option[PreviousBalance]] = F.pure(previousBalance)
+      ): Future[Unit] = Future.unit
+      override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] = Future.successful(previousBalance)
 
       override def clearPreviousBalance(): Future[Unit] = ???
 
       override def updateExpireAt(
         nino:     Nino,
         expireAt: LocalDateTime
-      ): TestF[Unit] = F.unit
+      ): Future[Unit] = Future.unit
 
-      override def updateExpireAt(): TestF[Unit] = F.unit
+      override def updateExpireAt(): Future[Unit] = Future.unit
 
-      override def getPreviousBalanceUpdateRequired(nino: Nino): TestF[Option[PreviousBalance]] =
-        F.pure(previousBalance)
+      override def getPreviousBalanceUpdateRequired(nino: Nino): Future[Option[PreviousBalance]] =
+        Future.successful(previousBalance)
 
     }
 

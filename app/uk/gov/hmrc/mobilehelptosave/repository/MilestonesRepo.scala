@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import cats.instances.future._
-import cats.syntax.functor._
+import cats.instances.future.*
+import cats.syntax.functor.*
 import org.mongodb.scala.Document
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Updates._
+import org.mongodb.scala.model.Filters.*
+import org.mongodb.scala.model.Updates.*
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{MongoMilestone, TestMilestone}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDateTime, ZoneOffset}
@@ -35,47 +36,48 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
-trait MilestonesRepo[F[_]] {
-  def setMilestone(milestone: MongoMilestone): F[Unit]
+trait MilestonesRepo {
+  def setMilestone(milestone: MongoMilestone): Future[Unit]
 
-  def setTestMilestone(milestone: TestMilestone): F[Unit]
+  def setTestMilestone(milestone: TestMilestone): Future[Unit]
 
-  def setTestMilestones(milestone: TestMilestone, amount: Int): F[Unit]
+  def setTestMilestones(milestone: TestMilestone, amount: Int): Future[Unit]
 
-  def getMilestones(nino: Nino): F[Seq[MongoMilestone]]
+  def getMilestones(nino: Nino): Future[Seq[MongoMilestone]]
 
   def markAsSeen(
-    nino:          Nino,
+    nino: Nino,
     milestoneType: String
-  ): F[Unit]
+  ): Future[Unit]
 
-  def clearMilestones(): F[Unit]
+  def clearMilestones(): Future[Unit]
 
-  def updateExpireAt(): F[Unit]
+  def updateExpireAt(): Future[Unit]
 
   def updateExpireAt(
-    nino:     Nino,
+    nino: Nino,
     expireAt: LocalDateTime
-  ): F[Unit]
+  ): Future[Unit]
 }
 
 class MongoMilestonesRepo(
-  mongo:        MongoComponent
-)(implicit ec:  ExecutionContext,
-  mongoFormats: Format[MongoMilestone])
-    extends PlayMongoRepository[MongoMilestone](collectionName = "milestones",
-                                                mongoComponent = mongo,
-                                                domainFormat   = mongoFormats,
-                                                indexes = Seq(
-                                                  IndexModel(descending("expireAt"),
-                                                             IndexOptions()
-                                                               .name("expireAtIdx")
-                                                               .expireAfter(0, TimeUnit.SECONDS)),
-                                                  IndexModel(ascending("nino"),
-                                                             IndexOptions().name("ninoIdx").unique(false).sparse(true))
-                                                ),
-                                                replaceIndexes = true)
-    with MilestonesRepo[Future] {
+  mongo: MongoComponent
+)(implicit ec: ExecutionContext, mongoFormats: Format[MongoMilestone])
+    extends PlayMongoRepository[MongoMilestone](
+      collectionName = "milestones",
+      mongoComponent = mongo,
+      domainFormat   = mongoFormats,
+      indexes = Seq(
+        IndexModel(descending("expireAt"),
+                   IndexOptions()
+                     .name("expireAtIdx")
+                     .expireAfter(0, TimeUnit.SECONDS)
+                  ),
+        IndexModel(ascending("nino"), IndexOptions().name("ninoIdx").unique(false).sparse(true))
+      ),
+      replaceIndexes = true
+    )
+    with MilestonesRepo {
 
   override def setMilestone(milestone: MongoMilestone): Future[Unit] =
     collection
@@ -92,7 +94,7 @@ class MongoMilestonesRepo(
       .toFuture()
 
   override def markAsSeen(
-    nino:          Nino,
+    nino: Nino,
     milestoneType: String
   ): Future[Unit] =
     collection
@@ -112,13 +114,14 @@ class MongoMilestonesRepo(
         filter = Document(),
         update = combine(set("updateRequired", true),
                          set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54)),
-                         set("generatedDate", LocalDateTime.now(ZoneOffset.UTC)))
+                         set("generatedDate", LocalDateTime.now(ZoneOffset.UTC))
+                        )
       )
       .toFutureOption()
       .void
 
   override def updateExpireAt(
-    nino:     Nino,
+    nino: Nino,
     expireAt: LocalDateTime
   ): Future[Unit] =
     collection
@@ -130,28 +133,34 @@ class MongoMilestonesRepo(
       .void
 
   override def setTestMilestone(milestone: TestMilestone): Future[Unit] =
-    collection.insertOne(
-      MongoMilestone(
-          nino = milestone.nino,
+    collection
+      .insertOne(
+        MongoMilestone(
+          nino          = milestone.nino,
           milestoneType = milestone.milestoneType,
-          milestone = milestone.milestone,
-          isSeen = milestone.isSeen,
-          isRepeatable = milestone.isRepeatable,
+          milestone     = milestone.milestone,
+          isSeen        = milestone.isSeen,
+          isRepeatable  = milestone.isRepeatable,
           generatedDate = milestone.generatedDate.getOrElse(Instant.now()),
-          expireAt = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
+          expireAt      = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
+        )
       )
-    ).toFuture().void
+      .toFuture()
+      .void
 
   override def setTestMilestones(milestone: TestMilestone, amount: Int): Future[Unit] =
-    collection.insertMany(Array.fill(amount) {
-      MongoMilestone(
-        nino = Nino("AA" + "%06d".format(Random.nextInt(100000)) + "ABCD".charAt(Random.nextInt(4))),
-        milestoneType = milestone.milestoneType,
-        milestone = milestone.milestone,
-        isSeen = milestone.isSeen,
-        isRepeatable = milestone.isRepeatable,
-        generatedDate = milestone.generatedDate.getOrElse(Instant.now()),
-        expireAt = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
-      )
-    }).toFuture().void
+    collection
+      .insertMany(Array.fill(amount) {
+        MongoMilestone(
+          nino          = Nino("AA" + "%06d".format(Random.nextInt(100000)) + "ABCD".charAt(Random.nextInt(4))),
+          milestoneType = milestone.milestoneType,
+          milestone     = milestone.milestone,
+          isSeen        = milestone.isSeen,
+          isRepeatable  = milestone.isRepeatable,
+          generatedDate = milestone.generatedDate.getOrElse(Instant.now()),
+          expireAt      = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
+        )
+      })
+      .toFuture()
+      .void
 }

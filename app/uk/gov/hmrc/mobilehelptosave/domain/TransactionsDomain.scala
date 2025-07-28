@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import java.time.LocalDate
 
 import cats.Eq
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait Operation {
 
@@ -29,7 +29,7 @@ sealed trait Operation {
   }
 }
 case object Credit extends Operation
-case object Debit extends Operation
+case object Debit  extends Operation
 
 object Operation {
   implicit val eqOperation: Eq[Operation] = Eq.fromUniversalEquals
@@ -49,12 +49,7 @@ object Operation {
   }
 }
 
-case class Transaction(
-  operation:       Operation,
-  amount:          BigDecimal,
-  transactionDate: LocalDate,
-  accountingDate:  LocalDate,
-  balanceAfter:    BigDecimal)
+case class Transaction(operation: Operation, amount: BigDecimal, transactionDate: LocalDate, accountingDate: LocalDate, balanceAfter: BigDecimal)
 
 object Transaction {
   implicit val format: OFormat[Transaction] = Json.format[Transaction]

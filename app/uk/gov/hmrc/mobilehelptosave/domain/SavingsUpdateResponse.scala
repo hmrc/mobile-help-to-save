@@ -20,53 +20,48 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.{LocalDate, YearMonth}
 
-case class SavingsUpdateResponse(
-  reportStartDate:        LocalDate,
-  reportEndDate:          LocalDate,
-  accountOpenedYearMonth: YearMonth,
-  savingsUpdate:          Option[SavingsUpdate],
-  bonusUpdate:            BonusUpdate)
+case class SavingsUpdateResponse(reportStartDate: LocalDate,
+                                 reportEndDate: LocalDate,
+                                 accountOpenedYearMonth: YearMonth,
+                                 savingsUpdate: Option[SavingsUpdate],
+                                 bonusUpdate: BonusUpdate
+                                )
 
 object SavingsUpdateResponse {
-  implicit val yearMonthFormat: Format[YearMonth]             = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
-  implicit val format:          Format[SavingsUpdateResponse] = Json.format[SavingsUpdateResponse]
+  implicit val yearMonthFormat: Format[YearMonth] = uk.gov.hmrc.mobilehelptosave.json.Formats.YearMonthFormat
+  implicit val format: Format[SavingsUpdateResponse] = Json.format[SavingsUpdateResponse]
 }
 
-case class SavingsUpdate(
-  savedInPeriod:            Option[BigDecimal],
-  savedByMonth:             Option[SavedByMonth],
-  goalsReached:             Option[GoalsReached],
-  amountEarnedTowardsBonus: Option[BigDecimal])
+case class SavingsUpdate(savedInPeriod: Option[BigDecimal],
+                         savedByMonth: Option[SavedByMonth],
+                         goalsReached: Option[GoalsReached],
+                         amountEarnedTowardsBonus: Option[BigDecimal]
+                        )
 
 object SavingsUpdate {
   implicit val format: Format[SavingsUpdate] = Json.format[SavingsUpdate]
 }
 
-case class BonusUpdate(
-  currentBonusTerm:            CurrentBonusTerm.Value,
-  monthsUntilBonus:            Int,
-  currentBonus:                Option[BigDecimal],
-  highestBalance:              Option[BigDecimal],
-  potentialBonusAtCurrentRate: Option[BigDecimal],
-  potentialBonusWithFiveMore:  Option[BigDecimal],
-  maxBonus:                    Option[BigDecimal])
+case class BonusUpdate(currentBonusTerm: CurrentBonusTerm.Value,
+                       monthsUntilBonus: Int,
+                       currentBonus: Option[BigDecimal],
+                       highestBalance: Option[BigDecimal],
+                       potentialBonusAtCurrentRate: Option[BigDecimal],
+                       potentialBonusWithFiveMore: Option[BigDecimal],
+                       maxBonus: Option[BigDecimal]
+                      )
 
 object BonusUpdate {
   implicit val format: Format[BonusUpdate] = Json.format[BonusUpdate]
 }
 
-case class SavedByMonth(
-  numberOfMonths: Int,
-  monthsSaved:    Int)
+case class SavedByMonth(numberOfMonths: Int, monthsSaved: Int)
 
 object SavedByMonth {
   implicit val format: Format[SavedByMonth] = Json.format[SavedByMonth]
 }
 
-case class GoalsReached(
-  currentAmount:        Double,
-  currentGoalName:      Option[String],
-  numberOfTimesReached: Int)
+case class GoalsReached(currentAmount: Double, currentGoalName: Option[String], numberOfTimesReached: Int)
 
 object GoalsReached {
   implicit val format: Format[GoalsReached] = Json.format[GoalsReached]

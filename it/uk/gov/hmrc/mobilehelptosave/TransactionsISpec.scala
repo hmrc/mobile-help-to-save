@@ -111,7 +111,7 @@ class TransactionsISpec extends BaseISpec with ComponentSupport {
       AuthStub.userIsNotLoggedIn()
       val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 401
-      response.body   shouldBe "Authorisation failure [Bearer token not supplied]"
+      response.body.toString   shouldBe "Authorisation failure [Bearer token not supplied]"
     }
 
     "return 403 Forbidden when the user is logged in with an insufficient confidence level" in {
@@ -119,7 +119,7 @@ class TransactionsISpec extends BaseISpec with ComponentSupport {
       AuthStub.userIsLoggedInWithInsufficientConfidenceLevel()
       val response = await(requestWithAuthHeaders(s"/savings-account/$nino/transactions?journeyId=$journeyId").get())
       response.status shouldBe 403
-      response.body   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
+      response.body.toString   shouldBe "Authorisation failure [Insufficient ConfidenceLevel]"
     }
 
     "return 400 when journeyId is not supplied" in {

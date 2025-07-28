@@ -26,11 +26,11 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 import scala.concurrent.{ExecutionContext, Future}
 
 class TestController(
-  savingsGoalEventRepo:     SavingsGoalEventRepo[Future],
-  milestonesRepo:           MilestonesRepo[Future],
-  previousBalanceRepo:      PreviousBalanceRepo[Future],
+  savingsGoalEventRepo: SavingsGoalEventRepo,
+  milestonesRepo: MilestonesRepo,
+  previousBalanceRepo: PreviousBalanceRepo,
   val controllerComponents: ControllerComponents
-)(implicit ec:              ExecutionContext)
+)(implicit ec: ExecutionContext)
     extends BackendBaseController {
 
   def clearGoalEvents(): Action[AnyContent] = Action.async {
@@ -53,23 +53,20 @@ class TestController(
     } yield Ok("Successfully cleared all milestone data")
   }
 
-  def addMilestone: Action[TestMilestone] = Action.async(parse.json[TestMilestone]) {
-    implicit request: Request[TestMilestone] =>
-      milestonesRepo.setTestMilestone(request.body)
-      Future successful Created("Milestone successfully created")
+  def addMilestone: Action[TestMilestone] = Action.async(parse.json[TestMilestone]) { implicit request: Request[TestMilestone] =>
+    milestonesRepo.setTestMilestone(request.body)
+    Future successful Created("Milestone successfully created")
   }
 
-  def addMilestones(amount: Int): Action[TestMilestone] = Action.async(parse.json[TestMilestone]) {
-    implicit request: Request[TestMilestone] =>
-      milestonesRepo.setTestMilestones(request.body, amount)
-      Future successful Created("Milestones have all been successfully created")
+  def addMilestones(amount: Int): Action[TestMilestone] = Action.async(parse.json[TestMilestone]) { implicit request: Request[TestMilestone] =>
+    milestonesRepo.setTestMilestones(request.body, amount)
+    Future successful Created("Milestones have all been successfully created")
   }
 
-  def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) {
-    implicit request: Request[TestSavingsGoal] =>
-      savingsGoalEventRepo
-        .setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
-      Future successful Created("Goal successfully created")
+  def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) { implicit request: Request[TestSavingsGoal] =>
+    savingsGoalEventRepo
+      .setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
+    Future successful Created("Goal successfully created")
   }
 
 }

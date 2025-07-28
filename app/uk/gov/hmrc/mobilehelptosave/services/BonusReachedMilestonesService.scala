@@ -17,49 +17,47 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.MonadError
-import cats.syntax.functor._
+import cats.syntax.functor.*
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
-import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository._
+import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.repository.*
 
 import java.time.{LocalDateTime, ZoneOffset}
+import scala.concurrent.{ExecutionContext, Future}
 
-trait BonusReachedMilestonesService[F[_]] {
+trait BonusReachedMilestonesService {
 
   def bonusReachedMilestoneCheck(
-    nino:             Nino,
-    bonusTerms:       Seq[BonusTerm],
+    nino: Nino,
+    bonusTerms: Seq[BonusTerm],
     currentBonusTerm: CurrentBonusTerm.Value
-  )(implicit hc:      HeaderCarrier
-  ): F[MilestoneCheckResult]
+  )(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[MilestoneCheckResult]
 }
 
-class HtsBonusReachedMilestonesService[F[_]](
-  logger:              LoggerLike,
-  config:              MilestonesConfig,
-  milestonesRepo:      MilestonesRepo[F],
-  previousBalanceRepo: PreviousBalanceRepo[F]
-)(implicit F:          MonadError[F, Throwable])
-    extends HtsMilestonesService[F](
-      logger:              LoggerLike,
-      config:              MilestonesConfig,
-      milestonesRepo:      MilestonesRepo[F],
-      previousBalanceRepo: PreviousBalanceRepo[F]
+class HtsBonusReachedMilestonesService(
+  logger: LoggerLike,
+  config: MilestonesConfig,
+  milestonesRepo: MilestonesRepo,
+  previousBalanceRepo: PreviousBalanceRepo
+) extends HtsMilestonesService(
+      logger: LoggerLike,
+      config: MilestonesConfig,
+      milestonesRepo: MilestonesRepo,
+      previousBalanceRepo: PreviousBalanceRepo
     )
-    with BonusReachedMilestonesService[F] {
+    with BonusReachedMilestonesService {
 
   override def bonusReachedMilestoneCheck(
-    nino:             Nino,
-    bonusTerms:       Seq[BonusTerm],
+    nino: Nino,
+    bonusTerms: Seq[BonusTerm],
     currentBonusTerm: CurrentBonusTerm.Value
-  )(implicit hc:      HeaderCarrier
-  ): F[MilestoneCheckResult] = {
+  )(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[MilestoneCheckResult] = {
 
-    val firstPeriodBonusEstimate    = bonusTerms.head.bonusEstimate
-    val secondPeriodBonusEstimate   = bonusTerms(1).bonusEstimate
+    val firstPeriodBonusEstimate = bonusTerms.head.bonusEstimate
+    val secondPeriodBonusEstimate = bonusTerms(1).bonusEstimate
     val secondPeriodBonusPaidBydate = bonusTerms(1).bonusPaidByDate.atStartOfDay()
 
     checkBonusReached(
@@ -70,16 +68,16 @@ class HtsBonusReachedMilestonesService[F[_]](
       secondPeriodBonusPaidBydate
     ) match {
       case Some(milestone) => super.setMilestone(milestone).map(_ => MilestoneHit)
-      case _               => F.pure(MilestoneNotHit)
+      case _               => Future.successful(MilestoneNotHit)
     }
   }
 
-  protected def checkBonusReached(
-    implicit nino:             Nino,
-    firstPeriodBonusEstimate:  BigDecimal,
+  protected def checkBonusReached(implicit
+    nino: Nino,
+    firstPeriodBonusEstimate: BigDecimal,
     secondPeriodBonusEstimate: BigDecimal,
-    currentBonusTerm:          CurrentBonusTerm.Value,
-    finalBonusPaidByDate:      LocalDateTime
+    currentBonusTerm: CurrentBonusTerm.Value,
+    finalBonusPaidByDate: LocalDateTime
   ): Option[MongoMilestone] =
     (currentBonusTerm, firstPeriodBonusEstimate, secondPeriodBonusEstimate) match {
       case (CurrentBonusTerm.First, firstBonusEstimate, _) if inRange(150, 300, firstBonusEstimate) =>
@@ -100,22 +98,21 @@ class HtsBonusReachedMilestonesService[F[_]](
     }
 
   private def inRange(
-    min:   BigDecimal,
-    max:   BigDecimal,
+    min: BigDecimal,
+    max: BigDecimal,
     value: BigDecimal
   ): Boolean = value >= min && value < max
 
   private def reached(
     threshold: BigDecimal,
-    value:     BigDecimal
+    value: BigDecimal
   ): Boolean =
     value >= threshold
 
   private def createBonusReachedMongoMilestone(
-    milestoneKey:         MilestoneKey,
+    milestoneKey: MilestoneKey,
     finalBonusPaidByDate: LocalDateTime
-  )(implicit nino:        Nino
-  ): MongoMilestone =
+  )(implicit nino: Nino): MongoMilestone =
     MongoMilestone(
       nino          = nino,
       milestoneType = BonusReached,

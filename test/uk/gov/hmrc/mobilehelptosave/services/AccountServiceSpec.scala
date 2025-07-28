@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.services
 
-import cats.syntax.applicativeError._
+import cats.syntax.applicativeError.*
 import org.mockito.Mockito.{never, verify}
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
@@ -24,17 +24,17 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.{AccountTestData, TransactionTestData}
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveAccount, HelpToSaveBonusTerm, HelpToSaveEnrolmentStatus, HelpToSaveGetAccount, HelpToSaveGetTransactions, HttpClientV2Helper}
 import uk.gov.hmrc.mobilehelptosave.controllers.TestSandboxDataConfig.inAppPaymentsEnabled
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.repository.{SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
-import uk.gov.hmrc.mobilehelptosave.support.TestF
 
 import java.time.{LocalDate, LocalDateTime, YearMonth}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with TestF with TransactionTestData {
+class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with TransactionTestData {
 
   private val testConfig = TestAccountServiceConfig(inAppPaymentsEnabled = false, savingsGoalsEnabled = false)
   val logger = mock[LoggerLike]
+  implicit val ex : ExecutionContext = ExecutionContext.global
   private val testMilestonesConfig =
     TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
                          bonusPeriodMilestoneCheckEnabled  = true,
@@ -50,7 +50,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -64,7 +64,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result mustBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = testConfig.savingsGoalsEnabled)))
     }
 
@@ -76,7 +76,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
 
       val config = testConfig.copy(savingsGoalsEnabled = true)
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      config,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -90,7 +90,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result mustBe Right(Some(mobileHelpToSaveAccount.copy(savingsGoalsEnabled = true)))
 
     }
@@ -101,7 +101,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig.copy(inAppPaymentsEnabled = true),
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -115,7 +115,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result mustBe Right(
         Some(
           mobileHelpToSaveAccount
@@ -133,7 +133,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -147,7 +147,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result mustBe Right(
         Some(
           mobileHelpToSaveAccount.copy(openedYearMonth     = YearMonth.now().minusMonths(2),
@@ -181,7 +181,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -195,7 +195,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result.map(_.map(_.potentialBonus)) mustBe Right(Some(Some(BigDecimal("0"))))
     }
 
@@ -217,7 +217,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -231,7 +231,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result.map(_.map(_.potentialBonus)) mustBe Right(Some(Some(BigDecimal("12"))))
     }
 
@@ -269,7 +269,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -283,7 +283,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      testMilestonesConfig)
 
       // Because the service uses the system time to calculate the number of remaining days we need to adjust that in the result
-      val result = service.account(nino).unsafeGet.map(_.map(_.copy(daysRemainingInMonth = 1)))
+      val result = service.account(nino).futureValue.map(_.map(_.copy(daysRemainingInMonth = 1)))
       result.map(_.map(_.potentialBonus)) mustBe Right(Some(Some(BigDecimal("600"))))
     }
 
@@ -293,7 +293,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      ShouldNotBeCalledGetAccount,
@@ -305,7 +305,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet mustBe Right(None)
+      service.account(nino).futureValue mustBe Right(None)
 
       (logger.warn(_: String))
     }
@@ -316,7 +316,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -329,7 +329,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.account(nino).unsafeGet mustBe Right(None)
+      service.account(nino).futureValue mustBe Right(None)
 
       (logger
         .warn(_: String)) (s"${nino.value} was enrolled according to help-to-save microservice but no account was found in NS&I - data is inconsistent")
@@ -339,11 +339,11 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
     "not call either fetchSavingsGoal or fetchNSAndIAccount if the user isn't enrolled" in {
       val fakeEnrolmentStatus = fakeHelpToSaveEnrolmentStatus(nino, Right(false))
 
-      val fakeGetAccount = new HelpToSaveGetAccount[TestF] {
+      val fakeGetAccount = new HelpToSaveGetAccount {
         override def getAccount(
           nino:        Nino
         )(implicit hc: HeaderCarrier
-        ): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
+        ): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
           fail("getAccount should not have been called")
       }
       val fakeGetTransactions = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
@@ -351,7 +351,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
 
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -364,7 +364,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      fakeGetTransactions,
                                      testMilestonesConfig)
 
-      service.account(nino).unsafeGet mustBe Right(None)
+      service.account(nino).futureValue mustBe Right(None)
     }
 
     "return errors returned by connector.enrolmentStatus" in {
@@ -373,7 +373,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -385,7 +385,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet mustBe Left(ErrorInfo.General)
+      service.account(nino).futureValue mustBe Left(ErrorInfo.General)
     }
 
     "return errors returned by connector.getAccount" in {
@@ -394,7 +394,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Right(List()))
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -406,7 +406,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet mustBe Left(ErrorInfo.General)
+      service.account(nino).futureValue mustBe Left(ErrorInfo.General)
     }
 
     "return errors if savingsGoalRepo.get throws exception" in {
@@ -415,7 +415,7 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
       val fakeGetTransactions  = fakeHelpToSaveGetTransactions(Right(Transactions(Seq.empty)))
       val savingsGoalEventRepo = fakeSavingsGoalEventsRepo(nino, Left(new Exception("test exception")))
       val service =
-        new HtsAccountService[TestF](logger,
+        new HtsAccountService(logger,
                                      testConfig,
                                      fakeEnrolmentStatus,
                                      fakeGetAccount,
@@ -427,25 +427,26 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
                                      new HtsSavingsUpdateService,
                                      fakeGetTransactions,
                                      testMilestonesConfig)
-      service.account(nino).unsafeGet mustBe Left(ErrorInfo.General)
+      service.account(nino).futureValue mustBe Left(ErrorInfo.General)
     }
   }
 
-  private def fakeBalanceMilestoneService: BalanceMilestonesService[TestF] =
-    new BalanceMilestonesService[TestF] {
+  private def fakeBalanceMilestoneService: BalanceMilestonesService =
+    new BalanceMilestonesService {
 
       override def balanceMilestoneCheck(
         nino:                        Nino,
         currentBalance:              BigDecimal,
         secondPeriodBonusPaidByDate: LocalDate
-      )(implicit hc:                 HeaderCarrier
-      ): TestF[MilestoneCheckResult] =
-        F.pure(CouldNotCheck)
+      )(implicit hc:                 HeaderCarrier,
+        ec:                          ExecutionContext
+      ): Future[MilestoneCheckResult] =
+        Future.successful(CouldNotCheck)
 
     }
 
-  private def fakeBonusPeriodMilestoneService: BonusPeriodMilestonesService[TestF] =
-    new BonusPeriodMilestonesService[TestF] {
+  private def fakeBonusPeriodMilestoneService: BonusPeriodMilestonesService =
+    new BonusPeriodMilestonesService {
 
       override def bonusPeriodMilestoneCheck(
         nino:             Nino,
@@ -453,109 +454,111 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
         currentBalance:   BigDecimal,
         currentBonusTerm: CurrentBonusTerm.Value,
         accountClosed:    Boolean
-      )(implicit hc:      HeaderCarrier
-      ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
+      )(implicit hc:      HeaderCarrier,
+        ex: ExecutionContext
+      ): Future[MilestoneCheckResult] = Future.successful(CouldNotCheck)
     }
 
-  private def fakeBonusReachedMilestoneService: BonusReachedMilestonesService[TestF] =
-    new BonusReachedMilestonesService[TestF] {
+  private def fakeBonusReachedMilestoneService: BonusReachedMilestonesService =
+    new BonusReachedMilestonesService {
 
       override def bonusReachedMilestoneCheck(
         nino:             Nino,
         bonusTerms:       Seq[BonusTerm],
         currentBonusTerm: CurrentBonusTerm.Value
-      )(implicit hc:      HeaderCarrier
-      ): TestF[MilestoneCheckResult] = F.pure(CouldNotCheck)
+      )(implicit hc:      HeaderCarrier,
+        ex: ExecutionContext
+      ): Future[MilestoneCheckResult] = Future.successful(CouldNotCheck)
     }
 
   private def fakeHelpToSaveEnrolmentStatus(
     expectedNino:    Nino,
     enrolledOrError: Either[ErrorInfo, Boolean]
-  ): HelpToSaveEnrolmentStatus[TestF] =
-    new HelpToSaveEnrolmentStatus[TestF] {
+  ): HelpToSaveEnrolmentStatus =
+    new HelpToSaveEnrolmentStatus {
 
-      override def enrolmentStatus()(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Boolean]] = {
+      override def enrolmentStatus()(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] = {
         nino mustBe expectedNino
         hc   mustBe passedHc
 
-        F.pure(enrolledOrError)
+        Future.successful(enrolledOrError)
       }
     }
 
   private def fakeHelpToSaveGetAccount(
     expectedNino:   Nino,
     accountOrError: Either[ErrorInfo, Option[HelpToSaveAccount]]
-  ): HelpToSaveGetAccount[TestF] =
-    new HelpToSaveGetAccount[TestF] {
+  ): HelpToSaveGetAccount =
+    new HelpToSaveGetAccount {
 
       override def getAccount(
         nino:        Nino
       )(implicit hc: HeaderCarrier
-      ): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
+      ): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] = {
         nino mustBe expectedNino
         hc   mustBe passedHc
 
-        F.pure(accountOrError)
+        Future.successful(accountOrError)
       }
     }
 
   private def fakeHelpToSaveGetTransactions(
     transactionsOrError: Either[ErrorInfo, Transactions]
-  ): HelpToSaveGetTransactions[TestF] =
-    new HelpToSaveGetTransactions[TestF] {
+  ): HelpToSaveGetTransactions =
+    new HelpToSaveGetTransactions {
 
-      override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): TestF[Either[ErrorInfo, Transactions]] =
-        F.pure(transactionsOrError)
+      override def getTransactions(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Transactions]] =
+        Future.successful(transactionsOrError)
     }
 
   private def fakeSavingsGoalEventsRepo(
     expectedNino:     Nino,
     goalsOrException: Either[Throwable, List[SavingsGoalEvent]]
-  ): SavingsGoalEventRepo[TestF] =
-    new SavingsGoalEventRepo[TestF] {
+  ): SavingsGoalEventRepo =
+    new SavingsGoalEventRepo {
 
       override def setGoal(
         nino:                        Nino,
         amount:                      Option[Double] = None,
         name:                        Option[String] = None,
         secondPeriodBonusPaidByDate: LocalDate
-      ): TestF[Unit] = {
+      ): Future[Unit] = {
         nino mustBe expectedNino
-        F.unit
+        Future.unit
       }
 
-      override def getEvents(nino: Nino): TestF[List[SavingsGoalEvent]] = {
+      override def getEvents(nino: Nino): Future[List[SavingsGoalEvent]] = {
         nino mustBe expectedNino
         goalsOrException match {
-          case Left(t)     => F.raiseError(t)
-          case Right(goal) => F.pure(goal)
+          case Left(t)     => Future.failed(t)
+          case Right(goal) => Future.successful(goal)
         }
       }
 
       override def deleteGoal(
         nino:                        Nino,
         secondPeriodBonusPaidByDate: LocalDate
-      ): TestF[Unit] = {
+      ): Future[Unit] = {
         nino mustBe expectedNino
-        F.unit
+        Future.unit
       }
 
-      override def clearGoalEvents(): TestF[Boolean] = F.pure(true)
+      override def clearGoalEvents(): Future[Boolean] = Future.successful(true)
 
-      override def getGoal(nino: Nino): TestF[Option[SavingsGoal]] =
+      override def getGoal(nino: Nino): Future[Option[SavingsGoal]] =
         goalsOrException match {
           case Right(events) =>
-            F.pure {
+            Future.successful {
               events.sortBy(_.date)(InstantOrdering.reverse).headOption.flatMap {
                 case SavingsGoalSetEvent(_, amount, _, name, _, _) => Some(SavingsGoal(amount))
                 case _                                             => None
               }
             }
-          case Left(t) => F.raiseError(t)
+          case Left(t) => Future.failed(t)
         }
 
       // This should never get called as part of the account service
-      override def getGoalSetEvents: TestF[List[SavingsGoalSetEvent]] = ???
+      override def getGoalSetEvents: Future[List[SavingsGoalSetEvent]] = ???
       override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, List[SavingsGoalSetEvent]]] = ???
 
       override def setTestGoal(
@@ -563,35 +566,35 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Te
         amount: Option[Double],
         name:   Option[String],
         date:   LocalDate
-      ): TestF[Unit] = ???
+      ): Future[Unit] = ???
 
       override def updateExpireAt(
         nino:     Nino,
         expireAt: LocalDateTime
-      ): TestF[Unit] = F.unit
+      ): Future[Unit] = Future.unit
 
-      override def updateExpireAt(): TestF[Unit] = F.unit
+      override def updateExpireAt(): Future[Unit] = Future.unit
 
     }
 
-  private def fakeMongoUpdateService: MongoUpdateService[TestF] =
-    new MongoUpdateService[TestF] {
+  private def fakeMongoUpdateService: MongoUpdateService =
+    new MongoUpdateService {
 
       override def updateExpireAtByNino(
         nino:     Nino,
         expireAt: LocalDateTime
-      ): TestF[Unit] =
-        F.pure()
+      ): Future[Unit] =
+        Future.successful(())
 
     }
 
-  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount[TestF] {
+  object ShouldNotBeCalledGetAccount extends HelpToSaveGetAccount {
 
     override def getAccount(
       nino:        Nino
     )(implicit hc: HeaderCarrier
-    ): TestF[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
+    ): Future[Either[ErrorInfo, Option[HelpToSaveAccount]]] =
       new RuntimeException("HelpToSaveGetAccount.getAccount should not be called in this situation")
-        .raiseError[TestF, Either[ErrorInfo, Option[HelpToSaveAccount]]]
+        .raiseError[Future, Either[ErrorInfo, Option[HelpToSaveAccount]]]
   }
 }

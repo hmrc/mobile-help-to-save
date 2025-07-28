@@ -22,8 +22,8 @@ import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
-import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.domain.types.ModelTypes.JourneyId
+import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId
 import uk.gov.hmrc.mobilehelptosave.repository.SavingsGoalEventRepo
 import uk.gov.hmrc.mobilehelptosave.services.{AccountService, SavingsUpdateService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
@@ -33,22 +33,22 @@ import scala.concurrent.{ExecutionContext, Future}
 trait HelpToSaveActions {
 
   def getTransactions(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent]
 
   def getAccount(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent]
 
   def putSavingsGoal(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[SavingsGoal]
 
   def deleteSavingsGoal(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent]
 
@@ -56,14 +56,14 @@ trait HelpToSaveActions {
 }
 
 class HelpToSaveController @Inject() (
-  val logger:                LoggerLike,
-  accountService:            AccountService[Future],
-  helpToSaveGetTransactions: HelpToSaveGetTransactions[Future],
-  authorisedWithIds:         AuthorisedWithIds,
-  savingsUpdateService:      SavingsUpdateService,
-  savingsGoalEventRepo:      SavingsGoalEventRepo[Future],
-  val controllerComponents:  ControllerComponents
-)(implicit ec:               ExecutionContext)
+  val logger: LoggerLike,
+  accountService: AccountService,
+  helpToSaveGetTransactions: HelpToSaveGetTransactions,
+  authorisedWithIds: AuthorisedWithIds,
+  savingsUpdateService: SavingsUpdateService,
+  savingsGoalEventRepo: SavingsGoalEventRepo,
+  val controllerComponents: ControllerComponents
+)(implicit ec: ExecutionContext)
     extends BackendBaseController
     with ControllerChecks
     with HelpToSaveActions {
@@ -72,7 +72,7 @@ class HelpToSaveController @Inject() (
     o.fold(AccountNotFound)(v => Ok(Json.toJson(v)))
 
   override def getTransactions(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
@@ -84,17 +84,17 @@ class HelpToSaveController @Inject() (
     }
 
   override def getAccount(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent] = authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
     verifyingMatchingNino(nino, request.shuttered) { nino =>
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       accountService.account(nino).map(handlingErrors(orAccountNotFound(_)))
     }
   }
 
   override def putSavingsGoal(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[SavingsGoal] =
     authorisedWithIds.async(parse.json[SavingsGoal]) { implicit request: RequestWithIds[SavingsGoal] =>
@@ -107,7 +107,7 @@ class HelpToSaveController @Inject() (
     }
 
   override def deleteSavingsGoal(
-    nino:      Nino,
+    nino: Nino,
     journeyId: JourneyId
   ): Action[AnyContent] =
     authorisedWithIds.async { implicit request: RequestWithIds[AnyContent] =>
@@ -125,11 +125,11 @@ class HelpToSaveController @Inject() (
             account       <- accountService.account(request.nino.getOrElse(Nino("")))
             accountExists <- Future successful account.toOption.map(_.getOrElse(None)).getOrElse(None) != None
             transactions <- if (account.isRight && accountExists)
-                             helpToSaveGetTransactions.getTransactions(request.nino.getOrElse(Nino("")))
-                           else Future successful Left(AccountNotFound)
-            goalSetEvents <- if (account.isRight && accountExists)
-                              savingsGoalEventRepo.getGoalSetEvents(request.nino.getOrElse(Nino("")))
+                              helpToSaveGetTransactions.getTransactions(request.nino.getOrElse(Nino("")))
                             else Future successful Left(AccountNotFound)
+            goalSetEvents <- if (account.isRight && accountExists)
+                               savingsGoalEventRepo.getGoalSetEvents(request.nino.getOrElse(Nino("")))
+                             else Future successful Left(AccountNotFound)
           } yield {
             (account, transactions, accountExists, goalSetEvents) match {
               case (Left(ErrorInfo.AccountNotFound), _, _, _) => AccountNotFound

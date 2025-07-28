@@ -17,17 +17,14 @@
 package uk.gov.hmrc.mobilehelptosave.repository
 
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
-case class SavingsGoalRepoModel(
-  nino:      Nino,
-  amount:    Double,
-  createdAt: Instant)
+case class SavingsGoalRepoModel(nino: Nino, amount: Double, createdAt: Instant)
 
 object SavingsGoalRepoModel {
-  implicit val reads:  Reads[SavingsGoalRepoModel]   = Json.reads[SavingsGoalRepoModel]
+  implicit val reads: Reads[SavingsGoalRepoModel] = Json.reads[SavingsGoalRepoModel]
   implicit val writes: OWrites[SavingsGoalRepoModel] = Json.writes[SavingsGoalRepoModel]
 
   implicit val format: Format[SavingsGoalRepoModel] =
@@ -44,7 +41,7 @@ sealed trait SavingsGoalEventType
 object SavingsGoalEventType {
 
   case object Delete extends SavingsGoalEventType
-  case object Set extends SavingsGoalEventType
+  case object Set    extends SavingsGoalEventType
 
   implicit val format: Format[SavingsGoalEventType] = new Format[SavingsGoalEventType] {
 
@@ -59,26 +56,26 @@ object SavingsGoalEventType {
   }
 }
 
-case class SavingsGoalSetEvent(
-  nino:           Nino,
-  amount:         Option[Double] = None,
-  date:           Instant,
-  name:           Option[String] = None,
-  expireAt:       Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
-  updateRequired: Boolean = false)
+case class SavingsGoalSetEvent(nino: Nino,
+                               amount: Option[Double] = None,
+                               date: Instant,
+                               name: Option[String] = None,
+                               expireAt: Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
+                               updateRequired: Boolean = false
+                              )
     extends SavingsGoalEvent
 
-case class SavingsGoalDeleteEvent(
-  nino:           Nino,
-  date:           Instant,
-  expireAt:       Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
-  updateRequired: Boolean = false)
+case class SavingsGoalDeleteEvent(nino: Nino,
+                                  date: Instant,
+                                  expireAt: Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
+                                  updateRequired: Boolean = false
+                                 )
     extends SavingsGoalEvent
 
 object SavingsGoalEvent {
   implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-  val setEventFormat:      OFormat[SavingsGoalSetEvent]    = Json.format
-  val deleteEventFormat:   OFormat[SavingsGoalDeleteEvent] = Json.format
+  val setEventFormat: OFormat[SavingsGoalSetEvent] = Json.format
+  val deleteEventFormat: OFormat[SavingsGoalDeleteEvent] = Json.format
 
   val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
 
@@ -94,11 +91,11 @@ object SavingsGoalEvent {
     override def reads(json: JsValue): JsResult[SavingsGoalEvent] =
       typeReads.reads(json) match {
         case JsSuccess(ev, _) => readEvent(ev, json)
-        case error: JsError => error
+        case error: JsError   => error
       }
 
     private def readEvent(
-      ev:   SavingsGoalEventType,
+      ev: SavingsGoalEventType,
       json: JsValue
     ): JsResult[SavingsGoalEvent] = ev match {
       case SavingsGoalEventType.Set    => setEventFormat.reads(json)

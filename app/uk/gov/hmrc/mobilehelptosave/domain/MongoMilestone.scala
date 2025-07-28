@@ -16,28 +16,28 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 import java.time.{Instant, LocalDateTime, ZoneOffset}
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import scala.language.implicitConversions
 
-case class MongoMilestone(
-  nino:           Nino,
-  milestoneType:  MilestoneType,
-  milestone:      Milestone,
-  isSeen:         Boolean = false,
-  isRepeatable:   Boolean = true,
-  generatedDate:  Instant = Instant.now(),
-  expireAt:       Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
-  updateRequired: Boolean = false) {
+case class MongoMilestone(nino: Nino,
+                          milestoneType: MilestoneType,
+                          milestone: Milestone,
+                          isSeen: Boolean = false,
+                          isRepeatable: Boolean = true,
+                          generatedDate: Instant = Instant.now(),
+                          expireAt: Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
+                          updateRequired: Boolean = false
+                         ) {
   def compare(that: MilestoneType) = milestoneType.priority - that.priority
 }
 
 object MongoMilestone {
-  implicit val dateFormat:                    Format[Instant]         = MongoJavatimeFormats.instantFormat
-  implicit val format:                        OFormat[MongoMilestone] = Json.format
-  implicit def ordering[A <: MongoMilestone]: Ordering[A]             = Ordering.by(_.milestoneType.priority)
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+  implicit val format: OFormat[MongoMilestone] = Json.format
+  implicit def ordering[A <: MongoMilestone]: Ordering[A] = Ordering.by(_.milestoneType.priority)
 }
 
 case class Milestones(milestones: List[MongoMilestone])
@@ -71,8 +71,8 @@ sealed trait MilestoneType extends Ordered[MilestoneType] {
   def compare(that: MilestoneType) = priority - that.priority
 }
 
-case object BonusPeriod extends MilestoneType { val priority    = 1 }
-case object BonusReached extends MilestoneType { val priority   = 2 }
+case object BonusPeriod    extends MilestoneType { val priority = 1 }
+case object BonusReached   extends MilestoneType { val priority = 2 }
 case object BalanceReached extends MilestoneType { val priority = 3 }
 
 object MilestoneType {
@@ -90,9 +90,7 @@ object MilestoneType {
   }
 }
 
-case class Milestone(
-  key:    MilestoneKey,
-  values: Option[Map[String, String]] = None)
+case class Milestone(key: MilestoneKey, values: Option[Map[String, String]] = None)
 
 object Milestone {
   implicit val format: Format[Milestone] = Json.format[Milestone]
@@ -182,32 +180,32 @@ object Milestone {
 
 sealed trait MilestoneKey
 
-case object BalanceReached1 extends MilestoneKey
-case object BalanceReached100 extends MilestoneKey
-case object BalanceReached200 extends MilestoneKey
-case object BalanceReached500 extends MilestoneKey
-case object BalanceReached750 extends MilestoneKey
-case object BalanceReached1000 extends MilestoneKey
-case object BalanceReached1500 extends MilestoneKey
-case object BalanceReached2000 extends MilestoneKey
-case object BalanceReached2400 extends MilestoneKey
-case object EndOfFirstBonusPeriodPositiveBonus extends MilestoneKey
-case object StartOfFinalBonusPeriodNoBonus extends MilestoneKey
-case object EndOfFinalBonusPeriodZeroBalanceNoBonus extends MilestoneKey
-case object EndOfFinalBonusPeriodZeroBalancePositiveBonus extends MilestoneKey
-case object EndOfFinalBonusPeriodPositiveBalanceNoBonus extends MilestoneKey
+case object BalanceReached1                                   extends MilestoneKey
+case object BalanceReached100                                 extends MilestoneKey
+case object BalanceReached200                                 extends MilestoneKey
+case object BalanceReached500                                 extends MilestoneKey
+case object BalanceReached750                                 extends MilestoneKey
+case object BalanceReached1000                                extends MilestoneKey
+case object BalanceReached1500                                extends MilestoneKey
+case object BalanceReached2000                                extends MilestoneKey
+case object BalanceReached2400                                extends MilestoneKey
+case object EndOfFirstBonusPeriodPositiveBonus                extends MilestoneKey
+case object StartOfFinalBonusPeriodNoBonus                    extends MilestoneKey
+case object EndOfFinalBonusPeriodZeroBalanceNoBonus           extends MilestoneKey
+case object EndOfFinalBonusPeriodZeroBalancePositiveBonus     extends MilestoneKey
+case object EndOfFinalBonusPeriodPositiveBalanceNoBonus       extends MilestoneKey
 case object EndOfFinalBonusPeriodPositiveBalancePositiveBonus extends MilestoneKey
-case object FirstBonusEarnedMaximum extends MilestoneKey
-case object FirstBonusEarned extends MilestoneKey
-case object FinalBonusEarnedMaximum extends MilestoneKey
-case object FinalBonusEarned extends MilestoneKey
-case object FirstBonusReached150 extends MilestoneKey
-case object FirstBonusReached300 extends MilestoneKey
-case object FirstBonusReached600 extends MilestoneKey
-case object FinalBonusReached75 extends MilestoneKey
-case object FinalBonusReached200 extends MilestoneKey
-case object FinalBonusReached300 extends MilestoneKey
-case object FinalBonusReached500 extends MilestoneKey
+case object FirstBonusEarnedMaximum                           extends MilestoneKey
+case object FirstBonusEarned                                  extends MilestoneKey
+case object FinalBonusEarnedMaximum                           extends MilestoneKey
+case object FinalBonusEarned                                  extends MilestoneKey
+case object FirstBonusReached150                              extends MilestoneKey
+case object FirstBonusReached300                              extends MilestoneKey
+case object FirstBonusReached600                              extends MilestoneKey
+case object FinalBonusReached75                               extends MilestoneKey
+case object FinalBonusReached200                              extends MilestoneKey
+case object FinalBonusReached300                              extends MilestoneKey
+case object FinalBonusReached500                              extends MilestoneKey
 
 object MilestoneKey {
 
@@ -252,6 +250,6 @@ object MilestoneKey {
 
 sealed trait MilestoneCheckResult
 
-case object MilestoneHit extends MilestoneCheckResult
+case object MilestoneHit    extends MilestoneCheckResult
 case object MilestoneNotHit extends MilestoneCheckResult
-case object CouldNotCheck extends MilestoneCheckResult
+case object CouldNotCheck   extends MilestoneCheckResult

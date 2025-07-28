@@ -16,43 +16,45 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import cats.instances.future._
-import cats.syntax.functor._
+import cats.instances.future.*
+import cats.syntax.functor.*
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-trait EligibilityRepo[F[_]] {
-  def setEligibility(eligibility: Eligibility): F[Unit]
+trait EligibilityRepo {
+  def setEligibility(eligibility: Eligibility): Future[Unit]
 
-  def getEligibility(nino: Nino): F[Option[Eligibility]]
+  def getEligibility(nino: Nino): Future[Option[Eligibility]]
 }
 
 class MongoEligibilityRepo(
-  mongo:        MongoComponent
-)(implicit ec:  ExecutionContext,
-  mongoFormats: Format[Eligibility])
-    extends PlayMongoRepository[Eligibility](collectionName = "eligibility",
-                                             mongoComponent = mongo,
-                                             domainFormat   = mongoFormats,
-                                             indexes = Seq(
-                                               IndexModel(descending("expireAt"),
-                                                          IndexOptions()
-                                                            .name("expireAtIdx")
-                                                            .expireAfter(0, TimeUnit.SECONDS)),
-                                               IndexModel(ascending("nino"),
-                                                          IndexOptions().name("ninoIdx").unique(true).sparse(true))
-                                             ),
-                                             replaceIndexes = true)
-    with EligibilityRepo[Future] {
+  mongo: MongoComponent
+)(implicit ec: ExecutionContext, mongoFormats: Format[Eligibility])
+    extends PlayMongoRepository[Eligibility](
+      collectionName = "eligibility",
+      mongoComponent = mongo,
+      domainFormat   = mongoFormats,
+      indexes = Seq(
+        IndexModel(descending("expireAt"),
+                   IndexOptions()
+                     .name("expireAtIdx")
+                     .expireAfter(0, TimeUnit.SECONDS)
+                  ),
+        IndexModel(ascending("nino"), IndexOptions().name("ninoIdx").unique(true).sparse(true))
+      ),
+      replaceIndexes = true
+    )
+    with EligibilityRepo {
 
   override def setEligibility(eligibility: Eligibility): Future[Unit] =
     collection.insertOne(eligibility).toFuture().void

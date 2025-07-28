@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
-case class StartupResponse(
-  shuttering:       Shuttering,
-  infoUrl:          Option[String] = None,
-  infoUrlSso:       Option[String] = None,
-  accessAccountUrl: Option[String] = None,
-  accountPayInUrl:  Option[String] = None,
-  user:             Option[UserDetails] = None,
-  userError:        Option[ErrorInfo] = None)
+case class StartupResponse(shuttering: Shuttering,
+                           infoUrl: Option[String] = None,
+                           infoUrlSso: Option[String] = None,
+                           accessAccountUrl: Option[String] = None,
+                           accountPayInUrl: Option[String] = None,
+                           user: Option[UserDetails] = None,
+                           userError: Option[ErrorInfo] = None
+                          )
 
 object StartupResponse {
   implicit val enabledWrites: Writes[StartupResponse] = Json.writes[StartupResponse]

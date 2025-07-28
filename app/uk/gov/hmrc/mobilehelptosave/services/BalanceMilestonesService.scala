@@ -17,47 +17,46 @@
 package uk.gov.hmrc.mobilehelptosave.services
 
 import cats.MonadError
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 import play.api.LoggerLike
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.MilestonesConfig
-import uk.gov.hmrc.mobilehelptosave.domain._
-import uk.gov.hmrc.mobilehelptosave.repository._
-import java.time.{LocalDate, LocalDateTime, ZoneOffset}
+import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.repository.*
 
-trait BalanceMilestonesService[F[_]] {
+import java.time.{LocalDate, LocalDateTime, ZoneOffset}
+import scala.concurrent.{ExecutionContext, Future}
+
+trait BalanceMilestonesService {
 
   def balanceMilestoneCheck(
-    nino:                        Nino,
-    currentBalance:              BigDecimal,
+    nino: Nino,
+    currentBalance: BigDecimal,
     secondPeriodBonusPaidByDate: LocalDate
-  )(implicit hc:                 HeaderCarrier
-  ): F[MilestoneCheckResult]
+  )(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[MilestoneCheckResult]
 
 }
 
-class HtsBalanceMilestonesService[F[_]](
-  logger:              LoggerLike,
-  config:              MilestonesConfig,
-  milestonesRepo:      MilestonesRepo[F],
-  previousBalanceRepo: PreviousBalanceRepo[F]
-)(implicit F:          MonadError[F, Throwable])
-    extends HtsMilestonesService[F](
-      logger:              LoggerLike,
-      config:              MilestonesConfig,
-      milestonesRepo:      MilestonesRepo[F],
-      previousBalanceRepo: PreviousBalanceRepo[F]
+class HtsBalanceMilestonesService(
+  logger: LoggerLike,
+  config: MilestonesConfig,
+  milestonesRepo: MilestonesRepo,
+  previousBalanceRepo: PreviousBalanceRepo
+) extends HtsMilestonesService(
+      logger: LoggerLike,
+      config: MilestonesConfig,
+      milestonesRepo: MilestonesRepo,
+      previousBalanceRepo: PreviousBalanceRepo
     )
-    with BalanceMilestonesService[F] {
+    with BalanceMilestonesService {
 
   override def balanceMilestoneCheck(
-    nino:                        Nino,
-    currentBalance:              BigDecimal,
+    nino: Nino,
+    currentBalance: BigDecimal,
     secondPeriodBonusPaidByDate: LocalDate
-  )(implicit hc:                 HeaderCarrier
-  ): F[MilestoneCheckResult] =
+  )(implicit hc: HeaderCarrier, ex: ExecutionContext): Future[MilestoneCheckResult] =
     previousBalanceRepo.getPreviousBalance(nino) flatMap {
       case Some(pb) =>
         previousBalanceRepo
@@ -65,7 +64,7 @@ class HtsBalanceMilestonesService[F[_]](
           .flatMap(_ =>
             compareBalances(nino, pb.previousBalance, currentBalance, secondPeriodBonusPaidByDate) match {
               case Some(milestone) => setMilestone(milestone).map(_ => MilestoneHit)
-              case _               => F.pure(MilestoneNotHit)
+              case _               => Future.successful(MilestoneNotHit)
             }
           )
       case _ =>
@@ -74,10 +73,10 @@ class HtsBalanceMilestonesService[F[_]](
           .map(_ => CouldNotCheck)
     }
 
-  protected def compareBalances(
-    implicit nino:               Nino,
-    previousBalance:             BigDecimal,
-    currentBalance:              BigDecimal,
+  protected def compareBalances(implicit
+    nino: Nino,
+    previousBalance: BigDecimal,
+    currentBalance: BigDecimal,
     secondPeriodBonusPaidByDate: LocalDate
   ): Option[MongoMilestone] = {
     def inRange(
@@ -94,47 +93,40 @@ class HtsBalanceMilestonesService[F[_]](
         Some(
           createBalanceMongoMilestone(milestoneKey         = BalanceReached1,
                                       finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay(),
-                                      isRepeatable         = false)
+                                      isRepeatable         = false
+                                     )
         )
       case (_, _) if inRange(100, 200) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached100,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached100, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if inRange(200, 500) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached200,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached200, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if inRange(500, 750) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached500,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached500, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if inRange(750, 1000) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached750,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached750, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if inRange(1000, 1500) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached1000,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached1000, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if inRange(1500, 2000) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached1500,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached1500, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if inRange(2000, 2400) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached2000,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached2000, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
       case (_, _) if reached(2400) =>
         Some(
-          createBalanceMongoMilestone(milestoneKey         = BalanceReached2400,
-                                      finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
+          createBalanceMongoMilestone(milestoneKey = BalanceReached2400, finalBonusPaidByDate = secondPeriodBonusPaidByDate.atStartOfDay())
         )
 
       case _ => None
@@ -142,11 +134,10 @@ class HtsBalanceMilestonesService[F[_]](
   }
 
   private def createBalanceMongoMilestone(
-    milestoneKey:         MilestoneKey,
+    milestoneKey: MilestoneKey,
     finalBonusPaidByDate: LocalDateTime,
-    isRepeatable:         Boolean = true
-  )(implicit nino:        Nino
-  ): MongoMilestone =
+    isRepeatable: Boolean = true
+  )(implicit nino: Nino): MongoMilestone =
     MongoMilestone(
       nino          = nino,
       milestoneType = BalanceReached,

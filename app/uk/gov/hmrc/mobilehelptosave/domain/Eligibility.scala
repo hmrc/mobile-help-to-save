@@ -22,11 +22,7 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
-case class EligibilityCheckResult(
-  result:     String,
-  resultCode: Int,
-  reason:     String,
-  reasonCode: Int)
+case class EligibilityCheckResult(result: String, resultCode: Int, reason: String, reasonCode: Int)
 
 object EligibilityCheckResult {
 
@@ -34,9 +30,7 @@ object EligibilityCheckResult {
 
 }
 
-case class EligibilityCheckResponse(
-  eligibilityCheckResult: EligibilityCheckResult,
-  threshold:              Option[Double])
+case class EligibilityCheckResponse(eligibilityCheckResult: EligibilityCheckResult, threshold: Option[Double])
 
 object EligibilityCheckResponse {
 
@@ -44,10 +38,7 @@ object EligibilityCheckResponse {
 
 }
 
-case class Eligibility(
-  nino:     Nino,
-  eligible: Boolean,
-  expireAt: Instant)
+case class Eligibility(nino: Nino, eligible: Boolean, expireAt: Instant)
 
 object Eligibility {
 

@@ -22,6 +22,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.mobilehelptosave.domain.{Account, BalanceReached, MongoMilestone, SavingsGoal, SavingsUpdateResponse, Transactions}
 import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
+import play.api.libs.ws.writeableOf_String
+import play.api.libs.ws.writeableOf_JsValue
 
 class SandboxISpec extends BaseISpec with OptionValues {
 
