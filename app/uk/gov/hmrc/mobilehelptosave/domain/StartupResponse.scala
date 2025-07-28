@@ -36,7 +36,9 @@ object StartupResponse {
 case class Shuttering(
   shuttered: Boolean,
   title:     Option[String] = None,
-  message:   Option[String] = None)
+  message:   Option[String] = None,
+  titleCy: Option[String] = None,
+  messageCy: Option[String] = None)
 
 case object Shuttering {
   implicit val format: OFormat[Shuttering] = Json.format[Shuttering]
