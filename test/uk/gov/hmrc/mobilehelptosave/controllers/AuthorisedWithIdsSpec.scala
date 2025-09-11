@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.support.{LoggerStub, ShutteringMocking}
 
@@ -47,7 +47,7 @@ class AuthorisedWithIdsSpec
     with Results
     with ShutteringMocking {
 
-  private val generator = new Generator(0)
+  private val generator = new NinoGenerator()
   private val testNino  = generator.nextNino
 
   "AuthorisedWithIds" should {
