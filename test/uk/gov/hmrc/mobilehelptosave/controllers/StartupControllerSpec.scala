@@ -19,14 +19,14 @@ package uk.gov.hmrc.mobilehelptosave.controllers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.libs.json.JsObject
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.FakeRequest
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.config.StartupControllerConfig
 import uk.gov.hmrc.mobilehelptosave.connectors.HttpClientV2Helper
 import uk.gov.hmrc.mobilehelptosave.support.ShutteringMocking
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.services.HtsUserService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -111,7 +111,7 @@ class StartupControllerSpec extends HttpClientV2Helper with ShutteringMocking{
         new StartupController(mockUserService, new AlwaysAuthorisedWithIds(nino), config, stubControllerComponents())
 
       "include userError and non-user fields such as URLs response" in {
-        val generator = new Generator(0)
+        val generator = new NinoGenerator()
         val nino      = generator.nextNino
 
         when(mockUserService.userDetails(any[Nino])(any[HeaderCarrier]))

@@ -25,7 +25,7 @@ import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Assertion, OneInstancePerTest}
 import play.api.test.Helpers.stubControllerComponents
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.HelpToSaveGetTransactions
 import uk.gov.hmrc.mobilehelptosave.domain.*
@@ -40,7 +40,7 @@ trait TestSupport {
   self: MockitoSugar with LoggerStub with OneInstancePerTest =>
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val generator = new Generator(0)
+  val generator = new NinoGenerator()
   val nino      = generator.nextNino
   val otherNino = generator.nextNino
   val journeyId = randomUUID().toString

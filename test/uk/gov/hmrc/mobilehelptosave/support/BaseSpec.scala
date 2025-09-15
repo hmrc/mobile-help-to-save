@@ -19,13 +19,13 @@ package uk.gov.hmrc.mobilehelptosave.support
 import org.scalatest.Outcome
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 trait BaseSpec extends PlaySpec with MockitoSugar {
 
-  val generator = new Generator(0)
+  val generator = new NinoGenerator()
   val nino:           Nino         = generator.nextNino
   val otherNino:      Nino         = generator.nextNino
   val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
