@@ -8,7 +8,7 @@ object AppDependencies {
   )
 
   private val hmrcMongoVersion     = "2.7.0"
-  private val bootstrapVersion     = "10.1.0"
+  private val bootstrapVersion     = "10.5.0"
   private val domainVersion        = "13.0.0"
   private val catsCoreVersion      = "2.13.0"
   private val scalaUriVersion      = "4.0.3"
