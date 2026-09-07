@@ -111,6 +111,7 @@ class ServiceComponents(context: Context)
     wire[HtsBonusReachedMilestonesService]
 
   lazy val mongo: MongoComponent = wire[HtsMongoComponent]
+  lazy val ninoHash: NinoHash = wire[NinoHash]
   lazy val eligibilityRepo: EligibilityRepo = wire[MongoEligibilityRepo]
   lazy val eventRepo: MongoSavingsGoalEventRepo = wire[MongoSavingsGoalEventRepo]
   lazy val previousBalanceRepo: MongoPreviousBalanceRepo = wire[MongoPreviousBalanceRepo]

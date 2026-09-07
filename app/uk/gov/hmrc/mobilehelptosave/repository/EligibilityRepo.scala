@@ -18,16 +18,18 @@ package uk.gov.hmrc.mobilehelptosave.repository
 
 import cats.instances.future.*
 import cats.syntax.functor.*
-import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Filters.{equal, or}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
+import org.mongodb.scala.model.Updates.{combine, set, setOnInsert, unset}
+import org.mongodb.scala.model.{IndexModel, IndexOptions, UpdateOptions}
 import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.config.EncryptionConfig
 import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,27 +40,82 @@ trait EligibilityRepo {
 }
 
 class MongoEligibilityRepo(
-  mongo: MongoComponent
-)(implicit ec: ExecutionContext, mongoFormats: Format[Eligibility])
-    extends PlayMongoRepository[Eligibility](
-      collectionName = "eligibility",
+  mongo:          MongoComponent,
+  config:         EncryptionConfig,
+  ninoHash:       NinoHash,
+  collectionName: String = "eligibility"
+)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[EligibilityRecord](
+      collectionName = collectionName,
       mongoComponent = mongo,
-      domainFormat   = mongoFormats,
+      domainFormat   = EligibilityRecord.format,
       indexes = Seq(
-        IndexModel(descending("expireAt"),
-                   IndexOptions()
-                     .name("expireAtIdx")
-                     .expireAfter(0, TimeUnit.SECONDS)
-                  ),
-        IndexModel(ascending("nino"), IndexOptions().name("ninoIdx").unique(true).sparse(true))
+        IndexModel(
+          descending("expireAt"),
+          IndexOptions()
+            .name("expireAtIdx")
+            .expireAfter(0, TimeUnit.SECONDS)
+        ),
+        IndexModel(ascending("nino"), IndexOptions().name("ninoIdx").unique(true).sparse(true)),
+        IndexModel(ascending("hashNino"), IndexOptions().name("hashNinoIdx").unique(true).sparse(true))
       ),
       replaceIndexes = true
     )
     with EligibilityRepo {
 
   override def setEligibility(eligibility: Eligibility): Future[Unit] =
-    collection.insertOne(eligibility).toFuture().void
+    if (config.encryptionEnabled) setHashedEligibility(eligibility)
+    else collection.insertOne(EligibilityRecord.legacy(eligibility)).toFuture().void
 
-  override def getEligibility(nino: Nino): Future[Option[Eligibility]] =
-    collection.find(equal("nino", nino.nino)).headOption()
+  override def getEligibility(nino: Nino): Future[Option[Eligibility]] = {
+    val record =
+      if (config.encryptionEnabled)
+        collection
+          .find(equal("hashNino", ninoHash(nino)))
+          .headOption()
+          .flatMap {
+            case found @ Some(_) => Future.successful(found)
+            case None            => collection.find(equal("nino", nino.nino)).headOption()
+          }
+      else
+        collection.find(equal("nino", nino.nino)).headOption()
+
+    record.map(_.map(_.toDomain(nino)))
+  }
+
+  private def setHashedEligibility(eligibility: Eligibility): Future[Unit] =
+    collection
+      .updateOne(
+        filter = or(
+          equal("hashNino", ninoHash(eligibility.nino)),
+          equal("nino", eligibility.nino.nino)
+        ),
+        update = combine(
+          set("hashNino", ninoHash(eligibility.nino)),
+          set("eligible", eligibility.eligible),
+          setOnInsert("expireAt", eligibility.expireAt),
+          unset("nino")
+        ),
+        options = UpdateOptions().upsert(true)
+      )
+      .toFuture()
+      .void
+}
+
+case class EligibilityRecord(
+  nino:     Option[Nino],
+  hashNino: Option[String],
+  eligible: Boolean,
+  expireAt: Instant) {
+
+  def toDomain(requestNino: Nino): Eligibility =
+    Eligibility(requestNino, eligible, expireAt)
+}
+
+object EligibilityRecord {
+  implicit val dateFormat: Format[Instant] = uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.instantFormat
+  implicit val format: OFormat[EligibilityRecord] = Json.format[EligibilityRecord]
+
+  def legacy(eligibility: Eligibility): EligibilityRecord =
+    EligibilityRecord(Some(eligibility.nino), None, eligibility.eligible, eligibility.expireAt)
 }
