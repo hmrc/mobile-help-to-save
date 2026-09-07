@@ -22,7 +22,7 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.MongoConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, EligibilityRecord}
+import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import java.time.Instant
