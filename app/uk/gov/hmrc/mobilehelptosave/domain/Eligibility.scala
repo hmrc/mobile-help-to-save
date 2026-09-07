@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.domain
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
@@ -46,4 +46,21 @@ object Eligibility {
 
   implicit val format: Format[Eligibility] = Json.format[Eligibility]
 
+}
+case class EligibilityRecord(
+                              nino:     Option[Nino],
+                              hashNino: Option[String],
+                              eligible: Boolean,
+                              expireAt: Instant) {
+
+  def toDomain(requestNino: Nino): Eligibility =
+    Eligibility(requestNino, eligible, expireAt)
+}
+
+object EligibilityRecord {
+  implicit val dateFormat: Format[Instant] = uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.instantFormat
+  implicit val format: OFormat[EligibilityRecord] = Json.format[EligibilityRecord]
+
+  def legacy(eligibility: Eligibility): EligibilityRecord =
+    EligibilityRecord(Some(eligibility.nino), None, eligibility.eligible, eligibility.expireAt)
 }

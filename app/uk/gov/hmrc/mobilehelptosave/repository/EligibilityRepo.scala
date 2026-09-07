@@ -25,11 +25,10 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions, UpdateOptions}
 import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.EncryptionConfig
-import uk.gov.hmrc.mobilehelptosave.domain.Eligibility
+import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, EligibilityRecord}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
-import java.time.Instant
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -100,22 +99,4 @@ class MongoEligibilityRepo(
       )
       .toFuture()
       .void
-}
-
-case class EligibilityRecord(
-  nino:     Option[Nino],
-  hashNino: Option[String],
-  eligible: Boolean,
-  expireAt: Instant) {
-
-  def toDomain(requestNino: Nino): Eligibility =
-    Eligibility(requestNino, eligible, expireAt)
-}
-
-object EligibilityRecord {
-  implicit val dateFormat: Format[Instant] = uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats.instantFormat
-  implicit val format: OFormat[EligibilityRecord] = Json.format[EligibilityRecord]
-
-  def legacy(eligibility: Eligibility): EligibilityRecord =
-    EligibilityRecord(Some(eligibility.nino), None, eligibility.eligible, eligibility.expireAt)
 }
