@@ -53,7 +53,7 @@ case class EligibilityRecord(
                               eligible: Boolean,
                               expireAt: Instant) {
 
-  def toDomain(requestNino: Nino): Eligibility =
+  def fromDomain(requestNino: Nino): Eligibility =
     Eligibility(requestNino, eligible, expireAt)
 }
 

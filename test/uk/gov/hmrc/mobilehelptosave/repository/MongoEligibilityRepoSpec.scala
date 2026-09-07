@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.config.EncryptionConfig
+import uk.gov.hmrc.mobilehelptosave.config.MongoConfig
 import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, EligibilityRecord}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
@@ -35,9 +35,9 @@ class MongoEligibilityRepoSpec
     with ScalaFutures
     with DefaultPlayMongoRepositorySupport[EligibilityRecord] {
 
-  private val collectionName = "poc-eligibility-hash-transition"
-  private val enabledConfig  = TestEncryptionConfig(encryptionEnabled = true)
-  private val disabledConfig = TestEncryptionConfig(encryptionEnabled = false)
+  private val collectionName = "eligibility-repo-spec"
+  private val enabledConfig  = TestMongoConfig(encryptionEnabled = true)
+  private val disabledConfig = TestMongoConfig(encryptionEnabled = false)
   private val ninoHash       = new NinoHash(enabledConfig)
 
   override protected val repository: MongoEligibilityRepo =
@@ -132,7 +132,9 @@ class MongoEligibilityRepoSpec
   }
 }
 
-private case class TestEncryptionConfig(
+private case class TestMongoConfig(
   encryptionEnabled: Boolean,
-  encryptionHashKey: String = "c29tZS1sb25nLXRlc3QtaGFzaC1rZXk="
-) extends EncryptionConfig
+  encryptionHashKey: String = "c29tZS1sb25nLXRlc3QtaGFzaC1rZXk=",
+  mongoUri: String = ""
+
+) extends MongoConfig

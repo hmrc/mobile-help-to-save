@@ -24,7 +24,7 @@ import org.mongodb.scala.model.Updates.{combine, set, setOnInsert, unset}
 import org.mongodb.scala.model.{IndexModel, IndexOptions, UpdateOptions}
 import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.config.EncryptionConfig
+import uk.gov.hmrc.mobilehelptosave.config.MongoConfig
 import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, EligibilityRecord}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -40,7 +40,7 @@ trait EligibilityRepo {
 
 class MongoEligibilityRepo(
   mongo:          MongoComponent,
-  config:         EncryptionConfig,
+  config:         MongoConfig,
   ninoHash:       NinoHash,
   collectionName: String = "eligibility"
 )(implicit ec: ExecutionContext)
@@ -79,7 +79,7 @@ class MongoEligibilityRepo(
       else
         collection.find(equal("nino", nino.nino)).headOption()
 
-    record.map(_.map(_.toDomain(nino)))
+    record.map(_.map(_.fromDomain(nino)))
   }
 
   private def setHashedEligibility(eligibility: Eligibility): Future[Unit] =

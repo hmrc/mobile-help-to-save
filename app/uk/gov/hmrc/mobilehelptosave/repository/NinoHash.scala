@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.crypto.{OnewayCryptoFactory, PlainText, Sha512Crypto}
-import uk.gov.hmrc.mobilehelptosave.config.EncryptionConfig
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.mobilehelptosave.config.MongoConfig
 
-class NinoHash(config: EncryptionConfig) {
+class NinoHash(config: MongoConfig) {
   private val hasher: Sha512Crypto = OnewayCryptoFactory.sha(config.encryptionHashKey)
 
   def apply(nino: Nino): String = hasher.hash(PlainText(nino.nino)).value

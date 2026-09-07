@@ -28,7 +28,6 @@ case class MobileHelpToSaveConfig(environment: Environment, configuration: Confi
     with SandboxDataConfig
     with StartupControllerConfig
     with UserServiceConfig
-    with EncryptionConfig
     with MilestonesConfig
     with MongoConfig {
 
@@ -36,6 +35,8 @@ case class MobileHelpToSaveConfig(environment: Environment, configuration: Confi
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
   override val shutteringBaseUrl: URL = configBaseUrl("mobile-shuttering")
   override val mongoUri: String = configString("mongodb.uri")
+  override val encryptionEnabled: Boolean = configBoolean("encryption.encryptionEnabled")
+  override val encryptionHashKey: String = configString("encryption.encryptionHashKey")
 
   override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
@@ -54,9 +55,7 @@ case class MobileHelpToSaveConfig(environment: Environment, configuration: Confi
   override val helpToSaveInfoUrlSso: String = configString("helpToSave.infoUrlSso")
   override val helpToSaveAccessAccountUrl: String = configString("helpToSave.accessAccountUrl")
   override val helpToSaveAccountPayInUrl: String = configString("helpToSave.accountPayInUrl")
-  override val encryptionEnabled: Boolean = configBoolean("encryption.encryptionEnabled")
-  override val encryptionHashKey: String = configString("encryption.encryptionHashKey")
-
+  
   private val accessConfig = configuration.underlying.getConfig("api.access")
   override val apiAccessType: String = accessConfig.getString("type")
 
@@ -112,4 +111,6 @@ trait ShutteringConnectorConfig {
 
 trait MongoConfig {
   def mongoUri: String
+  def encryptionEnabled: Boolean
+  def encryptionHashKey: String
 }
