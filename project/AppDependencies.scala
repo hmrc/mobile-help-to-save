@@ -7,7 +7,7 @@ object AppDependencies {
     libraryDependencies ++= compile ++ test ++ integrationTest
   )
 
-  private val hmrcMongoVersion     = "2.12.0"
+  private val hmrcMongoVersion     = "2.13.0"
   private val bootstrapVersion     = "10.7.0"
   private val domainVersion        = "13.0.0"
   private val catsCoreVersion      = "2.13.0"
@@ -18,7 +18,6 @@ object AppDependencies {
   private val refinedVersion       = "0.11.3"
   private val htsKalcVersion       = "0.8.1"
   private val jacksonModuleVersion = "2.20.0"
-  private val cryptoVersion        = "8.4.0"
 
   private val scalaMockVersion = "7.5.0"
 
@@ -32,7 +31,6 @@ object AppDependencies {
     "io.lemonlabs"                 %% "scala-uri"                  % scalaUriVersion,
     "uk.gov.hmrc"                  %% "play-hmrc-api-play-30"      % playHmrcVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"         % hmrcMongoVersion,
-    "uk.gov.hmrc"                  %% "crypto"                     % cryptoVersion,
     "com.beachape"                 %% "enumeratum-play-json"       % enumeratumVersion,
     "com.softwaremill.macwire"     %% "macros"                     % macrosVersion,
     "eu.timepit"                   %% "refined"                    % refinedVersion,
