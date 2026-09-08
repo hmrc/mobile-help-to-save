@@ -35,6 +35,8 @@ case class MobileHelpToSaveConfig(environment: Environment, configuration: Confi
   override val helpToSaveBaseUrl: URL = configBaseUrl("help-to-save")
   override val shutteringBaseUrl: URL = configBaseUrl("mobile-shuttering")
   override val mongoUri: String = configString("mongodb.uri")
+  override val encryptionEnabled: Boolean = configBoolean("mongodb.encryptionEnabled")
+  override val encryptionHashKey: String = configString("mongodb.encryptionHashKey")
 
   override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
@@ -73,6 +75,11 @@ trait UserServiceConfig {
   def eligibilityCheckEnabled: Boolean
 }
 
+trait EncryptionConfig {
+  def encryptionEnabled: Boolean
+  def encryptionHashKey: String
+}
+
 trait MilestonesConfig {
   def balanceMilestoneCheckEnabled: Boolean
   def bonusPeriodMilestoneCheckEnabled: Boolean
@@ -104,4 +111,6 @@ trait ShutteringConnectorConfig {
 
 trait MongoConfig {
   def mongoUri: String
+  def encryptionEnabled: Boolean
+  def encryptionHashKey: String
 }
