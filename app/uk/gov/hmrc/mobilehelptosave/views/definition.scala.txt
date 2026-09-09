@@ -1,7 +1,6 @@
-@import uk.gov.hmrc.mobilehelptosave.api.ApiAccess
 @import play.api.libs.json.Json
 
-@(apiAccess: ApiAccess)
+@(apiAccess: String)
 {
   "api": {
     "name": "Mobile Help To Save",

@@ -22,14 +22,8 @@ import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.views.txt
-
 import javax.inject.Inject
 
-case class ApiAccess(`type`: String)
-
-object ApiAccess {
-  implicit val writes: OWrites[ApiAccess] = Json.writes[ApiAccess]
-}
 
 class DocumentationController @Inject() (errorHandler: HttpErrorHandler,
                                          config: DocumentationControllerConfig,
@@ -38,7 +32,7 @@ class DocumentationController @Inject() (errorHandler: HttpErrorHandler,
                                         )
     extends uk.gov.hmrc.api.controllers.DocumentationController(cc, assets, errorHandler) {
 
-  private lazy val apiAccess = ApiAccess(config.apiAccessType)
+  private lazy val apiAccess: String = config.apiAccessType
 
   override def definition(): Action[AnyContent] = Action {
     Ok(txt.definition(apiAccess)).as(JSON)
