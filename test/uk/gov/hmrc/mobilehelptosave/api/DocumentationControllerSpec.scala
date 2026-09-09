@@ -17,11 +17,14 @@
 package uk.gov.hmrc.mobilehelptosave.api
 
 import play.api.http.HttpErrorHandler
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.mobilehelptosave.config.DocumentationControllerConfig
 import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
+
+import scala.concurrent.Future
 
 class DocumentationControllerSpec extends BaseSpec {
   "definition" should {
@@ -34,10 +37,11 @@ class DocumentationControllerSpec extends BaseSpec {
       )
       val result: Result = await(controller.definition()(FakeRequest()))
       result.body.contentType mustBe Some("application/json;charset=utf-8")
+      (Json.parse(contentAsString(Future.successful(result))) \ "api" \ "versions" \ 0 \ "access" \ "type").as[String] mustBe "CONTROLLED"
     }
   }
 }
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
-  override def apiAccessType = "PRIVATE"
+  override def apiAccessType = "CONTROLLED"
 }
