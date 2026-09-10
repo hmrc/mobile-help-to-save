@@ -49,6 +49,8 @@ class HtsUserService(
       isEnrolled <- EitherT(helpToSaveEnrolmentStatus.enrolmentStatus())
       isEligible <- if (!isEnrolled && config.eligibilityCheckEnabled) EitherT(checkEligibility(nino))
                     else EitherT(Future.successful(false.asRight[ErrorInfo]))
+      _ = logger.warn(s"Is Enrolled: $isEnrolled for request ID: ${hc.requestId}")
+      _ = logger.warn(s"Is Eligible: $isEligible for request ID: ${hc.requestId}")
       userDetails = (isEnrolled, isEligible) match {
                       case (true, _) => UserDetails(Enrolled)
                       case (_, true) => UserDetails(NotEnrolledButEligible)
