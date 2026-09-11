@@ -99,10 +99,15 @@ class MongoEligibilityRepoSpec
       legacyRepository.getEligibility(nino).futureValue mustBe None
     }
 
-    "fall back to NINO when encryption is enabled and no hashNino record exists" in {
+    "fall back to NINO and migrate the record without changing its expiry" in {
       insert(EligibilityRecord(Some(nino), None, eligible = true, expireAt)).futureValue
 
       repository.getEligibility(nino).futureValue mustBe Some(Eligibility(nino, eligible = true, expireAt))
+
+      val migrated = find(Filters.equal("hashNino", ninoHash(nino))).futureValue.head
+      migrated.nino mustBe None
+      migrated.hashNino mustBe Some(ninoHash(nino))
+      migrated.expireAt mustBe expireAt
     }
 
     "read by hashNino when encryption is enabled" in {
