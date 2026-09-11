@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import cats.instances.future.*
-import cats.syntax.functor.*
 import org.mongodb.scala.model.Filters.{equal, or}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.Updates.{combine, set, setOnInsert, unset}
 import org.mongodb.scala.model.{IndexModel, IndexOptions, UpdateOptions}
+import play.api.Logger
 import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.MongoConfig
@@ -62,9 +61,25 @@ class MongoEligibilityRepo(
     )
     with EligibilityRepo {
 
+  private val logger = Logger(getClass)
+
   override def setEligibility(eligibility: Eligibility): Future[Unit] =
-    if (config.encryptionEnabled) setHashedEligibility(eligibility)
-    else collection.insertOne(EligibilityRecord.legacy(eligibility)).toFuture().void
+    if (config.encryptionEnabled) {
+      logger.warn("Eligibility repository write started with NINO hashing enabled")
+      setHashedEligibility(eligibility)
+    } else {
+      logger.warn("Eligibility repository legacy write started with NINO hashing disabled")
+      collection
+        .insertOne(EligibilityRecord.legacy(eligibility))
+        .toFuture()
+        .map { result =>
+          logger.warn(s"Eligibility repository legacy write completed: acknowledged=${result.wasAcknowledged()}")
+        }
+        .recoverWith { case error =>
+          logger.warn("Eligibility repository legacy write failed", error)
+          Future.failed(error)
+        }
+    }
 
   override def getEligibility(nino: Nino): Future[Option[Eligibility]] = {
     val record =
@@ -73,24 +88,46 @@ class MongoEligibilityRepo(
           .find(equal("hashNino", ninoHash(nino)))
           .headOption()
           .flatMap {
-            case found @ Some(_) => Future.successful(found)
-            case None            => collection.find(equal("nino", nino.nino)).headOption()
+            case found @ Some(_) =>
+              logger.warn("Eligibility repository hashNino lookup hit")
+              Future.successful(found)
+            case None =>
+              logger.warn("Eligibility repository hashNino lookup missed; trying legacy NINO lookup")
+              collection.find(equal("nino", nino.nino)).headOption().flatMap {
+                case Some(legacyRecord) =>
+                  logger.warn("Eligibility repository legacy NINO fallback hit; starting hash migration")
+                  val eligibility = legacyRecord.fromDomain(nino)
+                  setHashedEligibility(eligibility).map { _ =>
+                    logger.warn("Eligibility repository legacy NINO fallback migration completed")
+                    Some(legacyRecord.copy(nino = None, hashNino = Some(ninoHash(nino))))
+                  }
+                case None =>
+                  logger.warn("Eligibility repository legacy NINO fallback missed")
+                  Future.successful(None)
+              }
           }
-      else
-        collection.find(equal("nino", nino.nino)).headOption()
+      else {
+        logger.warn("Eligibility repository read using legacy NINO because hashing is disabled")
+        collection.find(equal("nino", nino.nino)).headOption().map { result =>
+          logger.warn(s"Eligibility repository legacy NINO lookup hit=${result.isDefined}")
+          result
+        }
+      }
 
     record.map(_.map(_.fromDomain(nino)))
   }
 
-  private def setHashedEligibility(eligibility: Eligibility): Future[Unit] =
+  private def setHashedEligibility(eligibility: Eligibility): Future[Unit] = {
+    val hashNino = ninoHash(eligibility.nino)
+
     collection
       .updateOne(
         filter = or(
-          equal("hashNino", ninoHash(eligibility.nino)),
+          equal("hashNino", hashNino),
           equal("nino", eligibility.nino.nino)
         ),
         update = combine(
-          set("hashNino", ninoHash(eligibility.nino)),
+          set("hashNino", hashNino),
           set("eligible", eligibility.eligible),
           setOnInsert("expireAt", eligibility.expireAt),
           unset("nino")
@@ -98,5 +135,16 @@ class MongoEligibilityRepo(
         options = UpdateOptions().upsert(true)
       )
       .toFuture()
-      .void
+      .map { result =>
+        logger.warn(
+          s"Eligibility repository hashed write completed: acknowledged=${result.wasAcknowledged()}, " +
+            s"matched=${result.getMatchedCount}, modified=${result.getModifiedCount}, " +
+            s"upserted=${result.getUpsertedId != null}"
+        )
+      }
+      .recoverWith { case error =>
+        logger.warn("Eligibility repository hashed write failed", error)
+        Future.failed(error)
+      }
+  }
 }

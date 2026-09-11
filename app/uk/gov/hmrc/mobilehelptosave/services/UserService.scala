@@ -60,22 +60,37 @@ class HtsUserService(
 
   protected def checkEligibility(nino: Nino)(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, Boolean]] =
     eligibilityStatusRepo.getEligibility(nino).flatMap {
-      case Some(e) => Future.successful(e.eligible.asRight[ErrorInfo])
+      case Some(e) =>
+        logger.warn(s"Eligibility cache hit for request ID: ${hc.requestId}")
+        Future.successful(e.eligible.asRight[ErrorInfo])
       case None =>
+        logger.warn(s"Eligibility cache miss; calling upstream eligibility check for request ID: ${hc.requestId}")
         EitherT(helpToSaveEligibility.checkEligibility())
-          .map(r =>
-            (r.eligibilityCheckResult.resultCode, r.eligibilityCheckResult.reasonCode) match {
+          .map { r =>
+            val eligible = (r.eligibilityCheckResult.resultCode, r.eligibilityCheckResult.reasonCode) match {
               case (1, 6) => true
               case (1, 7) => true
               case (1, 8) => true
               case _      => false
             }
-          )
-          .flatMap(e =>
+            logger.warn(s"Upstream eligibility check completed; eligible=$eligible for request ID: ${hc.requestId}")
+            eligible
+          }
+          .flatMap { e =>
+            logger.warn(s"Eligibility repository write requested for request ID: ${hc.requestId}")
             EitherT.liftF[Future, ErrorInfo, Boolean](
-              eligibilityStatusRepo.setEligibility(Eligibility(nino, e, expireAtTime)).map(_ => e)
+              eligibilityStatusRepo
+                .setEligibility(Eligibility(nino, e, expireAtTime))
+                .map { _ =>
+                  logger.warn(s"Eligibility repository write completed for request ID: ${hc.requestId}")
+                  e
+                }
+                .recoverWith { case error =>
+                  logger.warn(s"Eligibility repository write failed for request ID: ${hc.requestId}", error)
+                  Future.failed(error)
+                }
             )
-          )
+          }
           .value
     }
 
