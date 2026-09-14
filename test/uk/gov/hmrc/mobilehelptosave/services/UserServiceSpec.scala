@@ -22,7 +22,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mobilehelptosave.connectors.{HelpToSaveEligibility, HelpToSaveEnrolmentStatus}
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 import uk.gov.hmrc.mobilehelptosave.support.BaseSpec
 
@@ -35,10 +35,10 @@ class UserServiceSpec extends BaseSpec with EitherValues {
   val logger = mock[LoggerLike]
   private val testConfig = TestUserServiceConfig(eligibilityCheckEnabled = true)
 
-  private class UserServiceWithTestDefaults(
-    helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
-    helpToSaveEligibility:     HelpToSaveEligibility,
-    eligibilityStatusRepo:     EligibilityRepo)
+  private class UserServiceWithTestDefaults(helpToSaveEnrolmentStatus: HelpToSaveEnrolmentStatus,
+                                            helpToSaveEligibility: HelpToSaveEligibility,
+                                            eligibilityStatusRepo: EligibilityRepo
+                                           )
       extends HtsUserService(
         logger,
         testConfig,
@@ -122,7 +122,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
         fakeEligibilityRepo(None)
       )
 
-      await(service.userDetails(nino))  mustBe Left(error)
+      await(service.userDetails(nino)) mustBe Left(error)
     }
   }
 
@@ -140,8 +140,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
     new HelpToSaveEligibility {
 
       override def checkEligibility(
-      )(implicit hc: HeaderCarrier
-      ): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
+      )(implicit hc: HeaderCarrier): Future[Either[ErrorInfo, EligibilityCheckResponse]] = {
         hc mustBe passedHc
 
         Future successful userIsEligibleForHelpToSave
@@ -150,8 +149,9 @@ class UserServiceSpec extends BaseSpec with EitherValues {
 
   private def fakeEligibilityRepo(eligibility: Option[Eligibility]) =
     new EligibilityRepo {
-      override def setEligibility(eligibility: Eligibility): Future[Unit]                = Future.successful(())
-      override def getEligibility(nino:        Nino):        Future[Option[Eligibility]] = Future.successful(eligibility)
+      override def setEligibility(eligibility: Eligibility): Future[Unit] = Future.successful(())
+      override def getEligibility(nino: Nino): Future[Option[Eligibility]] = Future.successful(eligibility)
+      override def deleteEligibility(nino: Nino): Future[Boolean] = Future.successful(false)
     }
 
 }

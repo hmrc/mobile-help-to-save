@@ -17,17 +17,15 @@
 package uk.gov.hmrc.mobilehelptosave
 
 import play.api.libs.json.Json
-import uk.gov.hmrc.mobilehelptosave.domain._
+import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 import play.api.libs.ws.writeableOf_JsValue
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
-/**
-  * Need two separate tests so that the servers can be run with different system
-  * property settings for the router
+/** Need two separate tests so that the servers can be run with different system property settings for the router
   */
 class TestOnlyRoutesNotWiredISpec extends BaseISpec {
-  val clearGoalEventsUrl           = "/mobile-help-to-save/test-only/clear-goal-events"
+  val clearGoalEventsUrl = "/mobile-help-to-save/test-only/clear-goal-events"
   private val applicationRouterKey = "application.router"
 
   System.clearProperty(applicationRouterKey)
@@ -39,14 +37,15 @@ class TestOnlyRoutesNotWiredISpec extends BaseISpec {
 
 class TestOnlyRoutesWiredISpec extends BaseISpec {
   val clearGoalEventsUrl = "/mobile-help-to-save/test-only/clear-goal-events"
-  val getGoalEventsUrl   = s"/mobile-help-to-save/test-only/goal-events/$nino"
-  val clearMiletonesUrl  = "/mobile-help-to-save/test-only/clear-milestone-data"
-  val createGoalUrl      = "/mobile-help-to-save/test-only/create-goal"
-  val addMilestoneUrl    = "/mobile-help-to-save/test-only/add-milestone"
-  val addMilestonesUrl   = "/mobile-help-to-save/test-only/add-milestones/10"
+  val getGoalEventsUrl = s"/mobile-help-to-save/test-only/goal-events/$nino"
+  val clearMiletonesUrl = "/mobile-help-to-save/test-only/clear-milestone-data"
+  val createGoalUrl = "/mobile-help-to-save/test-only/create-goal"
+  val addMilestoneUrl = "/mobile-help-to-save/test-only/add-milestone"
+  val addMilestonesUrl = "/mobile-help-to-save/test-only/add-milestones/10"
+  val eligibilityUrl = s"/mobile-help-to-save/test-only/eligibility/$nino"
 
   private val applicationRouterKey = "application.router"
-  private val testOnlyRoutes       = "testOnlyDoNotUseInAppConf.Routes"
+  private val testOnlyRoutes = "testOnlyDoNotUseInAppConf.Routes"
 
   System.setProperty(applicationRouterKey, testOnlyRoutes)
 
@@ -64,17 +63,17 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
 
   s"PUT $createGoalUrl with $applicationRouterKey set to $testOnlyRoutes" should {
     s"Return 201 " in {
-      (await(
+      await(
         wsUrl(createGoalUrl)
           .put(Json.toJson(TestSavingsGoal(nino, Some(10.0), None, LocalDate.now().minusMonths(8))))
-      ).status                                      shouldBe 201)
+      ).status                                      shouldBe 201
       await(wsUrl(clearGoalEventsUrl).get()).status shouldBe 200
     }
   }
 
   s"PUT $addMilestoneUrl with $applicationRouterKey set to $testOnlyRoutes" should {
     s"Return 201 " in {
-      (await(
+      await(
         wsUrl(addMilestoneUrl)
           .put(
             Json.toJson(
@@ -89,13 +88,13 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
               )
             )
           )
-      ).status shouldBe 201)
+      ).status shouldBe 201
     }
   }
 
   s"PUT $addMilestonesUrl with $applicationRouterKey set to $testOnlyRoutes" should {
     s"Return 201 " in {
-      (await(
+      await(
         wsUrl(addMilestonesUrl)
           .put(
             Json.toJson(
@@ -110,7 +109,20 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
               )
             )
           )
-      ).status shouldBe 201)
+      ).status shouldBe 201
+    }
+  }
+
+  s"eligibility test-only routes with $applicationRouterKey set to $testOnlyRoutes" should {
+    "set, get and delete eligibility" in {
+      await(wsUrl("/mobile-help-to-save/test-only/eligibility").put(Json.toJson(TestEligibility(nino, eligible = true)))).status shouldBe 201
+
+      val getResponse = await(wsUrl(eligibilityUrl).get())
+      getResponse.status                          shouldBe 200
+      (getResponse.json \ "eligible").as[Boolean] shouldBe true
+
+      await(wsUrl(eligibilityUrl).delete()).status shouldBe 204
+      await(wsUrl(eligibilityUrl).get()).status    shouldBe 404
     }
   }
 }

@@ -29,16 +29,12 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoEligibilityRepoSpec
-    extends AnyWordSpec
-    with Matchers
-    with ScalaFutures
-    with DefaultPlayMongoRepositorySupport[EligibilityRecord] {
+class MongoEligibilityRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with DefaultPlayMongoRepositorySupport[EligibilityRecord] {
 
   private val collectionName = "eligibility-repo-spec"
-  private val enabledConfig  = TestMongoConfig(encryptionEnabled = true)
+  private val enabledConfig = TestMongoConfig(encryptionEnabled = true)
   private val disabledConfig = TestMongoConfig(encryptionEnabled = false)
-  private val ninoHash       = new NinoHash(enabledConfig)
+  private val ninoHash = new NinoHash(enabledConfig)
 
   override protected val repository: MongoEligibilityRepo =
     new MongoEligibilityRepo(mongoComponent, enabledConfig, ninoHash, collectionName)
@@ -46,8 +42,8 @@ class MongoEligibilityRepoSpec
   private lazy val legacyRepository =
     new MongoEligibilityRepo(mongoComponent, disabledConfig, ninoHash, collectionName)
 
-  private val nino       = Nino("AA123456A")
-  private val expireAt   = Instant.now.plus(28, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS)
+  private val nino = Nino("AA123456A")
+  private val expireAt = Instant.now.plus(28, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MILLIS)
   private val laterExpiry = expireAt.plus(7, ChronoUnit.DAYS)
 
   "setEligibility" should {
@@ -117,6 +113,26 @@ class MongoEligibilityRepoSpec
     }
   }
 
+  "deleteEligibility" should {
+    "delete a legacy NINO record" in {
+      legacyRepository.setEligibility(Eligibility(nino, eligible = true, expireAt)).futureValue
+
+      repository.deleteEligibility(nino).futureValue mustBe true
+      find(Filters.equal("nino", nino.nino)).futureValue mustBe empty
+    }
+
+    "delete a hashNino record" in {
+      repository.setEligibility(Eligibility(nino, eligible = true, expireAt)).futureValue
+
+      repository.deleteEligibility(nino).futureValue mustBe true
+      find(Filters.equal("hashNino", ninoHash(nino))).futureValue mustBe empty
+    }
+
+    "return false when no record exists" in {
+      repository.deleteEligibility(nino).futureValue mustBe false
+    }
+  }
+
   "the unique sparse indexes" should {
     "allow hash-only and legacy NINO documents to coexist during transition" in {
       val secondNino = Nino("AA123457A")
@@ -141,5 +157,4 @@ private case class TestMongoConfig(
   encryptionEnabled: Boolean,
   encryptionHashKey: String = "c29tZS1sb25nLXRlc3QtaGFzaC1rZXk=",
   mongoUri: String = ""
-
 ) extends MongoConfig
