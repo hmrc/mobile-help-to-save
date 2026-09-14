@@ -19,16 +19,19 @@ package uk.gov.hmrc.mobilehelptosave.controllers.test
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mobilehelptosave.domain.{TestMilestone, TestSavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
+import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, TestEligibility, TestMilestone, TestSavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 class TestController(
   savingsGoalEventRepo: SavingsGoalEventRepo,
   milestonesRepo: MilestonesRepo,
   previousBalanceRepo: PreviousBalanceRepo,
+  eligibilityRepo: EligibilityRepo,
   val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendBaseController {
@@ -67,6 +70,28 @@ class TestController(
     savingsGoalEventRepo
       .setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
     Future successful Created("Goal successfully created")
+  }
+
+  def getEligibility(nino: Nino): Action[AnyContent] = Action.async {
+    eligibilityRepo.getEligibility(nino).map {
+      case Some(eligibility) => Ok(Json.toJson(eligibility))
+      case None              => NotFound
+    }
+  }
+
+  def setEligibility: Action[TestEligibility] = Action.async(parse.json[TestEligibility]) { implicit request: Request[TestEligibility] =>
+    val expireAt = Instant.now().plus(28, ChronoUnit.DAYS)
+
+    eligibilityRepo
+      .setEligibility(Eligibility(request.body.nino, request.body.eligible, expireAt))
+      .map(_ => Created)
+  }
+
+  def deleteEligibility(nino: Nino): Action[AnyContent] = Action.async {
+    eligibilityRepo.deleteEligibility(nino).map {
+      case true  => NoContent
+      case false => NotFound
+    }
   }
 
 }

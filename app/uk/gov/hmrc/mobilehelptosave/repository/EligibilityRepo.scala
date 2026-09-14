@@ -35,12 +35,14 @@ trait EligibilityRepo {
   def setEligibility(eligibility: Eligibility): Future[Unit]
 
   def getEligibility(nino: Nino): Future[Option[Eligibility]]
+
+  def deleteEligibility(nino: Nino): Future[Boolean]
 }
 
 class MongoEligibilityRepo(
-  mongo:          MongoComponent,
-  config:         MongoConfig,
-  ninoHash:       NinoHash,
+  mongo: MongoComponent,
+  config: MongoConfig,
+  ninoHash: NinoHash,
   collectionName: String = "eligibility"
 )(implicit ec: ExecutionContext)
     extends PlayMongoRepository[EligibilityRecord](
@@ -116,6 +118,17 @@ class MongoEligibilityRepo(
 
     record.map(_.map(_.fromDomain(nino)))
   }
+
+  override def deleteEligibility(nino: Nino): Future[Boolean] =
+    collection
+      .deleteOne(
+        or(
+          equal("hashNino", ninoHash(nino)),
+          equal("nino", nino.nino)
+        )
+      )
+      .toFuture()
+      .map(_.getDeletedCount > 0)
 
   private def setHashedEligibility(eligibility: Eligibility): Future[Unit] = {
     val hashNino = ninoHash(eligibility.nino)
