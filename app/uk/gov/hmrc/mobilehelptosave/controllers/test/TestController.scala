@@ -73,9 +73,9 @@ class TestController(
   }
 
   def getEligibility(nino: Nino): Action[AnyContent] = Action.async {
-    eligibilityRepo.getEligibility(nino).map {
-      case Some(eligibility) => Ok(Json.toJson(eligibility))
-      case None              => NotFound
+    eligibilityRepo.getEligibilityRecord(nino).map {
+      case Some(record) => Ok(Json.toJson(record))
+      case None         => NotFound
     }
   }
 

@@ -36,6 +36,8 @@ trait EligibilityRepo {
 
   def getEligibility(nino: Nino): Future[Option[Eligibility]]
 
+  def getEligibilityRecord(nino: Nino): Future[Option[EligibilityRecord]]
+
   def deleteEligibility(nino: Nino): Future[Boolean]
 }
 
@@ -83,41 +85,40 @@ class MongoEligibilityRepo(
         }
     }
 
-  override def getEligibility(nino: Nino): Future[Option[Eligibility]] = {
-    val record =
-      if (config.encryptionEnabled)
-        collection
-          .find(equal("hashNino", ninoHash(nino)))
-          .headOption()
-          .flatMap {
-            case found @ Some(_) =>
-              logger.warn("Eligibility repository hashNino lookup hit")
-              Future.successful(found)
-            case None =>
-              logger.warn("Eligibility repository hashNino lookup missed; trying legacy NINO lookup")
-              collection.find(equal("nino", nino.nino)).headOption().flatMap {
-                case Some(legacyRecord) =>
-                  logger.warn("Eligibility repository legacy NINO fallback hit; starting hash migration")
-                  val eligibility = legacyRecord.fromDomain(nino)
-                  setHashedEligibility(eligibility).map { _ =>
-                    logger.warn("Eligibility repository legacy NINO fallback migration completed")
-                    Some(legacyRecord.copy(nino = None, hashNino = Some(ninoHash(nino))))
-                  }
-                case None =>
-                  logger.warn("Eligibility repository legacy NINO fallback missed")
-                  Future.successful(None)
-              }
-          }
-      else {
-        logger.warn("Eligibility repository read using legacy NINO because hashing is disabled")
-        collection.find(equal("nino", nino.nino)).headOption().map { result =>
-          logger.warn(s"Eligibility repository legacy NINO lookup hit=${result.isDefined}")
-          result
-        }
-      }
+  override def getEligibility(nino: Nino): Future[Option[Eligibility]] =
+    getEligibilityRecord(nino).map(_.map(_.fromDomain(nino)))
 
-    record.map(_.map(_.fromDomain(nino)))
-  }
+  override def getEligibilityRecord(nino: Nino): Future[Option[EligibilityRecord]] =
+    if (config.encryptionEnabled)
+      collection
+        .find(equal("hashNino", ninoHash(nino)))
+        .headOption()
+        .flatMap {
+          case found @ Some(_) =>
+            logger.warn("Eligibility repository hashNino lookup hit")
+            Future.successful(found)
+          case None =>
+            logger.warn("Eligibility repository hashNino lookup missed; trying legacy NINO lookup")
+            collection.find(equal("nino", nino.nino)).headOption().flatMap {
+              case Some(legacyRecord) =>
+                logger.warn("Eligibility repository legacy NINO fallback hit; starting hash migration")
+                val eligibility = legacyRecord.fromDomain(nino)
+                setHashedEligibility(eligibility).map { _ =>
+                  logger.warn("Eligibility repository legacy NINO fallback migration completed")
+                  Some(legacyRecord.copy(nino = None, hashNino = Some(ninoHash(nino))))
+                }
+              case None =>
+                logger.warn("Eligibility repository legacy NINO fallback missed")
+                Future.successful(None)
+            }
+        }
+    else {
+      logger.warn("Eligibility repository read using legacy NINO because hashing is disabled")
+      collection.find(equal("nino", nino.nino)).headOption().map { result =>
+        logger.warn(s"Eligibility repository legacy NINO lookup hit=${result.isDefined}")
+        result
+      }
+    }
 
   override def deleteEligibility(nino: Nino): Future[Boolean] =
     collection
