@@ -151,6 +151,7 @@ class UserServiceSpec extends BaseSpec with EitherValues {
     new EligibilityRepo {
       override def setEligibility(eligibility: Eligibility): Future[Unit] = Future.successful(())
       override def getEligibility(nino: Nino): Future[Option[Eligibility]] = Future.successful(eligibility)
+      override def getEligibilityRecord(nino: Nino): Future[Option[EligibilityRecord]] = Future.successful(None)
       override def deleteEligibility(nino: Nino): Future[Boolean] = Future.successful(false)
     }
 

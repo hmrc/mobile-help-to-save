@@ -120,6 +120,8 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
       val getResponse = await(wsUrl(eligibilityUrl).get())
       getResponse.status                          shouldBe 200
       (getResponse.json \ "eligible").as[Boolean] shouldBe true
+      (getResponse.json \ "hashNino").as[String] should not be empty
+      (getResponse.json \ "nino").asOpt[String]  shouldBe None
 
       await(wsUrl(eligibilityUrl).delete()).status shouldBe 204
       await(wsUrl(eligibilityUrl).get()).status    shouldBe 404
