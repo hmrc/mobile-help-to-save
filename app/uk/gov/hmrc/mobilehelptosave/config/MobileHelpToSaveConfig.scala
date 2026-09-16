@@ -41,6 +41,7 @@ case class MobileHelpToSaveConfig(environment: Environment, configuration: Confi
   override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
   override def eligibilityCheckEnabled: Boolean = configBoolean("helpToSave.eligibilityCheckEnabled")
+  override val eligibilityTtlSeconds: Long = configuration.underlying.getLong("mongodb.ttlSeconds.eligibility")
 
   override def balanceMilestoneCheckEnabled: Boolean =
     configBoolean("helpToSave.milestones.balanceMilestoneCheckEnabled")
@@ -73,6 +74,7 @@ trait AccountServiceConfig {
 
 trait UserServiceConfig {
   def eligibilityCheckEnabled: Boolean
+  def eligibilityTtlSeconds: Long
 }
 
 trait EncryptionConfig {

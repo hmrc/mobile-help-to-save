@@ -22,7 +22,10 @@ case class TestAccountServiceConfig(
   savingsGoalsEnabled:  Boolean)
     extends AccountServiceConfig
 
-case class TestUserServiceConfig(eligibilityCheckEnabled: Boolean) extends UserServiceConfig
+case class TestUserServiceConfig(
+  eligibilityCheckEnabled: Boolean,
+  eligibilityTtlSeconds:  Long = 2419200)
+    extends UserServiceConfig
 
 case class TestMilestonesConfig(
   balanceMilestoneCheckEnabled:      Boolean,
