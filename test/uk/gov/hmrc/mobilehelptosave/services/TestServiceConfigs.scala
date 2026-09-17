@@ -24,7 +24,7 @@ case class TestAccountServiceConfig(
 
 case class TestUserServiceConfig(
   eligibilityCheckEnabled: Boolean,
-  eligibilityTtlSeconds:  Long = 2419200)
+  eligibilityTtlDays:     Long = 1)
     extends UserServiceConfig
 
 case class TestMilestonesConfig(

@@ -25,6 +25,7 @@ import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo,
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 class TestController(
@@ -81,7 +82,7 @@ class TestController(
   }
 
   def setEligibility: Action[TestEligibility] = Action.async(parse.json[TestEligibility]) { implicit request: Request[TestEligibility] =>
-    val expireAt = Instant.now().plusSeconds(config.eligibilityTtlSeconds)
+    val expireAt = Instant.now().plus(config.eligibilityTtlDays, ChronoUnit.DAYS)
 
     eligibilityRepo
       .setEligibility(Eligibility(request.body.nino, request.body.eligible, expireAt))

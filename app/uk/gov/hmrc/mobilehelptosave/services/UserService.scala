@@ -28,6 +28,7 @@ import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.repository.EligibilityRepo
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 trait UserService {
@@ -93,6 +94,6 @@ class HtsUserService(
           .value
     }
 
-  private def expireAtTime: Instant = Instant.now().plusSeconds(config.eligibilityTtlSeconds)
+  private def expireAtTime: Instant = Instant.now().plus(config.eligibilityTtlDays, ChronoUnit.DAYS)
 
 }
