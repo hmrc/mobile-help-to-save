@@ -6,5 +6,6 @@ PUT           /create-goal                     uk.gov.hmrc.mobilehelptosave.cont
 PUT           /add-milestone                   uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.addMilestone()
 PUT           /add-milestones/:amount          uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.addMilestones(amount: Int)
 GET           /eligibility/:nino               uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getEligibility(nino: uk.gov.hmrc.domain.Nino)
+GET           /eligibility                     uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getAllEligibility()
 PUT           /eligibility                     uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.setEligibility()
 DELETE        /eligibility/:nino               uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.deleteEligibility(nino: uk.gov.hmrc.domain.Nino)

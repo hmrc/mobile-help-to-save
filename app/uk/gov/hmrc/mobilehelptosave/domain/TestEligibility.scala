@@ -19,7 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.domain
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.domain.Nino
 
-case class TestEligibility(nino: Nino, eligible: Boolean)
+case class TestEligibility(nino: Nino, eligible: Boolean, isHashed: Boolean)
 
 object TestEligibility {
   implicit val format: OFormat[TestEligibility] = Json.format[TestEligibility]
