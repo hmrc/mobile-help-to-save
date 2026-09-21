@@ -133,6 +133,25 @@ class MongoEligibilityRepoSpec extends AnyWordSpec with Matchers with ScalaFutur
     }
   }
 
+  "test eligibility operations" should {
+    "write and retrieve hashed and unhashed records independently of encryption configuration" in {
+      val secondNino = Nino("AA123457A")
+
+      repository.setTestEligibility(Eligibility(nino, eligible = true, expireAt), isHashed = true).futureValue
+      repository.setTestEligibility(Eligibility(secondNino, eligible = false, laterExpiry), isHashed = false).futureValue
+
+      repository.getTestEligibilityRecord(nino).futureValue mustBe
+        Some(EligibilityRecord(None, Some(ninoHash(nino)), eligible = true, expireAt))
+      repository.getTestEligibilityRecord(secondNino).futureValue mustBe
+        Some(EligibilityRecord(Some(secondNino), None, eligible = false, laterExpiry))
+
+      repository.getAllTestEligibilityRecords().futureValue mustBe Seq(
+        EligibilityRecord(Some(secondNino), None, eligible = false, laterExpiry),
+        EligibilityRecord(None, Some(ninoHash(nino)), eligible = true, expireAt)
+      )
+    }
+  }
+
   "the unique sparse indexes" should {
     "allow hash-only and legacy NINO documents to coexist during transition" in {
       val secondNino = Nino("AA123457A")

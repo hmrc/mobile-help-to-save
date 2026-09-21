@@ -114,16 +114,37 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
   }
 
   s"eligibility test-only routes with $applicationRouterKey set to $testOnlyRoutes" should {
-    "set, get and delete eligibility" in {
-      await(wsUrl("/mobile-help-to-save/test-only/eligibility").put(Json.toJson(TestEligibility(nino, eligible = true)))).status shouldBe 201
+    "set hashed and unhashed records, get them independently of configuration, and return newest records first" in {
+      val secondNino = generator.nextNino
+
+      val hashedPut = await(
+        wsUrl("/mobile-help-to-save/test-only/eligibility")
+          .put(Json.toJson(TestEligibility(nino, eligible = true, isHashed = true)))
+      )
+      hashedPut.status                                  shouldBe 201
+      (hashedPut.json \ "hashNino").as[String] should not be empty
+      (hashedPut.json \ "nino").asOpt[String]     shouldBe None
+
+      val unhashedPut = await(
+        wsUrl("/mobile-help-to-save/test-only/eligibility")
+          .put(Json.toJson(TestEligibility(secondNino, eligible = false, isHashed = false)))
+      )
+      unhashedPut.status                                     shouldBe 201
+      (unhashedPut.json \ "nino").as[String]          shouldBe secondNino.nino
+      (unhashedPut.json \ "hashNino").asOpt[String] shouldBe None
 
       val getResponse = await(wsUrl(eligibilityUrl).get())
-      getResponse.status                          shouldBe 200
+      getResponse.status                                  shouldBe 200
       (getResponse.json \ "eligible").as[Boolean] shouldBe true
       (getResponse.json \ "hashNino").as[String] should not be empty
-      (getResponse.json \ "nino").asOpt[String]  shouldBe None
+
+      val getAllResponse = await(wsUrl("/mobile-help-to-save/test-only/eligibility").get())
+      getAllResponse.status shouldBe 200
+      val records = getAllResponse.json.as[Seq[EligibilityRecord]]
+      records.head.nino shouldBe Some(secondNino)
 
       await(wsUrl(eligibilityUrl).delete()).status shouldBe 204
+      await(wsUrl(s"/mobile-help-to-save/test-only/eligibility/$secondNino").delete()).status shouldBe 204
       await(wsUrl(eligibilityUrl).get()).status    shouldBe 404
     }
   }

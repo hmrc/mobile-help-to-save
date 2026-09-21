@@ -38,6 +38,12 @@ trait EligibilityRepo {
 
   def getEligibilityRecord(nino: Nino): Future[Option[EligibilityRecord]]
 
+  def setTestEligibility(eligibility: Eligibility, isHashed: Boolean): Future[Unit]
+
+  def getTestEligibilityRecord(nino: Nino): Future[Option[EligibilityRecord]]
+
+  def getAllTestEligibilityRecords(): Future[Seq[EligibilityRecord]]
+
   def deleteEligibility(nino: Nino): Future[Boolean]
 }
 
@@ -130,6 +136,34 @@ class MongoEligibilityRepo(
       )
       .toFuture()
       .map(_.getDeletedCount > 0)
+
+  override def setTestEligibility(eligibility: Eligibility, isHashed: Boolean): Future[Unit] = {
+    val hashNino = ninoHash(eligibility.nino)
+    val identifierUpdate =
+      if (isHashed) combine(set("hashNino", hashNino), unset("nino"))
+      else combine(set("nino", eligibility.nino.nino), unset("hashNino"))
+
+    collection
+      .updateOne(
+        filter = or(equal("hashNino", hashNino), equal("nino", eligibility.nino.nino)),
+        update = combine(
+          identifierUpdate,
+          set("eligible", eligibility.eligible),
+          set("expireAt", eligibility.expireAt)
+        ),
+        options = UpdateOptions().upsert(true)
+      )
+      .toFuture()
+      .map(_ => ())
+  }
+
+  override def getTestEligibilityRecord(nino: Nino): Future[Option[EligibilityRecord]] =
+    collection
+      .find(or(equal("hashNino", ninoHash(nino)), equal("nino", nino.nino)))
+      .headOption()
+
+  override def getAllTestEligibilityRecords(): Future[Seq[EligibilityRecord]] =
+    collection.find().sort(descending("_id")).toFuture()
 
   private def setHashedEligibility(eligibility: Eligibility): Future[Unit] = {
     val hashNino = ninoHash(eligibility.nino)

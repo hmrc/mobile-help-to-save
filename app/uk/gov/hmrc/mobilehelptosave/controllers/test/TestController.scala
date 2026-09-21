@@ -75,9 +75,15 @@ class TestController(
   }
 
   def getEligibility(nino: Nino): Action[AnyContent] = Action.async {
-    eligibilityRepo.getEligibilityRecord(nino).map {
+    eligibilityRepo.getTestEligibilityRecord(nino).map {
       case Some(record) => Ok(Json.toJson(record))
       case None         => NotFound
+    }
+  }
+
+  def getAllEligibility: Action[AnyContent] = Action.async {
+    eligibilityRepo.getAllTestEligibilityRecords().map { records =>
+      Ok(Json.toJson(records))
     }
   }
 
@@ -85,8 +91,12 @@ class TestController(
     val expireAt = Instant.now().plus(config.eligibilityTtlDays, ChronoUnit.DAYS)
 
     eligibilityRepo
-      .setEligibility(Eligibility(request.body.nino, request.body.eligible, expireAt))
-      .map(_ => Created)
+      .setTestEligibility(Eligibility(request.body.nino, request.body.eligible, expireAt), request.body.isHashed)
+      .flatMap(_ => eligibilityRepo.getTestEligibilityRecord(request.body.nino))
+      .map {
+        case Some(record) => Created(Json.toJson(record))
+        case None         => InternalServerError("Eligibility record was not found after writing")
+      }
   }
 
   def deleteEligibility(nino: Nino): Action[AnyContent] = Action.async {
