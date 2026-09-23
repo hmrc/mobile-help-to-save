@@ -9,3 +9,7 @@ GET           /eligibility/:nino               uk.gov.hmrc.mobilehelptosave.cont
 GET           /eligibility                     uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getAllEligibility()
 PUT           /eligibility                     uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.setEligibility()
 DELETE        /eligibility/:nino               uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.deleteEligibility(nino: uk.gov.hmrc.domain.Nino)
+GET           /previous-balance/:nino          uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getPreviousBalance(nino: uk.gov.hmrc.domain.Nino)
+GET           /previous-balance                uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getAllPreviousBalances()
+PUT           /previous-balance                uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.setPreviousBalance()
+DELETE        /previous-balance/:nino          uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.deletePreviousBalance(nino: uk.gov.hmrc.domain.Nino)

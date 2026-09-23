@@ -29,13 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class MilestonessServiceSpec extends HttpClientV2Helper {
 
-  private val now       = LocalDate.now()
+  private val now = LocalDate.now()
   val logger = mock[LoggerLike]
   implicit val ex: ExecutionContext = ExecutionContext.global
   private val testConfig =
-    TestMilestonesConfig(balanceMilestoneCheckEnabled      = true,
-                         bonusPeriodMilestoneCheckEnabled  = true,
-                         bonusReachedMilestoneCheckEnabled = true)
+    TestMilestonesConfig(balanceMilestoneCheckEnabled = true, bonusPeriodMilestoneCheckEnabled = true, bonusReachedMilestoneCheckEnabled = true)
 
   private val baseBonusTerms = Seq(
     BonusTerm(
@@ -61,13 +59,10 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
   "getMilestones" should {
     "retrieve a list of unseen milestones including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to true" in {
       val milestones = List(
-        MongoMilestone(nino          = nino,
-                       milestoneType = BalanceReached,
-                       milestone     = Milestone(BalanceReached1),
-                       isRepeatable  = false)
+        MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
       )
 
-      val milestonesRepo      = fakeMilestonesRepo(milestones)
+      val milestonesRepo = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
@@ -91,7 +86,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
         milestone.copy(generatedDate = Instant.parse("2019-01-17T10:15:30Z"))
       )
 
-      val milestonesRepo      = fakeMilestonesRepo(milestones)
+      val milestonesRepo = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
@@ -103,20 +98,14 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
     "retrieve a list of unseen milestones not including a BalanceReached milestone when balanceMilestoneCheckEnabled is set to false" in {
       val milestones = List(
-        MongoMilestone(nino          = nino,
-                       milestoneType = BalanceReached,
-                       milestone     = Milestone(BalanceReached1),
-                       isRepeatable  = false)
+        MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
       )
 
-      val milestonesRepo      = fakeMilestonesRepo(milestones)
+      val milestonesRepo = fakeMilestonesRepo(milestones)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
-        new HtsMilestonesService(logger,
-                                 testConfig.copy(balanceMilestoneCheckEnabled = false),
-                                 milestonesRepo,
-                                 previousBalanceRepo)
+        new HtsMilestonesService(logger, testConfig.copy(balanceMilestoneCheckEnabled = false), milestonesRepo, previousBalanceRepo)
 
       val result = service.getMilestones(nino).futureValue
       result mustBe List.empty
@@ -125,12 +114,9 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
   "setMilestone" should {
     "store the milestone that has been hit by the user" in {
-      val milestone = MongoMilestone(nino = nino,
-                                     milestoneType = BalanceReached,
-                                     milestone     = Milestone(BalanceReached1),
-                                     isRepeatable  = false)
+      val milestone = MongoMilestone(nino = nino, milestoneType = BalanceReached, milestone = Milestone(BalanceReached1), isRepeatable = false)
 
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
@@ -143,7 +129,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
   "balanceMilestoneCheck" should {
     "check if the user's previous balance has been set before and if not, set it and return CouldNotCheck" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
@@ -154,7 +140,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneNotHit if the BalanceReached1 milestone has not been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -165,7 +151,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "compare the current and previous balances if the previous balance has been set and return MilestoneHit if the BalanceReached1 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -178,7 +164,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
   "markAsSeen" should {
     "mark milestones as seen using the nino and milestone type" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo()
 
       val service =
@@ -191,7 +177,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
   "bonusPeriodMilestoneCheck" should {
     "check if the current date is within 20 days of the bonus period end date and return MilestoneHit if the bonus estimate is greater than 1" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -202,7 +188,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current date is within 20 days of the bonus period end date and return MilestoneNotHit if the bonus estimate is 0" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -215,7 +201,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current date is within 20 days of the bonus period end date and if not, then return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -228,7 +214,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current date is 90 or less days since the end of the first bonus period end date and if there are no bonus estimates or paid bonuses, then return MilestoneHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -238,8 +224,9 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
         baseBonusTerms(0).copy(bonusPaidOnOrAfterDate = LocalDate.now().minusDays(1),
                                bonusPaidByDate        = LocalDate.now().minusDays(1),
                                bonusEstimate          = 0,
-                               bonusPaid              = 0),
-        baseBonusTerms(1).copy(bonusEstimate          = 0)
+                               bonusPaid              = 0
+                              ),
+        baseBonusTerms(1).copy(bonusEstimate = 0)
       )
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).futureValue
@@ -247,7 +234,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current date is 90 or less days since the end of the first bonus period end date and if there are any bonus estimates or paid bonuses, then return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -261,22 +248,21 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current date is withing 20 days of the second bonus period end date, then return MilestoneHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms =
-        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)),
-            baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
+        Seq(baseBonusTerms(0).copy(endDate = LocalDate.now().minusYears(1)), baseBonusTerms(1).copy(endDate = LocalDate.now().plusDays(19)))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 1000, CurrentBonusTerm.Second, false).futureValue
       result mustBe MilestoneHit
     }
 
     "check if the current term is after the first and if a first term bonus was paid then return MilestoneHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -290,7 +276,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current term is after the first and if a first term bonus was not paid then return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -304,22 +290,21 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current term is before the first and if a first term bonus was paid then return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
         new HtsBonusPeriodMilestonesService(logger, testConfig, milestonesRepo, previousBalanceRepo)
 
       val bonusTerms =
-        Seq(baseBonusTerms(0).copy(bonusEstimate = 0, bonusPaid = 100, endDate = LocalDate.now().plusDays(1)),
-            baseBonusTerms(1))
+        Seq(baseBonusTerms(0).copy(bonusEstimate = 0, bonusPaid = 100, endDate = LocalDate.now().plusDays(1)), baseBonusTerms(1))
 
       val result = service.bonusPeriodMilestoneCheck(nino, bonusTerms, 0, CurrentBonusTerm.First, false).futureValue
       result mustBe MilestoneNotHit
     }
 
     "check if the current term is after the second and if a final term bonus was paid then return MilestoneHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -337,7 +322,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current term is after the second and if a final term bonus was not paid then return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -355,7 +340,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "check if the current term is the second and if a final term bonus was paid then return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -374,7 +359,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
   "bonusReachedMilestoneCheck" should {
     "If in the first bonus period check the user's estimated first bonus and return MilestoneNotHit if the BalanceReached150 milestone has not been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -385,7 +370,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached150 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -402,7 +387,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached300 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -419,7 +404,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the first bonus period check the user's estimated first bonus and return MilestoneHit if the BalanceReached600 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -436,7 +421,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneNotHit if a milestone has not been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -453,7 +438,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached75 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -470,7 +455,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached200 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -487,7 +472,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached300 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -504,7 +489,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the second bonus period check the user's estimated second bonus and return MilestoneHit if the BalanceReached500 milestone has been hit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -521,7 +506,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     }
 
     "If in the after final term period return MilestoneNotHit" in {
-      val milestonesRepo      = fakeMilestonesRepo(List.empty)
+      val milestonesRepo = fakeMilestonesRepo(List.empty)
       val previousBalanceRepo = fakePreviousBalanceRepo(Some(PreviousBalance(nino, 0, Instant.now())))
 
       val service =
@@ -539,23 +524,23 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
   }
 
   private def fakeMilestonesRepo(milestones: List[MongoMilestone] = List.empty) = new MilestonesRepo {
-    override def setMilestone(milestone:     MongoMilestone): Future[Unit] = Future.unit
-    override def setTestMilestone(milestone: TestMilestone):  Future[Unit] = Future.unit
+    override def setMilestone(milestone: MongoMilestone): Future[Unit] = Future.unit
+    override def setTestMilestone(milestone: TestMilestone): Future[Unit] = Future.unit
 
     override def setTestMilestones(
       milestone: TestMilestone,
-      amount:    Int
+      amount: Int
     ): Future[Unit] = Future.unit
     override def getMilestones(nino: Nino): Future[List[MongoMilestone]] = Future.successful(milestones)
 
     override def markAsSeen(
-      nino:        Nino,
+      nino: Nino,
       milestoneId: String
-    ):                              Future[Unit] = Future.unit
+    ): Future[Unit] = Future.unit
     override def clearMilestones(): Future[Unit] = ???
 
     override def updateExpireAt(
-      nino:     Nino,
+      nino: Nino,
       expireAt: LocalDateTime
     ): Future[Unit] = Future.unit
 
@@ -567,8 +552,8 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
     new PreviousBalanceRepo {
 
       override def setPreviousBalance(
-        nino:                 Nino,
-        previousBalance:      BigDecimal,
+        nino: Nino,
+        previousBalance: BigDecimal,
         finalBonusPaidByDate: LocalDateTime
       ): Future[Unit] = Future.unit
       override def getPreviousBalance(nino: Nino): Future[Option[PreviousBalance]] = Future.successful(previousBalance)
@@ -576,7 +561,7 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
       override def clearPreviousBalance(): Future[Unit] = ???
 
       override def updateExpireAt(
-        nino:     Nino,
+        nino: Nino,
         expireAt: LocalDateTime
       ): Future[Unit] = Future.unit
 
@@ -584,6 +569,14 @@ class MilestonessServiceSpec extends HttpClientV2Helper {
 
       override def getPreviousBalanceUpdateRequired(nino: Nino): Future[Option[PreviousBalance]] =
         Future.successful(previousBalance)
+
+      override def setTestPreviousBalance(previousBalance: PreviousBalance, isHashed: Boolean): Future[Unit] = Future.unit
+
+      override def getTestPreviousBalanceRecord(nino: Nino): Future[Option[PreviousBalanceRecord]] = Future.successful(None)
+
+      override def getAllTestPreviousBalanceRecords(): Future[Seq[PreviousBalanceRecord]] = Future.successful(Seq.empty)
+
+      override def deleteTestPreviousBalance(nino: Nino): Future[Boolean] = Future.successful(false)
 
     }
 

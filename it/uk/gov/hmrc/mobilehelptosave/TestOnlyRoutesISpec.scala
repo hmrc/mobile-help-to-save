@@ -18,6 +18,7 @@ package uk.gov.hmrc.mobilehelptosave
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.domain.*
+import uk.gov.hmrc.mobilehelptosave.repository.PreviousBalanceRecord
 import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 import play.api.libs.ws.writeableOf_JsValue
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
@@ -121,31 +122,68 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
         wsUrl("/mobile-help-to-save/test-only/eligibility")
           .put(Json.toJson(TestEligibility(nino, eligible = true, isHashed = true)))
       )
-      hashedPut.status                                  shouldBe 201
-      (hashedPut.json \ "hashNino").as[String] should not be empty
-      (hashedPut.json \ "nino").asOpt[String]     shouldBe None
+      hashedPut.status                        shouldBe 201
+      (hashedPut.json \ "hashNino").as[String]  should not be empty
+      (hashedPut.json \ "nino").asOpt[String] shouldBe None
 
       val unhashedPut = await(
         wsUrl("/mobile-help-to-save/test-only/eligibility")
           .put(Json.toJson(TestEligibility(secondNino, eligible = false, isHashed = false)))
       )
-      unhashedPut.status                                     shouldBe 201
-      (unhashedPut.json \ "nino").as[String]          shouldBe secondNino.nino
+      unhashedPut.status                            shouldBe 201
+      (unhashedPut.json \ "nino").as[String]        shouldBe secondNino.nino
       (unhashedPut.json \ "hashNino").asOpt[String] shouldBe None
 
       val getResponse = await(wsUrl(eligibilityUrl).get())
-      getResponse.status                                  shouldBe 200
+      getResponse.status                          shouldBe 200
       (getResponse.json \ "eligible").as[Boolean] shouldBe true
-      (getResponse.json \ "hashNino").as[String] should not be empty
+      (getResponse.json \ "hashNino").as[String]    should not be empty
 
       val getAllResponse = await(wsUrl("/mobile-help-to-save/test-only/eligibility").get())
       getAllResponse.status shouldBe 200
       val records = getAllResponse.json.as[Seq[EligibilityRecord]]
       records.head.nino shouldBe Some(secondNino)
 
-      await(wsUrl(eligibilityUrl).delete()).status shouldBe 204
+      await(wsUrl(eligibilityUrl).delete()).status                                            shouldBe 204
       await(wsUrl(s"/mobile-help-to-save/test-only/eligibility/$secondNino").delete()).status shouldBe 204
-      await(wsUrl(eligibilityUrl).get()).status    shouldBe 404
+      await(wsUrl(eligibilityUrl).get()).status                                               shouldBe 404
+    }
+  }
+
+  s"previous balance test-only routes with $applicationRouterKey set to $testOnlyRoutes" should {
+    "set hashed and unhashed records, retrieve both shapes, return newest first, and delete them" in {
+      val secondNino = generator.nextNino
+      val previousBalanceUrl = "/mobile-help-to-save/test-only/previous-balance"
+
+      val hashedPut = await(
+        wsUrl(previousBalanceUrl)
+          .put(Json.toJson(TestPreviousBalance(nino, BigDecimal(10), "1 day", isHashed = true)))
+      )
+      hashedPut.status                        shouldBe 201
+      (hashedPut.json \ "hashNino").as[String]  should not be empty
+      (hashedPut.json \ "nino").asOpt[String] shouldBe None
+
+      val legacyPut = await(
+        wsUrl(previousBalanceUrl)
+          .put(Json.toJson(TestPreviousBalance(secondNino, BigDecimal(20), "1 day", isHashed = false)))
+      )
+      legacyPut.status                            shouldBe 201
+      (legacyPut.json \ "nino").as[String]        shouldBe secondNino.nino
+      (legacyPut.json \ "hashNino").asOpt[String] shouldBe None
+
+      val getResponse = await(wsUrl(s"$previousBalanceUrl/$nino").get())
+      getResponse.status                                    shouldBe 200
+      (getResponse.json \ "previousBalance").as[BigDecimal] shouldBe BigDecimal(10)
+      (getResponse.json \ "hashNino").as[String]              should not be empty
+
+      val getAllResponse = await(wsUrl(previousBalanceUrl).get())
+      getAllResponse.status shouldBe 200
+      val records = getAllResponse.json.as[Seq[PreviousBalanceRecord]]
+      records.head.nino shouldBe Some(secondNino)
+
+      await(wsUrl(s"$previousBalanceUrl/$nino").delete()).status       shouldBe 204
+      await(wsUrl(s"$previousBalanceUrl/$secondNino").delete()).status shouldBe 204
+      await(wsUrl(s"$previousBalanceUrl/$nino").get()).status          shouldBe 404
     }
   }
 }
