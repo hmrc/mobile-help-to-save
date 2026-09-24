@@ -121,7 +121,7 @@ class MongoPreviousBalanceRepo(
       .void
 
   override def updateExpireAt(nino: Nino, expireAt: LocalDateTime): Future[Unit] = {
-    val update =
+    val updateExpression =
       if (config.encryptionEnabled)
         combine(
           set("hashNino", ninoHash(nino)),
@@ -134,7 +134,7 @@ class MongoPreviousBalanceRepo(
     collection
       .updateMany(
         filter = and(identifierFilter(nino), equal("updateRequired", true)),
-        update = update
+        update = updateExpression
       )
       .toFutureOption()
       .void
