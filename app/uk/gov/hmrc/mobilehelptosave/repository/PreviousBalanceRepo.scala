@@ -166,14 +166,14 @@ class MongoPreviousBalanceRepo(
   }
 
   override def getTestPreviousBalanceRecord(nino: Nino): Future[Option[PreviousBalanceRecord]] =
-    collection.find(identifierFilter(nino, includeLegacy = true)).headOption()
+    collection.find(identifierFilter(nino, isEncryptionEnabled = true)).headOption()
 
   override def getAllTestPreviousBalanceRecords(): Future[Seq[PreviousBalanceRecord]] =
     collection.find().sort(descending("_id")).toFuture()
 
   override def deleteTestPreviousBalance(nino: Nino): Future[Boolean] =
     collection
-      .deleteMany(identifierFilter(nino, includeLegacy = true))
+      .deleteMany(identifierFilter(nino, isEncryptionEnabled = true))
       .toFuture()
       .map(_.getDeletedCount > 0)
 
@@ -195,7 +195,7 @@ class MongoPreviousBalanceRepo(
               .headOption()
               .flatMap {
                 case Some(legacyRecord) =>
-                  migrateLegacyRecord(nino, additionalFilter)
+                  setHashedRecord(nino, additionalFilter)
                     .map(_ => Some(legacyRecord.copy(nino = None, hashNino = Some(ninoHash(nino)))))
                 case None => Future.successful(None)
               }
@@ -203,7 +203,7 @@ class MongoPreviousBalanceRepo(
     else collection.find(withAdditionalFilter(equal("nino", nino.nino))).headOption()
   }
 
-  private def migrateLegacyRecord(nino: Nino, additionalFilter: Option[Bson]): Future[Unit] = {
+  private def setHashedRecord(nino: Nino, additionalFilter: Option[Bson]): Future[Unit] = {
     val filter = additionalFilter.fold[Bson](equal("nino", nino.nino))(and(equal("nino", nino.nino), _))
 
     collection
@@ -215,7 +215,7 @@ class MongoPreviousBalanceRepo(
   private def setHashedPreviousBalance(previousBalance: PreviousBalance): Future[Unit] =
     collection
       .updateOne(
-        filter = identifierFilter(previousBalance.nino, includeLegacy = true),
+        filter = identifierFilter(previousBalance.nino, isEncryptionEnabled = true),
         update = combine(
           set("hashNino", ninoHash(previousBalance.nino)),
           unset("nino"),
@@ -229,8 +229,8 @@ class MongoPreviousBalanceRepo(
       .toFuture()
       .void
 
-  private def identifierFilter(nino: Nino, includeLegacy: Boolean = config.encryptionEnabled): Bson =
-    if (includeLegacy) or(equal("hashNino", ninoHash(nino)), equal("nino", nino.nino))
+  private def identifierFilter(nino: Nino, isEncryptionEnabled: Boolean = config.encryptionEnabled): Bson =
+    if (isEncryptionEnabled) or(equal("hashNino", ninoHash(nino)), equal("nino", nino.nino))
     else equal("nino", nino.nino)
 }
 
