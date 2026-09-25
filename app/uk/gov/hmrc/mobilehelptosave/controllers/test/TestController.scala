@@ -20,8 +20,8 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, TestEligibility, TestMilestone, TestSavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo, PreviousBalanceRepo, SavingsGoalEventRepo}
+import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, TestEligibility, TestMilestone, TestPreviousBalance, TestSavingsGoal}
+import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo, PreviousBalance, PreviousBalanceRepo, SavingsGoalEventRepo}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import java.time.Instant
@@ -101,6 +101,46 @@ class TestController(
 
   def deleteEligibility(nino: Nino): Action[AnyContent] = Action.async {
     eligibilityRepo.deleteEligibility(nino).map {
+      case true  => NoContent
+      case false => NotFound
+    }
+  }
+
+  def getPreviousBalance(nino: Nino): Action[AnyContent] = Action.async {
+    previousBalanceRepo.getTestPreviousBalanceRecord(nino).map {
+      case Some(record) => Ok(Json.toJson(record))
+      case None         => NotFound
+    }
+  }
+
+  def getAllPreviousBalances: Action[AnyContent] = Action.async {
+    previousBalanceRepo.getAllTestPreviousBalanceRecords().map(records => Ok(Json.toJson(records)))
+  }
+
+  def setPreviousBalance: Action[TestPreviousBalance] = Action.async(parse.json[TestPreviousBalance]) { implicit request =>
+    val now = Instant.now()
+    request.body.expireAtFrom(now) match {
+      case Left(error) => Future.successful(BadRequest(Json.obj("message" -> error)))
+      case Right(expireAt) =>
+        val previousBalance = PreviousBalance(
+          request.body.nino,
+          request.body.previousBalance,
+          now,
+          expireAt
+        )
+
+        previousBalanceRepo
+          .setTestPreviousBalance(previousBalance, request.body.isHashed)
+          .flatMap(_ => previousBalanceRepo.getTestPreviousBalanceRecord(request.body.nino))
+          .map {
+            case Some(record) => Created(Json.toJson(record))
+            case None         => InternalServerError("Previous balance record was not found after writing")
+          }
+    }
+  }
+
+  def deletePreviousBalance(nino: Nino): Action[AnyContent] = Action.async {
+    previousBalanceRepo.deleteTestPreviousBalance(nino).map {
       case true  => NoContent
       case false => NotFound
     }
