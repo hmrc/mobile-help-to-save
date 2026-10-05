@@ -86,7 +86,7 @@ class MongoPreviousBalanceRepo(
     previousBalance: BigDecimal,
     finalBonusPaidByDate: LocalDateTime
   ): Future[Unit] = {
-    val expireAt = finalBonusPaidByDate.plusMonths(6).toInstant(ZoneOffset.UTC)
+    val expireAt = finalBonusPaidByDate.plusMonths(config.previousBalanceTtlMonths).toInstant(ZoneOffset.UTC)
 
     if (config.encryptionEnabled)
       setHashedPreviousBalance(PreviousBalance(nino, previousBalance, Instant.now(), expireAt))

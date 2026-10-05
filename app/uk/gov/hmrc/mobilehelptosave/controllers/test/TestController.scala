@@ -20,8 +20,8 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, TestEligibility, TestMilestone, TestPreviousBalance, TestSavingsGoal}
-import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo, PreviousBalance, PreviousBalanceRepo, SavingsGoalEventRepo}
+import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, TestEligibility, TestMilestone, TestPreviousBalance, TestSavingsGoal, TestSavingsGoalEvent}
+import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo, PreviousBalance, PreviousBalanceRepo, SavingsGoalDeleteEvent, SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
 import java.time.Instant
@@ -141,6 +141,52 @@ class TestController(
 
   def deletePreviousBalance(nino: Nino): Action[AnyContent] = Action.async {
     previousBalanceRepo.deleteTestPreviousBalance(nino).map {
+      case true  => NoContent
+      case false => NotFound
+    }
+  }
+
+  def getSavingsGoalEvents(nino: Nino): Action[AnyContent] = Action.async {
+    savingsGoalEventRepo.getTestGoalEventRecords(nino).map { records =>
+      if (records.nonEmpty) Ok(Json.toJson(records)) else NotFound
+    }
+  }
+
+  def getAllSavingsGoalEvents: Action[AnyContent] = Action.async {
+    savingsGoalEventRepo.getAllTestGoalEventRecords().map(records => Ok(Json.toJson(records)))
+  }
+
+  def setSavingsGoalEvent: Action[TestSavingsGoalEvent] = Action.async(parse.json[TestSavingsGoalEvent]) { implicit request =>
+    val now = Instant.now()
+
+    val event = request.body.expireAtFrom(now).flatMap { expireAt =>
+      request.body.eventType.toLowerCase match {
+        case "set" =>
+          Right(
+            SavingsGoalSetEvent(
+              request.body.nino,
+              request.body.goalAmount,
+              now,
+              request.body.goalName,
+              expireAt
+            )
+          )
+        case "delete" => Right(SavingsGoalDeleteEvent(request.body.nino, now, expireAt))
+        case _        => Left("eventType must be either 'set' or 'delete'")
+      }
+    }
+
+    event match {
+      case Left(error) => Future.successful(BadRequest(Json.obj("message" -> error)))
+      case Right(goalEvent: SavingsGoalEvent) =>
+        savingsGoalEventRepo
+          .setTestGoalEvent(goalEvent, request.body.isHashed)
+          .map(_ => Created)
+    }
+  }
+
+  def deleteSavingsGoalEvents(nino: Nino): Action[AnyContent] = Action.async {
+    savingsGoalEventRepo.deleteTestGoalEvents(nino).map {
       case true  => NoContent
       case false => NotFound
     }

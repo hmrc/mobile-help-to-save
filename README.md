@@ -94,6 +94,32 @@ To run the tests in this repository:
 
     sbt test it:test
 
+### Savings goal event test-only routes
+
+Run the service with the test-only router, then use:
+
+| Method | Route | Purpose |
+|---|---|---|
+| `PUT` | `/mobile-help-to-save/test-only/savings-goal-events` | Insert a set or delete event in either legacy or hashed form |
+| `GET` | `/mobile-help-to-save/test-only/savings-goal-events/:nino` | Return all matching legacy and hashed events for a NINO |
+| `GET` | `/mobile-help-to-save/test-only/savings-goal-events` | Return all events, newest first |
+| `DELETE` | `/mobile-help-to-save/test-only/savings-goal-events/:nino` | Delete all matching legacy and hashed events for a NINO |
+
+Example `PUT` body:
+
+```json
+{
+  "nino": "AA123456A",
+  "eventType": "set",
+  "goalAmount": 100,
+  "goalName": "Holiday",
+  "ttl": "6 months",
+  "isHashed": true
+}
+```
+
+`eventType` accepts `set` or `delete`. Test TTLs accept readable or compact values such as `30 minutes`, `1 day`, `6 months`, `5m`, `2h`, and `1mo`.
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")

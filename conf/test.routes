@@ -13,3 +13,7 @@ GET           /previous-balance/:nino          uk.gov.hmrc.mobilehelptosave.cont
 GET           /previous-balance                uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getAllPreviousBalances()
 PUT           /previous-balance                uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.setPreviousBalance()
 DELETE        /previous-balance/:nino          uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.deletePreviousBalance(nino: uk.gov.hmrc.domain.Nino)
+GET           /savings-goal-events/:nino       uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getSavingsGoalEvents(nino: uk.gov.hmrc.domain.Nino)
+GET           /savings-goal-events             uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.getAllSavingsGoalEvents()
+PUT           /savings-goal-events             uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.setSavingsGoalEvent()
+DELETE        /savings-goal-events/:nino       uk.gov.hmrc.mobilehelptosave.controllers.test.TestController.deleteSavingsGoalEvents(nino: uk.gov.hmrc.domain.Nino)

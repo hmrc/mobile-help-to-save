@@ -18,7 +18,7 @@ package uk.gov.hmrc.mobilehelptosave
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.mobilehelptosave.domain.*
-import uk.gov.hmrc.mobilehelptosave.repository.PreviousBalanceRecord
+import uk.gov.hmrc.mobilehelptosave.repository.{PreviousBalanceRecord, SavingsGoalEventRecord}
 import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 import play.api.libs.ws.writeableOf_JsValue
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
@@ -184,6 +184,40 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
       await(wsUrl(s"$previousBalanceUrl/$nino").delete()).status       shouldBe 204
       await(wsUrl(s"$previousBalanceUrl/$secondNino").delete()).status shouldBe 204
       await(wsUrl(s"$previousBalanceUrl/$nino").get()).status          shouldBe 404
+    }
+  }
+
+  s"savings goal event test-only routes with $applicationRouterKey set to $testOnlyRoutes" should {
+    "set hashed and unhashed events, retrieve both shapes, return newest first, and delete them" in {
+      val savingsGoalEventsUrl = "/mobile-help-to-save/test-only/savings-goal-events"
+
+      await(wsUrl(s"$savingsGoalEventsUrl/$nino").delete())
+
+      await(
+        wsUrl(savingsGoalEventsUrl).put(
+          Json.toJson(TestSavingsGoalEvent(nino, "set", Some(100), Some("Holiday"), "6 months", isHashed = false))
+        )
+      ).status shouldBe 201
+
+      await(
+        wsUrl(savingsGoalEventsUrl).put(
+          Json.toJson(TestSavingsGoalEvent(nino, "delete", None, None, "1 day", isHashed = true))
+        )
+      ).status shouldBe 201
+
+      val getResponse = await(wsUrl(s"$savingsGoalEventsUrl/$nino").get())
+      getResponse.status shouldBe 200
+      val records = getResponse.json.as[Seq[SavingsGoalEventRecord]]
+      records               should have size 2
+      records.head.hashNino should not be empty
+      records.last.nino   shouldBe Some(nino)
+
+      val getAllResponse = await(wsUrl(savingsGoalEventsUrl).get())
+      getAllResponse.status                                           shouldBe 200
+      getAllResponse.json.as[Seq[SavingsGoalEventRecord]].head.hashNino should not be empty
+
+      await(wsUrl(s"$savingsGoalEventsUrl/$nino").delete()).status shouldBe 204
+      await(wsUrl(s"$savingsGoalEventsUrl/$nino").get()).status    shouldBe 404
     }
   }
 }
