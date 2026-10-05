@@ -8,21 +8,21 @@ object AppDependencies {
   )
 
   private val hmrcMongoVersion     = "2.14.0"
-  private val bootstrapVersion     = "10.7.0"
+  private val bootstrapVersion     = "10.8.0"
   private val domainVersion        = "13.0.0"
   private val catsCoreVersion      = "2.13.0"
   private val scalaUriVersion      = "4.0.3"
-  private val playHmrcVersion      = "8.3.0"
-  private val enumeratumVersion    = "1.9.0"
+  private val playHmrcVersion      = "9.0.0"
+  private val enumeratumVersion    = "1.9.8"
   private val macrosVersion        = "2.6.7"
-  private val refinedVersion       = "0.11.3"
+  private val refinedVersion       = "0.11.4"
   private val htsKalcVersion       = "0.8.1"
-  private val jacksonModuleVersion = "2.20.0"
+  private val jacksonModuleVersion = "2.22.3.1"
 
-  private val scalaMockVersion = "7.5.0"
+  private val scalaMockVersion     = "7.5.5"
 
-  private val flexmarkVersion            = "0.64.8"
-  private val playJsonVersion = "2.10.7"
+  private val flexmarkVersion      = "0.64.8"
+  private val playJsonVersion      = "2.10.8"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30"  % bootstrapVersion,
@@ -49,7 +49,7 @@ object AppDependencies {
 
   def testCommon(scope: String): Seq[ModuleID] = Seq(
     "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootstrapVersion % scope,
-    "com.vladsch.flexmark" % "flexmark-all"                 % flexmarkVersion   % scope,
+    "com.vladsch.flexmark" % "flexmark-all"   % flexmarkVersion  % scope,
     // workaround for version clash in IntelliJ where without this line both jetty-util-9.2.15.v20160210 and jetty-util-9.2.22.v20170606 are brought in
     // which results in a NoSuchMethodError when running StartupISpec
     "org.eclipse.jetty.websocket" % "websocket-client" % "9.4.58.v20250814" % scope,
