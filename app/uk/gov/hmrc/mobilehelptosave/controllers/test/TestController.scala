@@ -20,11 +20,11 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.config.UserServiceConfig
-import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, TestEligibility, TestMilestone, TestPreviousBalance, TestSavingsGoal, TestSavingsGoalEvent}
+import uk.gov.hmrc.mobilehelptosave.domain.{Eligibility, MongoMilestone, MongoMilestoneRecord, TestEligibility, TestMilestone, TestPreviousBalance, TestSavingsGoal, TestSavingsGoalEvent}
 import uk.gov.hmrc.mobilehelptosave.repository.{EligibilityRepo, MilestonesRepo, PreviousBalance, PreviousBalanceRepo, SavingsGoalDeleteEvent, SavingsGoalEvent, SavingsGoalEventRepo, SavingsGoalSetEvent}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -68,6 +68,16 @@ class TestController(
     Future successful Created("Milestones have all been successfully created")
   }
 
+  def updateExpireAt(nino: Nino): Action[LocalDateTime] = Action.async(parse.json[LocalDateTime]) { implicit request: Request[LocalDateTime] =>
+    milestonesRepo.updateExpireAt(nino, request.body)
+    Future successful Created("Milestones have all been successfully updated")
+  }
+
+  def setMilestone(): Action[MongoMilestone] = Action.async(parse.json[MongoMilestone]) { implicit request: Request[MongoMilestone] =>
+    milestonesRepo.setMilestone(request.body)
+    Future successful Created("Milestones have all been successfully created")
+  }
+
   def putSavingsGoal: Action[TestSavingsGoal] = Action.async(parse.json[TestSavingsGoal]) { implicit request: Request[TestSavingsGoal] =>
     savingsGoalEventRepo
       .setTestGoal(request.body.nino, request.body.goalAmount, request.body.goalName, request.body.date)
@@ -78,6 +88,12 @@ class TestController(
     eligibilityRepo.getTestEligibilityRecord(nino).map {
       case Some(record) => Ok(Json.toJson(record))
       case None         => NotFound
+    }
+  }
+
+  def getMilestones(nino: Nino): Action[AnyContent] = Action.async {
+    milestonesRepo.getMilestones(nino).map { records =>
+      if (records.isEmpty) NotFound else Ok(Json.toJson(records))
     }
   }
 

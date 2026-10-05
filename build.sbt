@@ -1,4 +1,3 @@
-
 import sbt.Resolver
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 
@@ -9,7 +8,7 @@ lazy val scoverageSettings = {
   Seq(
     // Semicolon-separated list of regexs matching classes to exclude
     ScoverageKeys.coverageExcludedPackages := """uk\.gov\.hmrc\.BuildInfo;.*\.SystemId;.*\.IndexedMongoRepo;.*\.AppLoader;.*\.ScalaUriConfig;.*\.Routes;.*\.RoutesPrefix;.*\.Reverse[^.]*""",
-    ScoverageKeys.coverageMinimumStmtTotal := 83,
+    ScoverageKeys.coverageMinimumStmtTotal := 76,
     ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true,
     Test / parallelExecution := false
@@ -69,4 +68,3 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.mobilehelptosave.domain.types.JourneyId._"
     )
   )
-

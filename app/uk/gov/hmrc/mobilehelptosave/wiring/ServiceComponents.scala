@@ -119,7 +119,7 @@ class ServiceComponents(context: Context)
   lazy val previousBalanceRepo: MongoPreviousBalanceRepo =
     new MongoPreviousBalanceRepo(mongo, helpToSaveConfig, ninoHash)
   lazy val milestonesRepo: MongoMilestonesRepo =
-    new MongoMilestonesRepo(mongo)
+    new MongoMilestonesRepo(mongo, ninoHash, helpToSaveConfig)
 
   lazy val startupController: StartupController = wire[StartupController]
   lazy val helpToSaveController: HelpToSaveController = wire[HelpToSaveController]
