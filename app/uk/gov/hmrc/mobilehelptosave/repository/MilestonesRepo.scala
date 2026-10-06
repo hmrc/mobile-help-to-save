@@ -61,10 +61,11 @@ trait MilestonesRepo {
 class MongoMilestonesRepo(
   mongo: MongoComponent,
   ninoHash: NinoHash,
-  config: MongoConfig
+  config: MongoConfig,
+  collectionName: String = "milestones"
 )(implicit ec: ExecutionContext, mongoFormats: Format[MongoMilestoneRecord])
     extends PlayMongoRepository[MongoMilestoneRecord](
-      collectionName = "milestones",
+      collectionName = collectionName,
       mongoComponent = mongo,
       domainFormat   = mongoFormats,
       indexes = Seq(
@@ -114,23 +115,26 @@ class MongoMilestonesRepo(
           )
         )
         .headOption()
-        .map {
+        .flatMap {
           case Some(m) =>
-            if (m.isRepeatable) { insertMilestone(updatedMilestone.copy(nino = None)) }
-            else {} // if record found, insert the new hashNino record only if isRepeatable is true
-            upsertMileStone(updatedMilestone, hashNinoString, milestone.nino) // and convert the existing records with nino text to hashNino
-          case _ => insertMilestone(updatedMilestone) // if record not found, insert the new record with hashNino
+            if (m.isRepeatable) {
+              insertMilestone(updatedMilestone.copy(nino = None)).flatMap(_ => upsertMileStone(updatedMilestone, hashNinoString, milestone.nino))
+            } else {
+              upsertMileStone(updatedMilestone, hashNinoString, milestone.nino)
+            } // if record found, insert the new hashNino record only if isRepeatable is true
+          // and convert the existing records with nino text to hashNino
+          case _ =>
+            insertMilestone(updatedMilestone.copy(nino = None)) // if record not found, insert the new record with hashNino
         }
 
     } else {
-
       // If encryption is not enabled, we can insert the record with simple nino text
       val updatedMilestone = milestone.toMongoMilestoneRecord(None)
       collection
         .find(and(equal("nino", milestone.nino.nino), equal("milestone", Codecs.toBson(milestone.milestone))))
         .headOption()
-        .map {
-          case Some(m) => if (m.isRepeatable) insertMilestone(updatedMilestone) else ()
+        .flatMap {
+          case Some(m) => if (m.isRepeatable) insertMilestone(updatedMilestone) else Future.successful(())
           case _       => insertMilestone(updatedMilestone)
         }
     }
@@ -155,7 +159,7 @@ class MongoMilestonesRepo(
           )
         )
         .toFuture()
-        .map { record =>
+        .flatMap { record =>
           if (record.nonEmpty) { // if found, update all the records with nino text to hashNino and remove the nino field
             collection
               .updateMany(
@@ -165,15 +169,17 @@ class MongoMilestonesRepo(
                   unset("nino")
                 )
               )
+              .toFuture()
               .map(_ => record)
               .recover { case _ => record }
           } else { // If not found, do nothing
-            ()
+            Future.successful(record)
           }
-          record // return the record fetched from the database and add hashNino
+        // return the record fetched from the database and add hashNino
         }
 
     } else { // If encryption is not enabled, fetch the record(Seq[MongoMilestoneRecord]) with simple nino text
+      
       collection
         .find(and(equal("nino", nino.nino), equal("isSeen", false)))
         .toFuture()
