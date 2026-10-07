@@ -62,10 +62,10 @@ class MongoMilestonesRepo(
   mongo: MongoComponent,
   ninoHash: NinoHash,
   config: MongoConfig,
-  collectionName: String = "milestones"
+  collectionName: String
 )(implicit ec: ExecutionContext, mongoFormats: Format[MongoMilestoneRecord])
     extends PlayMongoRepository[MongoMilestoneRecord](
-      collectionName = collectionName,
+      collectionName = "milestones",
       mongoComponent = mongo,
       domainFormat   = mongoFormats,
       indexes = Seq(
@@ -175,11 +175,11 @@ class MongoMilestonesRepo(
           } else { // If not found, do nothing
             Future.successful(record)
           }
-        // return the record fetched from the database and add hashNino
+          // return the record fetched from the database and add hashNino
         }
 
     } else { // If encryption is not enabled, fetch the record(Seq[MongoMilestoneRecord]) with simple nino text
-      
+
       collection
         .find(and(equal("nino", nino.nino), equal("isSeen", false)))
         .toFuture()

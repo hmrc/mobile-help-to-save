@@ -61,10 +61,10 @@ class MongoPreviousBalanceRepo(
   mongo: MongoComponent,
   config: MongoConfig,
   ninoHash: NinoHash,
-  collectionName: String = "previousBalance"
+  collectionName: String
 )(implicit ec: ExecutionContext)
     extends PlayMongoRepository[PreviousBalanceRecord](
-      collectionName = collectionName,
+      collectionName = "previousBalance",
       mongoComponent = mongo,
       domainFormat   = PreviousBalanceRecord.formats,
       indexes = Seq(
