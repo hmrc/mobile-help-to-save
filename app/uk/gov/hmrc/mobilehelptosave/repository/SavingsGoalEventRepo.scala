@@ -204,14 +204,14 @@ class MongoSavingsGoalEventRepo(
       .void
 
   override def getTestGoalEventRecords(nino: Nino): Future[Seq[SavingsGoalEventRecord]] =
-    collection.find(identifierFilter(nino, includeLegacy = true)).sort(descending("date")).toFuture()
+    collection.find(identifierFilter(nino, encryptionEnabled = true)).sort(descending("date")).toFuture()
 
   override def getAllTestGoalEventRecords(): Future[Seq[SavingsGoalEventRecord]] =
     collection.find().sort(descending("_id")).toFuture()
 
   override def deleteTestGoalEvents(nino: Nino): Future[Boolean] =
     collection
-      .deleteMany(identifierFilter(nino, includeLegacy = true))
+      .deleteMany(identifierFilter(nino, encryptionEnabled = true))
       .toFuture()
       .map(_.getDeletedCount > 0)
 
@@ -230,22 +230,28 @@ class MongoSavingsGoalEventRepo(
     nino: Nino,
     additionalFilter: Option[Bson] = None
   ): Future[Seq[SavingsGoalEventRecord]] = {
-    def filter(identifier: Bson): Bson = additionalFilter.fold(identifier)(and(identifier, _))
-
     if (config.encryptionEnabled)
       for {
-        hashed <- collection.find(filter(equal("hashNino", ninoHash(nino)))).toFuture()
-        legacy <- collection.find(filter(equal("nino", nino.nino))).toFuture()
+        hashed <- collection
+                    .find(withAdditionalFilter(equal("hashNino", ninoHash(nino)), additionalFilter))
+                    .toFuture()
+        legacy <- collection
+                    .find(withAdditionalFilter(equal("nino", nino.nino), additionalFilter))
+                    .toFuture()
         _      <- migrateLegacyRecords(nino, legacy.nonEmpty, additionalFilter)
       } yield (hashed ++ legacy.map(withHashedIdentifier(_, nino))).sortBy(_.date)
-    else collection.find(filter(equal("nino", nino.nino))).sort(ascending("date")).toFuture()
+    else
+      collection
+        .find(withAdditionalFilter(equal("nino", nino.nino), additionalFilter))
+        .sort(ascending("date"))
+        .toFuture()
   }
 
   private def migrateLegacyRecords(nino: Nino, recordsFound: Boolean, additionalFilter: Option[Bson]): Future[Unit] =
     if (recordsFound)
       collection
         .updateMany(
-          additionalFilter.fold(equal("nino", nino.nino))(and(equal("nino", nino.nino), _)),
+          withAdditionalFilter(equal("nino", nino.nino), additionalFilter),
           combine(set("hashNino", ninoHash(nino)), unset("nino"))
         )
         .toFuture()
@@ -263,7 +269,10 @@ class MongoSavingsGoalEventRepo(
       .atStartOfDay()
       .toInstant(ZoneOffset.UTC)
 
-  private def identifierFilter(nino: Nino, includeLegacy: Boolean = config.encryptionEnabled): Bson =
-    if (includeLegacy) or(equal("hashNino", ninoHash(nino)), equal("nino", nino.nino))
+  private def withAdditionalFilter(identifier: Bson, additionalFilter: Option[Bson]): Bson =
+    additionalFilter.fold(identifier)(and(identifier, _))
+
+  private def identifierFilter(nino: Nino, encryptionEnabled: Boolean = config.encryptionEnabled): Bson =
+    if (encryptionEnabled) or(equal("hashNino", ninoHash(nino)), equal("nino", nino.nino))
     else equal("nino", nino.nino)
 }

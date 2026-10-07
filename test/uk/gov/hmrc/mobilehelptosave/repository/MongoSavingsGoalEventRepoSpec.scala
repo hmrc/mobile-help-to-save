@@ -70,6 +70,7 @@ class MongoSavingsGoalEventRepoSpec
       val records = find(Filters.equal("hashNino", ninoHash(nino))).futureValue
       records must have size 2
       all(records.map(_.nino)) mustBe None
+      all(records.map(_.hashNino)) mustBe Some(ninoHash(nino))
       records.map(_.getClass).toSet mustBe Set(classOf[SavingsGoalSetEventRecord], classOf[SavingsGoalDeleteEventRecord])
     }
 
@@ -98,11 +99,17 @@ class MongoSavingsGoalEventRepoSpec
       insert(SavingsGoalSetEventRecord(Some(nino), None, Some(100), now, None, originalExpiry)).futureValue
       insert(SavingsGoalDeleteEventRecord(Some(nino), None, secondDate, originalExpiry)).futureValue
 
+      val legacyRecords = find(Filters.equal("nino", nino.nino)).futureValue
+      legacyRecords must have size 2
+      all(legacyRecords.map(_.nino)) mustBe Some(nino)
+      all(legacyRecords.map(_.hashNino)) mustBe None
+
       repository.getEvents(nino).futureValue.map(_.date) mustBe Seq(now, secondDate)
 
       val migrated = find(Filters.equal("hashNino", ninoHash(nino))).futureValue
       migrated must have size 2
       all(migrated.map(_.nino)) mustBe None
+      all(migrated.map(_.hashNino)) mustBe Some(ninoHash(nino))
       all(migrated.map(_.expireAt)) mustBe originalExpiry
     }
 
