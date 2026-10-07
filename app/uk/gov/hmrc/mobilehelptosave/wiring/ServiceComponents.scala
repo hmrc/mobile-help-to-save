@@ -112,10 +112,14 @@ class ServiceComponents(context: Context)
 
   lazy val mongo: MongoComponent = wire[HtsMongoComponent]
   lazy val ninoHash: NinoHash = wire[NinoHash]
-  lazy val eligibilityRepo: EligibilityRepo = wire[MongoEligibilityRepo]
-  lazy val eventRepo: MongoSavingsGoalEventRepo = wire[MongoSavingsGoalEventRepo]
-  lazy val previousBalanceRepo: MongoPreviousBalanceRepo = wire[MongoPreviousBalanceRepo]
-  lazy val milestonesRepo: MongoMilestonesRepo = wire[MongoMilestonesRepo]
+  lazy val eligibilityRepo: EligibilityRepo =
+    new MongoEligibilityRepo(mongo, helpToSaveConfig, ninoHash)
+  lazy val eventRepo: MongoSavingsGoalEventRepo =
+    new MongoSavingsGoalEventRepo(mongo, helpToSaveConfig, ninoHash)
+  lazy val previousBalanceRepo: MongoPreviousBalanceRepo =
+    new MongoPreviousBalanceRepo(mongo, helpToSaveConfig, ninoHash)
+  lazy val milestonesRepo: MongoMilestonesRepo =
+    new MongoMilestonesRepo(mongo)
 
   lazy val startupController: StartupController = wire[StartupController]
   lazy val helpToSaveController: HelpToSaveController = wire[HelpToSaveController]
