@@ -61,8 +61,7 @@ trait MilestonesRepo {
 class MongoMilestonesRepo(
   mongo: MongoComponent,
   ninoHash: NinoHash,
-  config: MongoConfig,
-  collectionName: String
+  config: MongoConfig
 )(implicit ec: ExecutionContext, mongoFormats: Format[MongoMilestoneRecord])
     extends PlayMongoRepository[MongoMilestoneRecord](
       collectionName = "milestones",
@@ -171,7 +170,6 @@ class MongoMilestonesRepo(
               )
               .toFuture()
               .map(_ => record)
-              .recover { case _ => record }
           } else { // If not found, do nothing
             Future.successful(record)
           }
@@ -250,7 +248,7 @@ class MongoMilestonesRepo(
     } else {
       collection
         .updateMany(
-          filter = and(equal("nino", Codecs.toBson(nino)), equal("updateRequired", true)),
+          filter = and(equal("nino", nino.nino), equal("updateRequired", true)),
           update = combine(set("updateRequired", false), set("expireAt", expireAt))
         )
         .toFutureOption()

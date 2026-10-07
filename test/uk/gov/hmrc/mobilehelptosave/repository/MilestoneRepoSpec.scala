@@ -16,24 +16,18 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
-import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.model.Filters
-import org.mongodb.scala.model.Filters.{and, equal}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.*
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-
-import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with DefaultPlayMongoRepositorySupport[MongoMilestoneRecord] {
-  // private val collectionName = "milestones-spec"
   private val enabledConfig = TestMongoConfig(encryptionEnabled = true)
   private val disabledConfig = TestMongoConfig(encryptionEnabled = false)
   private val ninoHash = new NinoHash(enabledConfig)
@@ -42,13 +36,11 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
     mongoComponent,
     ninoHash,
     disabledConfig
-    // collectionName
   )
   override protected val repository: MongoMilestonesRepo = new MongoMilestonesRepo(
     mongoComponent,
     ninoHash,
     enabledConfig
-    // collectionName
   )
 
   private val nino1 = Nino("AA123456A")
@@ -275,6 +267,46 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
         resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe expireAt6Months
       }
 
+    }
+
+  }
+
+  "updateExpireAt" when {
+
+    "encryption flag is disabled" should {
+
+      "set expireAt with the given date time and updateRequired= false based on nino and  updateRequired= true" in {
+
+        val newExpireAt = LocalDateTime.ofInstant(expireAt.plus(1, ChronoUnit.DAYS), ZoneId.of("Europe/London"))
+        repositoryWithoutEncrypt.collection.drop()
+        repositoryWithoutEncrypt.setMilestone(mileStone.copy(updateRequired = true)).futureValue
+        val result = find(Filters.equal("nino", nino1.nino)).futureValue
+        result.size mustBe 1
+        result.head.nino mustBe Some(nino1)
+        result.head.updateRequired mustBe true
+        repositoryWithoutEncrypt.updateExpireAt(nino1, newExpireAt).futureValue
+        val resultNew = find(Filters.equal("nino", nino1.nino)).futureValue
+        resultNew.size mustBe 1
+        resultNew.head.nino mustBe (Some(nino1))
+        resultNew.head.updateRequired mustBe false
+        resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe newExpireAt.atZone(ZoneOffset.UTC).toLocalDate
+
+      }
+
+      "not set any values if there is no matching record for the given nino updateRequired= true" in {
+        val newExpireAt = LocalDateTime.ofInstant(expireAt.plus(1, ChronoUnit.DAYS), ZoneId.of("Europe/London"))
+        repositoryWithoutEncrypt.collection.drop()
+        repositoryWithoutEncrypt.setMilestone(mileStone).futureValue
+        val result = find(Filters.equal("nino", nino1.nino)).futureValue
+        result.size mustBe 1
+        result.head.nino mustBe Some(nino1)
+        result.head.updateRequired mustBe false
+        repositoryWithoutEncrypt.updateExpireAt(nino1, newExpireAt).futureValue
+        val resultNew = find(Filters.equal("nino", nino1.nino)).futureValue
+        result.head.updateRequired mustBe false
+        resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe expireAt.atZone(ZoneOffset.UTC).toLocalDate
+
+      }
     }
 
   }
