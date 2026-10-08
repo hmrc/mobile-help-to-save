@@ -568,6 +568,14 @@ class AccountServiceSpec extends HttpClientV2Helper with AccountTestData with Tr
         date:   LocalDate
       ): Future[Unit] = ???
 
+      override def setTestGoalEvent(event: SavingsGoalEvent, isHashed: Boolean): Future[Unit] = Future.unit
+
+      override def getTestGoalEventRecords(nino: Nino) = Future.successful(Seq.empty)
+
+      override def getAllTestGoalEventRecords() = Future.successful(Seq.empty)
+
+      override def deleteTestGoalEvents(nino: Nino) = Future.successful(false)
+
       override def updateExpireAt(
         nino:     Nino,
         expireAt: LocalDateTime

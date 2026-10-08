@@ -71,6 +71,16 @@ class MongoPreviousBalanceRepoSpec
       stored.previousBalance mustBe BigDecimal(20)
     }
 
+    "use the configured TTL in calendar months" in {
+      val twoMonthConfig = enabledConfig.copy(previousBalanceTtlMonths = 2)
+      val twoMonthRepository = new MongoPreviousBalanceRepo(mongoComponent, twoMonthConfig, ninoHash, collectionName)
+
+      twoMonthRepository.setPreviousBalance(nino, BigDecimal(20), finalBonusPaidByDate).futureValue
+
+      find(Filters.equal("hashNino", ninoHash(nino))).futureValue.head.expireAt mustBe
+        finalBonusPaidByDate.plusMonths(2).toInstant(ZoneOffset.UTC)
+    }
+
     "transition a legacy record without changing its expiry" in {
       insert(PreviousBalanceRecord(Some(nino), None, BigDecimal(10), now, originalExpiry)).futureValue
 
@@ -164,5 +174,6 @@ class MongoPreviousBalanceRepoSpec
 private case class PreviousBalanceTestMongoConfig(
   encryptionEnabled: Boolean,
   encryptionHashKey: String = "c29tZS1sb25nLXRlc3QtaGFzaC1rZXk=",
-  mongoUri: String = ""
+  mongoUri: String = "",
+  override val previousBalanceTtlMonths: Long = 6
 ) extends MongoConfig

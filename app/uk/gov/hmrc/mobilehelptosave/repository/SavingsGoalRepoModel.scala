@@ -103,3 +103,82 @@ object SavingsGoalEvent {
     }
   }
 }
+
+sealed trait SavingsGoalEventRecord {
+  def nino: Option[Nino]
+  def hashNino: Option[String]
+  def date: Instant
+  def expireAt: Instant
+  def updateRequired: Boolean
+
+  def toDomain(requestNino: Nino): SavingsGoalEvent
+}
+
+case class SavingsGoalSetEventRecord(
+  nino: Option[Nino],
+  hashNino: Option[String],
+  amount: Option[Double] = None,
+  date: Instant,
+  name: Option[String] = None,
+  expireAt: Instant,
+  updateRequired: Boolean = false
+) extends SavingsGoalEventRecord {
+  override def toDomain(requestNino: Nino): SavingsGoalSetEvent =
+    SavingsGoalSetEvent(requestNino, amount, date, name, expireAt, updateRequired)
+}
+
+case class SavingsGoalDeleteEventRecord(
+  nino: Option[Nino],
+  hashNino: Option[String],
+  date: Instant,
+  expireAt: Instant,
+  updateRequired: Boolean = false
+) extends SavingsGoalEventRecord {
+  override def toDomain(requestNino: Nino): SavingsGoalDeleteEvent =
+    SavingsGoalDeleteEvent(requestNino, date, expireAt, updateRequired)
+}
+
+object SavingsGoalEventRecord {
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+  val setEventFormat: OFormat[SavingsGoalSetEventRecord] = Json.format
+  val deleteEventFormat: OFormat[SavingsGoalDeleteEventRecord] = Json.format
+
+  private val typeReads: Reads[SavingsGoalEventType] = (__ \ "type").read
+
+  implicit val format: OFormat[SavingsGoalEventRecord] = new OFormat[SavingsGoalEventRecord] {
+    override def writes(record: SavingsGoalEventRecord): JsObject = record match {
+      case event: SavingsGoalSetEventRecord =>
+        setEventFormat.writes(event) + ("type" -> Json.toJson[SavingsGoalEventType](SavingsGoalEventType.Set))
+      case event: SavingsGoalDeleteEventRecord =>
+        deleteEventFormat.writes(event) + ("type" -> Json.toJson[SavingsGoalEventType](SavingsGoalEventType.Delete))
+    }
+
+    override def reads(json: JsValue): JsResult[SavingsGoalEventRecord] =
+      typeReads.reads(json) match {
+        case JsSuccess(SavingsGoalEventType.Set, _)    => setEventFormat.reads(json)
+        case JsSuccess(SavingsGoalEventType.Delete, _) => deleteEventFormat.reads(json)
+        case error: JsError                            => error
+      }
+  }
+
+  def  fromDomain(event: SavingsGoalEvent, hashNino: Option[String]): SavingsGoalEventRecord = event match {
+    case SavingsGoalSetEvent(nino, amount, date, name, expireAt, updateRequired) =>
+      SavingsGoalSetEventRecord(
+        if (hashNino.isDefined) None else Some(nino),
+        hashNino,
+        amount,
+        date,
+        name,
+        expireAt,
+        updateRequired
+      )
+    case SavingsGoalDeleteEvent(nino, date, expireAt, updateRequired) =>
+      SavingsGoalDeleteEventRecord(
+        if (hashNino.isDefined) None else Some(nino),
+        hashNino,
+        date,
+        expireAt,
+        updateRequired
+      )
+  }
+}
