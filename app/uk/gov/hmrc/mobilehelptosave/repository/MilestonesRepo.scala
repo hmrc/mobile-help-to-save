@@ -84,7 +84,7 @@ class MongoMilestonesRepo(
     collection.insertOne(updatedMilestone).toFuture().void
   }
 
-  private def upsertMileStone(updatedMilestone: MongoMilestoneRecord, hashNinoString: String, nino: Nino): Future[Unit] = {
+  private def setHashNino(updatedMilestone: MongoMilestoneRecord, hashNinoString: String, nino: Nino): Future[Unit] = {
 
     collection
       .updateMany(
@@ -117,9 +117,9 @@ class MongoMilestonesRepo(
         .flatMap {
           case Some(m) =>
             if (m.isRepeatable) {
-              insertMilestone(updatedMilestone.copy(nino = None)).flatMap(_ => upsertMileStone(updatedMilestone, hashNinoString, milestone.nino))
+              insertMilestone(updatedMilestone.copy(nino = None)).flatMap(_ => setHashNino(updatedMilestone, hashNinoString, milestone.nino))
             } else {
-              upsertMileStone(updatedMilestone, hashNinoString, milestone.nino)
+              setHashNino(updatedMilestone, hashNinoString, milestone.nino)
             } // if record found, insert the new hashNino record only if isRepeatable is true
           // and convert the existing records with nino text to hashNino
           case _ =>
@@ -141,10 +141,10 @@ class MongoMilestonesRepo(
   }
 
   override def getMilestones(nino: Nino): Future[Seq[MongoMilestone]] = {
-    getMileStoneRecord(nino).map(_.map(_.toMongoMilestone(nino)))
+    getMilestoneRecord(nino).map(_.map(_.toMongoMilestone(nino)))
   }
 
-  private def getMileStoneRecord(nino: Nino): Future[Seq[MongoMilestoneRecord]] = {
+  private def getMilestoneRecord(nino: Nino): Future[Seq[MongoMilestoneRecord]] = {
     if (config.encryptionEnabled) { // If encryption is enabled, we need to check if the record exists with nino or hashNino and isSeen as false
       val ninohash = ninoHash(nino)
       collection
