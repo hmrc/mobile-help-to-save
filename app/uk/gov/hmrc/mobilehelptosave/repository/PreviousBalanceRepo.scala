@@ -60,8 +60,7 @@ trait PreviousBalanceRepo {
 class MongoPreviousBalanceRepo(
   mongo: MongoComponent,
   config: MongoConfig,
-  ninoHash: NinoHash,
-  collectionName: String
+  ninoHash: NinoHash
 )(implicit ec: ExecutionContext)
     extends PlayMongoRepository[PreviousBalanceRecord](
       collectionName = "previousBalance",
