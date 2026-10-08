@@ -127,7 +127,7 @@ class MongoMilestonesRepo(
         }
 
     } else {
-      // If encryption is not enabled, we can insert the record with simple nino text
+      // If encryption is not enabled,  insert the record with simple nino text
       val updatedMilestone = milestone.toMongoMilestoneRecord(None)
       collection
         .find(and(equal("nino", milestone.nino.nino), equal("milestone", Codecs.toBson(milestone.milestone))))
@@ -145,7 +145,7 @@ class MongoMilestonesRepo(
   }
 
   private def getMilestoneRecord(nino: Nino): Future[Seq[MongoMilestoneRecord]] = {
-    if (config.encryptionEnabled) { // If encryption is enabled, we need to check if the record exists with nino or hashNino and isSeen as false
+    if (config.encryptionEnabled) { // If encryption is enabled, check if the record exists with nino or hashNino and isSeen as false
       val ninohash = ninoHash(nino)
       collection
         .find(
@@ -188,7 +188,7 @@ class MongoMilestonesRepo(
     nino: Nino,
     milestoneType: String
   ): Future[Unit] = {
-    if (config.encryptionEnabled) { // if encryption is enabled,  check if the record exists with nino or hashNino and isSeen as false and milestoneType as needed
+    if (config.encryptionEnabled) { // if encryption is enabled, check if the record exists with nino or hashNino and isSeen as false and milestoneType as needed
       collection
         .findOneAndUpdate(
           filter = and(or(
