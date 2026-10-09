@@ -28,11 +28,7 @@ import java.time.{Instant, LocalDateTime, ZoneOffset}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoPreviousBalanceRepoSpec
-    extends AnyWordSpec
-    with Matchers
-    with ScalaFutures
-    with DefaultPlayMongoRepositorySupport[PreviousBalanceRecord] {
+class MongoPreviousBalanceRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with DefaultPlayMongoRepositorySupport[PreviousBalanceRecord] {
 
   private val collectionName = "previous-balance-repo-spec"
   private val enabledConfig = PreviousBalanceTestMongoConfig(encryptionEnabled = true)
@@ -40,10 +36,10 @@ class MongoPreviousBalanceRepoSpec
   private val ninoHash = new NinoHash(enabledConfig)
 
   override protected val repository: MongoPreviousBalanceRepo =
-    new MongoPreviousBalanceRepo(mongoComponent, enabledConfig, ninoHash, collectionName)
+    new MongoPreviousBalanceRepo(mongoComponent, enabledConfig, ninoHash)
 
   private lazy val legacyRepository =
-    new MongoPreviousBalanceRepo(mongoComponent, disabledConfig, ninoHash, collectionName)
+    new MongoPreviousBalanceRepo(mongoComponent, disabledConfig, ninoHash)
 
   private val nino = Nino("AA123456A")
   private val now = Instant.now().truncatedTo(ChronoUnit.MILLIS)
@@ -73,7 +69,7 @@ class MongoPreviousBalanceRepoSpec
 
     "use the configured TTL in calendar months" in {
       val twoMonthConfig = enabledConfig.copy(previousBalanceTtlMonths = 2)
-      val twoMonthRepository = new MongoPreviousBalanceRepo(mongoComponent, twoMonthConfig, ninoHash, collectionName)
+      val twoMonthRepository = new MongoPreviousBalanceRepo(mongoComponent, twoMonthConfig, ninoHash)
 
       twoMonthRepository.setPreviousBalance(nino, BigDecimal(20), finalBonusPaidByDate).futureValue
 

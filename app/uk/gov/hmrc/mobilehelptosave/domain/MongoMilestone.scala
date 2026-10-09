@@ -38,6 +38,55 @@ object MongoMilestone {
   implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
   implicit val format: OFormat[MongoMilestone] = Json.format
   implicit def ordering[A <: MongoMilestone]: Ordering[A] = Ordering.by(_.milestoneType.priority)
+  implicit class MongoMilestoneOps(mongoMilestone: MongoMilestone) {
+    def toMongoMilestoneRecord(hashNinoString: Option[String]) =
+      MongoMilestoneRecord(
+        nino           = Some(mongoMilestone.nino),
+        hashNino       = hashNinoString,
+        milestoneType  = mongoMilestone.milestoneType,
+        milestone      = mongoMilestone.milestone,
+        isSeen         = mongoMilestone.isSeen,
+        isRepeatable   = mongoMilestone.isRepeatable,
+        generatedDate  = mongoMilestone.generatedDate,
+        expireAt       = mongoMilestone.expireAt,
+        updateRequired = mongoMilestone.updateRequired
+      )
+  }
+
+}
+
+case class MongoMilestoneRecord(nino: Option[Nino],
+                                hashNino: Option[String],
+                                milestoneType: MilestoneType,
+                                milestone: Milestone,
+                                isSeen: Boolean = false,
+                                isRepeatable: Boolean = true,
+                                generatedDate: Instant = Instant.now(),
+                                expireAt: Instant = LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC),
+                                updateRequired: Boolean = false
+                               ) {
+  def compare(that: MilestoneType) = milestoneType.priority - that.priority
+}
+
+object MongoMilestoneRecord {
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+  implicit val format: OFormat[MongoMilestoneRecord] = Json.format
+  implicit def ordering[A <: MongoMilestoneRecord]: Ordering[A] = Ordering.by(_.milestoneType.priority)
+  implicit class MongoMilestoneRecordOps(mongoMilestoneRecord: MongoMilestoneRecord) {
+    def toMongoMilestone(nino: Nino): MongoMilestone =
+      MongoMilestone(
+        nino           = nino,
+        milestoneType  = mongoMilestoneRecord.milestoneType,
+        milestone      = mongoMilestoneRecord.milestone,
+        isSeen         = mongoMilestoneRecord.isSeen,
+        isRepeatable   = mongoMilestoneRecord.isRepeatable,
+        generatedDate  = mongoMilestoneRecord.generatedDate,
+        expireAt       = mongoMilestoneRecord.expireAt,
+        updateRequired = mongoMilestoneRecord.updateRequired
+      )
+
+  }
+
 }
 
 case class Milestones(milestones: List[MongoMilestone])
