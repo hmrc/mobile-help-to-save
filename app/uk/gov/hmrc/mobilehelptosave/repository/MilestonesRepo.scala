@@ -127,7 +127,7 @@ class MongoMilestonesRepo(
         }
 
     } else {
-      // If encryption is not enabled,  insert the record with simple nino text
+      // If encryption is not enabled, insert the record with simple nino text
       val updatedMilestone = milestone.toMongoMilestoneRecord(None)
       collection
         .find(and(equal("nino", milestone.nino.nino), equal("milestone", Codecs.toBson(milestone.milestone))))
@@ -211,7 +211,7 @@ class MongoMilestonesRepo(
         .findOneAndUpdate(
           filter = and(equal("nino", nino.nino), equal("milestoneType", milestoneType), equal("isSeen", false)),
           update = combine(set("isSeen", true),
-                           set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(6))
+                           set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(config.milestonesTtlMonths))
                           ) // if found, set it mark as seen and update expireAt date time
         )
         .toFutureOption()
