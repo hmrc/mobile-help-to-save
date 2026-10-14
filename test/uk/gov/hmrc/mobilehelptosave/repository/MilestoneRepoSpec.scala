@@ -173,7 +173,7 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
 
       }
 
-      "return the milestone details  if one nino and one hashNino record is present and update the nino one to ninohash" in {
+      "return the milestone details  if one nino and one hashNino record is present and update the nino one to ninohash if record found" in {
         repository.collection.drop()
         repository.setMilestone(mileStone).futureValue
         repositoryWithoutEncrypt.setMilestone(mileStone.copy(milestoneType = BonusReached)).futureValue
@@ -182,6 +182,21 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
         result.size mustBe 2
         resultNew.map(_.nino) mustBe Seq(None, None)
         resultNew.map(_.hashNino) mustBe Seq(Some(ninoHash(nino1)), Some(ninoHash(nino1)))
+
+      }
+      "return the milestone details  if one nino and one hashNino record is present and update the nino one to ninohash if record not found" in {
+        repository.collection.drop()
+        repositoryWithoutEncrypt.setMilestone(mileStone.copy(milestoneType = BonusReached, isSeen = true)).futureValue
+        val resultOld = find(Filters.equal("nino", nino1.nino)).futureValue
+        resultOld.size mustBe 1
+        resultOld.head.isSeen mustBe true
+        resultOld.head.hashNino mustBe None
+        val milestoneData = repository.getMilestones(nino1).futureValue
+        milestoneData.size mustBe 0
+        val resultNew: Seq[MongoMilestoneRecord] = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        resultNew.size mustBe 1
+        resultNew.map(_.nino) mustBe Seq(None)
+        resultNew.map(_.hashNino) mustBe Seq(Some(ninoHash(nino1)))
 
       }
     }

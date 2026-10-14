@@ -39,6 +39,7 @@ case class MobileHelpToSaveConfig(environment: Environment, configuration: Confi
   override val encryptionHashKey: String = configString("mongodb.encryptionHashKey")
   override val previousBalanceTtlMonths: Long = configuration.underlying.getLong("mongodb.ttlMonths.previousBalance")
   override val savingsGoalEventsTtlMonths: Long = configuration.underlying.getLong("mongodb.ttlMonths.savingsGoalEvents")
+  override val milestonesTtlMonths: Long = configuration.underlying.getLong("mongodb.ttlMonths.milestones")
 
   override def savingsGoalsEnabled: Boolean = configBoolean("helpToSave.savingsGoalsEnabled")
   override val inAppPaymentsEnabled: Boolean = configBoolean("helpToSave.inAppPaymentsEnabled")
@@ -119,4 +120,5 @@ trait MongoConfig {
   def encryptionHashKey: String
   def previousBalanceTtlMonths: Long = 6
   def savingsGoalEventsTtlMonths: Long = 6
+  def milestonesTtlMonths: Long = 6
 }
