@@ -289,10 +289,6 @@ class MongoMilestonesRepo(
   }
 
   override def setTestMilestone(milestone: TestMilestone): Future[Unit] = {
-    for {
-      milestoneData <- selectByNino(milestone.nino)
-      res           <- if (milestoneData.nonEmpty) deleteMany(milestone.nino) else Future.successful(true)
-    } yield {}
     if (config.encryptionEnabled) {
 
       collection
