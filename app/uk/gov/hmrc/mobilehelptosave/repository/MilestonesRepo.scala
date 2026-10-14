@@ -23,6 +23,7 @@ import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Updates.*
 import org.mongodb.scala.model.{IndexModel, IndexOptions, UpdateOptions}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
+import org.mongodb.scala.result.UpdateResult
 import play.api.libs.json.*
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.{MongoMilestone, MongoMilestoneRecord, TestMilestone}
@@ -144,6 +145,19 @@ class MongoMilestonesRepo(
     getMilestoneRecord(nino).map(_.map(_.toMongoMilestone(nino)))
   }
 
+  private def updateMilestone(nino: Nino): Future[UpdateResult] = {
+    collection
+      .updateMany(
+        filter = and(equal("nino", nino.nino)),
+        update = combine(
+          set("hashNino", ninoHash(nino)),
+          unset("nino")
+        )
+      )
+      .toFuture()
+
+  }
+
   private def getMilestoneRecord(nino: Nino): Future[Seq[MongoMilestoneRecord]] = {
     if (config.encryptionEnabled) { // If encryption is enabled, check if the record exists with nino or hashNino and isSeen as false
       val ninohash = ninoHash(nino)
@@ -158,23 +172,7 @@ class MongoMilestonesRepo(
           )
         )
         .toFuture()
-        .flatMap { record =>
-          if (record.nonEmpty) { // if found, update all the records with nino text to hashNino and remove the nino field
-            collection
-              .updateMany(
-                filter = and(equal("nino", nino.nino), equal("isSeen", false)),
-                update = combine(
-                  set("hashNino", ninoHash(nino)),
-                  unset("nino")
-                )
-              )
-              .toFuture()
-              .map(_ => record)
-          } else { // If not found, do nothing
-            Future.successful(record)
-          }
-          // return the record fetched from the database and add hashNino
-        }
+        .flatMap(record => updateMilestone(nino).map(_ => record)) // Once record is found/not found, update the ones with given NINO to hashNINO
 
     } else { // If encryption is not enabled, fetch the record(Seq[MongoMilestoneRecord]) with simple nino text
 
