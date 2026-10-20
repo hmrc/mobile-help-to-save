@@ -37,11 +37,11 @@ class DocumentationControllerSpec extends BaseSpec {
       )
       val result: Result = await(controller.definition()(FakeRequest()))
       result.body.contentType mustBe Some("application/json;charset=utf-8")
-      (Json.parse(contentAsString(Future.successful(result))) \ "api" \ "versions" \ 0 \ "access").as[String] mustBe "CONTROLLED"
+      (Json.parse(contentAsString(Future.successful(result))) \ "api" \ "versions" \ 0 \ "access").as[String] mustBe "INTERNAL"
     }
   }
 }
 
 private object TestDocumentationControllerConfig extends DocumentationControllerConfig {
-  override def apiAccessType = "CONTROLLED"
+  override def apiAccessType = "INTERNAL"
 }
