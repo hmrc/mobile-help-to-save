@@ -27,7 +27,8 @@ case class TestMilestone(nino: Nino,
                          isSeen: Boolean = false,
                          isRepeatable: Boolean = true,
                          generatedDate: Option[Instant] = None,
-                         expireAt: Option[Instant] = None
+                         expireAt: Option[Instant] = None,
+                         updateRequired: Boolean = false
                         )
 
 object TestMilestone {

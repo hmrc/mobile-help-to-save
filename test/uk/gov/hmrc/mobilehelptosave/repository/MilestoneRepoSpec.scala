@@ -238,7 +238,6 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
         // call markSSeen
         repositoryWithoutEncrypt.markAsSeen(nino1, milestoneType = BonusPeriod.toString).futureValue
         val resultNew = find(Filters.equal("nino", nino1.nino)).futureValue
-        println("truncated" + expireAt.truncatedTo(ChronoUnit.SECONDS))
         result.head.expireAt.truncatedTo(ChronoUnit.SECONDS) mustBe expireAt.truncatedTo(ChronoUnit.SECONDS)
       }
 

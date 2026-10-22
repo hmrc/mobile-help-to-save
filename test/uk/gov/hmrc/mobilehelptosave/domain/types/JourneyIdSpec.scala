@@ -76,6 +76,15 @@ class JourneyIdSpec extends AnyFlatSpec with Matchers {
     bound shouldBe JourneyId.from(validId)
   }
 
+  "PathBindable[JourneyId]" should "unbind correctly from a valid path segment" in {
+    val validId = "123e4567-e89b-12d3-a456-426614174000"
+    val bindable = implicitly[PathBindable[JourneyId]]
+
+    val bound = bindable.unbind("id", JourneyId.from(validId).toOption.get)
+
+    bound shouldBe validId
+  }
+
   it should "fail to bind from an invalid path segment" in {
     val invalidId = "bad"
     val bindable = implicitly[PathBindable[JourneyId]]

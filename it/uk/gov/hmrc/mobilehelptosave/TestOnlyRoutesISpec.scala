@@ -21,6 +21,8 @@ import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mobilehelptosave.repository.{PreviousBalanceRecord, SavingsGoalEventRecord}
 import uk.gov.hmrc.mobilehelptosave.support.BaseISpec
 import play.api.libs.ws.writeableOf_JsValue
+import uk.gov.hmrc.domain.Nino
+
 import java.time.{LocalDate, LocalDateTime, ZoneOffset}
 
 /** Need two separate tests so that the servers can be run with different system property settings for the router
@@ -37,6 +39,7 @@ class TestOnlyRoutesNotWiredISpec extends BaseISpec {
 }
 
 class TestOnlyRoutesWiredISpec extends BaseISpec {
+  val nino1 = Nino("AA123456A")
   val clearGoalEventsUrl = "/mobile-help-to-save/test-only/clear-goal-events"
   val getGoalEventsUrl = s"/mobile-help-to-save/test-only/goal-events/$nino"
   val clearMiletonesUrl = "/mobile-help-to-save/test-only/clear-milestone-data"
@@ -44,6 +47,12 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
   val addMilestoneUrl = "/mobile-help-to-save/test-only/add-milestone"
   val addMilestonesUrl = "/mobile-help-to-save/test-only/add-milestones/10"
   val eligibilityUrl = s"/mobile-help-to-save/test-only/eligibility/$nino"
+  val deleteEligibilityUrl = s"/mobile-help-to-save/test-only/eligibility/$nino1"
+  val updateExpireATUrl = s"/mobile-help-to-save/test-only/update-expire-at/$nino1"
+  val setMileStoneUrl = s"/mobile-help-to-save/test-only/update-milestone"
+  val getMilestoneUrl = s"/mobile-help-to-save/test-only/get-milestone/$nino1"
+  val deletePreviousBalanceUrl = s"/mobile-help-to-save/test-only/previous-balance/$nino1"
+
 
   private val applicationRouterKey = "application.router"
   private val testOnlyRoutes = "testOnlyDoNotUseInAppConf.Routes"
@@ -90,6 +99,7 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
             )
           )
       ).status shouldBe 201
+      // await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200
     }
   }
 
@@ -111,10 +121,11 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
             )
           )
       ).status shouldBe 201
+      // await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200
     }
   }
 
-  s"eligibility test-only routes with $applicationRouterKey set to $testOnlyRoutes" should {
+  s"GET $eligibilityUrl with $applicationRouterKey set to $testOnlyRoutes" should {
     "set hashed and unhashed records, get them independently of configuration, and return newest records first" in {
       val secondNino = generator.nextNino
 
@@ -150,6 +161,31 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
     }
   }
 
+  s"Delete $eligibilityUrl with $applicationRouterKey set to $testOnlyRoutes" should {
+    s"Return 204 " in {
+      await(
+        wsUrl("/mobile-help-to-save/test-only/eligibility")
+          .put(Json.toJson(TestEligibility(nino1, eligible = true, isHashed = false)))
+      ).status                                           shouldBe 201
+      await(wsUrl(deleteEligibilityUrl).delete()).status shouldBe 204
+    }
+    s"Return 404 " in {
+      await(wsUrl(deleteEligibilityUrl).delete()).status shouldBe 404
+    }
+  }
+
+  s"Delete $deletePreviousBalanceUrl with $applicationRouterKey set to $testOnlyRoutes" should {
+    s"Return 204 " in {
+      await(
+        wsUrl("/mobile-help-to-save/test-only/previous-balance")
+          .put(Json.toJson(TestPreviousBalance(nino1, BigDecimal(10), "1 day", isHashed = false)))
+      ).status                                           shouldBe 201
+      await(wsUrl(deletePreviousBalanceUrl).delete()).status shouldBe 204
+    }
+    s"Return 404 " in {
+      await(wsUrl(deletePreviousBalanceUrl).delete()).status shouldBe 404
+    }
+  }
   s"previous balance test-only routes with $applicationRouterKey set to $testOnlyRoutes" should {
     "set hashed and unhashed records, retrieve both shapes, return newest first, and delete them" in {
       val secondNino = generator.nextNino
@@ -220,4 +256,96 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
       await(wsUrl(s"$savingsGoalEventsUrl/$nino").get()).status    shouldBe 404
     }
   }
+
+  s"PUT $updateExpireATUrl with $applicationRouterKey set to $testOnlyRoutes " should {
+
+    "return 201" in {
+      await(
+        wsUrl(addMilestoneUrl)
+          .put(
+            Json.toJson(
+              TestMilestone(
+                nino           = nino1,
+                milestoneType  = BonusReached,
+                milestone      = Milestone(FirstBonusReached150),
+                isSeen         = true,
+                isRepeatable   = false,
+                generatedDate  = Some(LocalDateTime.now().minusMonths(1).toInstant(ZoneOffset.UTC)),
+                expireAt       = Some(LocalDateTime.now().plusMinutes(20).toInstant(ZoneOffset.UTC)),
+                updateRequired = true
+              )
+            )
+          )
+      ).status shouldBe 201
+      await(
+        wsUrl(updateExpireATUrl)
+          .put(Json.toJson(LocalDateTime.now().plusMinutes(30).toInstant(ZoneOffset.UTC)))
+      ).status                                     shouldBe 201
+      await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200
+    }
+  }
+
+  s"PUT $setMileStoneUrl with $applicationRouterKey set to $testOnlyRoutes with no existing records " should {
+
+    "return 201" in {
+      await(
+        wsUrl(setMileStoneUrl)
+          .put(
+            Json.toJson(
+              MongoMilestone(
+                nino           = nino1,
+                milestoneType  = BonusReached,
+                milestone      = Milestone(FirstBonusReached150),
+                isSeen         = true,
+                isRepeatable   = false,
+                updateRequired = true
+              )
+            )
+          )
+      ).status                                     shouldBe 201
+      await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200
+    }
+  }
+
+  s"PUT $setMileStoneUrl with $applicationRouterKey set to $testOnlyRoutes with  existing records " should {
+
+    "return 201" in {
+      await(
+        wsUrl(setMileStoneUrl)
+          .put(
+            Json.toJson(
+              MongoMilestone(
+                nino           = nino1,
+                milestoneType  = BonusReached,
+                milestone      = Milestone(FirstBonusReached150),
+                updateRequired = true
+              )
+            )
+          )
+      ).status shouldBe 201
+      await(
+        wsUrl(setMileStoneUrl)
+          .put(
+            Json.toJson(
+              MongoMilestone(
+                nino           = nino1,
+                milestoneType  = BonusReached,
+                milestone      = Milestone(FirstBonusReached300),
+                updateRequired = true
+              )
+            )
+          )
+      ).status shouldBe 201
+    }
+  }
+
+  s"GET $getMilestoneUrl with $applicationRouterKey set to $testOnlyRoutes " should {
+
+    "return 200" in {
+      await(
+        wsUrl(getMilestoneUrl).get()
+      ).status shouldBe 200
+    }
+  }
+
 }
