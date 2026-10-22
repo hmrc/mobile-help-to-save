@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
+import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
@@ -23,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+
 import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -402,13 +404,38 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
     }
 
     "encryption flag is enabled" should {
-      "insert only one record with hashNIno and delete existing records" in {
+      "insert  one record with hashNIno " in {
         repository.collection.drop()
         repository.setTestMilestone(testMileStone).futureValue
         val result = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
         result.size mustBe 1
         result.head.hashNino mustBe Some(ninoHash(nino1))
 
+      }
+    }
+  }
+
+  "setTestMilestones" when {
+
+    "encryption flag is disabled" should {
+
+      "insert the number of records equivalent to number entered with random NINOs" in {
+        repositoryWithoutEncrypt.collection.drop()
+        repositoryWithoutEncrypt.setTestMilestones(testMileStone, 4).futureValue
+        val result = find(Document()).futureValue
+        result.size mustBe 4
+        result.map(_.hashNino) mustBe Seq(None, None, None, None)
+      }
+    }
+
+    "encryption flag is enabled" should {
+
+      "insert the number of records equivalent to number entered with random hashNino" in {
+        repository.collection.drop()
+        repository.setTestMilestones(testMileStone, 4).futureValue
+        val result = find(Document()).futureValue
+        result.size mustBe 4
+        result.map(_.hashNino.isDefined) mustBe Seq(true, true, true, true)
       }
     }
   }
