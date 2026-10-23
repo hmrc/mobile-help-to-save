@@ -99,7 +99,7 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
             )
           )
       ).status shouldBe 201
-      // await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200
+
     }
   }
 
@@ -121,7 +121,7 @@ class TestOnlyRoutesWiredISpec extends BaseISpec {
             )
           )
       ).status shouldBe 201
-      // await(wsUrl(clearMiletonesUrl).get()).status shouldBe 200
+
     }
   }
 
