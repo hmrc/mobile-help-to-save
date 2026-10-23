@@ -289,10 +289,6 @@ class MongoMilestonesRepo(
   }
 
   override def setTestMilestone(milestone: TestMilestone): Future[Unit] = {
-    for {
-      milestoneData <- selectByNino(milestone.nino)
-      res           <- if (milestoneData.nonEmpty) deleteMany(milestone.nino) else Future.successful(true)
-    } yield {}
     if (config.encryptionEnabled) {
 
       collection
@@ -314,14 +310,15 @@ class MongoMilestonesRepo(
       collection
         .insertOne(
           MongoMilestoneRecord(
-            nino          = Some(milestone.nino),
-            hashNino      = None,
-            milestoneType = milestone.milestoneType,
-            milestone     = milestone.milestone,
-            isSeen        = milestone.isSeen,
-            isRepeatable  = milestone.isRepeatable,
-            generatedDate = milestone.generatedDate.getOrElse(Instant.now()),
-            expireAt      = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS))
+            nino           = Some(milestone.nino),
+            hashNino       = None,
+            milestoneType  = milestone.milestoneType,
+            milestone      = milestone.milestone,
+            isSeen         = milestone.isSeen,
+            isRepeatable   = milestone.isRepeatable,
+            generatedDate  = milestone.generatedDate.getOrElse(Instant.now()),
+            expireAt       = milestone.expireAt.getOrElse(Instant.now().plus(1, ChronoUnit.HOURS)),
+            updateRequired = milestone.updateRequired
           )
         )
         .toFuture()

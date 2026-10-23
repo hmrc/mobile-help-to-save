@@ -7,8 +7,8 @@ lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
   Seq(
     // Semicolon-separated list of regexs matching classes to exclude
-    ScoverageKeys.coverageExcludedPackages := """uk\.gov\.hmrc\.BuildInfo;.*\.SystemId;.*\.IndexedMongoRepo;.*\.AppLoader;.*\.ScalaUriConfig;.*\.Routes;.*\.RoutesPrefix;.*\.Reverse[^.]*""",
-    ScoverageKeys.coverageMinimumStmtTotal := 77,
+    ScoverageKeys.coverageExcludedPackages := """uk\.gov\.hmrc\.BuildInfo;.*\.SystemId;.*\.IndexedMongoRepo;.*\.AppLoader;.*\.ScalaUriConfig;.*\.Routes;.*\.RoutesPrefix;.*\.Reverse[^.]*;.*\.wiring.FilterWiring;.*\.domain.types.package""",
+    ScoverageKeys.coverageMinimumStmtTotal := 87,
     ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true,
     Test / parallelExecution := false

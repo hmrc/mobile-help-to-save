@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.mobilehelptosave.repository
 
+import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.must.Matchers
@@ -23,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.mobilehelptosave.domain.*
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+
 import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -52,6 +54,9 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
     milestone     = Milestone(key = BalanceReached1),
     expireAt      = expireAt
   )
+
+  val testMileStone =
+    TestMilestone(nino = nino1, milestoneType = BonusPeriod, milestone = Milestone(key = BalanceReached1), expireAt = Some(expireAt))
 
   "setMilestone" when {
 
@@ -233,7 +238,6 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
         // call markSSeen
         repositoryWithoutEncrypt.markAsSeen(nino1, milestoneType = BonusPeriod.toString).futureValue
         val resultNew = find(Filters.equal("nino", nino1.nino)).futureValue
-        println("truncated" + expireAt.truncatedTo(ChronoUnit.SECONDS))
         result.head.expireAt.truncatedTo(ChronoUnit.SECONDS) mustBe expireAt.truncatedTo(ChronoUnit.SECONDS)
       }
 
@@ -318,12 +322,121 @@ class MilestoneRepoSpec extends AnyWordSpec with Matchers with ScalaFutures with
         result.head.updateRequired mustBe false
         repositoryWithoutEncrypt.updateExpireAt(nino1, newExpireAt).futureValue
         val resultNew = find(Filters.equal("nino", nino1.nino)).futureValue
-        result.head.updateRequired mustBe false
+        resultNew.head.updateRequired mustBe false
         resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe expireAt.atZone(ZoneOffset.UTC).toLocalDate
 
       }
     }
 
+    "encryption flag is enabled" should {
+
+      "set expireAt = given date time, hashNino= encrypted value, unset the text nino and updateRequired= false based on nino and  updateRequired= true" in {
+        val newExpireAt = LocalDateTime.ofInstant(expireAt.plus(1, ChronoUnit.DAYS), ZoneId.of("Europe/London"))
+        repository.collection.drop()
+        repositoryWithoutEncrypt.setMilestone(mileStone.copy(updateRequired = true)).futureValue
+        val result = find(Filters.equal("nino", nino1.nino)).futureValue
+        result.size mustBe 1
+        result.head.nino mustBe Some(nino1)
+        result.head.hashNino mustBe None
+        result.head.updateRequired mustBe true
+        repository.updateExpireAt(nino1, newExpireAt).futureValue
+        val resultNew = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        resultNew.size mustBe 1
+        resultNew.head.nino mustBe None
+        resultNew.head.hashNino mustBe Some(ninoHash(nino1))
+        resultNew.head.updateRequired mustBe false
+        resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe newExpireAt.atZone(ZoneOffset.UTC).toLocalDate
+      }
+
+      "set expireAt = given date time, hashNino= encrypted value, unset the text nino and updateRequired= false based on ninohash and  updateRequired= true" in {
+        val newExpireAt = LocalDateTime.ofInstant(expireAt.plus(1, ChronoUnit.DAYS), ZoneId.of("Europe/London"))
+        repository.collection.drop()
+        repository.setMilestone(mileStone.copy(updateRequired = true)).futureValue
+        val result = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        result.size mustBe 1
+        result.head.hashNino mustBe Some(ninoHash(nino1))
+        result.head.updateRequired mustBe true
+        repository.updateExpireAt(nino1, newExpireAt).futureValue
+        val resultNew = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        resultNew.size mustBe 1
+        resultNew.head.hashNino mustBe Some(ninoHash(nino1))
+        resultNew.head.updateRequired mustBe false
+        resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe newExpireAt.atZone(ZoneOffset.UTC).toLocalDate
+      }
+
+      "not set any values if no data is found for the given nino/ninohash" in {
+        val newExpireAt = LocalDateTime.ofInstant(expireAt.plus(1, ChronoUnit.DAYS), ZoneId.of("Europe/London"))
+        repository.collection.drop()
+        repository.setMilestone(mileStone).futureValue
+        val result = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        result.size mustBe 1
+        result.head.hashNino mustBe Some(ninoHash(nino1))
+        result.head.updateRequired mustBe false
+        repository.updateExpireAt(nino1, newExpireAt).futureValue
+        val resultNew = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        resultNew.head.updateRequired mustBe false
+        resultNew.head.expireAt.atZone(ZoneOffset.UTC).toLocalDate mustBe expireAt.atZone(ZoneOffset.UTC).toLocalDate
+      }
+    }
+
+  }
+
+  "setTestMilestone" when {
+
+    "encryption flag is disabled" should {
+
+      "insert the duplicate nino with plain text and hashnino is None" in {
+
+        repositoryWithoutEncrypt.collection.drop()
+        repositoryWithoutEncrypt.setTestMilestone(testMileStone).futureValue
+        val result = find(Filters.equal("nino", nino1.nino)).futureValue
+        result.size mustBe 1
+        result.head.nino mustBe Some(nino1)
+        result.head.hashNino mustBe None
+        repositoryWithoutEncrypt.setTestMilestone(testMileStone.copy(milestoneType = BalanceReached)).futureValue
+        val resultNew = find(Filters.equal("nino", nino1.nino)).futureValue
+        resultNew.size mustBe 2
+        resultNew.flatMap(_.nino) mustBe Seq(nino1, nino1)
+        result.map(_.hashNino) mustBe Seq(None)
+      }
+
+    }
+
+    "encryption flag is enabled" should {
+      "insert  one record with hashNIno " in {
+        repository.collection.drop()
+        repository.setTestMilestone(testMileStone).futureValue
+        val result = find(Filters.equal("hashNino", ninoHash(nino1))).futureValue
+        result.size mustBe 1
+        result.head.hashNino mustBe Some(ninoHash(nino1))
+
+      }
+    }
+  }
+
+  "setTestMilestones" when {
+
+    "encryption flag is disabled" should {
+
+      "insert the number of records equivalent to number entered with random NINOs" in {
+        repositoryWithoutEncrypt.collection.drop()
+        repositoryWithoutEncrypt.setTestMilestones(testMileStone, 4).futureValue
+        val result = find(Document()).futureValue
+        result.size mustBe 4
+        result.map(_.hashNino) mustBe Seq(None, None, None, None)
+      }
+    }
+
+    "encryption flag is enabled" should {
+
+      "insert the number of records equivalent to number entered with random hashNino" in {
+        repository.collection.drop()
+        repository.setTestMilestones(testMileStone, 4).futureValue
+        val result = find(Document()).futureValue
+        result.size mustBe 4
+        result.map(_.hashNino.isDefined) mustBe Seq(true, true, true, true)
+      }
+    }
   }
 
 }
