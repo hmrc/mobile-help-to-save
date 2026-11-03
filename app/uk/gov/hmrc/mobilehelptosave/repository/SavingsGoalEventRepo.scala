@@ -44,9 +44,7 @@ trait SavingsGoalEventRepo {
   def getEvents(nino: Nino): Future[Seq[SavingsGoalEvent]]
   def clearGoalEvents(): Future[Boolean]
 
-  def getGoalSetEvents: Future[Seq[SavingsGoalSetEvent]]
   def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]]
-  def updateExpireAt(): Future[Unit]
   def updateExpireAt(nino: Nino, expireAt: LocalDateTime): Future[Unit]
 
   def setTestGoalEvent(event: SavingsGoalEvent, isHashed: Boolean): Future[Unit]
@@ -141,17 +139,6 @@ class MongoSavingsGoalEventRepo(
       case SavingsGoalSetEventRecord(_, _, amount, _, name, _, _) => Some(SavingsGoal(goalName = name, goalAmount = amount))
     })
 
-  override def getGoalSetEvents: Future[Seq[SavingsGoalSetEvent]] =
-    collection
-      .find(equal("type", "set"))
-      .toFuture()
-      .map(_.map {
-        case record: SavingsGoalSetEventRecord if record.nino.isDefined => record.toDomain(record.nino.get)
-        case _: SavingsGoalSetEventRecord =>
-          throw new IllegalStateException("A NINO is required when retrieving all savings goal set events")
-        case _ => throw new IllegalStateException("Event must be a set event")
-      })
-
   override def getGoalSetEvents(nino: Nino): Future[Either[ErrorInfo, Seq[SavingsGoalSetEvent]]] =
     findRecords(nino, additionalFilter = Some(equal("type", "set")))
       .map(_.map {
@@ -159,19 +146,6 @@ class MongoSavingsGoalEventRepo(
         case _                                 => throw new IllegalStateException("Event must be a set event")
       })
       .map(Right(_))
-
-  override def updateExpireAt(): Future[Unit] =
-    collection
-      .updateMany(
-        filter = Document(),
-        update = combine(
-          set("updateRequired", true),
-          set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(54).toInstant(ZoneOffset.UTC)),
-          set("date", Instant.now())
-        )
-      )
-      .toFutureOption()
-      .void
 
   override def updateExpireAt(nino: Nino, expireAt: LocalDateTime): Future[Unit] = {
     val update =
@@ -238,7 +212,7 @@ class MongoSavingsGoalEventRepo(
         legacy <- collection
                     .find(withAdditionalFilter(equal("nino", nino.nino), additionalFilter))
                     .toFuture()
-        _      <- migrateLegacyRecords(nino, legacy.nonEmpty, additionalFilter)
+        _ <- migrateLegacyRecords(nino, legacy.nonEmpty, additionalFilter)
       } yield (hashed ++ legacy.map(withHashedIdentifier(_, nino))).sortBy(_.date)
     else
       collection

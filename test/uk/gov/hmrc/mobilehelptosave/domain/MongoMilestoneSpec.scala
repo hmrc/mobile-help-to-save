@@ -64,10 +64,43 @@ class MongoMilestoneSpec extends AnyWordSpec with Matchers {
       result.expireAt      must not be null
     }
 
-    "compare milestone types by priority" in {
+    "compare milestone types by priority for MongoMilestone" in {
       buildMilestone(BonusPeriod).compare(BonusReached) must be < 0
       buildMilestone(BonusReached).compare(BonusPeriod) must be > 0
       buildMilestone(BalanceReached).compare(BalanceReached) mustBe 0
+    }
+
+    "compare milestone types based on their priority fro MongoMilestoneRecord" in {
+      val record = MongoMilestoneRecord(
+        None,
+        None,
+        BonusPeriod,
+        milestone
+      )
+
+      record.compare(BonusReached) mustBe
+        (BonusPeriod.priority - BonusReached.priority)
+    }
+
+    "order records based on milestone type priority" in {
+      val record1 = MongoMilestoneRecord(
+        None,
+        None,
+        BonusPeriod,
+        milestone
+      )
+
+      val record2 = MongoMilestoneRecord(
+        None,
+        None,
+        BonusReached,
+        milestone
+      )
+
+      val sortedRecords = List(record1, record2).sorted
+
+      sortedRecords.map(_.milestoneType.priority) mustBe
+        List(BonusPeriod.priority, BonusReached.priority).sorted
     }
 
     "order milestones by ascending priority" in {
