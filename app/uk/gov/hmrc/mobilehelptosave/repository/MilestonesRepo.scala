@@ -19,6 +19,7 @@ package uk.gov.hmrc.mobilehelptosave.repository
 import cats.instances.future.*
 import cats.syntax.functor.*
 import org.mongodb.scala.Document
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.model.Updates.*
 import org.mongodb.scala.model.{IndexModel, IndexOptions, UpdateOptions}
@@ -81,10 +82,29 @@ class MongoMilestonesRepo(
     )
     with MilestonesRepo {
 
+  /** Check for the filter for querying mongo If isEncryptionEnabled is true, then check for both hashNino and nino presence else just check for
+    * NINO's presence
+    * @param nino
+    * @param isEncryptionEnabled
+    * @return
+    */
+  private def identifierFilter(nino: Nino, isEncryptionEnabled: Boolean = config.encryptionEnabled): Bson =
+    if (isEncryptionEnabled) or(equal("hashNino", ninoHash(nino)), equal("nino", nino.nino))
+    else equal("nino", nino.nino)
+
   private def insertMilestone(updatedMilestone: MongoMilestoneRecord): Future[Unit] = {
     collection.insertOne(updatedMilestone).toFuture().void
   }
 
+  /** update milestone record with hashNino adn unset nino
+    * @param updatedMilestone-
+    *   new milestone data
+    * @param hashNinoString-
+    *   hashnino to be set as new value
+    * @param nino
+    *   \- nino to serach
+    * @return
+    */
   private def setHashNino(updatedMilestone: MongoMilestoneRecord, hashNinoString: String, nino: Nino): Future[Unit] = {
 
     collection
@@ -100,19 +120,19 @@ class MongoMilestonesRepo(
 
   }
 
+  /** This method is used to insert the milestone record with hashNino. Unset nino search is done based on the presence of hashNino or nino and
+    * milestone if record is found, then check for isRepeatable, if it is yes , insert the new record with hashNINO else only call set nino
+    * @param milestone
+    * @return
+    */
+
   override def setMilestone(milestone: MongoMilestone): Future[Unit] = {
     if (config.encryptionEnabled) { // if encryption is enabled, we need to check if the record exists with nino or hashNino
       val hashNinoString = ninoHash(milestone.nino)
       val updatedMilestone = milestone.toMongoMilestoneRecord(Some(hashNinoString))
       collection
         .find(
-          and(
-            or(
-              equal("nino", milestone.nino.nino),
-              equal("hashNino", hashNinoString)
-            ),
-            equal("milestone", Codecs.toBson(milestone.milestone))
-          )
+          and(identifierFilter(milestone.nino), equal("milestone", Codecs.toBson(milestone.milestone)))
         )
         .headOption()
         .flatMap {
@@ -158,18 +178,17 @@ class MongoMilestonesRepo(
 
   }
 
+  /** This method is used to fetch the milestone record with hashNino. The search is done based on the presence of hashNino or nino and isSeen as
+    * false
+    * @param nino
+    * @return
+    */
   private def getMilestoneRecord(nino: Nino): Future[Seq[MongoMilestoneRecord]] = {
     if (config.encryptionEnabled) { // If encryption is enabled, check if the record exists with nino or hashNino and isSeen as false
       val ninohash = ninoHash(nino)
       collection
         .find(
-          and(
-            or(
-              equal("nino", nino.nino),
-              equal("hashNino", ninoHash(nino))
-            ),
-            equal("isSeen", false)
-          )
+          and(identifierFilter(nino), equal("isSeen", false))
         )
         .toFuture()
         .flatMap(record => updateMilestone(nino).map(_ => record)) // Once record is found/not found, update the ones with given NINO to hashNINO
@@ -182,6 +201,12 @@ class MongoMilestonesRepo(
     }
   }
 
+  /** This method is used to mark a milestone as seen. The search is done based on the presence of hashNino or nino and milestoneType and isSeen as
+    * false If found, then set the isSeen as true and update the expireAt date and hashNino and unset the nino
+    * @param nino
+    * @param milestoneType
+    * @return
+    */
   override def markAsSeen(
     nino: Nino,
     milestoneType: String
@@ -189,13 +214,7 @@ class MongoMilestonesRepo(
     if (config.encryptionEnabled) { // if encryption is enabled, check if the record exists with nino or hashNino and isSeen as false and milestoneType as needed
       collection
         .findOneAndUpdate(
-          filter = and(or(
-                         equal("nino", nino.nino),
-                         equal("hashNino", ninoHash(nino))
-                       ),
-                       equal("milestoneType", milestoneType),
-                       equal("isSeen", false)
-                      ),
+          filter = and(identifierFilter(nino), equal("milestoneType", milestoneType), equal("isSeen", false)),
           update = combine(set("isSeen", true),
                            set("hashNino", ninoHash(nino)),
                            set("expireAt", LocalDateTime.now(ZoneOffset.UTC).plusMonths(6)),
@@ -221,6 +240,12 @@ class MongoMilestonesRepo(
   override def clearMilestones(): Future[Unit] =
     collection.deleteMany(filter = Document()).toFuture().void
 
+  /** This method is used to update the expireAt date. If encryption is enabled, then search for the record with nino or hashNino and updateRequired
+    * as true
+    * @param nino
+    * @param expireAt
+    * @return
+    */
   override def updateExpireAt(
     nino: Nino,
     expireAt: LocalDateTime
@@ -255,15 +280,14 @@ class MongoMilestonesRepo(
 
   }
 
+  /** This method is used to fetch the milestone record with hashNino or NINO.
+    * @param nino
+    * @return
+    */
   private def selectByNino(nino: Nino): Future[Seq[MongoMilestoneRecord]] = {
     if (config.encryptionEnabled) {
       collection
-        .find(
-          or(
-            equal("hashNino", ninoHash(nino)),
-            equal("nino", nino.nino)
-          )
-        )
+        .find(identifierFilter(nino))
         .toFuture()
 
     } else {
@@ -273,13 +297,14 @@ class MongoMilestonesRepo(
     }
   }
 
+  /** This method is used to delete the milestone record with hashNino or NINO.
+    * @param nino
+    * @return
+    */
   private def deleteMany(nino: Nino): Future[Boolean] = {
     collection
       .deleteMany(
-        or(
-          equal("hashNino", ninoHash(nino)),
-          equal("nino", nino.nino)
-        )
+        identifierFilter(nino)
       )
       .toFuture()
       .map(_.getDeletedCount > 0)
@@ -288,6 +313,10 @@ class MongoMilestonesRepo(
       }
   }
 
+  /** Set a milestone usinf test only routes
+    * @param milestone
+    * @return
+    */
   override def setTestMilestone(milestone: TestMilestone): Future[Unit] = {
     if (config.encryptionEnabled) {
 
@@ -327,6 +356,12 @@ class MongoMilestonesRepo(
 
   }
 
+  /** Set multiple milestones using test only routes with random NINOs.
+    * @param milestone
+    * @param amount-
+    *   amount of milestone record needed
+    * @return
+    */
   override def setTestMilestones(milestone: TestMilestone, amount: Int): Future[Unit] = {
     if (config.encryptionEnabled) {
 
